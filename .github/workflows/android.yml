@@ -21,8 +21,8 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
-
+      # ubuntu-latest ships an Android SDK (ANDROID_HOME) with accepted licences;
+      # AGP installs any missing platform or build-tools on first use.
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Unit tests and debug build
