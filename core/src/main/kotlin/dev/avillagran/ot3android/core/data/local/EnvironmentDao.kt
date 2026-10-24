@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EnvironmentDao {
-    @Query("SELECT * FROM environments ORDER BY label")
+    @Query("SELECT * FROM environments ORDER BY sortOrder, label")
     fun observeAll(): Flow<List<EnvironmentEntity>>
 
     @Query("SELECT * FROM environments WHERE id = :id")

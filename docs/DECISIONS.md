@@ -24,8 +24,14 @@ not need yet (see the entry above). Revisit only together with the Koin question
 
 ## 2026-10-24: Room for structured data, DataStore Preferences for small state
 
-- Room (with KSP, Kotlin code generation, exported schemas under `core/schemas`) stores
-  structured, queryable data: environments now; drafts, outbox and caches later.
+- Room (with KSP, Kotlin code generation, and the `androidx.room` Gradle plugin exporting
+  schemas to `core/schemas`) stores structured, queryable data: environments now; drafts,
+  outbox and caches later. Exported schemas are committed and packaged as androidTest
+  assets so `MigrationTestHelper` can test every migration.
+- Schema 1 already carries what the environment catalog needs (label, origin-only base
+  URL, the server's environment UUID, creation and last-connection times, sort order) to
+  avoid an immediate migration. Routes beyond URL + token come later with a tested
+  migration.
 - DataStore Preferences stores small, non-secret UI state such as the last selected
   environment id.
 - Neither of them ever holds a credential.
