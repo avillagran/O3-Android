@@ -14,4 +14,8 @@
 *.aab
 *.keystore
 /libs/*.aar
+/libs/*.aar.tmp
+/libs/*.sha256
+/libs/*.properties
+/libs/host/
 google-services.json

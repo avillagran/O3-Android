@@ -9,5 +9,7 @@ and answer questions from your phone or tablet, against your own T3 Code servers
 pairing link, URL and token, OmaBridge, Tailscale, and later T3 Connect.
 
 Status: **in development, not distributed yet.** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The lib-t3-rust AAR is built locally with `scripts/fetch-or-build-lib.sh`; see
+[docs/LIB_BUILD.md](docs/LIB_BUILD.md).
 
 Independent community project; not an official T3 Code app. MIT License.
