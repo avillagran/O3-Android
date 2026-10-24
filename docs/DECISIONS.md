@@ -66,7 +66,15 @@ used. Consequences:
 - `app`: the single activity, navigation, Compose UI and theme, and the `AppGraph`.
 - `core`: an Android library (not pure JVM, because Room, DataStore and the Keystore
   need Android) with `domain` (plain Kotlin models), `data` (Room, DataStore),
-  `security` (credentials) and `transport` (the `T3Transport` boundary to lib-t3-rust).
-- The lib-t3-rust AAR will be consumed by `core` only, behind `T3Transport`. Protocol
-  logic stays in the Rust library.
+  `security` (credentials). A `transport` package arrives with the lib-t3-rust AAR.
+- The lib-t3-rust AAR will be consumed by `core` only. Protocol logic stays in the Rust
+  library.
 - More modules (for example per feature) only when build times or ownership ask for it.
+
+## 2026-10-24: The Kotlin transport mirrors the lib's `T3Client`
+
+No transport interface is written ahead of the AAR. The Kotlin transport adapter arrives
+with it and mirrors the surface of the lib's `T3Client` (`connect(route)`, `call`,
+`describe`, `subscribe` delivering full batches with boundaries, idle, completion marker,
+closed and error, `wake`, `upload`, `image`, `Closeable`); it does not expose RPC tags or
+HTTP paths to the UI layer.
