@@ -42,6 +42,15 @@ Tokens are stored through `CredentialStore`, backed by `EncryptedSharedPreferenc
 `androidx.security:security-crypto`. Its master key is generated and kept in the Android
 Keystore, so key material never leaves secure hardware where available.
 
+- The master key has an explicit alias (`ot3_credentials_master_v1`), uses AES256_GCM and
+  does **not** require user authentication: the future follow service must read tokens
+  while the device is locked.
+- The store is opened off the main thread (`CredentialStore.open`, on `Dispatchers.IO`).
+  If the file or its master key is unusable (Keystore reset, restore from another
+  device), both are deleted and the store is recreated once; `wasReset` lets the UI say
+  "credentials reset, re-pair". Writes use `commit()`. Values and exceptions are never
+  logged.
+- Removing an environment deletes its Room row and its token together.
 - Chosen over raw Keystore code because it gives authenticated encryption of keys and
   values with very little code, and works from minSdk 24.
 - The library is deprecated upstream as of 1.1.0. It still works and is the shortest
