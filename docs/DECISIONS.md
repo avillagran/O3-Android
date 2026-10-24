@@ -5,22 +5,22 @@ Dated record of build and structure decisions. Architecture itself is in
 
 ## 2026-10-24: Manual dependency injection, no Hilt
 
-The dependency graph is a plain `AppGraph` class created once in `Ot3Application` and
-reached from Compose through the application context. Every dependency is `lazy`.
+The dependency graph is a plain `AppGraph` class created once in `Ot3Application`.
+Code with a `Context` reaches it through `Context.appGraph`; Compose screens get their
+ViewModels from `appViewModel { graph -> ... }`, a thin wrapper over
+`lifecycle-viewmodel-compose`'s `viewModel { }` that hands the initializer the graph.
+Every dependency is `lazy` or opened on first use.
 
-- The app is small: one activity, a handful of repositories and one transport.
+- The app is small: one activity and a handful of repositories.
 - Compose does not need injected Android components; screens receive state holders and
   lambdas, which is easy to wire by hand and easy to fake in tests.
 - No annotation processing or generated components, so builds stay fast and the graph is
   readable in a single file.
+- Hilt, the default in most templates, is not used: it adds KSP processing, a Gradle
+  plugin and `@AndroidEntryPoint` plumbing for a benefit this app does not need yet.
 - If the graph grows beyond what is comfortable by hand, Koin is the fallback: it is
-  runtime-only and keeps the same constructor-based style.
-
-## 2026-10-24: No Hilt
-
-Stated separately because it is the default in most templates. Hilt adds kapt/KSP
-processing, a Gradle plugin and `@AndroidEntryPoint` plumbing for a benefit this app does
-not need yet (see the entry above). Revisit only together with the Koin question.
+  runtime-only and keeps the same constructor-based style. Hilt is reconsidered only
+  together with that question.
 
 ## 2026-10-24: Room for structured data, DataStore Preferences for small state
 
@@ -34,7 +34,9 @@ not need yet (see the entry above). Revisit only together with the Koin question
   migration.
 - DataStore Preferences stores small, non-secret UI state such as the last selected
   environment id.
-- Neither of them ever holds a credential.
+- Neither of them ever holds a credential in plaintext. The only credential data either
+  may hold in the future is ciphertext written by `CredentialStore` (see the migration
+  path below).
 
 ## 2026-10-24: security-crypto (EncryptedSharedPreferences) as credential store
 
@@ -55,20 +57,26 @@ Keystore, so key material never leaves secure hardware where available.
   values with very little code, and works from minSdk 24.
 - The library is deprecated upstream as of 1.1.0. It still works and is the shortest
   correct path today, so it is used behind `CredentialStore` with the deprecation warnings
-  suppressed in that file only. The migration path is a raw Keystore AES-GCM key wrapping
-  values stored in DataStore, behind the same class, with a one-time migration of existing
-  entries.
+  suppressed in that file only. The migration path is a raw Keystore AES-GCM key
+  (same no-user-auth policy) behind the same class, with a one-time migration of existing
+  entries. The values it persists, in DataStore or a private file, are ciphertext only;
+  the key never leaves the Keystore and no plaintext token is ever written to disk.
 
 ## 2026-10-24: compileSdk and targetSdk 36
 
-API 36 is the latest stable platform. API 37 is still treated as preview, so it is not
-used. Consequences:
+The SDK installed on the development machine includes `android-37.0`, a base
+(non-preview) platform. compileSdk and targetSdk nevertheless stay on 36, because moving
+to 37 is not a one-line change:
 
-- Android Gradle Plugin 8.13.x (Gradle 8.14), whose highest supported compileSdk is 36.
-- The Compose BOM is pinned to the newest release built for compileSdk 36
-  (`2026.06.01`, Compose UI 1.11). BOMs from `2026.08.00` (Compose 1.12) require
-  compileSdk 37 and AGP 9.1, and will be adopted together with API 37.
+- Compose 1.12 (BOM `2026.08.00` and `2026.09.xx`) requires compileSdk 37 and AGP 9.1,
+  and AGP 9.x requires Gradle 9. The three move together.
+- Today the build uses Android Gradle Plugin 8.13.x (Gradle 8.14), whose highest
+  supported compileSdk is 36, and the Compose BOM `2026.06.01` (Compose UI 1.11), the
+  newest built for compileSdk 36.
 - JVM target 17; CI and the development machine build with JDK 21.
+
+ARCHITECTURE.md asks for "the latest stable SDK". Read that as the latest SDK the stable
+toolchain (AGP, Compose BOM) supports as a set; adopting 37 is recorded as pending below.
 
 ## 2026-10-24: Module split: `app` and `core`
 
@@ -87,3 +95,8 @@ with it and mirrors the surface of the lib's `T3Client` (`connect(route)`, `call
 `describe`, `subscribe` delivering full batches with boundaries, idle, completion marker,
 closed and error, `wake`, `upload`, `image`, `Closeable`); it does not expose RPC tags or
 HTTP paths to the UI layer.
+
+## Pending decisions
+
+- **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
+  dedicated change once the AAR integration is stable.
