@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.roborazzi)
+    // Typed navigation routes (@Serializable destinations, UI_SPEC 2.1).
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
