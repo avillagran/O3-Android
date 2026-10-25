@@ -14,5 +14,6 @@
 *.apk
 *.aab
 *.keystore
+*.jks
 /libs/*.aar
 google-services.json
