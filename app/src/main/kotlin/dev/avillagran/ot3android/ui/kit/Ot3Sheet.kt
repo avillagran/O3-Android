@@ -21,8 +21,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -72,7 +71,7 @@ fun Ot3Sheet(
     val shape = RoundedCornerShape(topStart = Ot3Radii.sheet, topEnd = Ot3Radii.sheet)
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        modifier = modifier.sheetTopEdge(),
+        modifier = modifier,
         sheetState = sheetState,
         shape = shape,
         containerColor = colors.background,
@@ -94,15 +93,20 @@ fun Ot3Sheet(
     }
 }
 
-/** ot3's drag handle: 32 × 4 dp, fg @ 0.15, with 10 dp above and 6 dp below. */
+/**
+ * ot3's drag handle: 32 × 4 dp, fg @ 0.15, with 10 dp above and 6 dp below. Its slot spans
+ * the sheet's width and draws the sheet's top hairline, as Material's sheet takes no border.
+ */
 @Composable
 fun Ot3SheetHandle() {
-    Box(
-        Modifier
-            .padding(top = Ot3Spacing.xl, bottom = Ot3Spacing.md)
-            .size(width = 32.dp, height = 4.dp)
-            .background(Ot3Theme.colors.foreground.copy(alpha = HANDLE_ALPHA), RoundedCornerShape(2.dp)),
-    )
+    Box(Modifier.fillMaxWidth().sheetTopEdge(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .padding(top = Ot3Spacing.xl, bottom = Ot3Spacing.md)
+                .size(width = 32.dp, height = 4.dp)
+                .background(Ot3Theme.colors.foreground.copy(alpha = HANDLE_ALPHA), RoundedCornerShape(2.dp)),
+        )
+    }
 }
 
 /** A sheet title: titleSmall (16 sp Medium) with the phone gutter. */
@@ -161,22 +165,19 @@ fun Ot3SheetItem(
 @Composable
 private fun Modifier.sheetTopEdge(): Modifier {
     val color = Ot3Theme.colors.cardBorder
-    return drawWithContent {
-        drawContent()
+    return drawBehind {
         val stroke = Ot3Sizes.border.toPx()
-        val r = Ot3Radii.sheet.toPx()
         val inset = stroke / 2
+        val d = Ot3Radii.sheet.toPx() * 2 - stroke
         val path = Path().apply {
-            moveTo(inset, r)
-            arcTo(Rect(Offset(inset, inset), r * 2 - inset), 180f, 90f, false)
-            lineTo(size.width - r, inset)
-            arcTo(Rect(Offset(size.width - inset - (r * 2 - inset), inset), r * 2 - inset), 270f, 90f, false)
+            moveTo(inset, inset + d / 2)
+            arcTo(Rect(inset, inset, inset + d, inset + d), 180f, 90f, false)
+            lineTo(size.width - inset - d / 2, inset)
+            arcTo(Rect(size.width - inset - d, inset, size.width - inset, inset + d), 270f, 90f, false)
         }
         drawPath(path, color, style = Stroke(stroke))
     }
 }
-
-private fun Rect(topLeft: Offset, side: Float) = Rect(topLeft, androidx.compose.ui.geometry.Size(side, side))
 
 private const val HANDLE_ALPHA = 0.15f
 private const val SELECTED_ALPHA = 0.20f
