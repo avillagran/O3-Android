@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.random.Random
 
 /**
@@ -35,6 +37,9 @@ class ConnectionManager(
     /** Supervisors that were running when the app went to the background. */
     private val paused = mutableSetOf<String>()
 
+    /** Serializes creating and forgetting supervisors, which both read the repository. */
+    private val createLock = Mutex()
+
     /** Connection state per local environment id, for supervisors created so far. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val states: Flow<Map<String, ConnectionState>> = _supervisors.flatMapLatest { map ->
@@ -48,21 +53,30 @@ class ConnectionManager(
     /** The supervisor of [environmentId], created (not started) on first use; null if not saved. */
     suspend fun supervisor(environmentId: String): ConnectionSupervisor? {
         _supervisors.value[environmentId]?.let { return it }
-        val environment = repository.find(environmentId) ?: return null
-        return synchronized(this) {
-            _supervisors.value[environmentId] ?: create(environment).also { created ->
-                _supervisors.update { it + (environmentId to created) }
+        return createLock.withLock {
+            _supervisors.value[environmentId] ?: run {
+                // Read under the lock, so a forget() running now cannot leave a supervisor behind.
+                val environment = repository.find(environmentId) ?: return@withLock null
+                create(environment).also { created ->
+                    synchronized(this) { _supervisors.update { it + (environmentId to created) } }
+                }
             }
         }
     }
 
-    /** Stops and forgets [environmentId]'s supervisor, e.g. after its URL or token changed or it was removed. */
-    fun forget(environmentId: String) {
-        val removed = synchronized(this) {
-            paused.remove(environmentId)
-            _supervisors.value[environmentId]?.also { _supervisors.update { it - environmentId } }
+    /**
+     * Stops and forgets [environmentId]'s supervisor, e.g. after its URL or token changed or
+     * before it is removed. Returns once its run has ended (transport closed, cursor
+     * written), so deleting the environment afterwards leaves nothing behind.
+     */
+    suspend fun forget(environmentId: String) {
+        val removed = createLock.withLock {
+            synchronized(this) {
+                paused.remove(environmentId)
+                _supervisors.value[environmentId]?.also { _supervisors.update { it - environmentId } }
+            }
         }
-        removed?.stop()
+        removed?.stopAndJoin()
     }
 
     /** Probes every open stream and skips pending backoffs (resume, network change). */

@@ -53,7 +53,7 @@ class ConnectViewModel(
     private val probe: ServerProbe,
     private val repository: EnvironmentRepository,
     private val editingId: String?,
-    private val onSaved: (environmentId: String) -> Unit,
+    private val onSaved: suspend (environmentId: String) -> Unit,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ConnectUiState(editingId = editingId))

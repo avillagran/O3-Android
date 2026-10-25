@@ -16,6 +16,10 @@ class FakeEnvironmentDao : EnvironmentDao {
     override suspend fun findById(id: String) = rows.value[id]
     override suspend fun upsert(environment: EnvironmentEntity) = rows.update { it + (environment.id to environment) }
     override suspend fun deleteById(id: String) = rows.update { it - id }
+    override suspend fun markConnected(id: String, environmentId: String?, connectedAt: Long) = rows.update { current ->
+        val row = current[id] ?: return@update current
+        current + (id to row.copy(environmentId = environmentId ?: row.environmentId, lastConnectedAt = connectedAt))
+    }
 }
 
 class FakeTokenStore : TokenStore {

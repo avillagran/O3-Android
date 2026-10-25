@@ -233,14 +233,14 @@ class ConnectionSupervisorTest {
     }
 
     @Test
-    fun aNonTransientCloseDropsTheShellAndStartsFresh() = runTest {
+    fun aNonTransientCloseStartsFreshButKeepsShowingTheShell() = runTest {
         val supervisor = supervisor()
         supervisor.start()
         runCurrent()
         emit(ThreadUpdates.event(threadUpdated(6, thread("t3"))))
 
         emit(ThreadUpdates.closed("stream_closed"))
-        assertNull(supervisor.shell.value)
+        assertEquals("the sidebar does not blank", 3, supervisor.shell.value?.threads?.size)
 
         shellSequence = 50
         val waiting = supervisor.state.value as ConnectionState.Unreachable
@@ -323,6 +323,25 @@ class ConnectionSupervisorTest {
         runCurrent()
         assertEquals("written once more on stop", 10L, cursors.writes.last().second)
         assertEquals(2, cursors.writes.size)
+    }
+
+    @Test
+    fun aRunWindingDownAfterStopCannotOverwriteTheState() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        assertTrue(supervisor.state.value is ConnectionState.Connected)
+
+        supervisor.stop()
+        supervisor.start()
+        // The second run is connecting while the first one's close is still pending.
+        assertEquals(ConnectionState.Disconnected, supervisor.state.value)
+        runCurrent()
+
+        assertTrue(supervisor.state.value is ConnectionState.Connected)
+        assertEquals(2, factory.created.size)
+        assertTrue(factory.created.first().closed)
+        assertFalse(factory.created.last().closed)
     }
 
     @Test

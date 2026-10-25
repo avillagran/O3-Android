@@ -102,7 +102,10 @@ class ConnectionSupervisor(
 
     private val _shell = MutableStateFlow<ShellState?>(null)
 
-    /** The reduced shell, null until the first snapshot (or after a reset). */
+    /**
+     * The reduced shell, null until the first snapshot. It stays visible while the supervisor
+     * reconnects, stops or resets, until a newer shell replaces it.
+     */
     val shell: StateFlow<ShellState?> = _shell.asStateFlow()
 
     /** The shell as applied so far; [shell] catches up with it on repaint. */
@@ -117,25 +120,53 @@ class ConnectionSupervisor(
     private var persistedCursor: Long? = null
     private val persistLock = Mutex()
 
+    /** Guards [generation], [job], [transport] and every write of [state]. */
+    private val lock = Any()
+
+    /**
+     * Bumped by every [start] and [stop]. A run writes [state] only while its generation is
+     * current, so a run that is still winding down after [stop] cannot overwrite what the
+     * next run (or the stop itself) published.
+     */
+    private var generation = 0
+
     @Volatile private var transport: T3Transport? = null
-    private var job: Job? = null
+    @Volatile private var job: Job? = null
     private val retryNow = Channel<Unit>(Channel.CONFLATED)
 
     val isRunning: Boolean get() = job?.isActive == true
 
     /** Starts connecting unless already running. */
-    @Synchronized
     fun start() {
-        if (job?.isActive == true) return
-        job = scope.launch { run() }
+        synchronized(lock) {
+            if (job?.isActive == true) return
+            val run = ++generation
+            job = scope.launch { run(run) }
+        }
     }
 
     /** Stops and closes the transport. The shell stays visible and resumes on [start]. */
-    @Synchronized
     fun stop() {
-        job?.cancel()
+        stopRun()
+    }
+
+    /** [stop], then waits until the run has closed its transport and written its cursor. */
+    suspend fun stopAndJoin() {
+        stopRun()?.join()
+    }
+
+    private fun stopRun(): Job? = synchronized(lock) {
+        val stopped = job
         job = null
+        generation++
+        stopped?.cancel()
         _state.value = ConnectionState.Disconnected
+        stopped
+    }
+
+    /** Publishes [value] if [run] is still the current run. */
+    private fun setState(run: Int, value: ConnectionState) = synchronized(lock) {
+        if (run == generation) _state.value = value
     }
 
     /** Retries at once: skips a pending backoff, or starts again after `unauthorized` or a fatal error. */
@@ -172,25 +203,30 @@ class ConnectionSupervisor(
     }
 
     @OptIn(FlowPreview::class)
-    private suspend fun run() {
+    private suspend fun run(run: Int) {
         val backoff = Backoff(random)
         val client = transportFactory.create()
-        transport = client
+        synchronized(lock) { if (run == generation) transport = client }
         try {
             coroutineScope {
                 val persister = launch {
                     pendingCursor.debounce(PERSIST_DEBOUNCE_MS).collect { persistCursor() }
                 }
-                reconnect(client, backoff)
+                reconnect(run, client, backoff)
                 persister.cancel()
             }
         } catch (error: Exception) {
             // Never end silently: the state says so, retry() starts over, and the scope's
             // exception handler logs the class.
-            if (error !is CancellationException) _state.value = ConnectionState.Unreachable(INTERNAL_ERROR, null)
+            if (error !is CancellationException) setState(run, ConnectionState.Unreachable(INTERNAL_ERROR, null))
             throw error
         } finally {
-            if (transport === client) transport = null
+            synchronized(lock) {
+                if (transport === client) transport = null
+                // Ended while current (the scope was cancelled, not stop()): not connected any more.
+                val live = _state.value is ConnectionState.Connected || _state.value == ConnectionState.Connecting
+                if (run == generation && live) _state.value = ConnectionState.Disconnected
+            }
             withContext(NonCancellable + io) {
                 client.close()
                 persistCursor()
@@ -199,9 +235,9 @@ class ConnectionSupervisor(
     }
 
     /** Connects and follows the stream until `unauthorized` or a fatal error. */
-    private suspend fun reconnect(client: T3Transport, backoff: Backoff) {
+    private suspend fun reconnect(run: Int, client: T3Transport, backoff: Backoff) {
         while (true) {
-            val error = attempt(client, backoff)
+            val error = attempt(run, client, backoff)
             currentCoroutineContext().ensureActive()
             if (error == CANCELLED) {
                 // Still running, so not our stop(): reopen from the held cursor. The
@@ -211,27 +247,27 @@ class ConnectionSupervisor(
             }
             when {
                 error == UNAUTHORIZED -> {
-                    _state.value = ConnectionState.Unauthorized
+                    setState(run, ConnectionState.Unauthorized)
                     return
                 }
                 error in FATAL -> {
-                    _state.value = ConnectionState.Unreachable(error, nextRetryAt = null)
+                    setState(run, ConnectionState.Unreachable(error, nextRetryAt = null))
                     return
                 }
                 error !in TRANSIENT -> reset()
             }
             val delayMs = backoff.nextDelayMs()
-            _state.value = ConnectionState.Unreachable(error, clock() + delayMs)
+            setState(run, ConnectionState.Unreachable(error, clock() + delayMs))
             while (retryNow.tryReceive().isSuccess) Unit
             withTimeoutOrNull(delayMs) { retryNow.receive() }
         }
     }
 
     /** One connect and stream; returns the error code that ended it. */
-    private suspend fun attempt(client: T3Transport, backoff: Backoff): String {
+    private suspend fun attempt(run: Int, client: T3Transport, backoff: Backoff): String {
         var connectedAt: Long? = null
         try {
-            if (_state.value !is ConnectionState.Connected) _state.value = ConnectionState.Connecting
+            if (_state.value !is ConnectionState.Connected) setState(run, ConnectionState.Connecting)
             val descriptor = ServerDescriptor.from(client.fetchDescriptor(baseUrl, serverEnvironmentId))
             val secret = token() ?: return MISSING_TOKEN
             client.connect(ConnectRoute.Bearer(baseUrl, secret))
@@ -240,7 +276,7 @@ class ConnectionSupervisor(
                 shellLock.withLock { replaceHeld(fresh) }
             }
             if (serverEnvironmentId == null) serverEnvironmentId = descriptor.environmentId
-            _state.value = ConnectionState.Connected(descriptor)
+            setState(run, ConnectionState.Connected(descriptor))
             try {
                 onConnected(descriptor)
             } catch (error: Exception) {
@@ -283,12 +319,14 @@ class ConnectionSupervisor(
         pendingCursor.value = cursor
     }
 
-    /** Drops the held shell and cursor so the next stream starts from a fresh snapshot. */
+    /**
+     * Drops the held shell and cursor so the next stream starts from a fresh snapshot. [shell]
+     * keeps showing the last one meanwhile, so the sidebar does not blank on an `http_5xx`.
+     */
     private suspend fun reset() {
         shellLock.withLock {
             held = null
             cursor = null
-            _shell.value = null
             pendingCursor.value = null
         }
     }

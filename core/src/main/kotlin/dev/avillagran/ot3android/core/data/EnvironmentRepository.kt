@@ -62,15 +62,9 @@ class EnvironmentRepository(
         return saved
     }
 
-    /** Records a successful connection and the server's environment id. */
+    /** Records a successful connection and the server's environment id; a removed environment stays removed. */
     suspend fun markConnected(id: String, environmentId: String?) {
-        val current = dao.findById(id) ?: return
-        dao.upsert(
-            current.copy(
-                environmentId = environmentId ?: current.environmentId,
-                lastConnectedAt = clock(),
-            ),
-        )
+        dao.markConnected(id, environmentId, clock())
     }
 
     /** Removes the row, its token and its shell cursor together. */
