@@ -384,3 +384,18 @@ factory, the fake's scripting). Supersedes the entry above.
   dedicated change once the AAR integration is stable.
 - **Typed navigation routes** (`@Serializable` destinations with Navigation Compose)
   instead of the current string constants in `Routes`, once screens take arguments.
+
+## 2026-10-25 — The app follows the connected environment's Omarchy theme
+
+ot3-Android is "our Omarchy T3": by default it wears the Omarchy theme active on the host
+it is connected to, as ot3 follows the live theme on the desktop. The active
+`~/.local/state/omarchy/current/theme/colors.toml` is read through the T3 server
+(`filesystem.getMetadata` for HOME, then `projects.readFile`) and converted with the lib's
+`theme.tokens`; refreshed on connect, foreground, environment switch and by polling
+`theme.name` every few minutes while visible; cached per environment. The thread's or
+Home's environment decides; in the merged Home, the main environment (last used or chosen
+in Settings). Manual choice among the 22 bundled themes (tokyo-night / catppuccin-latte by
+default) or Material You is the fallback when the host is not Omarchy, the file cannot be
+read, or following is off. All colour values come from `theme.tokens`, live and bundled;
+`docs/ui/tokens.md` is regenerated from it. Spec: UI_SPEC 3.1.3. If the typed file API
+cannot reach the file (path outside a project, scope), the gap goes to `LIB_REQUESTS.md`.
