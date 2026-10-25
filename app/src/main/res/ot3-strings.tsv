@@ -149,3 +149,18 @@ ot3_env_pairing_code	Pairing code
 
 # Component catalog (3.9)
 ot3_catalog_theme	Theme
+
+# Component kit (3.9)
+ot3_kit_show	Show
+ot3_kit_hide	Hide
+ot3_kit_on	On
+ot3_kit_off	Off
+ot3_kit_draft	Draft
+ot3_kit_subagent	Subagent
+ot3_kit_copy_message	Copy message
+ot3_kit_copy_code	Copy code
+ot3_kit_copied	Copied!
+ot3_kit_copy_failed	Copy failed
+ot3_pr_open	Open
+ot3_pr_merged	Merged
+ot3_pr_closed	Closed

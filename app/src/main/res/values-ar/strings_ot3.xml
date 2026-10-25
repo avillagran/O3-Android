@@ -125,4 +125,17 @@
     <string name="ot3_env_pairing_link">رابط الاقتران</string>
     <string name="ot3_env_pairing_code">رمز الاقتران</string>
     <string name="ot3_catalog_theme">السمة</string>
+    <string name="ot3_kit_show">إظهار</string>
+    <string name="ot3_kit_hide">إخفاء</string>
+    <string name="ot3_kit_on">مفعّل</string>
+    <string name="ot3_kit_off">معطّل</string>
+    <string name="ot3_kit_draft">مسودة</string>
+    <string name="ot3_kit_subagent">وكيل فرعي</string>
+    <string name="ot3_kit_copy_message">نسخ الرسالة</string>
+    <string name="ot3_kit_copy_code">نسخ الشيفرة</string>
+    <string name="ot3_kit_copied">تم النسخ!</string>
+    <string name="ot3_kit_copy_failed">تعذر النسخ</string>
+    <string name="ot3_pr_open">مفتوحة</string>
+    <string name="ot3_pr_merged">مدمجة</string>
+    <string name="ot3_pr_closed">مغلقة</string>
 </resources>

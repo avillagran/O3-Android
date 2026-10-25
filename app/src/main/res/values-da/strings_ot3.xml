@@ -124,4 +124,17 @@
     <string name="ot3_env_pairing_link">Parringslink</string>
     <string name="ot3_env_pairing_code">Parringskode</string>
     <string name="ot3_catalog_theme">Tema</string>
+    <string name="ot3_kit_show">Vis</string>
+    <string name="ot3_kit_hide">Skjul</string>
+    <string name="ot3_kit_on">Til</string>
+    <string name="ot3_kit_off">Fra</string>
+    <string name="ot3_kit_draft">Kladde</string>
+    <string name="ot3_kit_subagent">Underagent</string>
+    <string name="ot3_kit_copy_message">Kopiér besked</string>
+    <string name="ot3_kit_copy_code">Kopiér kode</string>
+    <string name="ot3_kit_copied">Kopieret!</string>
+    <string name="ot3_kit_copy_failed">Kopiering mislykkedes</string>
+    <string name="ot3_pr_open">Åbne</string>
+    <string name="ot3_pr_merged">Flettede</string>
+    <string name="ot3_pr_closed">Lukkede</string>
 </resources>

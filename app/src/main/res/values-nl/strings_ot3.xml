@@ -124,4 +124,17 @@
     <string name="ot3_env_pairing_link">Koppelingslink</string>
     <string name="ot3_env_pairing_code">Koppelingscode</string>
     <string name="ot3_catalog_theme">Thema</string>
+    <string name="ot3_kit_show">Tonen</string>
+    <string name="ot3_kit_hide">Verbergen</string>
+    <string name="ot3_kit_on">Aan</string>
+    <string name="ot3_kit_off">Uit</string>
+    <string name="ot3_kit_draft">Concept</string>
+    <string name="ot3_kit_subagent">Subagent</string>
+    <string name="ot3_kit_copy_message">Bericht kopiëren</string>
+    <string name="ot3_kit_copy_code">Code kopiëren</string>
+    <string name="ot3_kit_copied">Gekopieerd!</string>
+    <string name="ot3_kit_copy_failed">Kopiëren mislukt</string>
+    <string name="ot3_pr_open">Open</string>
+    <string name="ot3_pr_merged">Samengevoegd</string>
+    <string name="ot3_pr_closed">Gesloten</string>
 </resources>
