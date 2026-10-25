@@ -80,8 +80,10 @@ fun PairScreen(
     SecureWindow()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val waiting by inbox.collectAsStateWithLifecycle()
-    LaunchedEffect(waiting) {
-        val offer = if (waiting != null) takeFromInbox() else null
+    // Taken only while idle: a link arriving mid-pairing waits in the inbox instead of being
+    // taken and then dropped by the busy ViewModel.
+    LaunchedEffect(waiting, state.busy) {
+        val offer = if (waiting != null && !state.busy) takeFromInbox() else null
         when {
             offer == null -> Unit
             offer.scanned -> viewModel.open(offer.link)
