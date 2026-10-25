@@ -20,7 +20,8 @@ Point Gradle at the SDK with `sdk.dir=...` in `local.properties` (not versioned)
 
 ```sh
 ./gradlew :core:testDebugUnitTest :app:assembleDebug   # unit tests and debug APK
-./gradlew :app:connectedDebugAndroidTest               # Compose UI tests on a device
+./gradlew :core:lintDebug :app:lintDebug               # lint
+./gradlew connectedDebugAndroidTest                    # Room, credential and Compose UI tests on a device
 ```
 
 Build and structure decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
