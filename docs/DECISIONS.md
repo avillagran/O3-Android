@@ -196,11 +196,13 @@ factory, the fake's scripting). Supersedes the entry above.
   rotation does not reconnect), resume on `ON_START`, and are probed with
   `wakeSubscriptions` on `ON_RESUME` and on default-network changes.
 - **Shell cursor in DataStore** (`ShellCursorPreferences`, file `connection`, key
-  `shell_cursor:<local id>`), written on repaint when it moved and removed with the
-  environment or when its URL changes. The cursor is `shellCursor`, not
+  `shell_cursor:<local id>`), written off the hot path (conflated, debounced 1.5 s, and
+  once more when a run ends) and removed with the environment or when its URL changes.
+  **It is write-only today**: a run always starts from a shell GET and subscribes after
+  that shell's sequence, because a cursor without the shell it belongs to resumes nothing.
+  A cached shell (later) is what will read it. The cursor is `shellCursor`, not
   `update.cursor`, because the lib moves its cursor on metadata-only snapshots
-  (LIB_REQUESTS.md). Today a cold start still takes the shell over HTTP (the shell itself
-  is only in memory); the persisted cursor is what a cached shell will resume from.
+  (LIB_REQUESTS.md).
 - **Token in Keystore-backed preferences**: `EnvironmentRepository` writes the Room row
   and the `CredentialStore` token together (token first) and deletes the row, the token
   and the cursor together. `CredentialStore` now implements a small `TokenStore`

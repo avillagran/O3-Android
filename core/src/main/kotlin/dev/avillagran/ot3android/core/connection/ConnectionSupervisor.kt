@@ -12,15 +12,18 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -66,7 +69,10 @@ sealed interface ConnectionState {
  * Stream updates are applied with [ShellReducer.reduce] and the resume cursor follows
  * `shellCursor`, both through the `ShellUpdates.kt` adapter, so a metadata-only snapshot
  * never replaces the shell or moves the cursor. [shell] is published only on the update's
- * `repaint`, never mid-chunk. The cursor is persisted in [cursorStore] on repaint.
+ * `repaint`, never mid-chunk. The cursor is written to [cursorStore] off the hot path:
+ * conflated, [PERSIST_DEBOUNCE_MS] after it last moved, and once more when a run ends. It
+ * is not read back yet: without a cached shell, a run always starts from a shell GET and
+ * resumes after its sequence (docs/DECISIONS.md).
  *
  * Pure Kotlin (no Android types); runs in [scope]. The token is read through [token] at each
  * run and never logged.
@@ -103,7 +109,11 @@ class ConnectionSupervisor(
     /** Where the shell stream resumes (`afterSequence`) for [held]; see `shellCursor`. */
     private var cursor: Long? = null
     private val shellLock = Mutex()
+
+    /** The cursor to write next; [persistCursor] writes it when it differs from the last write. */
+    private val pendingCursor = MutableStateFlow<Long?>(null)
     private var persistedCursor: Long? = null
+    private val persistLock = Mutex()
 
     @Volatile private var transport: T3Transport? = null
     private var job: Job? = null
@@ -154,35 +164,18 @@ class ConnectionSupervisor(
         publish(fresh)
     }
 
+    @OptIn(FlowPreview::class)
     private suspend fun run() {
         val backoff = Backoff(random)
         val client = transportFactory.create()
         transport = client
         try {
-            while (true) {
-                val error = attempt(client, backoff)
-                currentCoroutineContext().ensureActive()
-                if (error == CANCELLED) {
-                    // Still running, so not our stop(): reopen from the held cursor. The
-                    // fixed pause keeps a handle that cancels at once from spinning.
-                    delay(CANCEL_REOPEN_MS)
-                    continue
+            coroutineScope {
+                val persister = launch {
+                    pendingCursor.debounce(PERSIST_DEBOUNCE_MS).collect { persistCursor() }
                 }
-                when {
-                    error == UNAUTHORIZED -> {
-                        _state.value = ConnectionState.Unauthorized
-                        return
-                    }
-                    error in FATAL -> {
-                        _state.value = ConnectionState.Unreachable(error, nextRetryAt = null)
-                        return
-                    }
-                    error !in TRANSIENT -> reset()
-                }
-                val delayMs = backoff.nextDelayMs()
-                _state.value = ConnectionState.Unreachable(error, clock() + delayMs)
-                while (retryNow.tryReceive().isSuccess) Unit
-                withTimeoutOrNull(delayMs) { retryNow.receive() }
+                reconnect(client, backoff)
+                persister.cancel()
             }
         } catch (error: Exception) {
             // Never end silently: the state says so, retry() starts over, and the scope's
@@ -191,7 +184,39 @@ class ConnectionSupervisor(
             throw error
         } finally {
             if (transport === client) transport = null
-            withContext(NonCancellable + io) { client.close() }
+            withContext(NonCancellable + io) {
+                client.close()
+                persistCursor()
+            }
+        }
+    }
+
+    /** Connects and follows the stream until `unauthorized` or a fatal error. */
+    private suspend fun reconnect(client: T3Transport, backoff: Backoff) {
+        while (true) {
+            val error = attempt(client, backoff)
+            currentCoroutineContext().ensureActive()
+            if (error == CANCELLED) {
+                // Still running, so not our stop(): reopen from the held cursor. The
+                // fixed pause keeps a handle that cancels at once from spinning.
+                delay(CANCEL_REOPEN_MS)
+                continue
+            }
+            when {
+                error == UNAUTHORIZED -> {
+                    _state.value = ConnectionState.Unauthorized
+                    return
+                }
+                error in FATAL -> {
+                    _state.value = ConnectionState.Unreachable(error, nextRetryAt = null)
+                    return
+                }
+                error !in TRANSIENT -> reset()
+            }
+            val delayMs = backoff.nextDelayMs()
+            _state.value = ConnectionState.Unreachable(error, clock() + delayMs)
+            while (retryNow.tryReceive().isSuccess) Unit
+            withTimeoutOrNull(delayMs) { retryNow.receive() }
         }
     }
 
@@ -242,14 +267,10 @@ class ConnectionSupervisor(
         showHeld()
     }
 
-    /** Publishes [held] and persists [cursor] when it moved. Call with [shellLock] held. */
-    private suspend fun showHeld() {
+    /** Publishes [held] and queues [cursor] for [persistCursor]. Call with [shellLock] held. */
+    private fun showHeld() {
         _shell.value = held
-        val at = cursor ?: return
-        if (at != persistedCursor) {
-            cursorStore.setCursor(environmentId, at)
-            persistedCursor = at
-        }
+        pendingCursor.value = cursor
     }
 
     /** Drops the held shell and cursor so the next stream starts from a fresh snapshot. */
@@ -258,9 +279,23 @@ class ConnectionSupervisor(
             held = null
             cursor = null
             _shell.value = null
-            persistedCursor = null
+            pendingCursor.value = null
         }
-        cursorStore.setCursor(environmentId, null)
+    }
+
+    /**
+     * Writes [pendingCursor] unless it is what was written last. A failed write only loses a
+     * resume point, so it is not an error of the connection.
+     */
+    private suspend fun persistCursor() = persistLock.withLock {
+        val at = pendingCursor.value
+        if (at == persistedCursor) return@withLock
+        try {
+            cursorStore.setCursor(environmentId, at)
+            persistedCursor = at
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
+        }
     }
 
     companion object {
@@ -269,6 +304,9 @@ class ConnectionSupervisor(
 
         /** Not a lib code: the environment has no stored token. */
         const val MISSING_TOKEN = "missing_token"
+
+        /** How long the cursor must stay put before it is written. */
+        const val PERSIST_DEBOUNCE_MS = 1_500L
 
         /** How long a cancelled stream waits before it is reopened. */
         const val CANCEL_REOPEN_MS = 250L

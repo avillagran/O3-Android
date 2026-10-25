@@ -99,6 +99,7 @@ class ConnectionSupervisorTest {
 
         emit(ThreadUpdates.idle())
         assertEquals(listOf("t1", "t2", "t3"), supervisor.shell.value?.threads?.map { it.id })
+        advanceTimeBy(ConnectionSupervisor.PERSIST_DEBOUNCE_MS + 1)
         assertEquals(6L, cursors.cursors.value["local-1"])
     }
 
@@ -121,6 +122,7 @@ class ConnectionSupervisorTest {
         assertEquals(10L, shell.sequence)
         assertEquals(listOf("a", "b", "c"), shell.threads.map { it.id })
         assertEquals("""{"canonicalKey":"repo"}""", shell.projects.single().repositoryIdentity)
+        advanceTimeBy(ConnectionSupervisor.PERSIST_DEBOUNCE_MS + 1)
         assertEquals(10L, cursors.cursors.value["local-1"])
     }
 
@@ -238,7 +240,6 @@ class ConnectionSupervisorTest {
 
         emit(ThreadUpdates.closed("stream_closed"))
         assertNull(supervisor.shell.value)
-        assertNull(cursors.cursors.value["local-1"])
 
         shellSequence = 50
         val waiting = supervisor.state.value as ConnectionState.Unreachable
@@ -248,6 +249,8 @@ class ConnectionSupervisorTest {
         assertEquals(2, shellRequests.get())
         assertEquals(listOf("t1", "t2"), supervisor.shell.value?.threads?.map { it.id })
         assertEquals(listOf<Long?>(5, 50), streamOpens.map { it.afterSequence })
+        advanceTimeBy(ConnectionSupervisor.PERSIST_DEBOUNCE_MS + 1)
+        assertEquals("the stale cursor is never kept", 50L, cursors.cursors.value["local-1"])
     }
 
     @Test
@@ -298,6 +301,27 @@ class ConnectionSupervisorTest {
         runCurrent()
         assertEquals(listOf<Long?>(5, 6), streamOpens.map { it.afterSequence })
         assertEquals(1, shellRequests.get())
+    }
+
+    @Test
+    fun cursorWritesAreDebouncedAndFlushedOnStop() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        for (sequence in 6L..9L) {
+            emit(ThreadUpdates.event(threadUpdated(sequence, thread("t$sequence"))))
+            advanceTimeBy(500)
+        }
+        assertTrue("nothing written while the cursor keeps moving", cursors.writes.isEmpty())
+
+        advanceTimeBy(ConnectionSupervisor.PERSIST_DEBOUNCE_MS)
+        assertEquals(listOf<Pair<String, Long?>>("local-1" to 9L), cursors.writes)
+
+        emit(ThreadUpdates.event(threadUpdated(10, thread("t10"))))
+        supervisor.stop()
+        runCurrent()
+        assertEquals("written once more on stop", 10L, cursors.writes.last().second)
+        assertEquals(2, cursors.writes.size)
     }
 
     @Test

@@ -111,8 +111,12 @@ threads[], archivedThreads[]}`. Here: 16 projects, 216 threads, 0 archived, abou
 
 ### Resume and reconnect (host-owned)
 
-- The cursor (the reduced shell's sequence) is persisted per environment in DataStore
-  on every repaint where it moved.
+- The cursor (`shellCursor`, see above) is held in memory and resumes every reconnect
+  of a running supervisor. It is also written per environment to DataStore, off the hot
+  path: conflated, 1.5 s after it last moved, and once more when the supervisor stops.
+  Nothing reads it back yet: the shell itself is only in memory, so a cold start (or a
+  supervisor started again after a reset) always takes the shell over HTTP and subscribes
+  after that shell's `snapshotSequence`, which is never older than the written cursor.
 - On a closed update or a stream that fails to open with a **transient** error
   (`stream_timeout`, `disconnected`, `rpc_connection_failed`, `unreachable`), keep the
   shell and resubscribe with `afterSequence` = cursor after a jittered backoff: 1 s
