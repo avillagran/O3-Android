@@ -69,7 +69,12 @@ class LiveThreadTest {
                         val kinds = (0 until items.length()).map { i ->
                             val item = items.getJSONObject(i)
                             when (item.optString("kind")) {
-                                "event" -> "event(${item.optJSONObject("event")?.optString("type")}, seq+${item.optLong("sequence") - start})"
+                                "event" -> {
+                                    val event = item.optJSONObject("event")
+                                    // Payload key names only, never values.
+                                    val keys = event?.optJSONObject("payload")?.keys()?.asSequence()?.sorted()?.toList()
+                                    "event(${event?.optString("type")}, seq+${item.optLong("sequence") - start}, payload keys $keys)"
+                                }
                                 "snapshot" -> "snapshot(seq+${item.optLong("snapshotSequence") - start}, ${counts(item.optJSONObject("projection"))})"
                                 else -> item.optString("kind") + (if (item.has("sequence")) "(seq+${item.optLong("sequence") - start})" else "")
                             }
