@@ -18,4 +18,5 @@
 /libs/*.sha256
 /libs/*.properties
 /libs/host/
+/libs/.fetch-or-build.lock
 google-services.json
