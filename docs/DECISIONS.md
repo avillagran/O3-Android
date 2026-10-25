@@ -287,6 +287,35 @@ factory, the fake's scripting). Supersedes the entry above.
 - **Schema 2** adds both tables with a manual `MIGRATION_1_2` whose SQL is Room's own
   (`core/schemas/.../2.json`), tested with `MigrationTestHelper`.
 
+## 2026-10-25: lib-t3-rust v0.3.3, the Kotlin shims removed, `DomainEngine`
+
+- **Target v0.3.3** (`5cfb7ac`, release AAR SHA-256 `183e233e…`, see LIB_BUILD.md): ABI 3
+  plus the op `domain`, 37 pure functions with no connection (`describe().domain`).
+- **`DomainCalls` / `DomainEngine`**: `T3Transport` extends `DomainCalls`
+  (`suspend fun domain(fn, args): Any?`, offline, on IO), and `DomainEngine` holds one
+  never-connected `T3Client`, created lazily on IO, for UI state builders that have no
+  environment transport. `DomainEngine.shared` is the process-wide one (concurrent calls
+  are fine: `T3Client` takes a read lock per call). Tests use `DomainEngine(Unconfined)`
+  so the real lib runs inline on a test dispatcher.
+- **Removed**: `core/shell/SidebarModel.kt` (now `SidebarView`, a mapper of
+  `sidebar.view`, project chips from its `projectIdentities`) and
+  `core/thread/ThreadProjectionShim.kt` (now `ThreadSession` + `ThreadTimelines`:
+  `projection.apply` once per update on the held snapshot JSON, `timeline.view` on each
+  repaint, both off the main thread; the whole `timeline.view` result is kept as
+  `ThreadView.timeline` for UI-2). The refetch stays only for `stream_backpressure`,
+  `stream_closed`, a malformed snapshot or a projection the lib refuses, at most once
+  per 10 s. The resume cursor is the lib's (`ThreadUpdate.cursor`).
+- **Kept, still temporary, each with its missing lib function in LIB_REQUESTS.md
+  ("2026-10-25: v0.3.3")**: `ShellReducer.kt` and `ShellUpdates.kt` (no `shell.apply`;
+  the shell metadata snapshot finding is still open), `MessageSender`'s
+  `message.dispatch` and `run.interrupt` arguments (no composer message builder),
+  `Backoff.kt` (no `reconnect.*` domain function). `PairingLink.kt` on `feat/pairing`
+  must switch to `connectionCatalog.pairingTarget`.
+- **Sidebar screen until UI-1**: one environment (`environmentId` filter), a flat active
+  list in the lib's order with a project chip per row (replacing the per-project
+  headers), a snoozed shelf, the settled section, and the lib's English `statusLabel` in
+  the status chip until the i18n catalog lands.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

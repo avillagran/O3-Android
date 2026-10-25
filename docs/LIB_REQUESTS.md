@@ -207,6 +207,9 @@ to the `softprops/action-gh-release` files, from the same commit as the AAR.
 
 ## 2026-10-24 — Capabilities requested for Android phase 1 (not defects)
 
+Status at v0.3.3: see "2026-10-25: v0.3.3" below (items 1, 6 and 7 closed, 3 and 4
+partially closed, 2, 5 and 8 open).
+
 These are missing pieces of API, not bugs. Each already exists in Rust (in the lib or
 in ot3) but cannot be reached from Kotlin, so phase 1 (connect, live sidebar, read a
 thread with streaming, send, approve and answer, choose a model) would otherwise have
@@ -483,6 +486,9 @@ forces is the largest piece of protocol logic left in the app.
 
 ## 2026-10-25: requests from the UI specification
 
+Status at v0.3.3: see "2026-10-25: v0.3.3" below (U0, U1, U2, U3, U4, U5, U6, U7, U8,
+U10, U17, U18 and U21 closed; the rest in progress in the lib).
+
 Source: `docs/UI_SPEC.md` section 6 (merged in #7), which maps every screen of ot3-Android
 v1 to the lib function it reads. This section moves the rows marked **new** there, plus
 U2, whose scope the spec extends; the other U rows restate existing items above (U1 =
@@ -532,3 +538,114 @@ Proposed fix, common to every row: expose the Rust function (moving it from ot3'
 into the lib first where the row says "ot3 only") through the connection-free operation,
 add it to `describe` with typed args, generate the `T3Api` wrapper, and cover it with a
 fixture test whose JSON the app can reuse as screenshot-test input.
+
+## 2026-10-25: v0.3.3
+
+Checked against the v0.3.3 GitHub release (`5cfb7ac`, published 2026-10-25 18:35 UTC),
+consumed through `libs/lib-t3-rust.lock`, on the same machine and toolchain as above.
+Source references are to the lib at the tag; the lib checkout stayed at the tag and clean.
+
+- `gh release download v0.3.3 -R avillagran/lib-t3-rust`, then `sha256sum`:
+  `183e233edd1b9250976463f952210781eba85f33f64493498e0b169f68c861e4`, equal to the
+  release's `.sha256`; 17367953 bytes.
+- `scripts/fetch-or-build-lib.sh --release --host-jni`: checksum verified against the
+  lock, `version=0.3.3 source=5cfb7ac… tag=v0.3.3 abiVersion=3 origin=release v0.3.3`;
+  host `libt3_jni.so` built from `5cfb7ac`.
+- `scripts/fetch-or-build-lib.sh --host-jni-only --lib-fixtures`: `JNI_PASS`,
+  `KOTLIN_JNI_PASS` (now including the domain functions), `KOTLIN_STREAMS_PASS`, exit 0.
+- `capabilities`: `abiVersion 3`, `libraryVersion 0.3.3`, 19 `operations` (`domain`
+  added), `functions 116`, `domainFunctions 37`; `describe`: 116 `functions`, 13
+  `streams`, 37 `domain` (pinned in `NativeSmokeTest`). `classes.jar` has 50 classes
+  (`T3Api$Domain` and 16 module classes added).
+- Read-only live check against the local T3 (0.1.3-nightly, protocol 2) with a 30-minute
+  token, revoked afterwards: `LiveConnectionTest` and `LiveThreadTest` pass;
+  `sidebar.view` over 233 shell threads (203 subagents) and 16 projects gives `active`
+  36, `snoozed` 0, `settled` 24 rows and 16 project identities; `timeline.view` of a
+  running thread gives 45 rows (15 assistant, 5 user, 20 activity, 5 subagents), each with
+  a `rev`, and the session paints them while live.
+- `git diff v0.3.2 v0.3.3 -- src/stream.rs src/bounded_snapshot.rs src/reconnect.rs
+  src/composer.rs src/api/orchestration.rs` is empty; `T3Client.kt` only adds `domain`.
+
+### Requests from the UI specification
+
+| # | Request | Status | Evidence |
+|---|---|---|---|
+| U0 | Timeline view | **Closed in v0.3.3** | `timeline.view`, `timeline.liveActivity` in `describe.domain`. `ThreadSession` paints from it; `ThreadTimelineTest` (`applyUpsertsMessagesAndKeepsTheActiveRun`, `theKitchenSinkKeepsMessagesAsBubblesAndTheRestForUi2` on the lib's `timeline-projections.json`), `ThreadSessionTest.eventsGoThroughTheLibInOneCallPerUpdate`, `DomainContractTest.u0LiveActivity`. |
+| U1 | Reduced thread view (phase 1 item 1) | **Closed in v0.3.3** | `projection.apply` (with `applied`) + `timeline.view`. `ThreadProjectionShim.kt` is deleted; `ThreadTimelineTest.typesTheLibDoesNotKnowChangeNothing`, `ThreadSessionTest.threadVisitedOnlyMovesTheCursor`. The lib-held reduced view was not taken; its cost is new finding 3. |
+| U2 | `sidebar.view` over several environments | **Closed in v0.3.3** | `sidebar.view` (sections, `sectionCounts`, `counts`, `filterCounts`, `projectGroups`, `projectIdentities`, rows with `detail`, `state`, `statusLabel`, `statusRole`, `time`, `environmentId` filter). `SidebarModel.kt` is deleted; `SidebarViewTest` (the lib's `sidebar-environments.json`: three environments, the ten details, labels and roles, time labels, `environmentId`, malformed shells). The shell reducer half of the request stays open: new finding 1. |
+| U3 | `activity.describe` | **Closed in v0.3.3** | `activity.describe`; `DomainContractTest.u3ActivityDescribe`. No screen calls it yet (UI-2); `timeline.view` activity rows already carry it. |
+| U4 | `changes.summaries` | **Closed in v0.3.3** | `changes.summaries`; `DomainContractTest.u4ChangesSummaries`. No screen yet (UI-2). |
+| U5 | `queue.derive`, `queue.command` | **Closed in v0.3.3** | Both in `describe.domain`; `DomainContractTest.u5QueueDeriveAndCommand`; `timeline.view` returns `queue` too. No screen yet (UI-3). |
+| U6 | `approvals.*`, `questions.*` | **Closed in v0.3.3** | `approvals.pending` / `command`, `questions.pending` / `command`; `DomainContractTest.u6ApprovalsAndQuestions`; the banners now read `timeline.view` `approvals` and `questions` (`ThreadTimelineTest.approvalsAndQuestionsBecomeBanners`). Answering waits for UI-4. |
+| U7 | `models.*` | **Closed in v0.3.3** | `models.catalog`, `preferences`, `favoritePayload`, `runtimeModeCommand`; `DomainContractTest.u7ModelsAndRuntimeMode` (catalog, runtime mode command); `preferences` and `favoritePayload` verified by `describe` only. |
+| U8 | `composer.paths`, `composer.catalog` | **Closed in v0.3.3** | Both plus `composer.fileLink` and `attachmentReference`; `DomainContractTest.u8ComposerCompletions` (paths, file link); `catalog` verified by `describe` only (it needs a provider object). |
+| U10 | Markdown as renderer-neutral blocks | **Closed in v0.3.3** | `markdown.blocks`, `markdown.link` (and `codeBlocks.parse`); assistant rows and plans of `timeline.view` carry `blocks`. `DomainContractTest.u10MarkdownBlocksAndLinks`, `ThreadTimelineTest.blocksFlattenToPlainText` (bubbles show them as plain text until UI-2). |
+| U17 | Pairing-link parser (phase 1 item 6) | **Closed in v0.3.3** | `connectionCatalog.pairingTarget` `{link, pairingCode?}` → `{httpBaseUrl, pairingCode}`; `DomainContractTest.u17PairingTarget`. `feat/pairing` still has a temporary `PairingLink.kt`: that branch must switch to this function. |
+| U18 | History paging (phase 1 item 7) | **Closed in v0.3.3** | `history.path`, `history.envelope`; `DomainContractTest.u18HistoryPath`; `envelope` verified by `describe` only. The app does not page yet. |
+| U21 | Project identity | **Closed in v0.3.3** | `projects.identity`, `projects.monogram`, and `sidebar.view` `projectIdentities`; the sidebar rows show the chip. `DomainContractTest.u21ProjectIdentity`, `SidebarViewTest.rowsCarryKeysProjectsAndChips`, `NativeSmokeTest.domainRunsWithoutAConnection`. |
+| U9, U11, U12, U13, U14, U15, U16, U19, U20, U22, U23, U24, U25 | the rest of section 6 | **In progress in the lib** | None of `diffReview.*`, `theme.*`, `timeline.minimap`, `subagents.*`, `usageSummary.*` / `quotaSources.*`, `planWorkflow.*`, a string catalog, `pullRequests.*`, `branchPicker.*`, `gitControls.*`, `nativeSettings.*` / `scopedSettings.*`, `checkpointRevert.*` or `toolInspector.*` is in the 37 `describe.domain` entries. (`timeline.view` already returns `planView` and subagent summaries, which UI-2 can use before U13 and U15.) |
+
+### Phase 1 capabilities
+
+| Item | Status | Evidence |
+|---|---|---|
+| 1. Apply thread events | **Closed in v0.3.3** | U0 and U1 above. |
+| 2. Compact stream snapshots | Open (unchanged) | `src/stream.rs` and `src/bounded_snapshot.rs` did not change; `compactTurnItems` stays false. |
+| 3. Sidebar view and shell reducer | **Partially closed** | `sidebar.view` closes the view (U2). No shell reducer: `ShellReducer.kt` stays, marked temporary (new finding 1). |
+| 4. Command builders | **Partially closed** | `approvals.command`, `questions.command`, `queue.command`, `models.runtimeModeCommand`, `sidebar.command`, `sidebar.threadAction`, `models.catalog` are in `describe.domain`. Still missing: a `message.dispatch` builder, a `run.interrupt` builder and `projects.command`, so `MessageSender` keeps building those arguments (new finding 2). |
+| 5. Reconnect policy | Open | No `reconnect.*` in `describe.domain` (`src/reconnect.rs` unchanged); `Backoff.kt` stays. |
+| 6. Pairing-link parser | **Closed in v0.3.3** | U17. |
+| 7. History paging | **Closed in v0.3.3** | U18 (pure form). |
+| 8. Kotlin wrappers for the remaining operations | Open | `T3Client.kt` adds only `domain`; `fetchDescriptor`, `pairBearer`, `boundedThread`, `requestOk` and the shell GET are still assembled in `NativeT3Transport`. |
+
+### Earlier findings
+
+| Finding | Status | Evidence |
+|---|---|---|
+| v0.3.2 transport 1: a shell metadata snapshot replaces the shell and moves the cursor | **Open** | `start_of` still returns `Snapshot` for every shell `snapshot` (`src/stream.rs:54`) and `ThreadStream.poll` still keeps only the last one and clears the events before it (`T3Client.kt:297`). Seen again live on 2026-10-25: the first shell batch holds the authoritative snapshot (233 threads) and two metadata snapshots (`resolvedRepositoryIdentityRoots` of 16 and 1 roots, `threads[0]`). `ShellUpdates.kt` stays. New finding 1 would close it. |
+| v0.3.2 transport 2: `rpc_rejected` without a machine-readable field | Open | `T3Exception(code, reason, requiredScope)` unchanged (`T3Client.kt:147`). |
+| v0.3.2 transport 3: no per-event `applied` | **Closed in v0.3.3** | `projection.apply` returns `applied`; the app no longer classifies event types. |
+| v0.3.0 5: `image()` throws `IllegalArgumentException` | Open | `requireNotNull(asset.bytes) { "missing_image_bytes" }` (`T3Client.kt:107`). |
+| v0.3.0 7: releases do not publish the host JNI library | Open | Release v0.3.3 assets: the AAR and its `.sha256` only. |
+
+### 1. No shell reducer in `domain`
+
+- What: `sidebar.view` takes each environment's `shell` as "its
+  `orchestration.getShellSnapshot` (or the live shell stream's state)"
+  (`src/sidebar/view.rs:155-157`), but nothing in the lib turns the shell stream into that
+  state. ot3-Android keeps `core/shell/ShellReducer.kt` (a port of ot3's
+  `src/shell_state.rs`) and `core/transport/ShellUpdates.kt` (the metadata-snapshot
+  workaround) for it: protocol logic outside the lib.
+- Evidence: no `shell.*` function among the 37 `describe.domain` entries; metadata
+  snapshots seen live as above.
+- Proposed fix: `shell.apply` `{shell?, items}` (the raw stream items of one update, in
+  order) → `{shell, cursor, changed}`: an authoritative `snapshot` replaces `shell`
+  keeping resolved repository identities, a snapshot with
+  `resolvedRepositoryIdentityRoots` only merges those identities and does not move the
+  cursor, `project.*` / `thread.*` events apply after it, as ot3's `shell_state.rs`
+  does. This also closes the metadata-snapshot finding for every host.
+
+### 2. No `message.dispatch` or `run.interrupt` builder
+
+- What: sending and Stop build their `orchestration.dispatchCommand` arguments in Kotlin
+  (`MessageSender.messageCommand`, the interrupt command) from the lib's validator.
+- Evidence: `composer.*` in `describe.domain` is `paths`, `catalog`, `fileLink` and
+  `attachmentReference`; `MessageDispatch` stays Rust-only (`src/api/orchestration.rs:345`),
+  as does the `run.interrupt` arm (`:665`).
+- Proposed fix: `composer.message` `{threadId, commandId, messageId, text, attachments?,
+  modelSelection?, dispatchMode?, deliveryIntent?}` → the ready arguments (the host mints
+  and persists the ids before sending, so they stay inputs), and
+  `composer.interruptCommand` `{threadId, runId, commandId}`.
+
+### 3. The projection crosses JNI twice per stream update
+
+- What: with `projection.apply` and `timeline.view` the whole projection is serialised to
+  the lib and back on every update, then again for the view.
+- Evidence: live bounded projection of 1.6 MiB (104 turn items, 346 nodes): about 50 ms per
+  `projection.apply` and 35 ms per `timeline.view` (mean of 5, node x86_64, host
+  library), so about 85 ms of CPU per painted update on a desktop and several times that
+  on a phone, plus the JSON copies in Kotlin.
+- Proposed fix (nice to have): keep the projection in the lib, e.g. `projection.open`
+  `{snapshot}` → `{handle}`, `projection.apply` `{handle, events}` → `{applied}`,
+  `timeline.view` `{handle, …}`, and `projection.close`; or let `timeline.view` take
+  `events` to apply first and return the projection only on request.
