@@ -350,14 +350,15 @@ factory, the fake's scripting). Supersedes the entry above.
   the app is approved for the domain, so the chooser normally does not appear there. On
   those versions the in-app scanner and paste are the dependable paths. Neither behaviour
   has been checked on a device yet. A link the app receives fills the pairing screen and
-  reads the server, but still waits for the user's confirmation. `MainActivity` is now
-  `singleTask`, so a link from another app reaches the running activity
-  (`onNewIntent`) instead of a second instance.
+  reads the server, but still waits for the user's confirmation. The intent filter
+  belongs to a trampoline, `PairingLinkActivity`: `Theme.NoDisplay`, `excludeFromRecents`,
+  `noHistory` and an empty `taskAffinity`, so it never shows, never joins the app's task and
+  leaves no recents entry. It hands the link to `PairingInbox`, starts `MainActivity` with a
+  plain intent and finishes, so the intent holding the code is never `MainActivity`'s
+  launching intent and never sits in the app task's recent-tasks record. `MainActivity` is
+  `singleTask` and has no VIEW filter; a running instance is brought to the front.
 - **Links travel in memory only** (`PairingInbox` in `AppGraph`), never as a navigation
-  argument or saved state, because they carry a one-time code. The activity clears the
-  intent's data after reading it. The system may still keep the launching intent in its
-  recent-tasks record; the code is single-use and short-lived (five minutes by default),
-  and it is spent once paired, so this is accepted.
+  argument or saved state, because they carry a one-time code.
 - **`FLAG_SECURE` while pairing**: the pairing and scanner screens set it on the activity's
   window while they are composed (`ui/pair/SecureWindow.kt`, counted so that the
   transition between the two never clears it), so the link, the code it holds and the

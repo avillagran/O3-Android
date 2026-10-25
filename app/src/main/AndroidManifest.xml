@@ -29,9 +29,19 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Pairing links as t3 pair prints them, http(s)://<any host>/pair#token=…. Not
-                 App Links (no verification is possible for arbitrary hosts): see
-                 docs/DECISIONS.md for when Android offers the app for them. -->
+        </activity>
+        <!-- Pairing links as t3 pair prints them, http(s)://<any host>/pair#token=…. Not
+             App Links (no verification is possible for arbitrary hosts): see
+             docs/DECISIONS.md for when Android offers the app for them. The link holds a
+             one-time code, so an invisible trampoline outside the app's task (no recents
+             entry, no history) takes it and opens MainActivity with a plain intent. -->
+        <activity
+            android:name=".PairingLinkActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay">
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
