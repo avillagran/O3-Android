@@ -362,6 +362,27 @@ class PairingServiceTest {
         assertTrue(factory.created.all { it.pairRequests.isEmpty() })
     }
 
+    @Test
+    fun onlyPairingLinksWithACodeAreTakenFromAQrCode() {
+        listOf(
+            LINK,
+            "$ORIGIN/pair?token=$CODE",
+            "wss://box.example.ts.net/pair#token=$CODE",
+            "https://t3.codes/connect?host=http%3A%2F%2F192.168.1.20%3A3773#token=$CODE",
+        ).forEach { assertTrue(it, PairingService.isPairingLink(it)) }
+        listOf(
+            "$ORIGIN/pair",
+            "$ORIGIN/pair#token=",
+            "$ORIGIN/other#token=$CODE",
+            "https://example.com/#token=$CODE",
+            "https://t3.codes/connect?host=#token=$CODE",
+            "ftp://node/pair#token=$CODE",
+            "WIFI:S:home;T:WPA;P:secret;;",
+            "just some text",
+            "",
+        ).forEach { assertFalse(it, PairingService.isPairingLink(it)) }
+    }
+
     private fun descriptor() = JSONObject()
         .put("environmentId", ENVIRONMENT)
         .put("label", "node")

@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.net.URI
+import java.net.URISyntaxException
 
 /** What the user can do about a failed pairing, grouped from the lib's error codes. */
 enum class PairingFailure {
@@ -246,5 +248,26 @@ class PairingService(
     companion object {
         /** [PairingState.Failed.code] when the link has no pairing code. */
         const val NO_CODE = "no_pairing_code"
+
+        /**
+         * Whether [text] (what a QR code holds) is a T3 pairing link, offline: it carries a
+         * pairing code and is a `/pair` link or a hosted link naming the server in `host`. Any
+         * other QR code (a URL, Wi-Fi settings, text) is not taken for one.
+         */
+        fun isPairingLink(text: String): Boolean {
+            val parsed = try {
+                PairingLink.parse(text)
+            } catch (_: T3Exception) {
+                return false
+            }
+            if (parsed.pairingCode.isEmpty()) return false
+            val uri = try {
+                URI(text.trim())
+            } catch (_: URISyntaxException) {
+                return false
+            }
+            val names = uri.rawQuery.orEmpty().split('&').filter { it.substringAfter('=', "").isNotEmpty() }.map { it.substringBefore('=') }
+            return uri.rawPath == "/pair" || "host" in names
+        }
     }
 }

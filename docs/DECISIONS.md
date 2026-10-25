@@ -323,7 +323,10 @@ factory, the fake's scripting). Supersedes the entry above.
   when the lib's `pairingTarget` lands.
 - **QR scanning: CameraX + ZXing core** (`camera-camera2`, `camera-lifecycle`,
   `camera-compose` 1.6.2; `com.google.zxing:core` 3.5.4), decoding the Y plane of
-  `ImageAnalysis` frames in the app (`ui/pair/QrDecoder.kt`).
+  `ImageAnalysis` frames in the app (`ui/pair/QrDecoder.kt`). The scanner only takes text
+  that is a pairing link (`PairingService.isPairingLink`: a non-empty code, and a `/pair`
+  path or a `host` parameter); for any other QR code it says "Not a T3 pairing code" and
+  keeps scanning.
   - Not ML Kit's bundled barcode scanner: its AAR (`barcode-scanning` 17.3.0) is 9.9 MB,
     mostly a native model for each ABI, so it would cost several times more than the whole
     scanner below. Its unbundled variant needs Play Services at runtime.

@@ -60,6 +60,8 @@
     <string name="scan_permission">The camera is needed to read the QR code. Nothing is recorded.</string>
     <string name="scan_allow">Allow camera</string>
     <string name="scan_no_camera">No camera is available. Paste the pairing link instead.</string>
+    <!-- Mobile-only (docs/ui/strings.md): ot3 has no QR scanner. -->
+    <string name="mobile_not_pairing_code">Not a T3 pairing code</string>
 
     <!-- Environments -->
     <string name="environments_title">Environments</string>
