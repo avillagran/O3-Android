@@ -28,6 +28,40 @@ jobs:
       # AGP installs any missing platform or build-tools on first use.
       - uses: gradle/actions/setup-gradle@v4
 
+      # lib-t3-rust: the AAR comes from the release pinned in libs/lib-t3-rust.lock; the
+      # host JNI library (JVM tests) is built from the lib at the same tag, since the
+      # release ships none. See docs/LIB_BUILD.md. Rust and CMake are preinstalled.
+      - name: Read the lib-t3-rust tag from the lock
+        id: lib
+        run: |
+          tag=$(sed -n 's/^tag=//p' libs/lib-t3-rust.lock)
+          [[ -n $tag ]] || { echo "libs/lib-t3-rust.lock has no tag=" >&2; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: avillagran/lib-t3-rust
+          ref: ${{ steps.lib.outputs.tag }}
+          path: lib-t3-rust
+          persist-credentials: false
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            libs/
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: lib-t3-rust-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('libs/lib-t3-rust.lock') }}
+
+      - name: lib-t3-rust AAR (release) and host JNI library
+        env:
+          LIB_T3_RUST_DIR: ${{ github.workspace }}/lib-t3-rust
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rustc --version && cargo --version && cmake --version | head -1
+          scripts/fetch-or-build-lib.sh --release --host-jni
+          cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
+
       - name: Unit tests, lint and debug build
         run: >-
           ./gradlew --no-daemon
