@@ -2,6 +2,7 @@ package dev.avillagran.ot3android
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.avillagran.ot3android.ui.connect.ConnectScreenTags
@@ -17,8 +18,11 @@ class MainActivitySmokeTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun launchShowsConnectScreen() {
-        composeRule.onNodeWithTag(ConnectScreenTags.ROOT).assertIsDisplayed()
-        composeRule.onNodeWithTag(ConnectScreenTags.CONTINUE).assertIsDisplayed()
+    fun aFreshInstallStartsOnTheConnectScreen() {
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithTag(ConnectScreenTags.ROOT).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag(ConnectScreenTags.URL).assertIsDisplayed()
+        composeRule.onNodeWithTag(ConnectScreenTags.TOKEN).assertIsDisplayed()
     }
 }
