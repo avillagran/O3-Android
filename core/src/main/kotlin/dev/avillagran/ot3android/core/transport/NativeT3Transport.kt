@@ -53,7 +53,11 @@ class NativeT3Transport(
     override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? =
         native { client.call(fn, args, timeoutMs) }
 
-    override suspend fun request(path: String, protocol: Boolean): Any? = native { client.request(path, protocol) }
+    // T3Client has no shell wrapper; this is T3's endpoint, read through the lib's GET.
+    override suspend fun shell(): JSONObject = request(SHELL_PATH) as JSONObject
+
+    /** A GET on the connected environment, as `T3Client.request`; tests only, the UI uses [shell]. */
+    internal suspend fun request(path: String, protocol: Boolean = true): Any? = native { client.request(path, protocol) }
 
     // fetchDescriptor and boundedThread have no T3Client wrapper yet (docs/LIB_REQUESTS.md,
     // phase 1 item 8); these are the lib's documented operations, unchanged.
@@ -124,6 +128,7 @@ class NativeT3Transport(
 
     private companion object {
         const val POLL_TIMEOUT_MS = 1000
+        const val SHELL_PATH = "/api/orchestration/shell"
 
         fun op(name: String): JSONObject = JSONObject().put("op", name)
 

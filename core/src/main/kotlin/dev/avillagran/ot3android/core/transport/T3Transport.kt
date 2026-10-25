@@ -43,8 +43,11 @@ interface T3Transport : Closeable {
      */
     suspend fun call(fn: String, args: JSONObject = JSONObject(), timeoutMs: Int? = null): Any?
 
-    /** A GET on the connected environment, as `T3Client.request`. */
-    suspend fun request(path: String, protocol: Boolean = true): Any?
+    /**
+     * The environment's shell (projects and thread rows) as one HTTP snapshot, with the
+     * orchestration protocol header the lib adds. [shellStream] keeps it current.
+     */
+    suspend fun shell(): JSONObject
 
     /**
      * The environment descriptor at [baseUrl], with no connection and no credential. With

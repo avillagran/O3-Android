@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Scripted [T3Transport] for domain and UI tests; no native code. Answers are registered
- * per function or path and may throw [T3Exception] to script failures. Calls that need a
+ * per function (or for the shell) and may throw [T3Exception] to script failures. Calls that need a
  * connection fail with `not_connected` before [connect], like the lib; unscripted ones fail
  * with `unknown_function`. Streams are hot [MutableSharedFlow]s per subscription target that
  * the test drives with [emitShell] and [emitThread] once [collectors] shows the subscriber;
@@ -52,14 +52,14 @@ class FakeT3Transport(
         private set
 
     private val functions = ConcurrentHashMap<String, (JSONObject) -> Any?>()
-    private val paths = ConcurrentHashMap<String, () -> Any?>()
+    @Volatile private var shell: (() -> JSONObject)? = null
     private val descriptors = ConcurrentHashMap<String, () -> JSONObject>()
     private val threads = ConcurrentHashMap<String, () -> JSONObject>()
     private val threadFlows = ConcurrentHashMap<String, MutableSharedFlow<ThreadUpdate>>()
     private val shellFlow = MutableSharedFlow<ThreadUpdate>(extraBufferCapacity = BUFFER)
 
     fun onCall(fn: String, answer: (args: JSONObject) -> Any?) { functions[fn] = answer }
-    fun onRequest(path: String, answer: () -> Any?) { paths[path] = answer }
+    fun onShell(answer: () -> JSONObject) { shell = answer }
     fun onDescriptor(baseUrl: String, answer: () -> JSONObject) { descriptors[baseUrl] = answer }
     fun onBoundedThread(threadId: String, answer: () -> JSONObject) { threads[threadId] = answer }
 
@@ -93,9 +93,9 @@ class FakeT3Transport(
         return answer(args)
     }
 
-    override suspend fun request(path: String, protocol: Boolean): Any? {
+    override suspend fun shell(): JSONObject {
         requireConnected()
-        return (paths[path] ?: throw T3Exception("http_404", "not scripted: $path"))()
+        return (shell ?: throw T3Exception("http_404", "not scripted: shell"))()
     }
 
     override suspend fun fetchDescriptor(baseUrl: String, environmentId: String?): JSONObject {

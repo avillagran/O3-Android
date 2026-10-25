@@ -17,6 +17,7 @@ class NativeHttpTest {
     private lateinit var server: FakeHttpServer
     private lateinit var transport: NativeT3Transport
     private val descriptorAuthorization = AtomicReference<String?>("unset")
+    private val shellProtocol = AtomicReference<String?>("unset")
 
     @Before
     fun setUp() {
@@ -26,6 +27,14 @@ class NativeHttpTest {
                 "/fixture" ->
                     if (headers["authorization"] == "Bearer $TOKEN") FakeHttpServer.Response(200, "{\"text\":\"á 🦀\"}")
                     else FakeHttpServer.Response(401)
+                "/api/orchestration/shell" -> {
+                    shellProtocol.set(headers["x-t3-orchestration-protocol"])
+                    if (headers["authorization"] == "Bearer $TOKEN") {
+                        FakeHttpServer.Response(200, "{\"snapshotSequence\":3,\"projects\":[],\"threads\":[]}")
+                    } else {
+                        FakeHttpServer.Response(401)
+                    }
+                }
                 "/.well-known/t3/environment" -> {
                     descriptorAuthorization.set(headers["authorization"])
                     FakeHttpServer.Response(200, "{\"environmentId\":\"env-fixture\",\"label\":\"Fixture\"}")
@@ -52,10 +61,27 @@ class NativeHttpTest {
     }
 
     @Test
+    fun shellIsTheProtocolSnapshot() = runBlocking {
+        transport.connect(ConnectRoute.Bearer(server.baseUrl, TOKEN))
+
+        val shell = transport.shell()
+
+        assertEquals(3L, shell.getLong("snapshotSequence"))
+        assertEquals("2", shellProtocol.get())
+    }
+
+    @Test
+    fun shellNeedsAConnection() {
+        val error = assertThrows(T3Exception::class.java) { runBlocking { transport.shell() } }
+
+        assertEquals("not_connected", error.code)
+    }
+
+    @Test
     fun wrongTokenIsUnauthorized() {
         runBlocking { transport.connect(ConnectRoute.Bearer(server.baseUrl, "wrong-token-456")) }
 
-        val error = assertThrows(T3Exception::class.java) { runBlocking { transport.request("/fixture") } }
+        val error = assertThrows(T3Exception::class.java) { runBlocking { transport.shell() } }
 
         assertEquals("unauthorized", error.code)
     }
