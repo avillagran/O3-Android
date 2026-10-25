@@ -195,6 +195,13 @@ factory, the fake's scripting). Supersedes the entry above.
   `unauthorized`. Streams stop on the process's `ON_STOP` (ProcessLifecycleOwner, so
   rotation does not reconnect), resume on `ON_START`, and are probed with
   `wakeSubscriptions` on `ON_RESUME` and on default-network changes.
+- **Other screens borrow the supervisor's transport** through
+  `ConnectionSupervisor.connection: StateFlow<Connection?>` (`Connection(transport,
+  epoch)`): set while `Connected`, null otherwise; `epoch` grows with every `connect`,
+  which ends every stream of the handle as a cancel, so a thread view reopens its streams
+  when the epoch changes. They never close it. `ShellState.thread(id)`/`project(id)` are
+  indexed, and each row keeps its `raw` JSON so fields the reducer does not read
+  (`modelSelection`, `runtimeMode`, ...) are reachable without growing the reducer.
 - **Shell cursor in DataStore** (`ShellCursorPreferences`, file `connection`, key
   `shell_cursor:<local id>`), written off the hot path (conflated, debounced 1.5 s, and
   once more when a run ends) and removed with the environment or when its URL changes.

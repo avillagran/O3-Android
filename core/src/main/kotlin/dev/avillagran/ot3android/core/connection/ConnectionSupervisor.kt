@@ -51,6 +51,15 @@ sealed interface ConnectionState {
 }
 
 /**
+ * The supervisor's live connection, for code that opens its own streams on it (the thread
+ * view). [epoch] grows with every `connect` of [transport]; a `connect` ends every open
+ * stream of the handle as a cancel, so a holder reopens its streams whenever the epoch
+ * changes, and stops them while there is no connection. Never close [transport]: the
+ * supervisor owns it.
+ */
+data class Connection(val transport: T3Transport, val epoch: Int)
+
+/**
  * Keeps one environment connected and its shell current. Owns one [T3Transport] while
  * running. A run is: `fetchDescriptor` → `connect(Bearer)` (no I/O) → shell GET (the first
  * request, so a bad token surfaces here as `unauthorized`) → shell stream from the shell's
@@ -100,6 +109,17 @@ class ConnectionSupervisor(
     private val _state = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     val state: StateFlow<ConnectionState> = _state.asStateFlow()
 
+    private val _connection = MutableStateFlow<Connection?>(null)
+
+    /**
+     * The transport while [state] is [ConnectionState.Connected] (token proven, shell
+     * stream opening); null while connecting, backing off, stopped or failed.
+     */
+    val connection: StateFlow<Connection?> = _connection.asStateFlow()
+
+    /** Successful `connect` calls so far, across runs; see [Connection.epoch]. */
+    private var epoch = 0
+
     private val _shell = MutableStateFlow<ShellState?>(null)
 
     /**
@@ -120,7 +140,7 @@ class ConnectionSupervisor(
     private var persistedCursor: Long? = null
     private val persistLock = Mutex()
 
-    /** Guards [generation], [job], [transport] and every write of [state]. */
+    /** Guards [generation], [job], [transport], [epoch] and every write of [state] and [connection]. */
     private val lock = Any()
 
     /**
@@ -161,12 +181,24 @@ class ConnectionSupervisor(
         generation++
         stopped?.cancel()
         _state.value = ConnectionState.Disconnected
+        _connection.value = null
         stopped
     }
 
     /** Publishes [value] if [run] is still the current run. */
     private fun setState(run: Int, value: ConnectionState) = synchronized(lock) {
         if (run == generation) _state.value = value
+    }
+
+    /** Publishes [ConnectionState.Connected] and its [Connection] together, if [run] is current. */
+    private fun setConnected(run: Int, descriptor: ServerDescriptor, client: T3Transport, epoch: Int) = synchronized(lock) {
+        if (run != generation) return@synchronized
+        _state.value = ConnectionState.Connected(descriptor)
+        _connection.value = Connection(client, epoch)
+    }
+
+    private fun clearConnection(run: Int) = synchronized(lock) {
+        if (run == generation) _connection.value = null
     }
 
     /** Retries at once: skips a pending backoff, or starts again after `unauthorized` or a fatal error. */
@@ -226,6 +258,7 @@ class ConnectionSupervisor(
                 // Ended while current (the scope was cancelled, not stop()): not connected any more.
                 val live = _state.value is ConnectionState.Connected || _state.value == ConnectionState.Connecting
                 if (run == generation && live) _state.value = ConnectionState.Disconnected
+                if (run == generation) _connection.value = null
             }
             withContext(NonCancellable + io) {
                 client.close()
@@ -271,12 +304,13 @@ class ConnectionSupervisor(
             val descriptor = ServerDescriptor.from(client.fetchDescriptor(baseUrl, serverEnvironmentId))
             val secret = token() ?: return MISSING_TOKEN
             client.connect(ConnectRoute.Bearer(baseUrl, secret))
+            val connected = synchronized(lock) { ++epoch }
             if (shellLock.withLock { held } == null) {
                 val fresh = withContext(computation) { ShellReducer.parse(client.shell()) }
                 shellLock.withLock { replaceHeld(fresh) }
             }
             if (serverEnvironmentId == null) serverEnvironmentId = descriptor.environmentId
-            setState(run, ConnectionState.Connected(descriptor))
+            setConnected(run, descriptor, client, connected)
             try {
                 onConnected(descriptor)
             } catch (error: Exception) {
@@ -302,6 +336,7 @@ class ConnectionSupervisor(
         } catch (_: Exception) {
             return INTERNAL_ERROR
         } finally {
+            clearConnection(run)
             connectedAt?.let { backoff.connectionLasted(clock() - it) }
         }
     }
@@ -366,7 +401,7 @@ class ConnectionSupervisor(
         const val INTERNAL_ERROR = "internal_error"
 
         /** Errors after which the stream resumes from the held shell's sequence. */
-        val TRANSIENT = setOf("stream_timeout", "disconnected", "rpc_connection_failed", "unreachable")
+        val TRANSIENT = setOf("stream_timeout", "disconnected", "rpc_connection_failed", "unreachable", "subscription_limit")
 
         /** Errors that retrying cannot fix. */
         val FATAL = setOf("invalid_endpoint", "t3_environment_mismatch", "invalid_connection_options", MISSING_TOKEN)

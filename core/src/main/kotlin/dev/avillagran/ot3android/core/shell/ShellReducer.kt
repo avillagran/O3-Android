@@ -18,6 +18,11 @@ data class ShellProject(
     val workspaceRoot: String?,
     /** The server's `repositoryIdentity`, kept as compact JSON text; null while unresolved. */
     val repositoryIdentity: String?,
+    /**
+     * The project row as last received, for fields the reducer does not read
+     * (`defaultModelSelection`, `scripts`, ...). Read only; [repositoryIdentity] wins over it.
+     */
+    val raw: JSONObject,
 )
 
 /**
@@ -59,6 +64,13 @@ data class ShellThread(
     val parentThreadId: String?,
     val relationshipToParent: String?,
     val branch: String?,
+    /**
+     * The thread row as last received (snapshot or `thread.updated`), for fields the reducer
+     * does not read (`modelSelection`, `runtimeMode`, `interactionMode`,
+     * `providerInstanceId`, `latestRunId`, ...). Read only. Compared by reference, so two
+     * parses of the same row are not equal.
+     */
+    val raw: JSONObject,
 )
 
 /**
@@ -69,7 +81,16 @@ data class ShellState(
     val sequence: Long?,
     val projects: List<ShellProject>,
     val threads: List<ShellThread>,
-)
+) {
+    private val threadsById by lazy(LazyThreadSafetyMode.PUBLICATION) { threads.associateBy { it.id } }
+    private val projectsById by lazy(LazyThreadSafetyMode.PUBLICATION) { projects.associateBy { it.id } }
+
+    /** The thread row [id] (archived and subagent ones included), or null. */
+    fun thread(id: String): ShellThread? = threadsById[id]
+
+    /** The project [id], or null. */
+    fun project(id: String): ShellProject? = projectsById[id]
+}
 
 object ShellReducer {
 
@@ -101,7 +122,7 @@ object ShellReducer {
     fun applyEvent(state: ShellState?, item: JSONObject): ShellState? = when (item.optString("kind")) {
         "project.updated" -> event(state, item) { shell ->
             val next = item.optJSONObject("project")?.let(::project) ?: return@event shell
-            val previous = shell.projects.firstOrNull { it.id == next.id }
+            val previous = shell.project(next.id)
             shell.copy(projects = shell.projects.upsert(retainIdentity(previous, next)) { it.id })
         }
         "project.removed" -> event(state, item) { shell ->
@@ -130,10 +151,7 @@ object ShellReducer {
         val body = item.optJSONObject("snapshot") ?: return state
         val next = parse(body)
         if (state == null) return next
-        val merged = next.copy(
-            projects = next.projects.map { p -> retainIdentity(state.projects.firstOrNull { it.id == p.id }, p) },
-        )
-        return if (merged == state) state else merged
+        return next.copy(projects = next.projects.map { p -> retainIdentity(state.project(p.id), p) })
     }
 
     /**
@@ -189,6 +207,7 @@ object ShellReducer {
             workspaceRoot = json.text("workspaceRoot"),
             repositoryIdentity = json.opt("repositoryIdentity").takeUnless { it == null || it == JSONObject.NULL }
                 ?.toString(),
+            raw = json,
         )
     }
 
@@ -226,6 +245,7 @@ object ShellReducer {
             parentThreadId = lineage?.text("parentThreadId"),
             relationshipToParent = lineage?.text("relationshipToParent"),
             branch = json.text("branch"),
+            raw = json,
         )
     }
 

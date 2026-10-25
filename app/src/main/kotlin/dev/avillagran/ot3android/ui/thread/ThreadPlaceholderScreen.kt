@@ -42,7 +42,7 @@ object ThreadScreenTags {
 class ThreadPlaceholderViewModel(environmentId: String, threadId: String, connections: ConnectionManager) : ViewModel() {
     val title: StateFlow<String?> = connections.supervisors
         .flatMapLatest { it[environmentId]?.shell ?: flowOf(null) }
-        .map { shell -> shell?.threads?.firstOrNull { it.id == threadId }?.title }
+        .map { shell -> shell?.thread(threadId)?.title }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 }
 

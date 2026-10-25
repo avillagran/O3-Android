@@ -35,7 +35,19 @@ class ShellReducerTest {
         val replaced = apply(shell, snapshot(9, listOf(project("p2")), listOf(thread("t9"))))!!
         assertEquals(9L, replaced.sequence)
         assertEquals(listOf("t9"), replaced.threads.map { it.id })
-        assertSame("an identical snapshot changes nothing", replaced, apply(replaced, snapshot(9, listOf(project("p2")), listOf(thread("t9")))))
+    }
+
+    @Test
+    fun rowsAreIndexedAndKeepTheirRawJson() {
+        val row = thread("t1", "p1", "modelSelection" to JSONObject().put("model", "m-1"), "runtimeMode" to "full-access")
+        val shell = reduced(base, threadUpdated(6, row))!!
+
+        assertEquals("Thread t1", shell.thread("t1")?.title)
+        assertNull(shell.thread("missing"))
+        assertEquals("m-1", shell.thread("t1")?.raw?.optJSONObject("modelSelection")?.optString("model"))
+        assertEquals("full-access", shell.thread("t1")?.raw?.optString("runtimeMode"))
+        assertEquals("/w/p1", shell.project("p1")?.raw?.optString("workspaceRoot"))
+        assertNull(shell.project("p9"))
     }
 
     @Test

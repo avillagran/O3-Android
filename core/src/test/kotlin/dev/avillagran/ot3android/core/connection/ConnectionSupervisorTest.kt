@@ -24,6 +24,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -342,6 +343,37 @@ class ConnectionSupervisorTest {
         assertEquals(2, factory.created.size)
         assertTrue(factory.created.first().closed)
         assertFalse(factory.created.last().closed)
+    }
+
+    @Test
+    fun theConnectionIsPublishedWhileConnectedWithANewEpochPerConnect() = runTest {
+        val supervisor = supervisor()
+        assertNull(supervisor.connection.value)
+        supervisor.start()
+        runCurrent()
+
+        val first = supervisor.connection.value!!
+        assertSame(fake, first.transport)
+        assertEquals(1, first.epoch)
+
+        // A cancel reconnects the same handle: a new epoch, so thread streams reopen.
+        fake.disconnect()
+        runCurrent()
+        assertNull("none between connects", supervisor.connection.value)
+        advanceTimeBy(ConnectionSupervisor.CANCEL_REOPEN_MS + 1)
+        runCurrent()
+        assertEquals(Connection(fake, 2), supervisor.connection.value)
+
+        emit(ThreadUpdates.closed("stream_timeout"))
+        assertNull("none while backing off", supervisor.connection.value)
+
+        supervisor.stop()
+        runCurrent()
+        assertNull(supervisor.connection.value)
+        supervisor.start()
+        runCurrent()
+        assertEquals("epochs keep growing across runs", 3, supervisor.connection.value?.epoch)
+        assertSame(factory.created.last(), supervisor.connection.value?.transport)
     }
 
     @Test
