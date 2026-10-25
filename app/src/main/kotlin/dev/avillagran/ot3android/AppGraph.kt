@@ -7,6 +7,7 @@ import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.local.Ot3Database
 import dev.avillagran.ot3android.core.data.prefs.AppearancePreferences
+import dev.avillagran.ot3android.core.data.prefs.HomePreferences
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.security.CredentialStore
@@ -54,6 +55,9 @@ class AppGraph(
     val shellCursors: ShellCursorPreferences by lazy { ShellCursorPreferences(appContext) }
 
     val appearancePreferences: AppearancePreferences by lazy { AppearancePreferences(appContext) }
+
+    /** Home's grouping and collapsed shelves. */
+    val homePreferences: HomePreferences by lazy { HomePreferences(appContext) }
 
     /** The bundled Omarchy themes, parsed once off the main thread (started in [init]). */
     suspend fun themeCatalog(): OmarchyThemeCatalog = OmarchyThemeCatalog.load(appContext)

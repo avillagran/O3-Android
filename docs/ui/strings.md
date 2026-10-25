@@ -30,7 +30,7 @@ the desktop (UI_SPEC rule 4); each one is listed below, written in ot3's voice.
    in the English string, and escapes `'`, `"`, `@`, `?` for Android resources.
 4. Writes `values/strings_ot3.xml` and `values-<locale>/strings_ot3.xml`, with ot3's `no`
    written as `values-nb`, and `values-ar` marked for RTL review.
-5. Leaves `values/strings.xml` (the app's own strings, today 79) and
+5. Leaves `values/strings.xml` (the app's own strings, today 75) and
    `values/strings_mobile.xml` (the list below) untouched.
 
 Plurals: ot3 has none (counts are written as "Working ({count})",
@@ -67,3 +67,4 @@ ot3's sentence case and tone.
 | `mobile_env_connection_failed` | Connection failed | same | `t3m:src/features/connection/connectionTone.ts:32` |
 | `mobile_env_retrying_attempt` | Retrying · attempt {n} | same | `t3m:src/features/connection/ConnectionEnvironmentRow.tsx:134` |
 | `mobile_component_catalog` | UI components | the debug catalog is T3 Mobile's | `t3m:src/Stack.tsx:703` |
+| `mobile_snooze_until` | Snooze until | ot3's snooze presets are a popup menu without a title | `t3m:src/features/threads/threadListV2.ts:95-118` |

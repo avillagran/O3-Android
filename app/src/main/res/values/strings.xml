@@ -55,19 +55,10 @@
     <string name="state_error_retry">%1$s · retrying in %2$ds</string>
 
     <!-- Sidebar -->
-    <string name="sidebar_section_active">Active</string>
-    <string name="sidebar_section_settled">Settled (%1$d)</string>
-    <string name="sidebar_no_project">No project</string>
     <string name="sidebar_untitled">Untitled thread</string>
-    <string name="sidebar_empty">No threads</string>
     <string name="sidebar_edit_token">Edit token</string>
     <string name="sidebar_pinned">Pinned</string>
-    <string name="sidebar_expanded">Expanded</string>
-    <string name="sidebar_collapsed">Collapsed</string>
-    <string name="sidebar_not_found">This environment is no longer saved.</string>
-    <string name="status_needs_you">Needs you</string>
     <string name="status_working">Working</string>
-    <string name="status_failed">Failed</string>
 
     <!-- Thread -->
     <string name="thread_empty">No messages yet</string>
@@ -91,4 +82,11 @@
     <string name="thread_notice_rejected_plain">The server refused it.</string>
     <string name="thread_notice_scope">This token cannot do that (it needs %1$s).</string>
     <string name="thread_notice_not_connected">Not connected.</string>
+
+    <!-- Navigation and Settings placeholders (UI-1d); the pages and their ot3 titles come with UI-6. -->
+    <string name="not_yet">Not available yet</string>
+    <string name="home_more">More options</string>
+    <string name="settings_usage">Usage</string>
+    <string name="settings_archive">Archived threads</string>
+    <string name="settings_licenses">Licenses</string>
 </resources>
