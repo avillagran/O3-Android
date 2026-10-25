@@ -523,7 +523,8 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
   ot3's plan / done / woke refinements (`ot3:ui/js/SidebarModel.js:5-17`): all through
   `sidebar.view` (U2). Interim: today's `SidebarModel.kt` statuses (`NeedsYou`,
   `Working`, `Failed`, `core/.../shell/SidebarModel.kt:9-22`) mapped to Approval/Input,
-  Working and Failed; no Done, Plan, Woke or Limited until U2.
+  Working and Failed; no Done, Plan, Woke or Limited until U2. (2026-10-25: U2 closed in
+  lib v0.3.3, `SidebarModel.kt` removed; see the note at the top of section 6.)
 
 #### 4.1.4 Order and shelves
 
@@ -543,6 +544,7 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
 - Working shelf only exists when grouping is on (`ot3:ui/qml/T3Panel.qml:556`).
 - Data: `sidebar.view` sections (U2). Interim: `SidebarModel.kt` active/settled split
   (`core/.../shell/SidebarModel.kt:45-64`), extended to several environments.
+  (2026-10-25: superseded by `sidebar.view`; see the note at the top of section 6.)
 
 #### 4.1.5 Actions
 
@@ -1304,6 +1306,16 @@ UI-1 also records the decisions of section 1 in `docs/DECISIONS.md` (the archite
 line on themes already changes with this spec).
 
 ## 6. What the lib would have to expose (for `LIB_REQUESTS.md`)
+
+> **Note (2026-10-25, lib v0.3.4).** Every row of the table below is now exposed by the
+> lib through `{"op":"domain"}` (108 functions in `describe().domain`; v0.3.3 closed U0 to
+> U8, U10, U17, U18 and U21, v0.3.4 the rest), and ot3's string catalog ships in the AAR
+> as the asset `lib-t3-rust/i18n.json` (U16). The "Until then" column and the interim
+> notes in section 4 are therefore historical: `SidebarModel.kt` and
+> `ThreadProjectionShim.kt` no longer exist (the sidebar reads `sidebar.view`, the thread
+> `projection.apply` and `timeline.view`). The function names per row, their status and
+> the tests that exercise them are in [LIB_REQUESTS.md](LIB_REQUESTS.md), "2026-10-25:
+> v0.3.4". Still open there: the shell reducer half of U2 (v0.3.3 finding 1, `shell.apply`).
 
 As of v0.3.2 no presentation module is reachable from Kotlin: the C ABI's operations are
 the transport ones plus `call` / `describe` (`lib:src/ffi.rs:30-37`), and `call` only

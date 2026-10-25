@@ -316,6 +316,32 @@ factory, the fake's scripting). Supersedes the entry above.
   headers), a snoozed shelf, the settled section, and the lib's English `statusLabel` in
   the status chip until the i18n catalog lands.
 
+## 2026-10-25: lib-t3-rust v0.3.4; strings and theme colours come from the lib
+
+- **Target v0.3.4** (`e2ec546`, release AAR SHA-256 `b90064ae…`, see LIB_BUILD.md): same
+  ABI, operations and `T3Client`; `describe().domain` grows from 37 to 108 functions, which
+  expose every row of UI_SPEC section 6 (LIB_REQUESTS.md, "2026-10-25: v0.3.4"). The AAR
+  carries ot3's string catalog as the asset `lib-t3-rust/i18n.json` (20 locales, 1 796
+  English sources), which Gradle merges into the app's assets.
+- **Strings are generated at build time from the AAR asset.** The `strings_ot3.xml`
+  generator reads `assets/lib-t3-rust/i18n.json` from `libs/lib-t3-rust-android.aar`
+  instead of an ot3 checkout, so the strings are pinned by `libs/lib-t3-rust.lock` like
+  the rest of the lib; the UI-1 branch switches its generator. English sources the lib
+  returns at run time (`statusLabel`, subagent labels, summary parts) are looked up with
+  `i18n.t` / `i18n.catalog` rather than a Kotlin name table.
+- **Theme colours come from `theme.tokens`.** The theme importer passes each Omarchy
+  `colors.toml` to `theme.tokens` and writes its `roles`, `statusColors`,
+  `projectPalette` / `projectFills`, `sky`, `document` and `appearance`; the UI-1 branch
+  switches its importer. Reason: `docs/ui/tokens.md` (UI-1) computed the foreground- and
+  accent-over-background roles with straight alpha, and 19 of its 50 tokyo-night /
+  catppuccin-latte values are one off on one channel (for example tokyo-night `dim`
+  `#6c708a` against `#6b718a`). ot3 draws `Qt.rgba(fg, α)` over the background with Qt
+  Quick's 8-bit premultiplied blend; the lib reproduces it (`src/theme.rs`) and checked its
+  goldens for Omarchy's 22 themes against what ot3 drew on screen (1 692 channels).
+  `DomainContractTest.u11ThemeTokens*` pins tokyo-night and catppuccin-latte.
+- **Still temporary** (unchanged by v0.3.4): `ShellReducer.kt` / `ShellUpdates.kt`,
+  `MessageSender`'s `message.dispatch` / `run.interrupt` arguments and `Backoff.kt`.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
