@@ -41,9 +41,10 @@ not reused. ot3-Android is native Kotlin on a shared Rust core.
 
 Development machine: **node** (x86_64, Ubuntu, JDK 21, Android SDK with NDK 27 and
 28.2.13676358, Rust Android targets installed). minSdk 24, target the latest stable
-SDK, Kotlin 2.x, AGP current stable, Gradle wrapper, Compose BOM. Build the AAR with
-`tools/build-android` and `tools/package-android` from lib-t3-rust, or consume the
-GitHub release artifact once published. Device QA on a physical Android phone and an
+SDK, Kotlin 2.x, AGP current stable, Gradle wrapper, Compose BOM. The AAR comes from
+the lib-t3-rust GitHub release pinned in `libs/lib-t3-rust.lock` (v0.3.2), or is built
+with `tools/build-android` and `tools/package-android` for unreleased lib work; see
+[LIB_BUILD.md](LIB_BUILD.md). Device QA on a physical Android phone and an
 emulator.
 
 ## Reference material

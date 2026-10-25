@@ -19,18 +19,11 @@ K2JVMCompiler from the Gradle cache, NDK 28.2.13676358) with
 `tools/package-android`, `tools/test-jni` and `tools/test-kotlin-jni`. The lib checkout
 stayed clean at the tag throughout.
 
-**Status:** every finding below still applies to v0.3.1 (`17d3cb7`). Fixes for findings
-1 to 6 are in progress upstream for v0.3.2, on the lib branch
-`feat/android-bindings-fixes`, together with a workflow that compiles the Kotlin
-sources on each pull request and publishes the AAR and its SHA-256 on each `v*` tag.
-Update, 2026-10-25 UTC: that branch has since been merged (PR #8) and tagged v0.3.2
-(`26e67a7`, with a GitHub release). A first look at v0.3.2, not yet the target: both
-host fixtures pass; `classes.jar` contains `T3Api` and `T3Asset`; `assetBytes`,
-`projectFavicon` and connection `options` have wrappers; JNI codes are mapped to
-`T3Exception`, except `image()`'s `missing_image_bytes`, which is still an
-`IllegalArgumentException`; the release has the AAR and `.sha256` but no host library
-(finding 7). The findings are closed when this repository moves to v0.3.2 and
-checks them again.
+**Status:** every finding below still applies to v0.3.1 (`17d3cb7`). The fixes were
+merged upstream (PR #8) and released as v0.3.2 (`26e67a7`), which is now the target.
+Each finding is re-checked against the v0.3.2 release in
+[2026-10-24: v0.3.2](#2026-10-24-v032): findings 1 to 4 and 6 are closed, 5 is
+partially closed (`image()`'s `missing_image_bytes`) and 7 is still open.
 
 ### What works
 
@@ -167,6 +160,51 @@ Proposed fix: build the host library in the release workflow exactly as
 commit as the AAR. `scripts/fetch-or-build-lib.sh --release --host-jni` can then
 download it instead of building it.
 
+## 2026-10-24: v0.3.2
+
+Checked against the v0.3.2 GitHub release (`26e67a7`, published 2026-10-25 00:35 UTC),
+consumed through the committed `libs/lib-t3-rust.lock`, on the same machine and
+toolchain as above. Source references are to the lib at the tag. The lib checkout
+stayed clean.
+
+- `gh release download v0.3.2 -R avillagran/lib-t3-rust`, then `sha256sum`:
+  `3a07a7e4e6d8e60d0a568c961fafb60d867dce6094e7e9cb003a8e686c1a50fc`, equal to the
+  release's `.sha256` and to GitHub's asset digest; 16503549 bytes.
+- `scripts/fetch-or-build-lib.sh --release --host-jni`: checksum verified against the
+  lock, `version=0.3.2 source=26e67a7… tag=v0.3.2 abiVersion=3 origin=release v0.3.2`;
+  host `libt3_jni.so` built from `26e67a7` (the commit check against the AAR's
+  `source=` passed).
+- `scripts/fetch-or-build-lib.sh --lib-fixtures; echo exit=$?`: `JNI_PASS`,
+  `KOTLIN_JNI_PASS`, `KOTLIN_STREAMS_PASS` (org.json 20180813), `exit=0`.
+- Smoke through the release `classes.jar` and the host library: `abi=3 lib=0.3.2
+  ops=18 functions=116 describe=116 streams=13`; `upload(-1, …)` →
+  `T3Exception(host_file_unavailable)`; `connectBearer` with an unknown option →
+  `T3Exception(invalid_connection_options)`; `projectFavicon` offline →
+  `T3Exception(not_connected)`.
+- `git diff v0.3.1 v0.3.2 -- src/ include/` is empty: the Rust core and the C ABI did
+  not change, only the Android bindings, tools and workflows.
+
+| # | Finding | Status | Evidence |
+|---|---|---|---|
+| 1 | `tools/test-kotlin-jni` does not compile | **Closed** | `StreamFixture.kt:150` is `complete.addAll(chunks.accept(last))`; `tools/test-kotlin-jni` prints `KOTLIN_STREAMS_PASS`. |
+| 2 | `T3Api` is not in the AAR | **Closed** | `T3Api.kt` is generated into `bindings/android/kotlin/dev/avillagran/t3/` (`tests/api_describe.rs:8`) and `tools/compile-android-kotlin:13` compiles `kotlin/…/*.kt`; `jar tf classes.jar` lists `T3Api` and its 20 module classes (`T3Api$Orchestration`, …; 116 `fun` declarations in `T3Api.kt`). |
+| 3 | `assetBytes` and `projectFavicon` unreachable | **Closed** | `javap`: `public final T3Asset assetBytes(JSONObject, long, Integer)` and `projectFavicon(String, String)`, both with `$default`; `T3Asset(status, bytes)` with `found` and `mimeType` (`T3Client.kt:107`, `:112`, `:132`). `maxBytes` is a `Long` defaulting to `MAX_ASSET_BYTES` (64 MiB) rather than `Long?`; equivalent. |
+| 4 | `connectBearer`/`connectRelay` take no `options` | **Closed** | `javap`: `connectBearer(String, String, JSONObject)` and `connectRelay(String, String, String, String, JSONObject)` with `$default`; `clientId = "t3-mobile"`, `options = null` (`T3Client.kt:40`, `:45-47`). |
+| 5 | JNI failures are not `T3Exception` | **Partially closed** | `jni {}` (`T3Client.kt:23-26`) maps `IllegalStateException` with `invalid_input`, `native_error`, `host_file_unavailable` or `native_allocation_failed` (`:127`, every code `t3_jni.cpp` throws) to `T3Exception(code)`; the Kotlin fixture asserts `host_file_unavailable` (`KotlinFixture.kt:54`). Still open: `image()` throws `IllegalArgumentException("missing_image_bytes")` (`T3Client.kt:100`, `requireNotNull(asset.bytes)`). |
+| 6 | No ABI 3 GitHub release | **Closed** | Release v0.3.2 has `lib-t3-rust-android-v0.3.2.aar` and `.sha256` (`android-release.yml:49-53`, on `v*` tags); `test.yml` job `kotlin` runs `tools/compile-android-kotlin`, `tools/test-jni` and `tools/test-kotlin-jni` on every push and pull request (green on PR #8 and on the tag). |
+| 7 | Releases do not publish the host JNI library | **Open** | `gh release view v0.3.2 --json assets`: only the AAR and its `.sha256`; `android-release.yml:49-53` uploads only those. CI here still checks out the lib at the tag to build it. |
+
+Fix for 5: in `image()`, `return asset.bytes ?: throw T3Exception("missing_image_bytes")`,
+and in `binary()` (`T3Client.kt:96`) replace `requireNotNull(result[0])` with
+`?: throw T3Exception("native_error")`, so no `T3Client` call throws anything else for
+a stable code; assert `missing_image_bytes` in `KotlinFixture.kt`. (Using a closed
+client still fails with `IllegalStateException("client_closed")` from `useHandle`;
+that is a caller bug rather than a stable code, so it is not part of this request.)
+
+Fix for 7: unchanged from finding 7 above. In `android-release.yml`, build the host
+library as `tools/test-jni` does and add `libt3_jni-linux-x86_64.so` and its `.sha256`
+to the `softprops/action-gh-release` files, from the same commit as the AAR.
+
 ## 2026-10-24 — Capabilities requested for Android phase 1 (not defects)
 
 These are missing pieces of API, not bugs. Each already exists in Rust (in the lib or
@@ -175,8 +213,10 @@ thread with streaming, send, approve and answer, choose a model) would otherwise
 to re-implement protocol logic, which [ARCHITECTURE.md](ARCHITECTURE.md) forbids.
 Checked against v0.3.1 (`17d3cb7`): `src/`, `bindings/android/describe.json` (116
 entries: 99 unary functions, 13 typed streams, 4 composed functions) and
-`T3Client.kt`. `src/` is identical at v0.3.2, so every request also stands there. ot3
-references are to omarchy-t3-code v0.2.22 (`191c1fc`).
+`T3Client.kt`. Re-checked at v0.3.2 (`26e67a7`, the current target):
+`git diff v0.3.1 v0.3.2 -- src/ include/` is empty and the v0.3.2 `T3Client.kt` and
+`T3Api.kt` add none of the eight, so every request stands unchanged. ot3 references are
+to omarchy-t3-code v0.2.22 (`191c1fc`).
 
 Already delivered by v0.3.1 and therefore not requested: typed streams and `subscribe`
 by `fn`, `cursor`/`start` in `pollSubscription`, the `ThreadStream` facade, the typed
@@ -219,12 +259,12 @@ at some cost in behaviour or bandwidth.
 - Why: with compact turn items the server omits local items from `turnItems` and ships
   them in `projection.visibleTurnItems` (`turnItemsOmitLocalVisible:true`); without the
   restore the timeline misses those items. `ThreadStream.thread(...)` defaults to
-  `compactTurnItems = true` and `docs/ANDROID.md` subscribes with
-  `acceptCompactTurnItems:true`, but nothing restores stream snapshots, so the default
-  path hands the host an unrestored snapshot. Until then the app subscribes with
-  `compactTurnItems = false`.
+  `compactTurnItems = true` (still at v0.3.2: `T3Client.kt:316`) and `docs/ANDROID.md`
+  subscribes with `acceptCompactTurnItems:true` (`:33`, `:163`, `:252` at v0.3.2), but
+  nothing restores stream snapshots, so the default path hands the host an unrestored
+  snapshot. Until then the app subscribes with `compactTurnItems = false`.
 - In Rust today: `bounded_snapshot::restore` (`src/bounded_snapshot.rs:30`), only used
-  by `boundedThread` (`src/bounded_snapshot.rs:68`, HTTP, one response).
+  by `boundedThread` (`src/bounded_snapshot.rs:69`, HTTP, one response).
 - The 8 MiB per-item queue cap is no longer a problem: since v0.3.0 a
   `subscribeThread` stream with `acceptBoundedSnapshot:true` accepts a 64 MiB item
   (72 MiB queue, at most 2 such streams per handle; `Limits::of` in
