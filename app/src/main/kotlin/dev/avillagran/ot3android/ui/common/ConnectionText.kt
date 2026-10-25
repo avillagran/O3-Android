@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.connection.ConnectionState
+import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import kotlinx.coroutines.delay
 
 /**
@@ -30,9 +31,21 @@ fun errorText(code: String): String = when {
     code == "unauthorized" -> stringResource(R.string.connect_error_unauthorized)
     code == "not_json" -> stringResource(R.string.connect_error_not_json)
     code == "t3_environment_mismatch" -> stringResource(R.string.connect_error_mismatch)
+    code == ConnectionSupervisor.MISSING_TOKEN -> stringResource(R.string.connect_error_missing_token)
+    code == ConnectionSupervisor.STREAM_CLOSED -> stringResource(R.string.connect_error_stream_closed)
+    code == "not_connected" -> stringResource(R.string.connect_error_not_connected)
+    code == "subscription_limit" -> stringResource(R.string.connect_error_subscription_limit)
+    code == ConnectionSupervisor.INTERNAL_ERROR -> stringResource(R.string.connect_error_internal)
     code.startsWith("http_") -> stringResource(R.string.connect_error_http, code.removePrefix("http_"))
     else -> stringResource(R.string.connect_error_generic, code)
 }
+
+/**
+ * True when only the user can fix the connection: a rejected token, or an error the
+ * supervisor will not retry (no token, another server, a bad address). Offer "Edit" then.
+ */
+fun ConnectionState?.needsEdit(): Boolean =
+    this == ConnectionState.Unauthorized || (this is ConnectionState.Unreachable && nextRetryAt == null)
 
 /** Short label of a connection state; counts down to the next retry. */
 @Composable

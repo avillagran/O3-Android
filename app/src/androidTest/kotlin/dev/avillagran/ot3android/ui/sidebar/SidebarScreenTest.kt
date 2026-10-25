@@ -11,10 +11,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.connection.ServerDescriptor
 import dev.avillagran.ot3android.core.shell.ShellReducer
 import dev.avillagran.ot3android.core.shell.SidebarModel
+import dev.avillagran.ot3android.ui.common.CommonTags
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONArray
 import org.json.JSONObject
@@ -101,6 +104,37 @@ class SidebarScreenTest {
         }
 
         composeRule.onNodeWithTag(SidebarScreenTags.RETRY).assertIsDisplayed()
-        composeRule.onNodeWithTag(SidebarScreenTags.EDIT_TOKEN).assertIsDisplayed()
+        composeRule.onNodeWithTag(SidebarScreenTags.EDIT).assertIsDisplayed()
+    }
+
+    @Test
+    fun anErrorThatIsNotRetriedOffersEdit() {
+        composeRule.setContent {
+            Ot3Theme {
+                SidebarContent(
+                    state = SidebarUiState(label = "Workstation", connection = ConnectionState.Unreachable("missing_token", null)),
+                    onOpenThread = {}, onToggleSettled = {}, onRefresh = {}, onRetry = {}, onEditEnvironment = {}, onBack = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(SidebarScreenTags.EDIT).assertIsDisplayed()
+        composeRule.onNodeWithTag(CommonTags.CONNECTION_CHIP)
+            .assertTextContains(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.connect_error_missing_token))
+    }
+
+    @Test
+    fun aRetriedErrorOffersNoEdit() {
+        composeRule.setContent {
+            Ot3Theme {
+                SidebarContent(
+                    state = SidebarUiState(label = "Workstation", connection = ConnectionState.Unreachable("http_502", Long.MAX_VALUE)),
+                    onOpenThread = {}, onToggleSettled = {}, onRefresh = {}, onRetry = {}, onEditEnvironment = {}, onBack = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(SidebarScreenTags.EDIT).assertDoesNotExist()
+        composeRule.onNodeWithTag(SidebarScreenTags.RETRY).assertIsDisplayed()
     }
 }

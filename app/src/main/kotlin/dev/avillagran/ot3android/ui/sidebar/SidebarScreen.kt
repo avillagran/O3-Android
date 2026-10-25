@@ -40,12 +40,13 @@ import dev.avillagran.ot3android.core.shell.RowStatus
 import dev.avillagran.ot3android.core.shell.SidebarRow
 import dev.avillagran.ot3android.ui.common.ConnectionChip
 import dev.avillagran.ot3android.ui.common.StatusLabel
+import dev.avillagran.ot3android.ui.common.needsEdit
 
 object SidebarScreenTags {
     const val ROOT = "sidebar_screen"
     const val LIST = "sidebar_list"
     const val RETRY = "sidebar_retry"
-    const val EDIT_TOKEN = "sidebar_edit_token"
+    const val EDIT = "sidebar_edit"
     const val ACTIVE_HEADER = "sidebar_active_header"
     const val SETTLED_HEADER = "sidebar_settled_header"
     const val EMPTY = "sidebar_empty"
@@ -105,9 +106,10 @@ fun SidebarContent(
                     }
                 },
                 actions = {
-                    if (state.connection == ConnectionState.Unauthorized) {
-                        TextButton(onClick = onEditEnvironment, modifier = Modifier.testTag(SidebarScreenTags.EDIT_TOKEN)) {
-                            Text(stringResource(R.string.sidebar_edit_token))
+                    if (state.connection.needsEdit()) {
+                        TextButton(onClick = onEditEnvironment, modifier = Modifier.testTag(SidebarScreenTags.EDIT)) {
+                            val label = if (state.connection == ConnectionState.Unauthorized) R.string.sidebar_edit_token else R.string.action_edit
+                            Text(stringResource(label))
                         }
                     }
                     if (state.connection !is ConnectionState.Connected && state.connection != ConnectionState.Connecting) {

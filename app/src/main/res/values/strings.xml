@@ -29,6 +29,11 @@
     <string name="connect_error_not_json">That address answered, but it does not look like a T3 Code server.</string>
     <string name="connect_error_http">The server answered with HTTP %1$s.</string>
     <string name="connect_error_mismatch">A different T3 environment answers at this address.</string>
+    <string name="connect_error_missing_token">No token is saved for this environment.</string>
+    <string name="connect_error_stream_closed">The server closed the live connection.</string>
+    <string name="connect_error_not_connected">Not connected to the server.</string>
+    <string name="connect_error_subscription_limit">Too many live connections are open to this server.</string>
+    <string name="connect_error_internal">Something went wrong in the app.</string>
     <string name="connect_error_generic">Could not connect (%1$s).</string>
 
     <!-- Environments -->

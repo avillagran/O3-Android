@@ -31,8 +31,12 @@ read-only. Counts below are from that server and only illustrate sizes.
 
 Error codes the UI maps: `invalid_endpoint`; `unreachable` (network); `unauthorized`;
 `not_json` (answered, but probably not a T3 origin); `http_<code>` (any other status);
-`t3_environment_mismatch`; anything else is shown as a generic failure with its code.
-Codes never carry the token.
+`t3_environment_mismatch`; `not_connected`; `subscription_limit`; `stream_closed`; and
+the app's own `missing_token` (no stored token) and `internal_error` (an exception that
+is not a `T3Exception`). Anything else is shown as a generic failure with its code.
+Codes never carry the token. When the supervisor will not retry (`unauthorized` and the
+fatal codes: `invalid_endpoint`, `t3_environment_mismatch`,
+`invalid_connection_options`, `missing_token`), the sidebar offers "Edit".
 
 ### Shell snapshot
 
