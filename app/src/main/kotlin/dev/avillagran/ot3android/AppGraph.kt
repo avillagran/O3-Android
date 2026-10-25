@@ -4,6 +4,8 @@ import android.content.Context
 import dev.avillagran.ot3android.core.data.local.Ot3Database
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.security.CredentialStore
+import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
+import dev.avillagran.ot3android.core.transport.T3TransportFactory
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -11,9 +13,13 @@ import kotlinx.coroutines.sync.withLock
  * Manual dependency graph, created once by [Ot3Application].
  *
  * Everything is lazy so that cold start only pays for what the first screen touches.
- * See docs/DECISIONS.md for why this is not Hilt.
+ * See docs/DECISIONS.md for why this is not Hilt. [transportFactory] creates one transport
+ * per environment; tests pass a fake one.
  */
-class AppGraph(context: Context) {
+class AppGraph(
+    context: Context,
+    val transportFactory: T3TransportFactory = NativeT3TransportFactory(),
+) {
     private val appContext = context.applicationContext
 
     val database: Ot3Database by lazy { Ot3Database.create(appContext) }

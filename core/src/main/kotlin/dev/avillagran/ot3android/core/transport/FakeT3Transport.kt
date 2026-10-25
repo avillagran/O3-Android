@@ -148,3 +148,13 @@ class FakeT3Transport(
         const val BUFFER = 64
     }
 }
+
+/** Hands out [FakeT3Transport]s built by [make] and keeps them, in order, in [created]. */
+class FakeT3TransportFactory(
+    private val make: () -> FakeT3Transport = { FakeT3Transport() },
+) : T3TransportFactory {
+
+    val created: MutableList<FakeT3Transport> = CopyOnWriteArrayList()
+
+    override fun create(): FakeT3Transport = make().also { created.add(it) }
+}

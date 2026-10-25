@@ -62,6 +62,17 @@ class FakeT3TransportTest {
         assertEquals(FakeT3Transport.StreamOpen("t-1", 5, false, true, false), fake.streamOpens.single())
     }
 
+    @Test
+    fun factoryKeepsEveryTransportItCreates() {
+        val factory = FakeT3TransportFactory()
+
+        val first = factory.create()
+        val second = factory.create()
+
+        assertEquals(listOf(first, second), factory.created)
+        assertTrue(first !== second)
+    }
+
     private fun update(cursor: Long, closed: Boolean, error: String? = null): ThreadUpdate {
         val batch = T3Batch(items = JSONArray(), closed = closed, error = error, cursor = cursor)
         return ThreadUpdate(
