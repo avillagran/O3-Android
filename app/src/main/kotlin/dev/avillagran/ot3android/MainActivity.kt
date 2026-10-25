@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,6 +12,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import dev.avillagran.ot3android.ui.navigation.Ot3NavHost
 import dev.avillagran.ot3android.ui.navigation.Routes
+import dev.avillagran.ot3android.ui.pair.PairingInbox
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import kotlinx.coroutines.flow.first
 
@@ -18,6 +20,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // A recreated activity (rotation, process restore) already handled its intent.
+        if (savedInstanceState == null) receivePairingLink(intent)
         val repository = appGraph.environmentRepository
         setContent {
             Ot3Theme {
@@ -30,5 +34,17 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        receivePairingLink(intent)
+    }
+
+    /** Hands a pairing link to the pairing screen (Ot3NavHost opens it) and drops it from the intent. */
+    private fun receivePairingLink(intent: Intent?) {
+        val link = PairingInbox.linkOf(intent) ?: return
+        intent?.data = null
+        appGraph.pairingInbox.offer(link)
     }
 }
