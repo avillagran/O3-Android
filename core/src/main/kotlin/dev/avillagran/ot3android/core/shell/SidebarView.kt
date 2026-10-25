@@ -84,7 +84,7 @@ data class ProjectIdentity(
     /** Two letters ([kind] `monogram`), as ot3 draws them. */
     val monogram: String,
     val label: String,
-    /** `monogram` or `icon`. */
+    /** `monogram`, `emoji` or `lucide` (the project's own icon, named by [icon]). */
     val kind: String,
     val icon: String?,
     /** Index into the theme's project palette; stable over all projects of the view. */
