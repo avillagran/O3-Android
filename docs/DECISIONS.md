@@ -181,6 +181,39 @@ factory, the fake's scripting). Supersedes the entry above.
   This is intentional: bumping `libs/lib-t3-rust.lock` must fail the test until someone
   reads the lib's changes and updates the pins with it.
 
+## 2026-10-25: Connection supervisor per environment, cursor in DataStore, temporary sidebar logic
+
+- **One `ConnectionSupervisor` per saved environment** (`core.connection`), owned by a
+  process-wide `ConnectionManager` and created on first use. It owns one `T3Transport`
+  while running and runs `fetchDescriptor` → `connect(Bearer)` → shell GET → shell
+  stream, exposing `StateFlow<ConnectionState>` (Disconnected, Connecting,
+  Connected(descriptor), Unauthorized, Unreachable(error, nextRetryAt)) and the reduced
+  `StateFlow<ShellState?>`. It is pure Kotlin (no Android types), so JVM tests drive it
+  with `FakeT3Transport` and virtual time. Reconnecting follows
+  [PROTOCOL_NOTES.md](PROTOCOL_NOTES.md) ("Resume and reconnect"): jittered `Backoff`,
+  resume from the cursor on transient errors, fresh snapshot otherwise, stop on
+  `unauthorized`. Streams stop on the process's `ON_STOP` (ProcessLifecycleOwner, so
+  rotation does not reconnect), resume on `ON_START`, and are probed with
+  `wakeSubscriptions` on `ON_RESUME` and on default-network changes.
+- **Shell cursor in DataStore** (`ShellCursorPreferences`, file `connection`, key
+  `shell_cursor:<local id>`), written on repaint when it moved and removed with the
+  environment or when its URL changes. The cursor is the reduced shell's sequence, not
+  `update.cursor`, because the lib moves its cursor on metadata-only snapshots
+  (LIB_REQUESTS.md). Today a cold start still takes the shell over HTTP (the shell itself
+  is only in memory); the persisted cursor is what a cached shell will resume from.
+- **Token in Keystore-backed preferences**: `EnvironmentRepository` writes the Room row
+  and the `CredentialStore` token together (token first) and deletes the row, the token
+  and the cursor together. `CredentialStore` now implements a small `TokenStore`
+  interface so the repository is testable on the JVM. The connect screen holds the token
+  only in memory, masks it, never shows it back and never logs it.
+- **Temporary Kotlin protocol logic, isolated in two files**: `core/shell/ShellReducer.kt`
+  (a port of ot3's `shell_state.rs`) and `core/shell/SidebarModel.kt` (ot3's minimum
+  sidebar rules), each with a header naming LIB_REQUESTS.md phase 1 item 3. `Backoff`
+  mirrors the lib's `reconnect::Backoff` (item 5). These do not grow; they are deleted
+  when the lib exposes `shell.reduce`/`sidebar.view` and the reconnect policy.
+- `room-runtime` is now an `api` dependency of `core`, since `Ot3Database` is part of
+  its public surface and `AppGraph` builds the repository from it.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

@@ -418,3 +418,16 @@ thread waking a blocked `poll` at once.
   the rule in ARCHITECTURE.md, accepted only as a stopgap: it is deleted when a lib
   release with the fix above lands.
 
+**Update 2026-10-25** (same server, v0.3.2, `T3Client` directly and the app's
+transport, read-only): the metadata frame also arrives **in the same batch** as the
+authoritative snapshot (`items=[snapshot{threads[216]}, snapshot{resolvedRepositoryIdentityRoots[16],
+threads[0]}]`, `boundaries=[2]`). `ThreadStream.poll` keeps only the last `snapshot`
+(`T3Client.kt:290`), so `ThreadUpdate.snapshot` is the empty metadata frame and the
+authoritative snapshot is not in the update at all; a host that follows the documented
+loop paints an empty sidebar. Metadata frames also recur later in a running stream (one
+for a single project, `resolvedRepositoryIdentityRoots[1]`; one subscription received
+13 `snapshot` items in 40 minutes, 11 of them after the first batch). ot3-Android works around it by reducing
+`update.batch.items` itself and taking the cursor from its reduced shell
+(`core/shell/ShellReducer.kt`, temporary); the proposed fix above (or item 3,
+`shell.reduce`) removes that.
+
