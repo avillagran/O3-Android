@@ -56,6 +56,17 @@ class LiveThreadTest {
                 line("projection keys: ${projection?.keys()?.asSequence()?.sorted()?.toList()}")
                 line("thread keys (${projection?.optJSONObject("thread")?.length()}): ${projection?.optJSONObject("thread")?.let { shape(it) }}")
                 line("counts: ${counts(projection)}")
+                if (projection != null) {
+                    // The cost of the lib's derivations on this snapshot (the projection crosses JNI each time).
+                    val engine = dev.avillagran.ot3android.core.transport.DomainEngine.shared
+                    ThreadTimelines.view(engine, projection) // warm-up: the first call creates the handle
+                    val bytes = projection.toString().length
+                    val viewMs = kotlin.system.measureTimeMillis { repeat(5) { ThreadTimelines.view(engine, projection) } } / 5
+                    val applyMs = kotlin.system.measureTimeMillis {
+                        repeat(5) { ThreadTimelines.apply(engine, projection, listOf(JSONObject().put("type", "thread.visited").put("payload", JSONObject()))) }
+                    } / 5
+                    line("domain cost: projection=${bytes / 1024} KiB timeline.view=${viewMs} ms projection.apply=${applyMs} ms (mean of 5)")
+                }
                 line("message row keys: ${rowKeys(projection?.optJSONArray("messages"))}")
                 line("message roles: ${values(projection?.optJSONArray("messages"), "role")} streaming=${values(projection?.optJSONArray("messages"), "streaming")}")
                 line("run statuses: ${values(projection?.optJSONArray("runs"), "status")}")
