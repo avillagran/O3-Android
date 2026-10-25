@@ -57,10 +57,26 @@ class NativeT3Transport(
     /** A GET on the connected environment, as `T3Client.request`; tests only, the UI uses [shell]. */
     internal suspend fun request(path: String, protocol: Boolean = true): Any? = native { client.request(path, protocol) }
 
-    // fetchDescriptor and boundedThread have no T3Client wrapper yet (docs/LIB_REQUESTS.md,
-    // phase 1 item 8); these are the lib's documented operations, unchanged.
+    // fetchDescriptor, pairBearer and boundedThread have no T3Client wrapper yet
+    // (docs/LIB_REQUESTS.md, phase 1 item 8); these are the lib's documented operations, unchanged.
     override suspend fun fetchDescriptor(baseUrl: String, environmentId: String?): JSONObject = native {
         client.execute(op("fetchDescriptor").put("httpBaseUrl", baseUrl).put("environmentId", environmentId)) as JSONObject
+    }
+
+    override suspend fun pairBearer(
+        baseUrl: String,
+        pairingCode: String,
+        environmentId: String?,
+        client: PairingClient,
+        connect: Boolean,
+    ): PairedBearer = native {
+        val request = op("pairBearer")
+            .put("httpBaseUrl", baseUrl)
+            .put("pairingCode", pairingCode)
+            .put("environmentId", environmentId)
+            .put("client", client.toJson())
+            .put("connect", connect)
+        PairedBearer.from(this.client.execute(request) as JSONObject)
     }
 
     override suspend fun boundedThread(threadId: String): JSONObject = native {
