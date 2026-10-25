@@ -90,6 +90,10 @@ toolchain (AGP, Compose BOM) supports as a set; adopting 37 is recorded as pendi
 
 ## 2026-10-24: The Kotlin transport mirrors the lib's `T3Client`
 
+**Superseded** by [Transport layer over `T3Client`](#2026-10-24-transport-layer-over-t3client-aar-through-a-t3-lib-module):
+the interface now exists, written together with the AAR rather than ahead of it, and
+the UI again sees no HTTP path since `request(path)` became `shell()`.
+
 No transport interface is written ahead of the AAR. The Kotlin transport adapter arrives
 with it and mirrors the surface of the lib's `T3Client` (`connect(route)`, `call`,
 `describe`, `subscribe` delivering full batches with boundaries, idle, completion marker,
@@ -97,6 +101,9 @@ closed and error, `wake`, `upload`, `image`, `Closeable`); it does not expose RP
 HTTP paths to the UI layer.
 
 ## 2026-10-24: Transport layer over `T3Client`, AAR through a `:t3-lib` module
+
+Revised 2026-10-25 after review (`shell()`, `disconnect()`, non-blocking `close()`, the
+factory, the fake's scripting). Supersedes the entry above.
 
 - **`:t3-lib`** exposes `libs/lib-t3-rust-android.aar` as the artifact of a plain
   `default` configuration; `core` takes it with `api(project(":t3-lib"))`, so `app` sees
@@ -106,18 +113,44 @@ HTTP paths to the UI layer.
   pointer to `scripts/fetch-or-build-lib.sh` when the AAR is missing.
 - **`core.transport`**: `T3Transport` (`Closeable`) mirrors `T3Client`: `connect(route)`
   with `ConnectRoute.Bearer` or `ConnectRoute.Relay` (credentials redacted from
-  `toString`), `capabilities`, `describe`, `call`, `request`, `fetchDescriptor`,
-  `boundedThread`, `shellStream`, `threadStream` and `wakeSubscriptions`. Results are the
-  lib's `org.json` values and failures its `T3Exception`, unchanged: there is no parallel
-  error type and the UI maps `code`. `fetchDescriptor`, `capabilities` and
-  `boundedThread` go through `execute` because `T3Client` has no wrapper for them yet
-  (LIB_REQUESTS.md, phase 1 item 8); no RPC tag or HTTP path is built in Kotlin.
-  `upload`, `image`, `assetBytes` and `projectFavicon` arrive with the screens that need
-  them.
+  `toString`; their `JSONObject` options compare by reference), `disconnect`,
+  `capabilities`, `describe`, `call`, `shell`, `fetchDescriptor`, `boundedThread`,
+  `shellStream`, `threadStream`, `wakeSubscriptions` and `close`. Results are the lib's
+  `org.json` values and failures its `T3Exception`, unchanged: there is no parallel error
+  type and the UI maps `code`. `fetchDescriptor`, `capabilities`, `boundedThread` and
+  `disconnect` go through `execute` because `T3Client` has no wrapper for them yet
+  (LIB_REQUESTS.md, phase 1 item 8). The UI never sees an RPC tag or an HTTP path:
+  `shell()` is the one path built in Kotlin (`GET /api/orchestration/shell`, read through
+  the lib's `request`, which adds the protocol header), and `request(path)` is `internal`
+  for the core tests. `upload`, `image`, `assetBytes` and `projectFavicon` arrive with the
+  screens that need them.
+- **`T3TransportFactory`** creates one transport per environment (each its own handle);
+  `AppGraph` takes `NativeT3TransportFactory` by default and tests pass a
+  `FakeT3TransportFactory`.
+- **Session changes end streams like a cancel.** A successful `connect` (a switch) or
+  `disconnect` cancels every stream of the handle, and so does `close`: the stream ends
+  with `closed = true, error = null`, which cannot be told apart from a host cancel. The
+  reconnection supervisor must not back off on it; it is the supervisor's own action.
+- **`close()` does not block.** `T3Client.close()` waits for in-flight native calls up to
+  their deadline, so `NativeT3Transport.close()` hands it to an internal
+  `CoroutineScope(Dispatchers.IO + SupervisorJob())` and returns; it is idempotent.
+  `shutdown()` awaits it (tests, teardown). Using the transport after `close()` fails
+  with `IllegalStateException("client_closed")` from `T3Client`: a caller bug, not a
+  stable code, so it is not mapped to `T3Exception`. A stream polled at that moment ends
+  as a cancel instead.
+- **Cancelling a native `call` does not unsend it.** The coroutine is cancelled, but the
+  blocking JNI call underneath runs to completion: a `dispatchCommand` whose caller was
+  cancelled is still sent, and its result is dropped. Send mutations from an app-scoped
+  (or `NonCancellable`) context with a stable command id, and treat
+  `rpc_outcome_unknown` as "maybe applied" (outbox, reconcile from the stream), never as
+  a failure to retry blindly.
 - **`NativeT3Transport`** runs every native call on `Dispatchers.IO`. Streams are cold
   flows over `ThreadStream`: each collection opens one subscription, polls it on IO,
-  skips polls with nothing new, emits the closed update last and completes. Cancelling
-  the collector closes the stream, which wakes a poll blocked in native code at once
+  skips polls with nothing new, emits the closed update last and completes. A poll that
+  throws ends the stream the same way: `T3Exception` keeps its code as the closed update's
+  `error`; `unknown_subscription` (the handle dropped the stream on connect or disconnect)
+  and `client_closed` are a cancel (`error = null`). Only opening a stream throws.
+  Cancelling the collector closes the stream, which wakes a poll blocked in native code at once
   (measured 11 ms instead of up to 1 s). The flow has no buffer: the lib's bounded queue
   is the buffer, and a collector that falls behind ends the stream with
   `stream_backpressure` instead of holding snapshots in Kotlin. Nothing reconnects; the
@@ -125,13 +158,22 @@ HTTP paths to the UI layer.
 - `threadStream` defaults to `compactTurnItems = false` (the lib's `ThreadStream`
   defaults to true) until the lib restores compact stream snapshots (LIB_REQUESTS.md,
   phase 1 item 2).
-- **`FakeT3Transport`** (scripted answers, `MutableSharedFlow` streams, `not_connected`
-  before `connect`) lives in `core`'s main source set so `app` tests can use it too;
-  Android test fixtures with Kotlin are still experimental in AGP 8.13.
+- **`FakeT3Transport`** (scripted `suspend` answers, `MutableSharedFlow` streams plus
+  optional per-collection stream hooks, `failNextStream`, `emitError`, a call log,
+  `not_connected` before `connect`, streams ended by `connect`/`disconnect`/`close`) and
+  **`ThreadUpdates`** (builds a `ThreadUpdate` over a minimal `T3Batch`) live in `core`'s
+  main source set so `app` tests can use them too; Android test fixtures with Kotlin are
+  still experimental in AGP 8.13.
 - JVM unit tests drive the real Rust core through the host `libt3_jni.so`
   (`java.library.path` set on every `Test` task, `org.json` on the test classpath)
   against small local HTTP and WebSocket fakes. They skip when the library is absent and
-  fail instead with `OT3A_REQUIRE_HOST_JNI=1`, which CI sets.
+  fail instead with `OT3A_REQUIRE_HOST_JNI=1`, which CI sets, or
+  `-Pot3a.requireHostJni=true` locally. The library and both switches are inputs of the
+  `Test` tasks, so a skipped run is never reused once the library exists. CI also checks
+  that the debug APK carries `lib/<abi>/libt3_jni.so` for the four ABIs.
+- `NativeSmokeTest` pins the targeted lib exactly (`0.3.2`, 116 functions, 13 streams).
+  This is intentional: bumping `libs/lib-t3-rust.lock` must fail the test until someone
+  reads the lib's changes and updates the pins with it.
 
 ## Pending decisions
 

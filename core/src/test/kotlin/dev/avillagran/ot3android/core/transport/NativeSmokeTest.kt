@@ -11,7 +11,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** The real Rust core through the AAR's adapter and the host JNI library; no network. */
+/**
+ * The real Rust core through the AAR's adapter and the host JNI library; no network.
+ *
+ * The exact pins (0.3.2, 116 functions, 13 streams) are intentional: bumping
+ * libs/lib-t3-rust.lock must fail here until the lib's changes are read and the pins move
+ * with them (docs/DECISIONS.md).
+ */
 class NativeSmokeTest {
 
     private lateinit var transport: NativeT3Transport
