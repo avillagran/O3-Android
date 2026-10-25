@@ -480,3 +480,55 @@ block, but item 1 is the one with live cost: the bounded snapshot of a busy thre
 (477 turn items, 340 nodes, `payloadBudgetExceeded = true`), so refetching it is not an
 answer to an event it cannot apply, and the Kotlin mirror of `projection::apply` it
 forces is the largest piece of protocol logic left in the app.
+
+## 2026-10-25: requests from the UI specification
+
+Source: `docs/UI_SPEC.md` section 6 (merged in #7), which maps every screen of ot3-Android
+v1 to the lib function it reads. This section moves the rows marked **new** there, plus
+U2, whose scope the spec extends; the other U rows restate existing items above (U1 =
+phase-1 item 1, U5 / U6 / U7 / U8 = item 4 and the pure-form list, U17 = item 6, U18 =
+item 7). Citation prefixes (`lib:`, `ot3:`) and pins are those of UI_SPEC section 0
+(lib v0.3.2 `26e67a7`, ot3 `7b5b1de`).
+
+All of them rely on the connection-free operation proposed at the start of the phase-1
+section (`{"op":"domain","fn":"<module>.<fn>","args":{...}}`, or the equivalent typed
+`call` without a socket), returning JSON the app renders without further derivation.
+
+**Order agreed with the lib (2026-10-25), already in progress there:** U2, U21, U0, U3,
+U4, U10, U5, U7, U8. Gating per UI tranche: nothing blocks UI-1 (U2 and U21 complete
+it); U0, U3, U4 and U10 gate UI-2; U5, U7 and U8 gate UI-3; U6, U15 and U24 gate UI-4;
+U9, U19, U20 and U22 gate UI-5; U14, U17 and U23 gate UI-6; U12 gates UI-7.
+
+### Extended existing request
+
+| # | Request | In Rust today | Screen | Until then |
+|---|---|---|---|---|
+| U2 | `sidebar.view` + shell reducer (existing item 3), **extended to several environments' shells in one view** and to ot3's ten-state detail and counts | `sidebar::sidebar_status`, `metadata`, `sort_timestamps` (`lib:src/sidebar.rs:6,19,37`); detail, grouping and order only in ot3 (`ot3:ui/js/SidebarModel.js:5-125`, `ot3:ui/js/ProjectModel.js:4-12`) | Home (4.1), count pills | `SidebarModel.kt`, extended to several environments |
+
+### New requests
+
+| # | Request | In Rust today | Screen | Until then |
+|---|---|---|---|---|
+| U0 | **new** Timeline view: ot3's `conversation_timeline` rows (user, assistant, activity groups, changes, context, plan, secret, subagents, error, each with a `rev`) and `live_activity`, from a projection or the reduced view of item 1 | **ot3 only**: `ot3:src/lib.rs:532-617` | Thread (4.3), working pill (4.4.1) | user and assistant messages from `ThreadProjectionShim` (`core/.../thread/ThreadProjectionShim.kt:54`) |
+| U3 | **new** `activity.describe` | `lib:src/activity.rs:38` | Activity blocks (4.3.3) | blocks hidden |
+| U4 | **new** `changes.summaries` | `lib:src/changes.rs:4` | Changed-files card (4.3.4), diff ranges (4.6.2) | card hidden |
+| U9 | **new** `diffReview.present` | `lib:src/diff_review.rs:100` | Diff (4.6) | file list without hunks |
+| U10 | **new** Markdown as renderer-neutral blocks (paragraphs, headings, lists, quotes, tables, code with language and runnable flag, images, links classified GitHub / file / thread / web with ot3's allow-list); the lib says an Android surface "gets its own variant once its renderer is designed" (`lib:README.md:602-612`) | ot3's renderer emits Qt rich text (`ot3:src/lib.rs:119-171`); `code_blocks::parse` already returns fenced blocks as data (`lib:src/code_blocks.rs:12`) | Messages (4.3.2) | display-only CommonMark in Kotlin; only http(s) links tappable |
+| U11 | **new** `theme.tokens`: Omarchy `colors.toml` in, ot3 roles out (3.1) | **ot3 only**: `ot3:ui/qml/T3Palette.qml`, `ot3:ui/qml/T3Panel.qml:380-387`, `ot3:ui/js/DocumentTheme.js` | every screen | precomputed by the generator with goldens |
+| U12 | **new** `timeline.minimap` | **ot3 only**: `ot3:ui/js/TimelineModel.js:4,16` | Tablet minimap (4.3.8) | no minimap |
+| U13 | **new** `subagents.buckets` and labels | **ot3 only**: `ot3:ui/js/Subagents.js:8-54` | Subagent cards (4.3.6) | hidden |
+| U14 | **new** `usageSummary.request` / `aggregate`, `quotaSources.limits` / `providers` / `sources` | `lib:src/usage_summary.rs:23,40`, `lib:src/quota_sources.rs:23,75,86` | Usage (4.10) | page hidden |
+| U15 | **new** `planWorkflow.view` / `followUp` with a renderer that returns Markdown | `lib:src/plan_workflow.rs:191,325` | Plan card and banner (4.3.7) | plan as a message |
+| U16 | **new** ship ot3's string catalog with the lib (or the AAR) | `i18n::translate` has no catalog (`lib:src/i18n.rs:4`); catalog in `ot3:translations/i18n.json` | every screen | generated `strings_ot3.xml` |
+| U19 | **new** `pullRequests.sidebarBadge`, `pullRequests.payload` | `lib:src/pull_requests.rs:82,268` | Row PR badge (3.7), PR comment, review and actions (4.8) | no badge; arguments built from the `describe` schema |
+| U20 | **new** `branchPicker.dedupe` / `selectionTarget` / `mismatch` | `lib:src/branch_picker.rs:9,41,90` | Branch picker, branch mismatch notice (4.7.3, 4.4.1) | refs listed as returned |
+| U21 | **new** project identity: monogram and colour slot | **ot3 only**: `ot3:src/lib.rs:729-755`, `ot3:ui/qml/T3Palette.qml:36-46` | Project chip everywhere (3.7) | first letter of the title, accent tint |
+| U22 | **new** `gitControls.scope` / `actions` / `present` / `buildAction` | `lib:src/git_controls.rs:37,185,203,245` | Git & changes sheet (4.6.3) | status and Review only |
+| U23 | **new** `nativeSettings.snapshot` / `patch`, `scopedSettings.effective` / `projectPatch` | `lib:src/native_settings.rs:107,152`, `lib:src/scoped_settings.rs:38,56` | Settings pages (4.9) | read-only |
+| U24 | **new** `checkpointRevert.canPreview` / `reference` / `command` / `observation` / `recoveryMessage` | `lib:src/checkpoint_revert.rs:7,39,159,208,248` | Edit from here (4.5.4) | not offered |
+| U25 | **new** `toolInspector.scope` / `request` / `parse` | `lib:src/tool_inspector.rs:61,89,236` | Inspector (4.3.3) | not offered |
+
+Proposed fix, common to every row: expose the Rust function (moving it from ot3's crate
+into the lib first where the row says "ot3 only") through the connection-free operation,
+add it to `describe` with typed args, generate the `T3Api` wrapper, and cover it with a
+fixture test whose JSON the app can reuse as screenshot-test input.
