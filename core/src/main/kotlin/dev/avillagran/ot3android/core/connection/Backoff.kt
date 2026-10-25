@@ -8,7 +8,7 @@ import kotlin.random.Random
  * connection that stayed up for [resetAfterMs] starts over from [baseMs].
  *
  * The lib has the same policy in Rust (`reconnect::Backoff`) but does not expose it yet, not
- * even through v0.3.3's `domain` (docs/LIB_REQUESTS.md, phase 1 item 5). Not thread-safe: one
+ * even through v0.3.4's `domain` (docs/LIB_REQUESTS.md, phase 1 item 5). Not thread-safe: one
  * per reconnect loop.
  */
 class Backoff(
