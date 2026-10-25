@@ -68,7 +68,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     api(libs.kotlinx.coroutines.android)
 
-    implementation(libs.androidx.room.runtime)
+    // api: Ot3Database (a RoomDatabase) is part of core's public surface; app builds the repository from it.
+    api(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
