@@ -11,6 +11,7 @@ import dev.avillagran.ot3android.core.thread.ThreadFixtures.projection
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.ThreadUpdates
+import dev.avillagran.ot3android.core.transport.assumeHostJni
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -22,6 +23,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
 import kotlin.random.Random
 
@@ -34,7 +36,7 @@ class ThreadSessionConnectionTest {
         FakeT3Transport().apply {
             onFetchDescriptor(baseUrl) { JSONObject().put("environmentId", "env-1") }
             onShell { ShellFixtures.body(5, listOf(ShellFixtures.project("p1")), listOf(ShellFixtures.thread("t1"))) }
-            onBoundedThread("t1") { bounded(10, projection(messages = listOf(message("m1", "hello", "1", role = "user")))) }
+            onBoundedThread("t1") { bounded(10, projection(messages = listOf(message("m1", "hello", "2026-10-25T01:00:01.000Z", role = "user")))) }
         }
     }
     private val fake: FakeT3Transport get() = factory.created.last()
@@ -51,6 +53,9 @@ class ThreadSessionConnectionTest {
         computation = StandardTestDispatcher(testScheduler),
     )
 
+    @Before
+    fun setUp() = assumeHostJni()
+
     @Test
     fun aReconnectOfTheSameHandleResumesTheThreadFromItsCursor() = runTest {
         val supervisor = supervisor()
@@ -60,11 +65,11 @@ class ThreadSessionConnectionTest {
         val session = ThreadSession(
             "t1", supervisor.connection, backgroundScope,
             clock = { testScheduler.currentTime }, random = Random(7),
-            dispatcher = StandardTestDispatcher(testScheduler),
+            dispatcher = StandardTestDispatcher(testScheduler), domain = TestDomain,
         ).also { it.start() }
         runCurrent()
         fake.collectors("t1").first { it > 0 }
-        fake.emitThread("t1", ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
+        fake.emitThread("t1", ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2026-10-25T01:00:02.000Z")), cursor = 11))
         runCurrent()
 
         // The shell stream is cancelled: the supervisor connects the same handle again, which

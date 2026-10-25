@@ -97,6 +97,8 @@ class LiveThreadTest {
                         "messages=${view.messages.size} working=${view.working} pending=${view.pendingRequests.size} " +
                         "stale=${view.stale} sequence=seq+${view.sequence?.minus(start)} modelSelection=${view.modelSelection != null}",
                 )
+                val rows = view.timeline?.optJSONArray("timeline")
+                line("timeline.view: rows=${rows?.length() ?: 0} roles=${values(rows, "role")} withRev=${(0 until (rows?.length() ?: 0)).count { rows!!.getJSONObject(it).has("rev") }}")
                 session.close()
             }
         } finally {
