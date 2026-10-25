@@ -131,7 +131,7 @@ class ThreadProjectionShim {
             return ApplyResult.APPLIED
         }
         return when (type) {
-            "message.updated" -> upsert(p, "messages", payload, MESSAGES_CAP)
+            "message.updated" -> upsert(p, "messages", payload, cap = null)
             "runtime-request.updated" -> upsert(p, "runtimeRequests", payload, RUNTIME_REQUESTS_CAP)
             "run.created", "run.updated" -> {
                 val result = upsert(p, "runs", payload, RUNS_CAP)
@@ -152,8 +152,12 @@ class ThreadProjectionShim {
     }
 
     companion object {
-        /** The lib's caps for the lists this shim touches (`src/projection.rs`). */
-        const val MESSAGES_CAP = 160
+        /**
+         * The lib's caps for the lists this shim touches (`src/projection.rs`). Messages are
+         * not capped (the lib caps them at 160): the bounded snapshot already decides how much
+         * history to send (`payloadBudgetExceeded`), and dropping by position would remove
+         * history it painted.
+         */
         const val RUNS_CAP = 64
         const val RUNTIME_REQUESTS_CAP = 128
 
@@ -219,7 +223,7 @@ class ThreadProjectionShim {
             }
         }
 
-        private fun upsert(p: JSONObject, key: String, row: JSONObject, cap: Int): ApplyResult {
+        private fun upsert(p: JSONObject, key: String, row: JSONObject, cap: Int?): ApplyResult {
             val id = row.text("id") ?: return ApplyResult.UNKNOWN
             val list = p.optJSONArray(key) ?: JSONArray().also { p.put(key, it) }
             val index = (0 until list.length()).firstOrNull { list.optJSONObject(it)?.text("id") == id }
@@ -228,7 +232,7 @@ class ThreadProjectionShim {
             } else {
                 list.put(row)
                 // Drop the oldest by position, as the lib does, to keep the mirror bounded.
-                if (list.length() > cap) {
+                if (cap != null && list.length() > cap) {
                     val kept = JSONArray()
                     for (i in list.length() - cap until list.length()) kept.put(list.get(i))
                     p.put(key, kept)

@@ -205,13 +205,17 @@ class ThreadProjectionShimTest {
     }
 
     @Test
-    fun messagesStayBoundedLikeTheLib() {
+    fun messagesAreNotCappedButRunsAre() {
         shim.replace(ThreadFixtures.bounded(0, projection()))
         for (i in 1..200) shim.apply(event(i.toLong(), "message.updated", message("m$i", "x", "%04d".format(i))))
         val ids = messages().map { it.id }
-        assertEquals(ThreadProjectionShim.MESSAGES_CAP, ids.size)
-        assertEquals("m41", ids.first())
-        assertEquals("m200", ids.last())
+        assertEquals(200, ids.size)
+        assertEquals("m1", ids.first())
+
+        for (i in 1..70) shim.apply(event(200L + i, "run.updated", run("r$i", "completed")))
+        val runs = shim.projection!!.getJSONArray("runs")
+        assertEquals(ThreadProjectionShim.RUNS_CAP, runs.length())
+        assertEquals("the oldest are dropped", "r7", runs.getJSONObject(0).getString("id"))
     }
 
     @Test
