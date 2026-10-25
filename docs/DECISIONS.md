@@ -295,8 +295,12 @@ factory, the fake's scripting). Supersedes the entry above.
   `pairBearer(connect = false)` with the descriptor's `environmentId`. The issued
   long-lived `accessToken` goes to the credential store; the one-time code is never stored
   and no state, `toString` or log holds either. The Room row takes the server's
-  `environmentId` and the descriptor's label. Pairing a server that is already saved (same
-  `environmentId`) keeps its row, id and label and replaces its URL and token. Then the
+  `environmentId` and the descriptor's label. A server already saved (same `environmentId`)
+  at the same address keeps its row, id and label and gets the new token. At another
+  address it is never moved silently, because the descriptor's `environmentId` is
+  unauthenticated and any server can claim it: the screen warns that the link moves the
+  saved environment from the old address to the new one, the default action adds a new
+  environment, and a second, explicit Replace moves the saved one. Then the
   connection layer takes over: `ConnectionManager.forget` drops a supervisor built from the
   old settings and a fresh one starts. Lib codes are grouped into `PairingFailure` for the
   UI; each step uses a short-lived transport. Confirming is a separate step so that a link

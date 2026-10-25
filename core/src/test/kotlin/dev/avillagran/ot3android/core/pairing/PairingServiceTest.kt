@@ -82,19 +82,56 @@ class PairingServiceTest {
     }
 
     @Test
-    fun theSameServerUpdatesItsTokenInsteadOfAddingOne() = runTest {
-        repository.save(null, "My box", "http://box.lan:3773", ENVIRONMENT, "old-token")
+    fun theSameServerAtTheSameAddressGetsTheNewToken() = runTest {
+        repository.save(null, "My box", ORIGIN, ENVIRONMENT, "old-token")
         val service = service()
 
         val ready = service.inspect(LINK) as PairingState.Ready
         assertEquals("My box", ready.existingLabel)
+        assertEquals(ORIGIN, ready.existingBaseUrl)
+        assertFalse(ready.moves)
         val paired = service.confirm()
 
         assertEquals(PairingState.Paired("local-1", "My box", updated = true), paired)
         val all = repository.environments.first()
         assertEquals(1, all.size)
         assertEquals("the user's label stays", "My box", all.single().label)
-        assertEquals("the address that paired wins", ORIGIN, all.single().baseUrl)
+        assertEquals(ACCESS_TOKEN, tokens.tokens["local-1"])
+        assertEquals(listOf("local-1"), handedOver)
+    }
+
+    @Test
+    fun aLinkToAnotherAddressAddsANewEnvironmentByDefault() = runTest {
+        repository.save(null, "My box", OLD_ORIGIN, ENVIRONMENT, "old-token")
+        val service = service()
+
+        val ready = service.inspect(LINK) as PairingState.Ready
+        assertEquals("My box", ready.existingLabel)
+        assertEquals(OLD_ORIGIN, ready.existingBaseUrl)
+        assertTrue(ready.moves)
+        val paired = service.confirm()
+
+        assertEquals(PairingState.Paired("local-2", "node", updated = false), paired)
+        assertEquals(listOf(OLD_ORIGIN, ORIGIN), repository.environments.first().map { it.baseUrl })
+        assertEquals("the saved environment keeps its address", OLD_ORIGIN, repository.find("local-1")!!.baseUrl)
+        assertEquals("and its token", "old-token", tokens.tokens["local-1"])
+        assertEquals(ACCESS_TOKEN, tokens.tokens["local-2"])
+        assertEquals(listOf("local-2"), handedOver)
+    }
+
+    @Test
+    fun replacingExplicitlyMovesTheSavedEnvironment() = runTest {
+        repository.save(null, "My box", OLD_ORIGIN, ENVIRONMENT, "old-token")
+        val service = service()
+        service.inspect(LINK)
+
+        val paired = service.confirm(replace = true)
+
+        assertEquals(PairingState.Paired("local-1", "My box", updated = true), paired)
+        val all = repository.environments.first()
+        assertEquals(1, all.size)
+        assertEquals("My box", all.single().label)
+        assertEquals(ORIGIN, all.single().baseUrl)
         assertEquals(ACCESS_TOKEN, tokens.tokens["local-1"])
         assertEquals(listOf("local-1"), handedOver)
     }
@@ -236,6 +273,7 @@ class PairingServiceTest {
 
     private companion object {
         const val ORIGIN = "http://192.168.1.20:3773"
+        const val OLD_ORIGIN = "http://box.lan:3773"
         const val CODE = "one-time-pairing-code-1234"
         const val ACCESS_TOKEN = "long-lived-access-token-5678"
         const val ENVIRONMENT = "8b55eaad-3149-443c-953f-afd6dd002666"

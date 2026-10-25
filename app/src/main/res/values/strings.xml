@@ -46,6 +46,9 @@
     <string name="pair_continue">Continue</string>
     <string name="pair_confirm">Pair</string>
     <string name="pair_existing">Already saved as “%1$s”. Pairing replaces its token.</string>
+    <string name="pair_moves">This link moves “%1$s” from %2$s to %3$s.</string>
+    <string name="pair_moves_help">Pair adds it as a new environment and leaves the saved one as it is. Replace moves the saved one to the new address.</string>
+    <string name="pair_replace">Replace</string>
     <string name="pair_error_invalid_link">That is not a pairing link.</string>
     <string name="pair_error_no_code">That link has no pairing code.</string>
     <string name="pair_error_invalid_code">The pairing code in that link is not valid.</string>

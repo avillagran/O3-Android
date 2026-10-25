@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.core.pairing
 import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import dev.avillagran.ot3android.core.connection.ServerDescriptor
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
+import dev.avillagran.ot3android.core.domain.Environment
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.ot3android.core.transport.T3Transport
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
@@ -79,10 +80,21 @@ sealed interface PairingState {
     data class Inspecting(val origin: String) : PairingState
 
     /**
-     * A T3 server answers at [origin]; waiting for the user to confirm. [existingLabel] names
-     * the saved environment for the same server, whose token pairing will replace.
+     * A T3 server answers at [origin]; waiting for the user to confirm. [existingLabel] and
+     * [existingBaseUrl] describe an environment already saved for the same server (by the
+     * descriptor's `environmentId`, which anyone can claim). At the same address pairing
+     * replaces its token; when it [moves], pairing adds a new environment unless the user
+     * explicitly replaces the saved one.
      */
-    data class Ready(val origin: String, val server: ServerDescriptor, val existingLabel: String?) : PairingState
+    data class Ready(
+        val origin: String,
+        val server: ServerDescriptor,
+        val existingLabel: String?,
+        val existingBaseUrl: String? = null,
+    ) : PairingState {
+        /** The saved environment for this server is at another address. */
+        val moves: Boolean get() = existingBaseUrl != null && existingBaseUrl != origin
+    }
 
     /** Exchanging the code and saving the environment. */
     data class Pairing(val origin: String, val server: ServerDescriptor) : PairingState
@@ -100,7 +112,9 @@ sealed interface PairingState {
  * one-time code with `pairBearer` (no connection), stores the environment (local row keyed by
  * the server's environment id, label from the descriptor) and the issued long-lived token, then
  * calls [handOver] so the connection layer picks it up. An environment already saved for the
- * same server keeps its row, label and id; only its URL and token change.
+ * same server at the same address keeps its row, label and id and gets the new token. One at
+ * another address is never moved silently: the descriptor that matched it is unauthenticated,
+ * so pairing adds a new environment unless [confirm] is told to replace the saved one.
  *
  * Each step uses a fresh transport, closed afterwards. One step runs at a time. Nothing here
  * logs; the pairing code and the token never reach [state] or a [toString].
@@ -120,9 +134,13 @@ class PairingService(
     /** The parsed link while [state] is [PairingState.Ready] or pairing. Holds the code. */
     private var target: PairingTarget? = null
 
+    /** The saved environment for the same server, found by [inspect]. */
+    private var existing: Environment? = null
+
     /** Parses [link] (a code in it, or [code] for a bare address) and reads the server's descriptor. */
     suspend fun inspect(link: String, code: String = ""): PairingState = lock.withLock {
         target = null
+        existing = null
         val parsed = try {
             PairingLink.parse(link, code)
         } catch (error: T3Exception) {
@@ -133,17 +151,24 @@ class PairingService(
         _state.value = PairingState.Inspecting(origin)
         step(origin) {
             val server = ServerDescriptor.from(withTransport { it.fetchDescriptor(origin) })
-            val existing = server.environmentId?.let { id -> repository.environments.first().firstOrNull { it.environmentId == id } }
+            val saved = server.environmentId?.let { id -> repository.environments.first().firstOrNull { it.environmentId == id } }
             target = parsed
-            PairingState.Ready(origin, server, existing?.label)
+            existing = saved
+            PairingState.Ready(origin, server, saved?.label, saved?.baseUrl)
         }
     }
 
-    /** Pairs with the server [inspect] found; ignored unless [state] is [PairingState.Ready]. */
-    suspend fun confirm(): PairingState = lock.withLock {
+    /**
+     * Pairs with the server [inspect] found; ignored unless [state] is [PairingState.Ready].
+     * When [PairingState.Ready.moves], a new environment is added unless [replace] is true,
+     * the user's explicit choice to move the saved one to the new address.
+     */
+    suspend fun confirm(replace: Boolean = false): PairingState = lock.withLock {
         val ready = _state.value as? PairingState.Ready ?: return@withLock _state.value
         val parsed = target ?: return@withLock _state.value
+        val match = existing?.takeIf { it.baseUrl == parsed.httpBaseUrl || replace }
         target = null
+        existing = null
         _state.value = PairingState.Pairing(ready.origin, ready.server)
         step(ready.origin) {
             val paired = withTransport { transport ->
@@ -158,17 +183,19 @@ class PairingService(
             val server = ServerDescriptor.from(paired.descriptor)
             // The code is spent: from here on a failure must not lose the issued session.
             withContext(NonCancellable) {
-                val existing = repository.environments.first().firstOrNull { it.environmentId == paired.environmentId }
-                val label = existing?.label ?: server.label ?: ready.server.label ?: ready.origin.substringAfter("://")
+                // Removed since inspect: added again as a new environment.
+                val updating = match?.let { repository.find(it.id) }
+                val label = updating?.label ?: server.label ?: ready.server.label ?: ready.origin.substringAfter("://")
                 val saved = repository.save(
-                    id = existing?.id,
+                    id = updating?.id,
                     label = label,
                     baseUrl = parsed.httpBaseUrl,
                     environmentId = paired.environmentId,
                     token = paired.accessToken,
+                    matchServer = false,
                 )
                 handOver(saved.id)
-                PairingState.Paired(saved.id, saved.label, updated = existing != null)
+                PairingState.Paired(saved.id, saved.label, updated = updating != null)
             }
         }
     }
@@ -176,6 +203,7 @@ class PairingService(
     /** Back to [PairingState.Idle], forgetting a parsed link. */
     suspend fun reset() = lock.withLock {
         target = null
+        existing = null
         _state.value = PairingState.Idle
     }
 

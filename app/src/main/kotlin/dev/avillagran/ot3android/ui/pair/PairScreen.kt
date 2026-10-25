@@ -53,6 +53,8 @@ object PairScreenTags {
     const val CONTINUE = "pair_continue"
     const val SERVER = "pair_server"
     const val CONFIRM = "pair_confirm"
+    const val REPLACE = "pair_replace"
+    const val MOVES = "pair_moves"
     const val ERROR = "pair_error"
     const val PROGRESS = "pair_progress"
 }
@@ -164,10 +166,30 @@ fun PairScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(pairing.origin, style = MaterialTheme.typography.bodyMedium)
-                        pairing.existingLabel?.let { Text(stringResource(R.string.pair_existing, it), style = MaterialTheme.typography.bodyMedium) }
+                        val existingLabel = pairing.existingLabel ?: stringResource(R.string.connect_server_unnamed)
+                        if (pairing.moves) {
+                            // Matched by the descriptor's environmentId, which any server can
+                            // claim: never move the saved environment without asking.
+                            Text(
+                                stringResource(R.string.pair_moves, existingLabel, pairing.existingBaseUrl.orEmpty(), pairing.origin),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.testTag(PairScreenTags.MOVES),
+                            )
+                            Text(stringResource(R.string.pair_moves_help), style = MaterialTheme.typography.bodyMedium)
+                        } else if (pairing.existingBaseUrl != null) {
+                            Text(stringResource(R.string.pair_existing, existingLabel), style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
-                    Button(onClick = viewModel::confirm, modifier = Modifier.testTag(PairScreenTags.CONFIRM)) {
-                        Text(stringResource(R.string.pair_confirm))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Button(onClick = { viewModel.confirm() }, modifier = Modifier.testTag(PairScreenTags.CONFIRM)) {
+                            Text(stringResource(R.string.pair_confirm))
+                        }
+                        if (pairing.moves) {
+                            OutlinedButton(onClick = { viewModel.confirm(replace = true) }, modifier = Modifier.testTag(PairScreenTags.REPLACE)) {
+                                Text(stringResource(R.string.pair_replace))
+                            }
+                        }
                     }
                 }
                 is PairingState.Failed -> Text(

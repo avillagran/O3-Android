@@ -31,8 +31,9 @@ class EnvironmentRepository(
 
     /**
      * Creates or updates an environment. With [id] null, an existing entry for the same
-     * server ([environmentId]) is updated instead of adding a duplicate. A null [token] keeps
-     * the stored one. Returns the saved environment.
+     * server ([environmentId]) is updated instead of adding a duplicate, unless [matchServer]
+     * is false (the user chose to keep both). A null [token] keeps the stored one. Returns the
+     * saved environment.
      */
     suspend fun save(
         id: String?,
@@ -40,10 +41,11 @@ class EnvironmentRepository(
         baseUrl: String,
         environmentId: String?,
         token: String?,
+        matchServer: Boolean = true,
     ): Environment {
         val all = environments.first()
         val existing = all.firstOrNull { it.id == id }
-            ?: environmentId?.let { serverId -> all.firstOrNull { it.environmentId == serverId } }
+            ?: environmentId?.takeIf { matchServer }?.let { serverId -> all.firstOrNull { it.environmentId == serverId } }
         val saved = existing?.copy(
             label = label,
             baseUrl = baseUrl,

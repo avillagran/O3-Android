@@ -48,9 +48,10 @@ class PairViewModel(private val service: PairingService) : ViewModel() {
         viewModelScope.launch { service.inspect(current) }
     }
 
-    fun confirm() {
+    /** Pairs; [replace] moves a saved environment at another address instead of adding one. */
+    fun confirm(replace: Boolean = false) {
         viewModelScope.launch {
-            if (service.confirm() is PairingState.Paired) link.value = ""
+            if (service.confirm(replace) is PairingState.Paired) link.value = ""
         }
     }
 
