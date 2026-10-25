@@ -5,7 +5,8 @@ import org.json.JSONObject
 
 // Stopgap for docs/LIB_REQUESTS.md, "2026-10-25: v0.3.2 through the app's transport layer",
 // finding 1: T3 follows the shell snapshot with a metadata-only `snapshot` item (it carries
-// `resolvedRepositoryIdentityRoots`), which lib-t3-rust 0.3.2 treats as a full shell. Every
+// `resolvedRepositoryIdentityRoots`), which lib-t3-rust 0.3.2 and 0.3.3 treat as a full shell
+// (still open at v0.3.3, see "2026-10-25: v0.3.3" there; `shell.apply` would close it). Every
 // shell consumer reads shell updates through these functions instead of
 // `ThreadUpdate.snapshot`, `events`, `start` and `cursor`. This is protocol knowledge in
 // Kotlin, accepted only until a lib release fixes the finding; then this file goes away.

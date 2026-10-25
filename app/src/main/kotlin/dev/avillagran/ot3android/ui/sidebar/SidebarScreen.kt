@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.connection.ConnectionState
@@ -283,7 +284,7 @@ private fun ProjectChip(identity: ProjectIdentity?, modifier: Modifier = Modifie
 private const val DEFAULT_FILL = 0.14
 
 private fun parseColor(text: String): Color? =
-    runCatching { Color(android.graphics.Color.parseColor(text)) }.getOrNull()
+    runCatching { Color(text.toColorInt()) }.getOrNull()
 
 /** The lib's label ("Approval", "Plan ready", "Working", ...; English until UI-1's catalog). */
 @Composable
