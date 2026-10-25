@@ -6,6 +6,7 @@ import dev.avillagran.ot3android.core.thread.ThreadFixtures.projection
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.run
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.snapshotItem
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.unknownEvent
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -40,16 +41,24 @@ class ThreadProjectionShimTest {
     fun messagesUpsertByIdAndOrderByCreatedAtThenArrayOrder() {
         shim.replace(ThreadFixtures.bounded(1, projection(messages = listOf(message("b", "B", "2026-10-25T02:00:00.000Z")))))
 
-        assertEquals(ApplyResult.APPLIED, shim.apply(event(2, "message.created", message("a", "A", "2026-10-25T01:00:00.000Z"))))
+        assertEquals(ApplyResult.APPLIED, shim.apply(event(2, "message.updated", message("a", "A", "2026-10-25T01:00:00.000Z"))))
         assertEquals(ApplyResult.APPLIED, shim.apply(event(3, "message.updated", message("c", "C", "2026-10-25T02:00:00.000Z"))))
         assertEquals(ApplyResult.APPLIED, shim.apply(event(4, "message.updated", message("b", "B2", "2026-10-25T02:00:00.000Z"))))
 
         assertEquals(listOf("a" to "A", "b" to "B2", "c" to "C"), messages().map { it.id to it.text })
         assertEquals(4L, shim.sequence)
+        assertEquals("a row without an id is skipped", ApplyResult.UNKNOWN, shim.apply(event(5, "message.updated", JSONObject().put("text", "x"))))
+        assertEquals(3, messages().size)
+    }
 
-        assertEquals(ApplyResult.APPLIED, shim.apply(event(5, "message.deleted", JSONObject().put("id", "a"))))
-        assertEquals(listOf("b", "c"), messages().map { it.id })
-        assertEquals("unknown payload shape is not guessed", ApplyResult.REFETCH, shim.apply(event(6, "message.deleted", JSONObject())))
+    @Test
+    fun messageCreatedAndDeletedAreNotGuessedAt() {
+        shim.replace(ThreadFixtures.bounded(1, projection(messages = listOf(message("a", "A", "1")))))
+        // Not in the lib's apply table: only the cursor moves.
+        assertEquals(ApplyResult.UNKNOWN, shim.apply(event(2, "message.created", message("b", "B", "2"))))
+        assertEquals(ApplyResult.UNKNOWN, shim.apply(event(3, "message.deleted", JSONObject().put("id", "a"))))
+        assertEquals(listOf("a"), messages().map { it.id })
+        assertEquals(3L, shim.sequence)
     }
 
     @Test
@@ -95,27 +104,92 @@ class ThreadProjectionShimTest {
     }
 
     @Test
-    fun threadUpdatedReplacesOnlyThisThread() {
+    fun anyThreadEventNamingThisThreadReplacesIt() {
         shim.replace(ThreadFixtures.bounded(1, projection()))
         val renamed = JSONObject().put("id", "t1").put("title", "Renamed").put("activeRunId", "r9")
         assertEquals(ApplyResult.APPLIED, shim.apply(event(2, "thread.updated", renamed)))
         assertEquals("Renamed", ThreadProjectionShim.title(shim.projection))
         assertTrue(ThreadProjectionShim.working(shim.projection))
-        assertEquals(ApplyResult.IGNORED, shim.apply(event(3, "thread.updated", JSONObject().put("id", "other").put("title", "x"))))
-        assertEquals("Renamed", ThreadProjectionShim.title(shim.projection))
+        assertEquals(ApplyResult.APPLIED, shim.apply(event(3, "thread.archived", JSONObject().put("id", "t1").put("title", "Archived"))))
+        assertEquals("Archived", ThreadProjectionShim.title(shim.projection))
+
+        assertEquals(ApplyResult.UNKNOWN, shim.apply(event(4, "thread.updated", JSONObject().put("id", "other").put("title", "x"))))
+        assertEquals("Archived", ThreadProjectionShim.title(shim.projection))
     }
 
     @Test
-    fun anEventTypeTheShimDoesNotKnowAsksForARefetch() {
+    fun aPullRequestLinkUpdatePatchesItsLinkOnly() {
+        val links = JSONArray().put(JSONObject().put("host", "github.com").put("repository", "a/b").put("number", 3).put("url", "u"))
+        val p = projection()
+        p.getJSONObject("thread").put("pullRequests", links)
+        shim.replace(ThreadFixtures.bounded(1, p))
+
+        val update = JSONObject().put("host", "github.com").put("repository", "a/b").put("number", 3).put("url", "u2")
+        assertEquals(ApplyResult.APPLIED, shim.apply(event(2, "thread.pull-request-link-updated", update)))
+        val thread = shim.projection!!.getJSONObject("thread")
+        assertEquals("u2", thread.getJSONArray("pullRequests").getJSONObject(0).getString("url"))
+        assertEquals("the thread row stays", "t1", thread.getString("id"))
+    }
+
+    @Test
+    fun runtimeRequestsUpsertWholeRows() {
         shim.replace(ThreadFixtures.bounded(1, projection()))
-        assertEquals(ApplyResult.REFETCH, shim.apply(event(2, "turn-item.updated", JSONObject().put("id", "i1"))))
-        assertEquals(ApplyResult.REFETCH, shim.apply(event(3, "runtime-request.updated", JSONObject().put("id", "q1"))))
-        assertEquals("the cursor still moves", 3L, shim.sequence)
-        // Cursor-only and marker items change nothing.
+        val pending = JSONObject().put("id", "q1").put("kind", "command").put("status", "pending").put("prompt", "ls")
+        assertEquals(ApplyResult.APPLIED, shim.apply(event(2, "runtime-request.updated", pending)))
+        assertEquals(listOf(RuntimeRequest("q1", "command", "ls")), ThreadProjectionShim.pendingRequests(shim.projection))
+
+        assertEquals(ApplyResult.APPLIED, shim.apply(event(3, "runtime-request.updated", JSONObject(pending.toString()).put("status", "resolved"))))
+        assertTrue(ThreadProjectionShim.pendingRequests(shim.projection).isEmpty())
+        assertEquals(1, shim.projection!!.getJSONArray("runtimeRequests").length())
+    }
+
+    @Test
+    fun cancelledBackgroundWorkIsMirroredOnItsRun() {
+        shim.replace(ThreadFixtures.bounded(1, projection(runs = listOf(run("r", "completed")))))
+        val payload = JSONObject().put("runId", "r").put("restartCancelledBackgroundWork", JSONArray().put(JSONObject().put("k", 1)))
+        assertEquals(ApplyResult.APPLIED, shim.apply(event(2, "run.background-work-cancelled", payload)))
+        val run = shim.projection!!.getJSONArray("runs").getJSONObject(0)
+        assertEquals(1, run.getJSONArray("restartCancelledBackgroundWork").getJSONObject(0).getInt("k"))
+    }
+
+    @Test
+    fun eventsTheLibReducesIntoOtherRowsAreIgnoredAndMoveTheCursor() {
+        shim.replace(ThreadFixtures.bounded(1, projection()))
+        val before = shim.projection.toString()
+        var seq = 1L
+        for (type in ThreadProjectionShim.IRRELEVANT + ThreadProjectionShim.IRRELEVANT_PARTIAL) {
+            assertEquals(type, ApplyResult.IGNORED, shim.apply(event(++seq, type, JSONObject().put("id", "x").put("providerSessionId", "s"))))
+        }
+        assertEquals(seq, shim.sequence)
+        assertEquals("nothing this view reads changed", before, shim.projection.toString())
+    }
+
+    @Test
+    fun eventsTheLibDoesNotKnowOnlyMoveTheCursor() {
+        shim.replace(ThreadFixtures.bounded(1, projection()))
+        val before = shim.projection.toString()
+        // Observed live right after subscribing: not in the lib's apply table.
+        assertEquals(ApplyResult.UNKNOWN, shim.apply(event(2, "thread.visited", JSONObject().put("threadId", "t1").put("visitedAt", "x"))))
+        assertEquals(ApplyResult.UNKNOWN, shim.apply(event(3, "future.event", JSONObject().put("id", "f"))))
+        assertEquals(3L, shim.sequence)
+        assertEquals(before, shim.projection.toString())
+        // Cursor-only and marker items change nothing either.
         assertEquals(ApplyResult.IGNORED, shim.apply(unknownEvent(7)))
         assertEquals(7L, shim.sequence)
         assertEquals(ApplyResult.IGNORED, shim.apply(JSONObject().put("kind", "synchronized")))
-        assertEquals(ApplyResult.REFETCH, shim.apply(JSONObject().put("kind", "something-new")))
+        assertEquals(ApplyResult.IGNORED, shim.apply(JSONObject().put("kind", "something-new")))
+        assertEquals(7L, shim.sequence)
+    }
+
+    @Test
+    fun aSnapshotWithoutProjectionOrSequenceIsMalformedAndKeepsTheHeldOne() {
+        shim.replace(ThreadFixtures.bounded(1, projection(messages = listOf(message("a", "A", "1")))))
+        assertEquals(ApplyResult.MALFORMED, shim.apply(JSONObject().put("kind", "snapshot").put("snapshotSequence", 9)))
+        assertEquals(ApplyResult.MALFORMED, shim.apply(JSONObject().put("kind", "snapshot").put("projection", projection())))
+        assertFalse(shim.replace(JSONObject().put("projection", projection())))
+        assertEquals(1L, shim.sequence)
+        assertEquals(listOf("a"), messages().map { it.id })
+        assertEquals("no snapshot to apply to", ApplyResult.MALFORMED, ThreadProjectionShim().apply(event(2, "message.updated", message("b", "B", "2"))))
     }
 
     @Test

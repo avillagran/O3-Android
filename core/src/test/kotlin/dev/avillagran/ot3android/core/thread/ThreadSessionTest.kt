@@ -130,7 +130,7 @@ class ThreadSessionTest {
     }
 
     @Test
-    fun backpressureRefetchesTheSnapshot() = runTest {
+    fun backpressureRefetchesTheSnapshotAtMostOncePerInterval() = runTest {
         val session = session()
         runCurrent()
 
@@ -141,30 +141,73 @@ class ThreadSessionTest {
         snapshotSequence = 30
         snapshotMessages = snapshotMessages + message("m3", "later", "4")
         skipBackoff(session)
+        assertEquals("the backoff ended inside the interval: wait for its end", 1, snapshots.get())
+        advanceTimeBy(ThreadSession.REFETCH_INTERVAL_MS - testScheduler.currentTime)
+        runCurrent()
 
         assertEquals(2, snapshots.get())
         assertEquals(listOf<Long?>(10, 30), opens())
         assertFalse(session.view.value.stale)
         assertEquals(listOf("m1", "m3"), session.view.value.messages.map { it.id })
+
+        // Another one right away waits for the trailing edge of the interval again.
+        val refetchedAt = testScheduler.currentTime
+        emit(ThreadUpdates.closed("stream_closed"))
+        skipBackoff(session)
+        assertEquals(2, snapshots.get())
+        advanceTimeBy(refetchedAt + ThreadSession.REFETCH_INTERVAL_MS - testScheduler.currentTime)
+        runCurrent()
+        assertEquals(3, snapshots.get())
     }
 
     @Test
-    fun anUnknownEventMarksStaleAndRefetchesAfterTheDebounce() = runTest {
+    fun fiftyTurnItemUpdatesNeverRefetch() = runTest {
         val session = session()
         runCurrent()
 
-        emit(ThreadUpdates.batch(event(11, "turn-item.updated", JSONObject().put("id", "i1")), repaint = false))
-        assertTrue(session.view.value.stale)
-
-        snapshotSequence = 11
-        advanceTimeBy(400)
+        repeat(50) { i ->
+            val item = JSONObject().put("id", "i$i").put("type", "command_execution").put("status", "running")
+            emit(ThreadUpdates.event(event(11L + i, "turn-item.updated", item)))
+        }
+        advanceTimeBy(60_000)
         runCurrent()
-        assertEquals("debounced", 1, snapshots.get())
 
-        advanceTimeBy(101)
+        assertEquals(1, fake.log.count { it.method == "boundedThread" })
+        assertFalse(session.view.value.stale)
+        assertEquals(60L, session.view.value.sequence)
+        assertEquals("one stream, never restarted", listOf<Long?>(10), opens())
+        assertEquals(ThreadConnection.Live, session.view.value.connectionState)
+    }
+
+    @Test
+    fun threadVisitedOnlyMovesTheCursor() = runTest {
+        val session = session()
+        runCurrent()
+        // As observed live: an idle poll, then the event with start = resume.
+        emit(ThreadUpdates.idle())
+        emit(ThreadUpdates.batch(event(11, "thread.visited", JSONObject().put("threadId", "t1")), start = "resume"))
+        advanceTimeBy(60_000)
+        runCurrent()
+
+        assertEquals(11L, session.view.value.sequence)
+        assertEquals(1, fake.log.count { it.method == "boundedThread" })
+        assertFalse(session.view.value.stale)
+        assertEquals(listOf("m1"), session.view.value.messages.map { it.id })
+    }
+
+    @Test
+    fun aMalformedStreamSnapshotRefetches() = runTest {
+        val session = session()
+        runCurrent()
+        snapshotSequence = 40
+        emit(ThreadUpdates.batch(JSONObject().put("kind", "snapshot").put("snapshotSequence", 39)))
+        assertTrue(session.view.value.stale)
+        assertEquals("rate-limited", 1, snapshots.get())
+
+        advanceTimeBy(ThreadSession.REFETCH_INTERVAL_MS)
         runCurrent()
         assertEquals(2, snapshots.get())
-        assertEquals("continues from the fresh snapshot", listOf<Long?>(10, 11), opens())
+        assertEquals(listOf<Long?>(10, 40), opens())
         assertFalse(session.view.value.stale)
     }
 
