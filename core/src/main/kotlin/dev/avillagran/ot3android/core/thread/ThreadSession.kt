@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android.core.thread
 
 import dev.avillagran.ot3android.core.connection.Backoff
+import dev.avillagran.ot3android.core.connection.Connection
 import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import dev.avillagran.ot3android.core.transport.T3Transport
 import dev.avillagran.t3.T3Exception
@@ -70,8 +71,10 @@ data class ThreadView(
  * One open thread: reads its bounded snapshot, follows its stream from the snapshot's
  * sequence and publishes [view] on each `repaint`, never mid-chunk.
  *
- * It runs on the environment's [connection] (the supervisor's connected transport) and stops
- * whenever that goes null; when it comes back the stream resumes from the held sequence.
+ * It runs on the environment's [connection] (`ConnectionSupervisor.connection`) and stops
+ * whenever that goes null. A new [Connection] (a reconnect, or a new epoch of the same
+ * transport, whose `connect` ended every open stream) restarts the stream with a fresh
+ * backoff; the held projection and its sequence survive, so it resumes where it was.
  * Ending streams follow the supervisor's rules: transient errors resume from the cursor after
  * a jittered [Backoff]; [FATAL] errors wait for [retry]; anything else (`stream_closed`,
  * `stream_backpressure`, ...) keeps the view on screen, marks it stale and refetches the
@@ -81,7 +84,7 @@ data class ThreadView(
 @OptIn(ExperimentalCoroutinesApi::class)
 class ThreadSession(
     val threadId: String,
-    private val connection: Flow<T3Transport?>,
+    private val connection: Flow<Connection?>,
     private val scope: CoroutineScope,
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: Random = Random.Default,
@@ -105,11 +108,11 @@ class ThreadSession(
     fun start() {
         if (job?.isActive == true) return
         job = scope.launch(dispatcher) {
-            connection.collectLatest { transport ->
-                if (transport == null) {
+            connection.collectLatest { current ->
+                if (current == null) {
                     setConnection(ThreadConnection.Waiting)
                 } else {
-                    follow(transport)
+                    follow(current.transport)
                 }
             }
         }

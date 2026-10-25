@@ -1,6 +1,6 @@
 package dev.avillagran.ot3android.core.thread
 
-import dev.avillagran.ot3android.core.connection.SHELL_PATH
+import dev.avillagran.ot3android.core.connection.Connection
 import dev.avillagran.ot3android.core.connection.normalizeOrigin
 import dev.avillagran.ot3android.core.shell.ShellReducer
 import dev.avillagran.ot3android.core.transport.ConnectRoute
@@ -44,10 +44,10 @@ class LiveThreadTest {
         try {
             NativeT3Transport().use { transport ->
                 transport.connect(ConnectRoute.Bearer(baseUrl, token))
-                val shell = ShellReducer.parse(transport.request(SHELL_PATH) as JSONObject)
+                val shell = ShellReducer.parse(transport.shell())
                 val thread = shell.threads
                     .filter { it.relationshipToParent != "subagent" && it.archivedAt == null && it.deletedAt == null }
-                    .maxByOrNull { it.updatedAt.orEmpty() } ?: error("no thread")
+                    .maxByOrNull { it.updatedAt ?: 0L } ?: error("no thread")
                 line("thread: status=${thread.status} working=${thread.activeRunId != null}")
 
                 val bounded = transport.boundedThread(thread.id)
@@ -83,7 +83,7 @@ class LiveThreadTest {
                 }
                 line("raw stream updates in ${windowMs / 1000} s: $index")
 
-                val session = ThreadSession(thread.id, flowOf(transport), scope)
+                val session = ThreadSession(thread.id, flowOf(Connection(transport, 1)), scope)
                 session.start()
                 delay(windowMs)
                 val view = session.view.value

@@ -1,18 +1,20 @@
 package dev.avillagran.ot3android.core.thread
 
+import dev.avillagran.ot3android.core.connection.Connection
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.bounded
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.event
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.message
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.projection
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.run
 import dev.avillagran.ot3android.core.thread.ThreadFixtures.snapshotItem
-import dev.avillagran.ot3android.core.thread.ThreadFixtures.update
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
-import dev.avillagran.ot3android.core.transport.T3Transport
+import dev.avillagran.ot3android.core.transport.ThreadUpdates
+import dev.avillagran.t3.ThreadUpdate
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -30,7 +32,7 @@ import kotlin.random.Random
 class ThreadSessionTest {
 
     private val fake = FakeT3Transport()
-    private val connection = MutableStateFlow<T3Transport?>(null)
+    private val connection = MutableStateFlow<Connection?>(null)
     private val snapshots = AtomicInteger()
     private var snapshotSequence = 10L
     private var snapshotMessages = listOf(message("m1", "hello", "2026-10-25T01:00:00.000Z", role = "user"))
@@ -44,7 +46,7 @@ class ThreadSessionTest {
 
     private suspend fun TestScope.session(): ThreadSession {
         fake.connect(ConnectRoute.Bearer("http://t3.test", "token-12345678"))
-        connection.value = fake
+        connection.value = Connection(fake, 1)
         return ThreadSession(
             threadId = "t1",
             connection = connection,
@@ -53,6 +55,13 @@ class ThreadSessionTest {
             random = Random(7),
             dispatcher = StandardTestDispatcher(testScheduler),
         ).also { it.start() }
+    }
+
+    /** Emits once the session's stream is collected (the fake drops emits without one). */
+    private suspend fun TestScope.emit(update: ThreadUpdate) {
+        fake.collectors("t1").first { it > 0 }
+        fake.emitThread("t1", update)
+        runCurrent()
     }
 
     private fun opens() = fake.streamOpens.map { it.afterSequence }
@@ -75,13 +84,11 @@ class ThreadSessionTest {
         assertEquals(1, snapshots.get())
         assertEquals(FakeT3Transport.StreamOpen("t1", 10, false, boundedSnapshot = true, compactTurnItems = false), fake.streamOpens.single())
 
-        fake.emitThread("t1", update(event(11, "message.updated", message("m2", "Hi", "2026-10-25T01:00:01.000Z", streaming = true)), repaint = false))
-        runCurrent()
+        emit(ThreadUpdates.batch(event(11, "message.updated", message("m2", "Hi", "2026-10-25T01:00:01.000Z", streaming = true)), repaint = false))
         assertEquals(ThreadConnection.Live, session.view.value.connectionState)
         assertEquals("not painted mid-chunk", 1, session.view.value.messages.size)
 
-        fake.emitThread("t1", update(event(12, "run.updated", run("r1", "running"))))
-        runCurrent()
+        emit(ThreadUpdates.event(event(12, "run.updated", run("r1", "running"))))
         val live = session.view.value
         assertEquals(listOf("m1", "m2"), live.messages.map { it.id })
         assertTrue(live.messages.last().streaming)
@@ -95,11 +102,9 @@ class ThreadSessionTest {
     fun aTransientCloseResubscribesFromTheCursorWithoutAnotherSnapshot() = runTest {
         val session = session()
         runCurrent()
-        fake.emitThread("t1", update(event(11, "message.updated", message("m2", "Hi", "2"))))
-        runCurrent()
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
 
-        fake.emitThread("t1", update(closed = true, error = "stream_timeout"))
-        runCurrent()
+        emit(ThreadUpdates.closed("stream_timeout"))
         val retrying = session.view.value.connectionState as ThreadConnection.Retrying
         assertEquals("stream_timeout", retrying.error)
         assertTrue("first delay", retrying.nextRetryAt - testScheduler.currentTime in 500L..1_000L)
@@ -115,13 +120,11 @@ class ThreadSessionTest {
     fun aClosedStreamStartingWithASnapshotReplaces() = runTest {
         val session = session()
         runCurrent()
-        fake.emitThread("t1", update(closed = true, error = "disconnected"))
-        runCurrent()
+        emit(ThreadUpdates.closed("disconnected"))
         skipBackoff(session)
 
         val fresh = projection(messages = listOf(message("n1", "fresh", "3")))
-        fake.emitThread("t1", update(snapshotItem(50, fresh), start = "snapshot"))
-        runCurrent()
+        emit(ThreadUpdates.batch(snapshotItem(50, fresh), start = "snapshot"))
         assertEquals(listOf("n1"), session.view.value.messages.map { it.id })
         assertEquals(50L, session.view.value.sequence)
     }
@@ -131,8 +134,7 @@ class ThreadSessionTest {
         val session = session()
         runCurrent()
 
-        fake.emitThread("t1", update(closed = true, error = "stream_backpressure"))
-        runCurrent()
+        emit(ThreadUpdates.closed("stream_backpressure"))
         assertTrue("stale until refetched", session.view.value.stale)
         assertEquals(1, session.view.value.messages.size)
 
@@ -151,8 +153,7 @@ class ThreadSessionTest {
         val session = session()
         runCurrent()
 
-        fake.emitThread("t1", update(event(11, "turn-item.updated", JSONObject().put("id", "i1")), repaint = false))
-        runCurrent()
+        emit(ThreadUpdates.batch(event(11, "turn-item.updated", JSONObject().put("id", "i1")), repaint = false))
         assertTrue(session.view.value.stale)
 
         snapshotSequence = 11
@@ -189,17 +190,32 @@ class ThreadSessionTest {
     fun losingTheConnectionPausesAndResumesFromTheCursor() = runTest {
         val session = session()
         runCurrent()
-        fake.emitThread("t1", update(event(11, "message.updated", message("m2", "Hi", "2"))))
-        runCurrent()
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
 
         connection.value = null
         runCurrent()
         assertEquals(ThreadConnection.Waiting, session.view.value.connectionState)
         assertEquals("the stream was closed", 0, fake.collectors("t1").value)
 
-        connection.value = fake
+        connection.value = Connection(fake, 1)
         runCurrent()
         assertEquals(listOf<Long?>(10, 11), opens())
         assertEquals(1, snapshots.get())
+    }
+
+    @Test
+    fun aNewEpochOfTheSameTransportReopensTheStreamFromTheCursor() = runTest {
+        val session = session()
+        runCurrent()
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
+
+        // The supervisor connected the same handle again: a new epoch restarts the stream.
+        connection.value = Connection(fake, 2)
+        runCurrent()
+
+        assertEquals(listOf<Long?>(10, 11), opens())
+        assertEquals("no second snapshot", 1, snapshots.get())
+        assertEquals("the old stream was closed", 1, fake.collectors("t1").value)
+        assertFalse(session.view.value.stale)
     }
 }

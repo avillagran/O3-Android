@@ -1,7 +1,5 @@
 package dev.avillagran.ot3android.core.thread
 
-import dev.avillagran.t3.T3Batch
-import dev.avillagran.t3.ThreadUpdate
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -46,18 +44,6 @@ object ThreadFixtures {
         .put("event", JSONObject().put("type", type).put("payload", payload))
 
     fun unknownEvent(sequence: Long): JSONObject = JSONObject().put("kind", "unknown-event").put("sequence", sequence)
-
-    fun update(
-        vararg items: JSONObject,
-        repaint: Boolean = true,
-        closed: Boolean = false,
-        error: String? = null,
-        start: String? = null,
-    ) = ThreadUpdate(
-        snapshot = null, events = emptyList(), repaint = repaint, synchronized = false, cursor = null,
-        start = start, idle = repaint, completionMarker = false, closed = closed, error = error, errorMessage = null,
-        batch = T3Batch(items = JSONArray(items.toList()), closed = closed, error = error, start = start),
-    )
 }
 
 /** Key names; android.jar's org.json (compiled against) has no `keySet`. */

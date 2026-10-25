@@ -2,9 +2,11 @@ package dev.avillagran.ot3android.ui.thread
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.avillagran.ot3android.core.connection.Connection
 import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
+import dev.avillagran.ot3android.core.shell.ShellThread
 import dev.avillagran.ot3android.core.thread.DraftRepository
 import dev.avillagran.ot3android.core.thread.MessageSender
 import dev.avillagran.ot3android.core.thread.OutboxRepository
@@ -12,7 +14,6 @@ import dev.avillagran.ot3android.core.thread.PendingCommand
 import dev.avillagran.ot3android.core.thread.SendResult
 import dev.avillagran.ot3android.core.thread.ThreadSession
 import dev.avillagran.ot3android.core.thread.ThreadView
-import dev.avillagran.ot3android.core.transport.T3Transport
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -44,6 +45,8 @@ data class ThreadUiState(
     val view: ThreadView,
     /** The projection's title, else the shell row's. */
     val title: String? = null,
+    /** The thread's `modelSelection` (compact JSON) from the projection, else the shell row's. */
+    val modelSelection: String? = null,
     val connection: ConnectionState = ConnectionState.Disconnected,
     val draft: String = "",
     val sending: Boolean = false,
@@ -88,30 +91,32 @@ class ThreadViewModel(
     @Volatile private var draftLoaded = false
     @Volatile private var savedDraft = ""
 
-    private val transport: StateFlow<T3Transport?> = supervisor
-        .flatMapLatest { it?.connectedTransport ?: flowOf(null) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
-    private val session = ThreadSession(threadId, transport, viewModelScope)
+    private val session = ThreadSession(
+        threadId,
+        supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) },
+        viewModelScope,
+    )
 
     private val connection: Flow<ConnectionState> =
         supervisor.flatMapLatest { it?.state ?: flowOf(ConnectionState.Disconnected) }
 
-    private val shellTitle: Flow<String?> = supervisor
+    /** This thread's sidebar row: the title before the snapshot, and the fallback model selection. */
+    private val shellRow: Flow<ShellThread?> = supervisor
         .flatMapLatest { it?.shell ?: flowOf(null) }
-        .map { shell -> shell?.threads?.firstOrNull { it.id == threadId }?.title }
+        .map { shell -> shell?.thread(threadId) }
         .distinctUntilChanged()
 
     val state: StateFlow<ThreadUiState> = combine(
         session.view,
         connection,
-        shellTitle,
+        shellRow,
         local,
         outbox.observeThread(environmentId, threadId),
-    ) { view, connection, shellTitle, local, unconfirmed ->
+    ) { view, connection, shellRow, local, unconfirmed ->
         ThreadUiState(
             view = view,
-            title = view.title ?: shellTitle,
+            title = view.title ?: shellRow?.title,
+            modelSelection = view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
             connection = connection,
             draft = local.draft,
             sending = local.sending,
@@ -149,9 +154,9 @@ class ThreadViewModel(
         val text = local.value.draft
         if (text.isBlank() || !current.connected || local.value.sending) return
         local.update { it.copy(sending = true, notice = null) }
-        val modelSelection = current.view.modelSelection
+        val modelSelection = current.modelSelection
         appScope.launch {
-            val result = sender.send(transport.value, environmentId, threadId, text, modelSelection)
+            val result = sender.send(transport(), environmentId, threadId, text, modelSelection)
             finish(result, sentText = text)
             local.update { it.copy(sending = false) }
         }
@@ -161,7 +166,7 @@ class ThreadViewModel(
     fun retry(commandId: String) {
         val text = state.value.unconfirmed.firstOrNull { it.commandId == commandId }?.text
         local.update { it.copy(notice = null) }
-        appScope.launch { finish(sender.retry(transport.value, commandId), sentText = text) }
+        appScope.launch { finish(sender.retry(transport(), commandId), sentText = text) }
     }
 
     fun discard(commandId: String) {
@@ -172,7 +177,7 @@ class ThreadViewModel(
         val runId = state.value.view.activeRunId ?: return
         local.update { it.copy(interrupting = true, notice = null) }
         appScope.launch {
-            val result = sender.interrupt(transport.value, threadId, runId)
+            val result = sender.interrupt(transport(), threadId, runId)
             local.update {
                 it.copy(interrupting = false, notice = (result as? SendResult.Failed)?.let(::failed) ?: it.notice)
             }
@@ -183,6 +188,9 @@ class ThreadViewModel(
         session.retry()
         supervisor.value?.retry()
     }
+
+    /** The supervisor's live transport right now; null while it is not connected. */
+    private fun transport() = supervisor.value?.connection?.value?.transport
 
     fun dismissNotice() {
         local.update { it.copy(notice = null) }

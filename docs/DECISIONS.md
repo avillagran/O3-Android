@@ -240,9 +240,10 @@ factory, the fake's scripting). Supersedes the entry above.
   then `threadStream` from its `snapshotSequence`, publishing `StateFlow<ThreadView>`
   (messages, working, active run, pending requests, model selection, stream state, stale)
   on `repaint` only. It runs on the environment supervisor's handle
-  (`ConnectionSupervisor.connectedTransport`, added for this) and pauses when that goes
-  null, so background stops, wakes and token problems stay with the supervisor. Reconnects
-  follow the supervisor's rules with its own `Backoff`.
+  (`ConnectionSupervisor.connection`, a `Connection(transport, epoch)`) and pauses when that
+  goes null, so background stops, wakes and token problems stay with the supervisor. A new
+  epoch restarts the stream with a fresh backoff, resuming from the held sequence.
+  Reconnects follow the supervisor's rules with its own `Backoff`.
 - **The shim is one file and applies five event families only**
   (`ThreadProjectionShim.kt`: `message.created|updated|deleted`, `run.created|updated`,
   `thread.updated`), mirroring the lib's `projection::apply` caps and `activeRunId` rule.
