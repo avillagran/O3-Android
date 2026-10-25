@@ -55,7 +55,7 @@
     <!-- Sidebar -->
     <string name="sidebar_section_active">Active</string>
     <string name="sidebar_section_settled">Settled (%1$d)</string>
-    <string name="sidebar_no_project">No project</string>
+    <string name="sidebar_section_snoozed">Snoozed (%1$d)</string>
     <string name="sidebar_untitled">Untitled thread</string>
     <string name="sidebar_empty">No threads</string>
     <string name="sidebar_edit_token">Edit token</string>
@@ -63,9 +63,7 @@
     <string name="sidebar_expanded">Expanded</string>
     <string name="sidebar_collapsed">Collapsed</string>
     <string name="sidebar_not_found">This environment is no longer saved.</string>
-    <string name="status_needs_you">Needs you</string>
     <string name="status_working">Working</string>
-    <string name="status_failed">Failed</string>
 
     <!-- Thread -->
     <string name="thread_empty">No messages yet</string>

@@ -1,7 +1,9 @@
-// TEMPORARY until lib-t3-rust exposes the shell reducer (`shell.reduce`, docs/LIB_REQUESTS.md
-// phase 1 item 3). This file is a minimal port of ot3's `src/shell_state.rs` (omarchy-t3-code
-// v0.2.22), itself following T3's client-runtime `state/shellReducer.ts`. Do not grow it: new
-// shell behaviour goes into the lib, and this file is deleted when the lib ships item 3.
+// TEMPORARY until lib-t3-rust exposes a shell reducer through `domain` (`shell.apply`,
+// docs/LIB_REQUESTS.md "2026-10-25: v0.3.3", finding 1). v0.3.3 ships the sidebar
+// (`sidebar.view`, see SidebarView.kt) but still expects the host to keep the shell stream's
+// state. This file is a minimal port of ot3's `src/shell_state.rs` (omarchy-t3-code v0.2.22),
+// itself following T3's client-runtime `state/shellReducer.ts`. Do not grow it: new shell
+// behaviour goes into the lib, and this file is deleted when the lib ships the reducer.
 package dev.avillagran.ot3android.core.shell
 
 import dev.avillagran.ot3android.core.transport.isShellMetadataOnly
