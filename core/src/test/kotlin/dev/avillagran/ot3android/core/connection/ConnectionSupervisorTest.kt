@@ -207,6 +207,29 @@ class ConnectionSupervisorTest {
     }
 
     @Test
+    fun aCancelledStreamReopensFromTheCursorWithoutBackoff() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        emit(ThreadUpdates.event(threadUpdated(6, thread("t3"))))
+
+        // The session dropped under the stream: it ends with closed = true, error = null.
+        fake.disconnect()
+        runCurrent()
+        assertTrue("no backoff state", supervisor.state.value is ConnectionState.Connected)
+        assertEquals("the shell stays", 3, supervisor.shell.value?.threads?.size)
+
+        advanceTimeBy(ConnectionSupervisor.CANCEL_REOPEN_MS + 1)
+        runCurrent()
+
+        assertTrue(supervisor.state.value is ConnectionState.Connected)
+        assertTrue(fake.connected)
+        assertEquals(listOf<Long?>(5, 6), streamOpens.map { it.afterSequence })
+        assertEquals("no fresh shell GET", 1, shellRequests.get())
+        assertEquals("one transport", 1, factory.created.size)
+    }
+
+    @Test
     fun aNonTransientCloseDropsTheShellAndStartsFresh() = runTest {
         val supervisor = supervisor()
         supervisor.start()

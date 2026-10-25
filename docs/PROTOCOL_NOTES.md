@@ -118,6 +118,10 @@ threads[], archivedThreads[]}`. Here: 16 projects, 216 threads, 0 archived, abou
   shell and resubscribe with `afterSequence` = cursor after a jittered backoff: 1 s
   base, doubling, cap 300 s, each delay uniform in [half, full] of the step, reset after
   30 s connected.
+- A closed update with `error = null` is a cancel (the handle's session was switched or
+  dropped, or the host closed it), not a failure: unless the supervisor itself is
+  stopping, it reconnects after a fixed 250 ms with the shell and cursor kept and no
+  backoff step.
 - On `unauthorized`: stop and ask for a new token.
 - On `stream_closed` and any other error: drop the held shell and the cursor and start
   over (shell GET, then a stream from its sequence).

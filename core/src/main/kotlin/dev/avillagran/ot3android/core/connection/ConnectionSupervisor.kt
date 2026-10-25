@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +53,9 @@ sealed interface ConnectionState {
  * request, so a bad token surfaces here as `unauthorized`) → shell stream from the shell's
  * sequence. When the stream ends it reconnects after a jittered [Backoff]:
  *
+ * - a cancel (`closed` with no error: the session was switched or dropped under it) is not
+ *   a failure: it reconnects after [CANCEL_REOPEN_MS], keeping the shell and the cursor and
+ *   without counting a backoff step;
  * - transient errors ([TRANSIENT]) keep the held shell and resume after its sequence;
  * - `unauthorized` stops and waits for [retry];
  * - [FATAL] errors stop with no retry time;
@@ -158,6 +162,12 @@ class ConnectionSupervisor(
             while (true) {
                 val error = attempt(client, backoff)
                 currentCoroutineContext().ensureActive()
+                if (error == CANCELLED) {
+                    // Still running, so not our stop(): reopen from the held cursor. The
+                    // fixed pause keeps a handle that cancels at once from spinning.
+                    delay(CANCEL_REOPEN_MS)
+                    continue
+                }
                 when {
                     error == UNAUTHORIZED -> {
                         _state.value = ConnectionState.Unauthorized
@@ -211,7 +221,7 @@ class ConnectionSupervisor(
                     cursor = update.shellCursor(cursor)
                     if (update.repaint || update.closed) showHeld()
                 }
-                if (update.closed) closedWith = update.error ?: STREAM_CLOSED
+                if (update.closed) closedWith = update.error ?: CANCELLED
             }
             return closedWith ?: STREAM_CLOSED
         } catch (error: T3Exception) {
@@ -259,6 +269,12 @@ class ConnectionSupervisor(
 
         /** Not a lib code: the environment has no stored token. */
         const val MISSING_TOKEN = "missing_token"
+
+        /** How long a cancelled stream waits before it is reopened. */
+        const val CANCEL_REOPEN_MS = 250L
+
+        /** Not a lib code: a stream closed with no error (a cancel); never shown. */
+        private const val CANCELLED = "cancelled"
 
         /** Not a lib code: something other than a [T3Exception] failed. */
         const val INTERNAL_ERROR = "internal_error"
