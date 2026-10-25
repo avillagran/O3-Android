@@ -1,8 +1,12 @@
 package dev.avillagran.ot3android.ui.pair
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.SystemClock
+import android.provider.Settings
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.compose.CameraXViewfinder
@@ -42,7 +46,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.pairing.PairingService
@@ -57,6 +63,7 @@ object QrScanScreenTags {
     const val PREVIEW = "qr_scan_preview"
     const val PERMISSION = "qr_scan_permission"
     const val REJECTED = "qr_scan_rejected"
+    const val SETTINGS = "qr_scan_settings"
 }
 
 /** How long "Not a T3 pairing code" stays up after the last such code was seen. */
@@ -84,12 +91,25 @@ fun QrScanScreen(
     var granted by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
+    val activity = LocalActivity.current
     var asked by remember { mutableStateOf(false) }
+    // Denied and Android will not ask again ("Don't allow" twice, or "don't ask again"): only
+    // the app's settings can grant it now.
+    var deniedForGood by remember { mutableStateOf(false) }
     val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { result ->
         granted = result
         asked = true
+        deniedForGood = !result && activity != null &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
     }
     LaunchedEffect(Unit) { if (!granted) request.launch(Manifest.permission.CAMERA) }
+    // Back from the app's settings, where the permission may have been granted.
+    LifecycleResumeEffect(Unit) {
+        if (!granted && ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            granted = true
+        }
+        onPauseOrDispose {}
+    }
 
     Scaffold(
         modifier = modifier.testTag(QrScanScreenTags.ROOT),
@@ -143,8 +163,19 @@ fun QrScanScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(stringResource(R.string.scan_permission), style = MaterialTheme.typography.bodyLarge)
-                    Button(onClick = { request.launch(Manifest.permission.CAMERA) }) { Text(stringResource(R.string.scan_allow)) }
+                    if (deniedForGood) {
+                        Text(stringResource(R.string.scan_permission_settings), style = MaterialTheme.typography.bodyLarge)
+                        Button(
+                            onClick = {
+                                val details = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+                                context.startActivity(details)
+                            },
+                            modifier = Modifier.testTag(QrScanScreenTags.SETTINGS),
+                        ) { Text(stringResource(R.string.scan_open_settings)) }
+                    } else {
+                        Text(stringResource(R.string.scan_permission), style = MaterialTheme.typography.bodyLarge)
+                        Button(onClick = { request.launch(Manifest.permission.CAMERA) }) { Text(stringResource(R.string.scan_allow)) }
+                    }
                 }
             }
         }

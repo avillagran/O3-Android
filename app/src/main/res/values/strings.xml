@@ -60,6 +60,8 @@
     <string name="scan_hint">Point the camera at the QR code from t3 pair.</string>
     <string name="scan_permission">The camera is needed to read the QR code. Nothing is recorded.</string>
     <string name="scan_allow">Allow camera</string>
+    <string name="scan_permission_settings">Camera access is turned off for this app. Allow it in the app’s settings to scan the QR code, or paste the pairing link instead.</string>
+    <string name="scan_open_settings">Open settings</string>
     <string name="scan_no_camera">No camera is available. Paste the pairing link instead.</string>
     <!-- Mobile-only (docs/ui/strings.md): ot3 has no QR scanner. -->
     <string name="mobile_not_pairing_code">Not a T3 pairing code</string>

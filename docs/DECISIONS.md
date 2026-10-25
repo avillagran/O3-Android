@@ -345,7 +345,9 @@ factory, the fake's scripting). Supersedes the entry above.
     +0.16 MB over four ABIs, resources +8 KB.
   - `CAMERA` is the only new permission and is requested when the scanner opens, with
     `uses-feature android.hardware.camera required="false"` so devices without a camera
-    can still install the app and paste the link.
+    can still install the app and paste the link. After a denial Android will not ask
+    again for (no rationale to show), the scanner offers Open settings (the app's details
+    screen) and checks the permission again when the user comes back.
 - **Deep link without App Links**: an intent filter for `http` and `https`, any host,
   path `/pair`, `autoVerify="false"`. Verification is impossible because T3 servers are
   arbitrary hosts. Up to Android 11, opening such a link from another app shows a chooser
