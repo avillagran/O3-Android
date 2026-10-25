@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import javax.inject.Inject
 
 plugins {
     alias(libs.plugins.android.application)
@@ -54,6 +55,45 @@ kotlin {
     }
 }
 
+// ot3's icons: the SVGs in src/main/svg/lucide become res/drawable/ic_<name>.xml at build
+// time, converted by tools/lucide-vectors (UI_SPEC 3.8; Ot3Icons lists them by name).
+val lucideVectors: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+    }
+}
+
+abstract class GenerateOt3Icons : DefaultTask() {
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val svgDir: DirectoryProperty
+
+    @get:Classpath
+    abstract val converter: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @get:Inject
+    abstract val exec: ExecOperations
+
+    @TaskAction
+    fun generate() {
+        exec.javaexec {
+            classpath = converter
+            mainClass.set("dev.avillagran.ot3android.vectors.MainKt")
+            args(svgDir.get().asFile.absolutePath, outputDir.get().asFile.absolutePath)
+        }
+    }
+}
+
+val generateOt3Icons = tasks.register<GenerateOt3Icons>("generateOt3Icons") {
+    svgDir.set(layout.projectDirectory.dir("src/main/svg/lucide"))
+    converter.from(lucideVectors)
+}
+
 dependencies {
     implementation(project(":core"))
 
@@ -89,4 +129,14 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.espresso.core)
+
+    testImplementation(libs.junit)
+
+    lucideVectors(project(":lucide-vectors"))
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.res?.addGeneratedSourceDirectory(generateOt3Icons, GenerateOt3Icons::outputDir)
+    }
 }

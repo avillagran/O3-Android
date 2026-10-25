@@ -410,6 +410,50 @@ renders in tokyo-night and catppuccin-latte and compares with
 `:app:verifyRoborazziDebug`. The first goldens are the token sheet (every role, the type
 scale, Fira Code), whose sampled pixels equal the tokens.
 
+## 2026-10-25: UI-1b: ot3 strings and Lucide icons
+
+- **`tools/import-ot3-strings` is a Python script (standard library, run as `python3 -I`).**
+  It runs by hand when `app/src/main/res/ot3-strings.tsv` changes, and its output
+  (`values*/strings_ot3.xml`) is committed, so the build never needs Python or the ot3
+  checkout. It only reads JSON and writes XML; Python's `json` keeps the catalog's key order
+  and Unicode untouched, and `-I` keeps it from importing anything from either checkout.
+  The ot3 checkout comes from `--ot3` or `OT3_CHECKOUT`; each file records the catalog's
+  sha256, so a rerun on the same catalog is byte-identical (`--check` verifies that).
+- **Names:** imported strings are `ot3_*`, mobile-only ones `mobile_*`; the importer fails if
+  a name also exists in `strings.xml` or `strings_mobile.xml`, if a key is missing in any of
+  the 20 locales, or if a translation's `{placeholders}` differ from the English ones.
+  Placeholders become `%1$s`… in English order; a literal `%` in a formatted string is `%%`.
+- **Locales:** ot3's `no` is written as `values-nb`; `zh` as `values-zh` (all Chinese
+  locales); `values-ar` carries an RTL-review comment. `strings.xml` (the app's own strings)
+  and `strings_mobile.xml` are English-only and say so with `tools:ignore="MissingTranslation"`
+  on their root; the alternative, disabling the check in Gradle, would also hide gaps in the
+  generated files.
+- **Wording choices:** where ot3 and T3 Mobile both have a string for the same thing, ot3's
+  wins (rule 4): "Add connection" for adding an environment, "Name" for the environment
+  label, "Reconnecting…" for the reconnecting state, "Pull requests" and "Settings" for two of
+  the three tabs, "Command Palette". Thirteen strings only T3 Mobile has were added to the
+  mobile-only list in `docs/ui/strings.md`, each with its source.
+- **Icons are converted at build time by a Kotlin JVM module, `:lucide-vectors`
+  (`tools/lucide-vectors`)**, which `:app:generateOt3Icons` runs and AGP registers as a
+  generated resource directory. Kotlin rather than the importer's Python because it runs on
+  every build: it needs nothing beyond the JDK Gradle already uses, it is cached as a
+  normal task with declared inputs, and its unit tests run with Gradle. It parses SVG path
+  data and writes it back with explicit commands and separators (Android's `PathParser`
+  does not accept every compressed form), turns `circle`, `ellipse`, `rect`, `line`,
+  `polyline` and `polygon` into paths, draws every stroke at 1.75 (scaled to the viewport),
+  paints in white for tinting, centres non-square view boxes in a square viewport, and
+  fails on transforms or unknown elements.
+- **Icon sources:** ot3's icon folder first, then ot3's inline icons in `IconAssets.js`
+  (ot3 draws several of them differently from current Lucide, e.g. `pin`,
+  `git-pull-request`, `settings`; ot3's drawing wins), then `lucide-static@0.564.0` for
+  icons ot3 lacks (`eye`). `send.svg` is left out because `ic_send` already exists and ot3's
+  composer sends with `arrow-up`. Provider marks (Claude, OpenAI, Cursor) wait for the
+  screens that show providers. `Ot3Icons` maps ot3 names to the drawables; a unit test keeps
+  it equal to the folder.
+- **Licences:** `docs/LICENSES.md` collects the Lucide ISC (and Feather MIT) text, the T3
+  mark notice, ot3's MIT notice and the machine-translation status of the catalog, for
+  Settings → About → Licenses.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
