@@ -9,6 +9,7 @@ import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairedBearer
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.t3.T3Exception
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -134,6 +135,31 @@ class PairingServiceTest {
         assertEquals(ORIGIN, all.single().baseUrl)
         assertEquals(ACCESS_TOKEN, tokens.tokens["local-1"])
         assertEquals(listOf("local-1"), handedOver)
+    }
+
+    @Test
+    fun leavingDuringTheExchangeStillStoresTheEnvironmentAndToken() = runTest {
+        val exchanging = CompletableDeferred<Unit>()
+        val answer = CompletableDeferred<Unit>()
+        pairAnswer = {
+            exchanging.complete(Unit)
+            answer.await()
+            paired()
+        }
+        val service = service()
+        service.inspect(LINK)
+        val screen = launch { service.confirm() }
+        exchanging.await()
+
+        screen.cancel()
+        answer.complete(Unit)
+        screen.join()
+
+        assertEquals(PairingState.Paired("local-1", "node", updated = false), service.state.value)
+        assertEquals(ORIGIN, repository.find("local-1")!!.baseUrl)
+        assertEquals(ACCESS_TOKEN, tokens.tokens["local-1"])
+        assertEquals(listOf("local-1"), handedOver)
+        assertTrue(factory.created.all { it.closed })
     }
 
     @Test

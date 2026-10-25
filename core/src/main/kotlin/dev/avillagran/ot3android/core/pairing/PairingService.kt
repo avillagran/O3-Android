@@ -116,8 +116,8 @@ sealed interface PairingState {
  * another address is never moved silently: the descriptor that matched it is unauthenticated,
  * so pairing adds a new environment unless [confirm] is told to replace the saved one.
  *
- * Each step uses a fresh transport, closed afterwards. One step runs at a time. Nothing here
- * logs; the pairing code and the token never reach [state] or a [toString].
+ * Each step uses a fresh transport, closed afterwards. One step runs at a time; [confirm] is
+ * not cancellable once it starts (see there). Nothing here logs; the pairing code and the token never reach [state] or a [toString].
  */
 class PairingService(
     private val transportFactory: T3TransportFactory,
@@ -170,19 +170,20 @@ class PairingService(
         target = null
         existing = null
         _state.value = PairingState.Pairing(ready.origin, ready.server)
-        step(ready.origin) {
-            val paired = withTransport { transport ->
-                transport.pairBearer(
-                    baseUrl = parsed.httpBaseUrl,
-                    pairingCode = parsed.pairingCode,
-                    environmentId = ready.server.environmentId,
-                    client = client,
-                    connect = false,
-                )
-            }
-            val server = ServerDescriptor.from(paired.descriptor)
-            // The code is spent: from here on a failure must not lose the issued session.
-            withContext(NonCancellable) {
+        // Once confirmed, the pairing completes even if the caller (the screen) goes away: the
+        // exchange spends the code, so stopping half-way could only lose the issued session.
+        withContext(NonCancellable) {
+            step(ready.origin) {
+                val paired = withTransport { transport ->
+                    transport.pairBearer(
+                        baseUrl = parsed.httpBaseUrl,
+                        pairingCode = parsed.pairingCode,
+                        environmentId = ready.server.environmentId,
+                        client = client,
+                        connect = false,
+                    )
+                }
+                val server = ServerDescriptor.from(paired.descriptor)
                 // Removed since inspect: added again as a new environment.
                 val updating = match?.let { repository.find(it.id) }
                 val label = updating?.label ?: server.label ?: ready.server.label ?: ready.origin.substringAfter("://")

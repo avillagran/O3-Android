@@ -305,6 +305,9 @@ factory, the fake's scripting). Supersedes the entry above.
   old settings and a fresh one starts. Lib codes are grouped into `PairingFailure` for the
   UI; each step uses a short-lived transport. Confirming is a separate step so that a link
   opened from elsewhere (a deep link) never pairs without the user seeing the server.
+  Once confirmed, the exchange, the save and the hand-over run to the end even if the user
+  leaves the screen (`NonCancellable`): the exchange spends the code, so stopping half-way
+  could only lose the issued session.
 - **`pairBearer` goes through `execute`** in `NativeT3Transport`, like `fetchDescriptor`,
   because `T3Client` has no wrapper (LIB_REQUESTS.md, phase 1 item 8).
 - **Temporary link parser** `core/pairing/PairingLink.kt`, a port of
