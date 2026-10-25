@@ -222,7 +222,7 @@ object HomeStateBuilder {
             },
             projects = projects.map { (key, project) ->
                 val environmentId = key.substringBefore('/')
-                ProjectOption(key, project.title ?: project.id, labels[environmentId].takeIf { multiple })
+                ProjectOption(key, project.title ?: project.id, labels[environmentId].takeIf { multiple }, project.workspaceRoot)
             }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, ProjectOption::title).thenBy { it.environmentLabel.orEmpty() }),
             environments = if (multiple) environments.map { EnvironmentOption(it.id, it.label) } else emptyList(),
         )

@@ -86,7 +86,7 @@ class HomeStateBuilderTest {
         assertFalse(one.multipleEnvironments)
         assertNull(one.rows.getValue("e1/a").environmentLabel)
         assertTrue(one.filterOptions.environments.isEmpty())
-        assertEquals(listOf(ProjectOption("e1/p1", "Alpha", null)), one.filterOptions.projects)
+        assertEquals(listOf(ProjectOption("e1/p1", "Alpha", null, "/w/alpha")), one.filterOptions.projects)
 
         val withoutShell = build(listOf(laptop, env("e3", "Pending", null, ConnectionState.Connecting)))
         assertEquals("a saved environment counts even before its shell", "Laptop", withoutShell.rows.getValue("e1/a").environmentLabel)

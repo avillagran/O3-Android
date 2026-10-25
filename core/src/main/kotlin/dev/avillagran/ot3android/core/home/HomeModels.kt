@@ -119,7 +119,8 @@ data class CountPills(val working: Int = 0, val done: Int = 0, val waiting: Int 
 
 data class StatusCount(val filter: StatusFilter, val count: Int)
 
-data class ProjectOption(val key: String, val title: String, val environmentLabel: String?)
+/** A project of the Project filter; [workspaceRoot] is what Copy Path copies. */
+data class ProjectOption(val key: String, val title: String, val environmentLabel: String?, val workspaceRoot: String? = null)
 
 data class EnvironmentOption(val id: String, val label: String)
 
