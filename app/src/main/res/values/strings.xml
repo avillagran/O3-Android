@@ -1,8 +1,72 @@
 <resources>
     <string name="app_name">ot3</string>
 
-    <string name="connect_title">Connect to a T3 Code server</string>
-    <string name="connect_continue">Continue</string>
+    <string name="action_back">Back</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
 
-    <string name="sidebar_empty">No environments yet</string>
+    <!-- Connect -->
+    <string name="connect_title">Connect to a T3 Code server</string>
+    <string name="connect_edit_title">Edit environment</string>
+    <string name="connect_url_label">Server URL</string>
+    <string name="connect_url_hint">https://host:port or http://192.168.1.20:3773</string>
+    <string name="connect_token_label">Bearer token</string>
+    <string name="connect_token_keep">Leave empty to keep the saved token</string>
+    <string name="connect_label_label">Name (optional)</string>
+    <string name="connect_paste">Paste</string>
+    <string name="connect_check">Check server</string>
+    <string name="connect_save">Save and connect</string>
+    <string name="connect_server_found">%1$s · T3 %2$s</string>
+    <string name="connect_server_unnamed">T3 server</string>
+    <string name="connect_server_version_unknown">unknown version</string>
+    <string name="connect_error_url_required">Enter the server URL.</string>
+    <string name="connect_error_token_required">Enter the token.</string>
+    <string name="connect_error_invalid_endpoint">That is not a server address. Use http(s)://host[:port].</string>
+    <string name="connect_error_unreachable">Could not reach the server. Check the address and your network.</string>
+    <string name="connect_error_unauthorized">The server rejected the token.</string>
+    <string name="connect_error_not_json">That address answered, but it does not look like a T3 Code server.</string>
+    <string name="connect_error_http">The server answered with HTTP %1$s.</string>
+    <string name="connect_error_mismatch">A different T3 environment answers at this address.</string>
+    <string name="connect_error_missing_token">No token is saved for this environment.</string>
+    <string name="connect_error_stream_closed">The server closed the live connection.</string>
+    <string name="connect_error_not_connected">Not connected to the server.</string>
+    <string name="connect_error_subscription_limit">Too many live connections are open to this server.</string>
+    <string name="connect_error_internal">Something went wrong in the app.</string>
+    <string name="connect_error_generic">Could not connect (%1$s).</string>
+
+    <!-- Environments -->
+    <string name="environments_title">Environments</string>
+    <string name="environments_add">Add environment</string>
+    <string name="environments_empty">No environments yet</string>
+    <string name="environments_delete_title">Remove %1$s?</string>
+    <string name="environments_delete_body">Its saved token is deleted from this device.</string>
+
+    <!-- Connection states -->
+    <string name="state_disconnected">Not connected</string>
+    <string name="state_connecting">Connecting…</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_unauthorized">Token rejected</string>
+    <string name="state_unreachable_retry">Offline · retrying in %1$ds</string>
+    <string name="state_unreachable">Offline</string>
+    <string name="state_error_retry">%1$s · retrying in %2$ds</string>
+
+    <!-- Sidebar -->
+    <string name="sidebar_section_active">Active</string>
+    <string name="sidebar_section_settled">Settled (%1$d)</string>
+    <string name="sidebar_no_project">No project</string>
+    <string name="sidebar_untitled">Untitled thread</string>
+    <string name="sidebar_empty">No threads</string>
+    <string name="sidebar_edit_token">Edit token</string>
+    <string name="sidebar_pinned">Pinned</string>
+    <string name="sidebar_expanded">Expanded</string>
+    <string name="sidebar_collapsed">Collapsed</string>
+    <string name="sidebar_not_found">This environment is no longer saved.</string>
+    <string name="status_needs_you">Needs you</string>
+    <string name="status_working">Working</string>
+    <string name="status_failed">Failed</string>
+
+    <!-- Thread placeholder -->
+    <string name="thread_placeholder">The thread view arrives in the next version.</string>
 </resources>

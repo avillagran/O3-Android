@@ -181,6 +181,59 @@ factory, the fake's scripting). Supersedes the entry above.
   This is intentional: bumping `libs/lib-t3-rust.lock` must fail the test until someone
   reads the lib's changes and updates the pins with it.
 
+## 2026-10-25: Connection supervisor per environment, cursor in DataStore, temporary sidebar logic
+
+- **One `ConnectionSupervisor` per saved environment** (`core.connection`), owned by a
+  process-wide `ConnectionManager` and created on first use. It owns one `T3Transport`
+  while running and runs `fetchDescriptor` → `connect(Bearer)` → shell GET → shell
+  stream, exposing `StateFlow<ConnectionState>` (Disconnected, Connecting,
+  Connected(descriptor), Unauthorized, Unreachable(error, nextRetryAt)) and the reduced
+  `StateFlow<ShellState?>`. It is pure Kotlin (no Android types), so JVM tests drive it
+  with `FakeT3Transport` and virtual time. Reconnecting follows
+  [PROTOCOL_NOTES.md](PROTOCOL_NOTES.md) ("Resume and reconnect"): jittered `Backoff`,
+  resume from the cursor on transient errors, fresh snapshot otherwise, stop on
+  `unauthorized`. Streams stop on the process's `ON_STOP` (ProcessLifecycleOwner, so
+  rotation does not reconnect), resume on `ON_START`, and are probed with
+  `wakeSubscriptions` on `ON_RESUME` and on default-network changes.
+- **Supervisors start lazily**: `ConnectionManager.supervisor(id)` creates one (not
+  started) the first time a screen asks for it, and the sidebar starts it. Nothing
+  connects at process start; the background stops only the ones that were running and
+  the foreground restarts just those. `forget` (edit or removal) waits for the run to end
+  before the caller deletes the row, and each run carries a generation so a run winding
+  down after `stop` never overwrites the state of the next one.
+- **Other screens borrow the supervisor's transport** through
+  `ConnectionSupervisor.connection: StateFlow<Connection?>` (`Connection(transport,
+  epoch)`): set while `Connected`, null otherwise; `epoch` grows with every `connect`,
+  which ends every stream of the handle as a cancel, so a thread view reopens its streams
+  when the epoch changes. They never close it. `ShellState.thread(id)`/`project(id)` are
+  indexed, and each row keeps its `raw` JSON so fields the reducer does not read
+  (`modelSelection`, `runtimeMode`, ...) are reachable without growing the reducer.
+- **Shell cursor in DataStore** (`ShellCursorPreferences`, file `connection`, key
+  `shell_cursor:<local id>`), written off the hot path (conflated, debounced 1.5 s, and
+  once more when a run ends) and removed with the environment or when its URL changes.
+  **It is write-only today**: a run always starts from a shell GET and subscribes after
+  that shell's sequence, because a cursor without the shell it belongs to resumes nothing.
+  A cached shell (later) is what will read it. The cursor is `shellCursor`, not
+  `update.cursor`, because the lib moves its cursor on metadata-only snapshots
+  (LIB_REQUESTS.md).
+- **Token in Keystore-backed preferences**: `EnvironmentRepository` writes the Room row
+  and the `CredentialStore` token together (token first) and deletes the row, the token
+  and the cursor together. `CredentialStore` now implements a small `TokenStore`
+  interface so the repository is testable on the JVM. The connect screen holds the token
+  only in memory, masks it, never shows it back and never logs it.
+- **Temporary Kotlin protocol logic, isolated in two files**: `core/shell/ShellReducer.kt`
+  (a port of ot3's `shell_state.rs`) and `core/shell/SidebarModel.kt` (ot3's minimum
+  sidebar rules), each with a header naming LIB_REQUESTS.md phase 1 item 3. `Backoff`
+  mirrors the lib's `reconnect::Backoff` (item 5). These do not grow; they are deleted
+  when the lib exposes `shell.reduce`/`sidebar.view` and the reconnect policy.
+- **`core/transport/ShellUpdates.kt` is the one stopgap for the metadata-only shell
+  snapshot** (LIB_REQUESTS.md, "v0.3.2 through the app's transport layer", finding 1).
+  `ShellReducer.reduce(state, update)` and the supervisor's cursor read updates only
+  through it (`shellSnapshot`, `shellMetadata`, `shellEvents`, `shellCursor`); neither
+  detects metadata frames itself.
+- `room-runtime` is now an `api` dependency of `core`, since `Ot3Database` is part of
+  its public surface and `AppGraph` builds the repository from it.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
