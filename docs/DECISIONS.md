@@ -353,7 +353,9 @@ factory, the fake's scripting). Supersedes the entry above.
   the app is approved for the domain, so the chooser normally does not appear there. On
   those versions the in-app scanner and paste are the dependable paths. Neither behaviour
   has been checked on a device yet. A link the app receives fills the pairing screen and
-  reads the server, but still waits for the user's confirmation. The intent filter
+  shows the host it points at, but sends nothing until the user taps Continue (no request
+  to an address the user has not seen), and then still waits for the confirmation. A link
+  scanned in the app reads the server at once. The intent filter
   belongs to a trampoline, `PairingLinkActivity`: `Theme.NoDisplay`, `excludeFromRecents`,
   `noHistory` and an empty `taskAffinity`, so it never shows, never joins the app's task and
   leaves no recents entry. It hands the link to `PairingInbox`, starts `MainActivity` with a

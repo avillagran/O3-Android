@@ -363,6 +363,15 @@ class PairingServiceTest {
     }
 
     @Test
+    fun theOriginOfALinkIsReadOffline() {
+        assertEquals(ORIGIN, PairingService.originOf(LINK))
+        assertEquals("https://box.example.ts.net", PairingService.originOf("wss://box.example.ts.net/pair#token=$CODE"))
+        assertNull(PairingService.originOf("ftp://node/pair#token=$CODE"))
+        assertNull(PairingService.originOf(""))
+        assertTrue("no transport", factory.created.isEmpty())
+    }
+
+    @Test
     fun onlyPairingLinksWithACodeAreTakenFromAQrCode() {
         listOf(
             LINK,

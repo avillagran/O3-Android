@@ -44,6 +44,7 @@
     <string name="pair_link_hint">http://host:3773/pair#token=…</string>
     <string name="pair_scan">Scan QR</string>
     <string name="pair_continue">Continue</string>
+    <string name="pair_link_origin">This link pairs with %1$s. Check that it is your computer, then tap Continue.</string>
     <string name="pair_confirm">Pair</string>
     <string name="pair_existing">Already saved as “%1$s”. Pairing replaces its token.</string>
     <string name="pair_moves">This link moves “%1$s” from %2$s to %3$s.</string>

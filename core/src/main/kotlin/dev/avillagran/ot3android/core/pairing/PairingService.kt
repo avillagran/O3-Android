@@ -249,6 +249,13 @@ class PairingService(
         /** [PairingState.Failed.code] when the link has no pairing code. */
         const val NO_CODE = "no_pairing_code"
 
+        /** The server origin [link] points at, offline, or null when it is not a readable link. */
+        fun originOf(link: String): String? = try {
+            PairingLink.parse(link).httpBaseUrl
+        } catch (_: T3Exception) {
+            null
+        }
+
         /**
          * Whether [text] (what a QR code holds) is a T3 pairing link, offline: it carries a
          * pairing code and is a `/pair` link or a hosted link naming the server in `host`. Any

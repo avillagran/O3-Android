@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 object PairScreenTags {
     const val ROOT = "pair_screen"
     const val LINK = "pair_link"
+    const val LINK_ORIGIN = "pair_link_origin"
     const val PASTE = "pair_paste"
     const val SCAN = "pair_scan"
     const val CONTINUE = "pair_continue"
@@ -61,15 +62,16 @@ object PairScreenTags {
 
 /**
  * Minimal pairing entry: paste a link or scan its QR code, check the server, confirm. Links
- * arriving through [inbox] (deep link, scanner) are taken only while this screen is started.
- * [onPaired] runs once with the saved environment's local id.
+ * arriving through [inbox] are taken only while this screen is started: a scanned one is read
+ * at once, one from outside (a deep link) fills the field and shows its host, and waits for
+ * Continue before anything is sent. [onPaired] runs once with the saved environment's local id.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PairScreen(
     viewModel: PairViewModel,
-    inbox: StateFlow<String?>,
-    takeFromInbox: () -> String?,
+    inbox: StateFlow<PairingInbox.Offer?>,
+    takeFromInbox: () -> PairingInbox.Offer?,
     onScan: () -> Unit,
     onPaired: (environmentId: String) -> Unit,
     onBack: (() -> Unit)?,
@@ -79,7 +81,12 @@ fun PairScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val waiting by inbox.collectAsStateWithLifecycle()
     LaunchedEffect(waiting) {
-        if (waiting != null) takeFromInbox()?.let(viewModel::open)
+        val offer = if (waiting != null) takeFromInbox() else null
+        when {
+            offer == null -> Unit
+            offer.scanned -> viewModel.open(offer.link)
+            else -> viewModel.setLink(offer.link)
+        }
     }
     LaunchedEffect(state.pairing) {
         val paired = state.pairing as? PairingState.Paired ?: return@LaunchedEffect
@@ -141,6 +148,15 @@ fun PairScreen(
                 },
                 modifier = Modifier.fillMaxWidth().testTag(PairScreenTags.LINK),
             )
+            val linkOrigin = state.linkOrigin
+            if (state.pairing == PairingState.Idle && linkOrigin != null) {
+                // The field is masked: say where the link goes before anything is sent there.
+                Text(
+                    stringResource(R.string.pair_link_origin, linkOrigin),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.testTag(PairScreenTags.LINK_ORIGIN),
+                )
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = onScan, enabled = idle, modifier = Modifier.testTag(PairScreenTags.SCAN)) {
                     Text(stringResource(R.string.pair_scan))

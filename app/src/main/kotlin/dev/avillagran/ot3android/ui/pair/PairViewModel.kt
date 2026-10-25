@@ -18,6 +18,9 @@ import kotlinx.coroutines.launch
 data class PairUiState(val link: String = "", val pairing: PairingState = PairingState.Idle) {
     val busy: Boolean get() = pairing is PairingState.Inspecting || pairing is PairingState.Pairing
 
+    /** The server [link] points at, read offline; null while it is not a readable link. */
+    val linkOrigin: String? get() = PairingService.originOf(link)
+
     override fun toString() = "PairUiState(link=<redacted>, pairing=$pairing)"
 }
 
@@ -35,7 +38,10 @@ class PairViewModel(private val service: PairingService) : ViewModel() {
         if (service.state.value !is PairingState.Idle) viewModelScope.launch { service.reset() }
     }
 
-    /** A link from the scanner or a deep link: read its server straight away. */
+    /**
+     * A link the user scanned in the app: read its server straight away. A link from outside
+     * (a deep link) only fills the field through [setLink] and waits for Continue.
+     */
     fun open(value: String) {
         if (state.value.busy) return
         link.value = value.trim()

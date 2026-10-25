@@ -12,17 +12,23 @@ import kotlinx.coroutines.flow.getAndUpdate
  * one-time code; a link not taken before the process dies is lost and the user scans again.
  */
 class PairingInbox {
-    private val _link = MutableStateFlow<String?>(null)
+
+    /** A waiting [link]; [scanned] when the in-app scanner read it, false for a deep link. */
+    class Offer(val link: String, val scanned: Boolean) {
+        override fun toString() = "Offer(link=<redacted>, scanned=$scanned)"
+    }
+
+    private val _link = MutableStateFlow<Offer?>(null)
 
     /** The waiting link, if any. Never log it. */
-    val link: StateFlow<String?> = _link.asStateFlow()
+    val link: StateFlow<Offer?> = _link.asStateFlow()
 
-    fun offer(link: String) {
-        _link.value = link
+    fun offer(link: String, scanned: Boolean = false) {
+        _link.value = Offer(link, scanned)
     }
 
     /** The waiting link, removed from the inbox. */
-    fun take(): String? = _link.getAndUpdate { null }
+    fun take(): Offer? = _link.getAndUpdate { null }
 
     companion object {
         /**

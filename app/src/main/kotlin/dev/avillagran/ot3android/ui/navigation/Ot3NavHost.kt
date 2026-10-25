@@ -118,7 +118,7 @@ fun Ot3NavHost(startDestination: String, navController: NavHostController = reme
                 onScanned = { text ->
                     // Back to the pairing screen first, so it is the one that takes the link.
                     navController.popBackStack()
-                    inbox.offer(text)
+                    inbox.offer(text, scanned = true)
                 },
                 onBack = { navController.popBackStack() },
             )
