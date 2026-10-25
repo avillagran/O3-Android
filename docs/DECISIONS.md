@@ -234,6 +234,38 @@ factory, the fake's scripting). Supersedes the entry above.
 - `room-runtime` is now an `api` dependency of `core`, since `Ot3Database` is part of
   its public surface and `AppGraph` builds the repository from it.
 
+## 2026-10-25: Live thread: temporary projection shim, refetch on unknown events, outbox and drafts
+
+- **`ThreadSession`** (`core.thread`, pure Kotlin) owns one open thread: `boundedThread`,
+  then `threadStream` from its `snapshotSequence`, publishing `StateFlow<ThreadView>`
+  (messages, working, active run, pending requests, model selection, stream state, stale)
+  on `repaint` only. It runs on the environment supervisor's handle
+  (`ConnectionSupervisor.connectedTransport`, added for this) and pauses when that goes
+  null, so background stops, wakes and token problems stay with the supervisor. Reconnects
+  follow the supervisor's rules with its own `Backoff`.
+- **The shim is one file and applies five event families only**
+  (`ThreadProjectionShim.kt`: `message.created|updated|deleted`, `run.created|updated`,
+  `thread.updated`), mirroring the lib's `projection::apply` caps and `activeRunId` rule.
+  Every other event type marks the view stale and triggers a debounced (500 ms) refetch of
+  the bounded snapshot, after which the stream restarts from the new sequence (restarting
+  rather than continuing avoids losing events delivered while the refetch was in flight).
+  `stream_backpressure` and other non-transient ends refetch too. This keeps the Kotlin
+  side tiny and never guesses an event's meaning, at the cost of a snapshot read for each
+  turn item or runtime request update; LIB_REQUESTS.md phase 1 item 1 removes both the shim
+  and that cost.
+- **Outbox in Room** (`outbox`: id = `commandId`, environmentId, threadId, commandJson,
+  createdAt, state). `MessageSender` mints `ot3a-<uuid>` ids once, persists before sending
+  and sends from the app scope under `NonCancellable`; only `rpc_outcome_unknown` keeps an
+  entry, and Resend sends its stored bytes unchanged. Interrupts are repeatable and are not
+  persisted. The `message.dispatch` arguments are built in Kotlin from the lib's validator
+  (LIB_REQUESTS.md phase 1 item 4 would move that into Rust); Rust validates them again.
+- **Drafts in Room** (`drafts`: threadKey `<environment id>/<thread id>`, text, updatedAt),
+  written 400 ms after the last change and once more when the screen goes away; empty text
+  deletes the row. A draft is cleared only when the server accepted exactly that text.
+  Room rather than DataStore because the outbox already needs Room and both are per thread.
+- **Schema 2** adds both tables with a manual `MIGRATION_1_2` whose SQL is Room's own
+  (`core/schemas/.../2.json`), tested with `MigrationTestHelper`.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

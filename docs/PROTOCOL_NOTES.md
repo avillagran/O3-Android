@@ -166,3 +166,101 @@ LIB_REQUESTS.md phase 1 item 3 (`sidebar.view`):
   otherwise nothing.
 
 Live: 6 project groups, 7 active rows, 23 settled rows (4 failed).
+
+## Thread stream and sending
+
+Shapes and key lists below were recorded on 2026-10-25 against the same server (T3
+0.1.3-nightly, orchestration protocol 2) through lib-t3-rust v0.3.2, read-only. The
+read-only check added with the thread screen (`core/.../thread/LiveThreadTest.kt`) could not
+run that day: the development token had expired. The `boundedThread` envelope (the fields
+at the top level, not nested) is therefore taken from the lib and from ot3, which reads
+`fetched["snapshotSequence"]` and `fetched["projection"]` (`src/live.rs`); the shim accepts
+exactly that shape and the live test prints its keys when it runs. **Nothing was sent to a
+live server**: sending and interrupting are verified only against `FakeT3Transport`.
+
+### Opening a thread
+
+1. **`boundedThread(threadId)`** (HTTP, up to 64 MiB, compact turn items already restored)
+   → `{snapshotSequence, projection{...}, historyCursor, hasMoreHistory,
+   latestLocalTurnOrdinal, payloadBudgetExceeded}`. Paint from it at once.
+2. **`threadStream(threadId, afterSequence = snapshotSequence, completionMarker = false,
+   boundedSnapshot = true, compactTurnItems = false)`** (`orchestration.subscribeThread`).
+   At most two bounded thread streams per handle (eight streams in total); the thread
+   screen uses the environment supervisor's handle and closes its stream when it goes away.
+3. **Items**, reduced in order from `update.batch.items`:
+   - `{kind: "snapshot", snapshotSequence, projection, ...}`: replaces everything. This
+     also covers `start == "snapshot"` on a resumed stream (replace, not merge).
+   - `{kind: "event", sequence, event{type, payload}}`: applied when `sequence` is above the
+     held one, otherwise ignored.
+   - `{kind: "unknown-event", sequence}`: the lib could not decode it; only the cursor moves.
+   - `{kind: "synchronized"}`: the completion marker (not requested here).
+   `update.idle` means caught up. Paint only on `update.repaint`, never mid-chunk.
+4. **Projection keys**: `thread{28 keys incl. id, title, status, activeRunId,
+   modelSelection, runtimeMode, interactionMode, projectId}, messages[], turnItems[],
+   visibleTurnItems[], runs[], plans[], runtimeRequests[], providerThreads[],
+   providerTurns[], providerSessions[], subagents[], nodes[], checkpointScopes[],
+   checkpoints[], contextHandoffs[], contextTransfers[], attempts[], updatedAt`.
+5. **Message rows** (`messages[]`): `id, role ("user" | "assistant"), text, attachments[],
+   createdAt, runId, streaming (bool), context?`. Streaming is a repeated whole-row
+   `message.updated` with growing `text` (there are no delta events). Order by `createdAt`,
+   then array order. The lib caps the mirrored list at 160 rows and `runs[]` at 64,
+   dropping the oldest by position.
+6. **Working**: any `runs[].status` in `preparing, starting, running, waiting`, or
+   `thread.activeRunId != null`. A `run.created`/`run.updated` with an active status sets
+   `thread.activeRunId`; any other status clears it if it named that run.
+7. **Needs the user**: `runtimeRequests[].status == "pending"`; the prompt is on the request
+   or on its latest turn item with the same `requestId`. Read-only for now.
+
+### What the temporary shim applies
+
+`core/thread/ThreadProjectionShim.kt` (until the lib exposes `projection.apply` or a
+reduced view, LIB_REQUESTS.md phase 1 item 1) applies only:
+
+- `message.created`, `message.updated`: upsert `messages[]` by `id` (the lib knows only
+  `message.updated`; `created` is treated the same);
+- `message.deleted`: remove by `payload.id` (or `payload.messageId`); with neither, refetch;
+- `run.created`, `run.updated`: upsert `runs[]` and maintain `thread.activeRunId` as above;
+- `thread.updated` whose `payload.id` is this thread: the payload replaces `thread` (as the
+  lib does).
+
+Any other event type (`turn-item.updated`, `runtime-request.updated`, `plan.updated`, ...)
+is not guessed at: the view is marked stale and, 500 ms later, the session reads a fresh
+`boundedThread` and reopens the stream from its `snapshotSequence`. A stream that ends with
+`stream_backpressure`, `stream_closed` or any other non-transient error does the same after
+the backoff. Transient errors (`stream_timeout`, `disconnected`, `rpc_connection_failed`,
+`unreachable`) resume from the held sequence without a new snapshot, with the supervisor's
+jittered backoff. `unauthorized`, `invalid_thread_id` and `http_404` wait for a retry.
+
+### Sending a message
+
+`call("orchestration.dispatchCommand", args)` (scope `orchestration:operate`) with
+
+```json
+{"type": "message.dispatch", "commandId": "ot3a-<uuid>", "threadId": "...",
+ "messageId": "ot3a-<uuid>", "text": "...", "attachments": [], "createdBy": "user",
+ "creationSource": "mobile", "dispatchMode": {"type": "start_immediately"},
+ "deliveryIntent": "auto", "modelSelection": {"...": "the thread's current one"}}
+```
+
+- `type, commandId, threadId, messageId, text, attachments, createdBy, creationSource,
+  dispatchMode` are required by the lib's validator (`src/api/orchestration.rs`,
+  `Command::from_json`); unknown members fail with `invalid_input`. Ids match
+  `^[A-Za-z0-9][A-Za-z0-9_:%.-]{0,2047}$`. `text` is at most 120 000 characters and not blank.
+  `modelSelection` comes from `projection.thread` and is omitted when the thread has none.
+- The response `{sequence}` means **accepted**, not finished: the user message and the run
+  arrive on the stream.
+- `creationSource: "mobile"` is accepted by the lib (`CREATION_SOURCES`). If the server
+  answers `rpc_rejected` naming `creationSource`, the sender switches to `"web"` for the rest
+  of the process and resends once with fresh ids.
+- **Outbox**: `commandId` and `messageId` are minted once and the exact JSON is stored in
+  Room (`outbox`) before sending, from the app scope under `NonCancellable`. Success deletes
+  it. `rpc_outcome_unknown` keeps it (`state = "unknown"`) and offers **Resend**, which sends
+  the stored bytes again; the server deduplicates by `commandId`. `rpc_rejected`,
+  `write_not_authorized` (with `requiredScope`) and every other code delete it, and the
+  composer keeps the draft.
+
+### Interrupting
+
+`call("orchestration.dispatchCommand", {type: "run.interrupt", commandId, threadId,
+runId: thread.activeRunId (else the newest active run), holdQueue: true})`, offered while
+the thread is working. It is repeatable, so it is not persisted.
