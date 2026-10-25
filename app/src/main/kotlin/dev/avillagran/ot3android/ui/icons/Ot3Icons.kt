@@ -19,10 +19,13 @@ import dev.avillagran.ot3android.R
  * that folder's NOTICE.md and add the icon here.
  */
 object Ot3Icons {
+    @DrawableRes val AlarmClock: Int = R.drawable.ic_alarm_clock
     @DrawableRes val ArrowUp: Int = R.drawable.ic_arrow_up
+    @DrawableRes val Bot: Int = R.drawable.ic_bot
     @DrawableRes val ChartNoAxesColumn: Int = R.drawable.ic_chart_no_axes_column
     @DrawableRes val Check: Int = R.drawable.ic_check
     @DrawableRes val ChevronDown: Int = R.drawable.ic_chevron_down
+    @DrawableRes val ChevronRight: Int = R.drawable.ic_chevron_right
     @DrawableRes val ChevronUp: Int = R.drawable.ic_chevron_up
     @DrawableRes val CircleAlert: Int = R.drawable.ic_circle_alert
     @DrawableRes val CircleCheck: Int = R.drawable.ic_circle_check
@@ -44,8 +47,10 @@ object Ot3Icons {
     @DrawableRes val GitPullRequestClosed: Int = R.drawable.ic_git_pull_request_closed
     @DrawableRes val GitPullRequestDraft: Int = R.drawable.ic_git_pull_request_draft
     @DrawableRes val Laptop: Int = R.drawable.ic_laptop
+    @DrawableRes val Layers: Int = R.drawable.ic_layers
     @DrawableRes val ListFilter: Int = R.drawable.ic_list_filter
     @DrawableRes val ListPlus: Int = R.drawable.ic_list_plus
+    @DrawableRes val LoaderCircle: Int = R.drawable.ic_loader_circle
     @DrawableRes val MessageCircleQuestion: Int = R.drawable.ic_message_circle_question
     @DrawableRes val MessageSquare: Int = R.drawable.ic_message_square
     @DrawableRes val Monitor: Int = R.drawable.ic_monitor
@@ -68,10 +73,13 @@ object Ot3Icons {
 
     /** Every icon, keyed by its ot3 / Lucide name (`"git-pull-request"`). */
     val byName: Map<String, Int> = mapOf(
+        "alarm-clock" to AlarmClock,
         "arrow-up" to ArrowUp,
+        "bot" to Bot,
         "chart-no-axes-column" to ChartNoAxesColumn,
         "check" to Check,
         "chevron-down" to ChevronDown,
+        "chevron-right" to ChevronRight,
         "chevron-up" to ChevronUp,
         "circle-alert" to CircleAlert,
         "circle-check" to CircleCheck,
@@ -93,8 +101,10 @@ object Ot3Icons {
         "git-pull-request-closed" to GitPullRequestClosed,
         "git-pull-request-draft" to GitPullRequestDraft,
         "laptop" to Laptop,
+        "layers" to Layers,
         "list-filter" to ListFilter,
         "list-plus" to ListPlus,
+        "loader-circle" to LoaderCircle,
         "message-circle-question" to MessageCircleQuestion,
         "message-square" to MessageSquare,
         "monitor" to Monitor,

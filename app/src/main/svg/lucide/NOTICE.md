@@ -18,10 +18,13 @@ Sources, in order of preference (UI_SPEC 3.8):
 
 | File | Source | Licence |
 |---|---|---|
+| `alarm-clock.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `arrow-up.svg` | ot3 folder | Lucide ISC |
+| `bot.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `chart-no-axes-column.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `check.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `chevron-down.svg` | ot3 folder | Lucide ISC |
+| `chevron-right.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `chevron-up.svg` | ot3 folder | Lucide ISC |
 | `circle-alert.svg` | ot3 folder | Lucide ISC |
 | `circle-check.svg` | ot3 folder | Lucide ISC |
@@ -43,8 +46,10 @@ Sources, in order of preference (UI_SPEC 3.8):
 | `git-pull-request-draft.svg` | ot3 folder | Lucide ISC |
 | `git-pull-request.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `laptop.svg` | ot3 folder | Lucide ISC |
+| `layers.svg` | ot3 folder | Lucide ISC |
 | `list-filter.svg` | ot3 folder | Lucide ISC |
 | `list-plus.svg` | ot3 `IconAssets.js` | Lucide ISC |
+| `loader-circle.svg` | ot3 folder | Lucide ISC |
 | `message-circle-question.svg` | ot3 folder | Lucide ISC |
 | `message-square.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `monitor.svg` | ot3 folder | Lucide ISC |
