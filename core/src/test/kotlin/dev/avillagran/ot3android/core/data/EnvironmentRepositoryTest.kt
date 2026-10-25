@@ -43,6 +43,18 @@ class EnvironmentRepositoryTest {
     }
 
     @Test
+    fun withoutMatchingTheServerASecondRowIsAdded() = runTest {
+        repository.save(null, "Workstation", "http://box:3773", "env-1", "secret-1")
+
+        val second = repository.save(null, "Workstation", "http://other:3773", "env-1", "secret-2", matchServer = false)
+
+        assertEquals("id-2", second.id)
+        assertEquals(listOf("http://box:3773", "http://other:3773"), repository.environments.first().map { it.baseUrl })
+        assertEquals("secret-1", repository.token("id-1"))
+        assertEquals("secret-2", repository.token("id-2"))
+    }
+
+    @Test
     fun markConnectedRecordsTimeAndServerId() = runTest {
         repository.save(null, "Workstation", "http://box:3773", null, "secret-1")
         now = 5_000

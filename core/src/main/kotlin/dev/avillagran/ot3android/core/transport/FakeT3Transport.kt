@@ -47,6 +47,18 @@ class FakeT3Transport(
 
     data class Call(val fn: String, val args: JSONObject, val timeoutMs: Int?)
 
+    /** One `pairBearer` call. [pairingCode] is a secret: it is not in [toString] nor in [log]. */
+    data class PairRequest(
+        val baseUrl: String,
+        val pairingCode: String,
+        val environmentId: String?,
+        val client: PairingClient,
+        val connect: Boolean,
+    ) {
+        override fun toString() =
+            "PairRequest(baseUrl=$baseUrl, pairingCode=<redacted>, environmentId=$environmentId, client=$client, connect=$connect)"
+    }
+
     /** One method call, in call order: the method's name and its arguments. */
     data class Invocation(val method: String, val args: List<Any?> = emptyList())
 
@@ -54,6 +66,7 @@ class FakeT3Transport(
     val routes: MutableList<ConnectRoute> = CopyOnWriteArrayList()
     val calls: MutableList<Call> = CopyOnWriteArrayList()
     val streamOpens: MutableList<StreamOpen> = CopyOnWriteArrayList()
+    val pairRequests: MutableList<PairRequest> = CopyOnWriteArrayList()
 
     /** Thrown by the next [connect] instead of connecting, then cleared. */
     @Volatile var connectFailure: T3Exception? = null
@@ -69,6 +82,7 @@ class FakeT3Transport(
 
     private val functions = ConcurrentHashMap<String, suspend (JSONObject) -> Any?>()
     private val descriptors = ConcurrentHashMap<String, suspend () -> JSONObject>()
+    private val pairings = ConcurrentHashMap<String, suspend (PairRequest) -> PairedBearer>()
     private val threads = ConcurrentHashMap<String, suspend () -> JSONObject>()
     @Volatile private var shell: (suspend () -> JSONObject)? = null
     @Volatile private var shellSource: ((afterSequence: Long?) -> Flow<ThreadUpdate>)? = null
@@ -88,6 +102,14 @@ class FakeT3Transport(
     fun onCall(fn: String, answer: suspend (args: JSONObject) -> Any?) { functions[fn] = answer }
     fun onShell(answer: suspend () -> JSONObject) { shell = answer }
     fun onFetchDescriptor(baseUrl: String, answer: suspend () -> JSONObject) { descriptors[baseUrl] = answer }
+
+    /**
+     * Answers `pairBearer` at [baseUrl]; [answer] may throw [T3Exception] (`pairing_rejected`, ...).
+     * As in the lib, a result naming another environment than the requested one fails with
+     * `t3_environment_mismatch`, and `connect = true` connects this handle.
+     */
+    fun onPairBearer(baseUrl: String, answer: suspend (PairRequest) -> PairedBearer) { pairings[baseUrl] = answer }
+
     fun onBoundedThread(threadId: String, answer: suspend () -> JSONObject) { threads[threadId] = answer }
 
     @Deprecated("Renamed", ReplaceWith("onFetchDescriptor(baseUrl, answer)"))
@@ -165,6 +187,28 @@ class FakeT3Transport(
             throw T3Exception("t3_environment_mismatch")
         }
         return descriptor
+    }
+
+    override suspend fun pairBearer(
+        baseUrl: String,
+        pairingCode: String,
+        environmentId: String?,
+        client: PairingClient,
+        connect: Boolean,
+    ): PairedBearer {
+        val request = PairRequest(baseUrl, pairingCode, environmentId, client, connect)
+        record("pairBearer", baseUrl, REDACTED, environmentId, client, connect)
+        pairRequests.add(request)
+        val answer = pairings[baseUrl] ?: throw T3Exception("rpc_connection_failed", "not scripted: $baseUrl")
+        val paired = answer(request)
+        if (!environmentId.isNullOrEmpty() && paired.environmentId != environmentId) {
+            throw T3Exception("t3_environment_mismatch")
+        }
+        if (connect) {
+            connected = true
+            session.update { it + 1 }
+        }
+        return paired.copy(connected = connect)
     }
 
     override suspend fun boundedThread(threadId: String): JSONObject {
@@ -246,6 +290,7 @@ class FakeT3Transport(
 
     private companion object {
         const val BUFFER = 64
+        const val REDACTED = "<redacted>"
     }
 }
 

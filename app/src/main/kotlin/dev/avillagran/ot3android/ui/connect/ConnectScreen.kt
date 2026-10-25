@@ -53,9 +53,13 @@ object ConnectScreenTags {
     const val SERVER = "connect_server"
     const val ERROR = "connect_error"
     const val PROGRESS = "connect_progress"
+    const val PAIR = "connect_pair"
 }
 
-/** URL + token entry; [onSaved] runs once with the saved environment's local id. */
+/**
+ * URL + token entry; [onSaved] runs once with the saved environment's local id. [onPair], when
+ * given, offers pairing with a link or QR code instead.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConnectScreen(
@@ -63,6 +67,7 @@ fun ConnectScreen(
     onSaved: (environmentId: String) -> Unit,
     onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    onPair: (() -> Unit)? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.savedEnvironmentId) {
@@ -100,6 +105,11 @@ fun ConnectScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             val idle = state.busy == null
+            if (onPair != null) {
+                OutlinedButton(onClick = onPair, enabled = idle, modifier = Modifier.fillMaxWidth().testTag(ConnectScreenTags.PAIR)) {
+                    Text(stringResource(R.string.connect_pair))
+                }
+            }
             OutlinedTextField(
                 value = state.url,
                 onValueChange = viewModel::setUrl,

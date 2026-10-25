@@ -287,6 +287,97 @@ factory, the fake's scripting). Supersedes the entry above.
 - **Schema 2** adds both tables with a manual `MIGRATION_1_2` whose SQL is Room's own
   (`core/schemas/.../2.json`), tested with `MigrationTestHelper`.
 
+## 2026-10-25: Pairing by link and QR: lib `pairBearer`, temporary link parser, CameraX + ZXing, unverified deep link
+
+- **`PairingService`** (`core.pairing`, pure Kotlin) runs a pairing as a state machine
+  (`Idle → Inspecting → Ready → Pairing → Paired | Failed`): parse the link, read the
+  descriptor (label and version shown to the user), and only on the user's confirmation
+  `pairBearer(connect = false)` with the descriptor's `environmentId`. The issued
+  long-lived `accessToken` goes to the credential store; the one-time code is never stored
+  and no state, `toString` or log holds either. The Room row takes the server's
+  `environmentId` and the descriptor's label. A server already saved (same `environmentId`)
+  at the same address keeps its row, id and label and gets the new token. At another
+  address it is never moved silently, because the descriptor's `environmentId` is
+  unauthenticated and any server can claim it: the screen warns that the link moves the
+  saved environment from the old address to the new one, the default action adds a new
+  environment, and a second, explicit Replace moves the saved one. Then the
+  connection layer takes over. A saved environment that changes is stopped first
+  (`ConnectionManager.forget`, which returns once its run has ended) and only then gets its
+  new row and token, because a supervisor reads the token at each reconnect but keeps the
+  URL it was built with: stopping it afterwards would leave a window in which it sends the
+  new token to the old address. After the write, any supervisor built in between is dropped
+  and a fresh one starts. Lib codes are grouped into `PairingFailure` for the
+  UI; each step uses a short-lived transport. Confirming is a separate step so that a link
+  opened from elsewhere (a deep link) never pairs without the user seeing the server.
+  Once confirmed, the exchange, the save and the hand-over run to the end even if the user
+  leaves the screen (`NonCancellable`): the exchange spends the code, so stopping half-way
+  could only lose the issued session.
+- **`pairBearer` goes through `execute`** in `NativeT3Transport`, like `fetchDescriptor`,
+  because `T3Client` has no wrapper (LIB_REQUESTS.md, phase 1 item 8).
+- **Temporary link parser** `core/pairing/PairingLink.kt`, a port of
+  `connection_catalog::pairing_target`, which the lib does not expose (phase 1 item 6,
+  U17 in UI_SPEC, now blocking). It also re-implements the part of the WHATWG URL parser
+  that function relies on. `PairingLinkTest` ports the lib's own test case by case and
+  compares 70 inputs with what the Rust function returned at v0.3.2 (captured by calling it
+  from a small binary). Known differences are listed in the file's header. It is deleted
+  when the lib's `pairingTarget` lands.
+- **QR scanning: CameraX + ZXing core** (`camera-camera2`, `camera-lifecycle`,
+  `camera-compose` 1.6.2; `com.google.zxing:core` 3.5.4), decoding the Y plane of
+  `ImageAnalysis` frames in the app (`ui/pair/QrDecoder.kt`). The scanner only takes text
+  that is a pairing link (`PairingService.isPairingLink`: a non-empty code, and a `/pair`
+  path or a `host` parameter); for any other QR code it says "Not a T3 pairing code" and
+  keeps scanning.
+  - Not ML Kit's bundled barcode scanner: its AAR (`barcode-scanning` 17.3.0) is 9.9 MB,
+    mostly a native model for each ABI, so it would cost several times more than the whole
+    scanner below. Its unbundled variant needs Play Services at runtime.
+  - Not zxing-android-embedded: it drives the deprecated Camera1 API from its own
+    View-based activity, and its last release is from 2021.
+  - ZXing is pure Java and reads inverted codes (`ALSO_INVERTED`, honoured by
+    `MultiFormatReader`). `t3 pair` draws its QR in the terminal's text colour, so on a dark
+    terminal it is light on dark; `QrDecoderTest` covers both.
+  - `camera-view` (`PreviewView`, `LifecycleCameraController`) is avoided: since 1.6 it
+    depends on `camera-video`, which brings media3 and Guava: the APK grew 4.94 MB with it
+    and about 2.3 MB without. The
+    preview is `camera-compose`'s `CameraXViewfinder` over `ProcessCameraProvider`.
+  - Cost, measured on the debug APK (no minification, as in release today): +2.3 MB
+    (2.27 to 2.34 MB between builds, the rest of the spread being zip alignment of the
+    uncompressed native libraries): dex +2.02 MB, CameraX's two small JNI libraries
+    +0.16 MB over four ABIs, resources +8 KB.
+  - `CAMERA` is the only new permission and is requested when the scanner opens, with
+    `uses-feature android.hardware.camera required="false"` so devices without a camera
+    can still install the app and paste the link. After a denial Android will not ask
+    again for (no rationale to show), the scanner offers Open settings (the app's details
+    screen) and checks the permission again when the user comes back.
+- **Deep link without App Links**: an intent filter for `http` and `https`, any host,
+  path `/pair`, `autoVerify="false"`. Verification is impossible because T3 servers are
+  arbitrary hosts. Up to Android 11, opening such a link from another app shows a chooser
+  that includes ot3. From Android 12, Android sends web links to the default browser unless
+  the app is approved for the domain, so the chooser normally does not appear there. On
+  those versions the in-app scanner and paste are the dependable paths. Neither behaviour
+  has been checked on a device yet. A link the app receives fills the pairing screen and
+  shows the host it points at, but sends nothing until the user taps Continue (no request
+  to an address the user has not seen), and then still waits for the confirmation. A link
+  scanned in the app reads the server at once. The intent filter
+  belongs to a trampoline, `PairingLinkActivity`: `Theme.NoDisplay`, `excludeFromRecents`,
+  `noHistory` and an empty `taskAffinity`, so it never shows, never joins the app's task and
+  leaves no recents entry. It hands the link to `PairingInbox`, starts `MainActivity` with a
+  plain intent and finishes, so the intent holding the code is never `MainActivity`'s
+  launching intent and never sits in the app task's recent-tasks record. `MainActivity` is
+  `singleTask` and has no VIEW filter; a running instance is brought to the front.
+- **Links travel in memory only** (`PairingInbox` in `AppGraph`), never as a navigation
+  argument or saved state, because they carry a one-time code. The pairing screen drops the
+  link once paired, and also when the server refused its code or the code is malformed,
+  since it cannot be used again.
+- **`FLAG_SECURE` while pairing**: the pairing and scanner screens set it on the activity's
+  window while they are composed (`ui/pair/SecureWindow.kt`, counted so that the
+  transition between the two never clears it), so the link, the code it holds and the
+  camera view stay out of screenshots, screen recordings and the recents thumbnail.
+- **UI kept minimal and isolated** (`ui/pair/`, one button on the Connect screen). The
+  redesign replaces it with the Add environment screen of [UI_SPEC.md](UI_SPEC.md) (4.2,
+  tranche UI-6), whose QR card, link field and masked code use this `PairingService`. That
+  screen keeps CameraX, and the decoder choice above stands. The link field is masked like a
+  token and uses a password keyboard, so the keyboard neither suggests nor learns it.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

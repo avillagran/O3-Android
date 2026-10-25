@@ -167,6 +167,83 @@ LIB_REQUESTS.md phase 1 item 3 (`sidebar.view`):
 
 Live: 6 project groups, 7 active rows, 23 settled rows (4 failed).
 
+## Pairing
+
+Marked as in the thread section below: **[observed]** was seen live on 2026-10-25 against
+T3 0.1.3-nightly.20261025.3669 (the same machine's server, on the LAN address the link
+named) through lib-t3-rust v0.3.2, by one run of `core/.../pairing/LivePairingTest.kt`;
+**[lib]** is read from lib-t3-rust v0.3.2 (`src/pairing.rs`, `src/connection_catalog.rs`)
+or the T3 CLI bundled in that release, and checked against local fixtures
+(`NativePairingTest`, `PairingLinkTest`); **[inferred]** is what this app assumes.
+
+### The link
+
+- `t3 pair --label <label> --ttl 5m` prints `Pairing with <server label> (<origin>).`, a
+  QR code, `Pairing URL: <link>`, `Token: <code>`, `Expires: <ISO time>` and a note
+  ("This URL works only from this machine's local network. From elsewhere, re-run with
+  --tailscale or use T3 Connect.") **[observed]**.
+- The link is `<origin>/pair#token=<code>`: `http://192.168.1.177:8643/pair#token=…` with a
+  12-character code, no query **[observed]**. The CLI builds it as `new URL(origin)`, path
+  `/pair`, any `token` query parameter deleted, and the hash set to
+  `URLSearchParams([["token", code]])`, so the code is form-encoded in the fragment and never
+  reaches a server in a request line **[lib]** (CLI source). `--tailscale` gives the same shape
+  on the tailnet's HTTPS name **[lib]**.
+- The QR code encodes the link (error correction M, quiet zone 2) drawn with half-block
+  characters in the terminal's text colour **[lib]**: on a dark terminal it is light on
+  dark, which the scanner must read inverted.
+- Accepted link forms are those of `connection_catalog::pairing_target` **[lib]**: the
+  code from the fragment's `token`, else the query's `token`, or a separately typed code,
+  which wins; a hosted link (`https://t3.codes/connect?host=<origin>#token=<code>`) points
+  at its `host` parameter, but only when there is a code; `ws`/`wss` map to `http`/`https`;
+  a bare `host:port` gets `https`. Path, query and fragment are dropped from the origin;
+  user info, port 0 and other schemes are `invalid_endpoint`, and a code with control
+  characters or over 16 KiB is `invalid_pairing_code`. `core/pairing/PairingLink.kt` ports
+  it until the lib exposes it (LIB_REQUESTS.md, phase 1 item 6).
+
+### The exchange (`pairBearer`)
+
+1. **Descriptor first, no credential**: `GET /.well-known/t3/environment`. Its
+   `environmentId` must be a UUID (`invalid_t3_environment_id`) and equal to the expected
+   one when given (`t3_environment_mismatch`); only then is the code sent **[lib]**. The app
+   reads the descriptor once to show the server before the user confirms, and passes its
+   `environmentId` to `pairBearer`, so a different server answering by then is refused
+   **[inferred]**.
+2. **`POST /oauth/token`**, `application/x-www-form-urlencoded`, `Accept:
+   application/json`, no `Authorization` **[lib]**, asserted in `NativePairingTest`:
+   `grant_type=urn:ietf:params:oauth:grant-type:token-exchange`, `subject_token=<code>`,
+   `subject_token_type=urn:t3:params:oauth:token-type:environment-bootstrap`,
+   `requested_token_type=urn:ietf:params:oauth:token-type:access_token`, and
+   `client_label`, `client_device_type`, `client_os` when set. The app sends
+   `ot3-Android · <device model>`, `mobile`, `android`.
+3. **Answer**: `token_type` must be `Bearer` and `access_token` a token of at least
+   8 characters without whitespace (`unsupported_pairing_token` otherwise); `scope` and
+   `expires_in` are passed through **[lib]**. The lib's operation returns `{accessToken,
+   tokenType: "Bearer", environmentId, descriptor, scope, expiresIn, connected}`; with
+   `connect: true` it also connects the handle. The app pairs with `connect: false` on a
+   short-lived handle and lets the environment's supervisor connect with the stored token
+   **[inferred]**.
+4. The issued token is a long-lived bearer session: it worked for `connect(Bearer)` and
+   the shell GET right away (16 projects, 227 threads) **[observed]**. The one-time code is
+   spent: `t3 auth pairing list` showed no active link afterwards **[observed]**. The
+   session shows in `t3 auth session list --json` as `{client{label, deviceType}, connected,
+   expiresAt, issuedAt, lastConnectedAt, method: "bearer-access-token", scopes, sessionId,
+   subject}`, with the label `ot3-android-pair-test` **[observed]**; the run used that label
+   for both the link and the client, so which of the two names the session is not settled.
+   It was revoked with `t3 auth session revoke <sessionId>` right after the run.
+
+### Errors
+
+None was seen live (one successful pairing). From the lib, checked against the fixture
+**[lib]**: `invalid_pairing_code` (empty, whitespace or control characters, over 4096
+bytes), `invalid_pairing_client` (a blank or over-256-byte label or OS, a device type
+outside `desktop|mobile|tablet|bot|unknown`), `invalid_endpoint` (not an origin),
+`unreachable`, `not_json`, `malformed` (descriptor without `environmentId`),
+`invalid_t3_environment_id`, `t3_environment_mismatch`, `pairing_rejected` (any non-2xx
+answer to the exchange, including 401 and 403: an unknown, used or expired code),
+`unsupported_pairing_token`. Input errors are found before any request. The app groups
+them into `PairingFailure` (link, no code, bad code, rejected, other server, incompatible,
+unreachable, not T3, internal, other) and shows one sentence for each.
+
 ## Thread stream and sending
 
 Each fact below is marked:
