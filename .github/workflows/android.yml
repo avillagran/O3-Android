@@ -5,9 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
@@ -25,12 +28,20 @@ jobs:
       # AGP installs any missing platform or build-tools on first use.
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Unit tests and debug build
-        run: ./gradlew --no-daemon :core:testDebugUnitTest :app:assembleDebug
+      - name: Unit tests, lint and debug build
+        run: >-
+          ./gradlew --no-daemon
+          :core:testDebugUnitTest
+          :core:lintDebug :app:lintDebug
+          :app:assembleDebug
+          :core:assembleDebugAndroidTest :app:assembleDebugAndroidTest
 
-      - name: Upload test reports
+      - name: Upload test and lint reports
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
-          path: '**/build/reports/tests/'
+          name: reports
+          path: |
+            **/build/reports/lint-results-*.html
+            **/build/reports/tests/
+            **/build/test-results/**/*.xml
