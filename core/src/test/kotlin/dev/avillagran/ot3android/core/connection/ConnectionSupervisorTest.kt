@@ -129,6 +129,46 @@ class ConnectionSupervisorTest {
     }
 
     @Test
+    fun aMetadataSnapshotAloneKeepsTheShellAndLaterEventsApply() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+
+        // Later in a running stream: one project's identity, no threads, a far sequence.
+        emit(ThreadUpdates.batch(identityRefresh(40, listOf("/w/p1"), listOf(project("p1", identity = "repo"))), start = "snapshot"))
+        assertEquals(listOf("t1", "t2"), supervisor.shell.value?.threads?.map { it.id })
+        assertEquals("""{"canonicalKey":"repo"}""", supervisor.shell.value?.projects?.single()?.repositoryIdentity)
+
+        emit(ThreadUpdates.event(threadUpdated(6, thread("t3"))))
+        assertEquals(listOf("t1", "t2", "t3"), supervisor.shell.value?.threads?.map { it.id })
+
+        emit(ThreadUpdates.closed("stream_timeout"))
+        val waiting = supervisor.state.value as ConnectionState.Unreachable
+        advanceTimeBy(waiting.nextRetryAt!! - testScheduler.currentTime + 1)
+        runCurrent()
+        assertEquals("the metadata frame did not move the cursor", listOf<Long?>(5, 6), streamOpens.map { it.afterSequence })
+    }
+
+    @Test
+    fun aResumedStreamThatStartsWithASnapshotReplacesTheShell() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        emit(ThreadUpdates.closed("stream_timeout"))
+        val waiting = supervisor.state.value as ConnectionState.Unreachable
+        advanceTimeBy(waiting.nextRetryAt!! - testScheduler.currentTime + 1)
+        runCurrent()
+        assertEquals(listOf<Long?>(5, 5), streamOpens.map { it.afterSequence })
+
+        // The server could not resume from 5 and sent a whole shell instead.
+        emit(ThreadUpdates.batch(snapshot(20, listOf(project("p1")), listOf(thread("x"))), start = "snapshot", cursor = 20))
+
+        assertEquals(listOf("x"), supervisor.shell.value?.threads?.map { it.id })
+        assertEquals(20L, supervisor.shell.value?.sequence)
+        assertEquals("no extra shell GET", 1, shellRequests.get())
+    }
+
+    @Test
     fun unauthorizedStopsWithoutRetrying() = runTest {
         shellAnswer = { throw T3Exception("unauthorized") }
         val supervisor = supervisor()
@@ -303,6 +343,8 @@ class ConnectionSupervisorTest {
         runCurrent()
         assertEquals(listOf<Long?>(5, 6), streamOpens.map { it.afterSequence })
         assertEquals(1, shellRequests.get())
+        assertEquals("stop and start use a new transport", 2, factory.created.size)
+        assertFalse(factory.created.last().closed)
     }
 
     @Test

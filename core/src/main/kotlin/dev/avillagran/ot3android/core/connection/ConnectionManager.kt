@@ -3,7 +3,9 @@ package dev.avillagran.ot3android.core.connection
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.domain.Environment
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +32,8 @@ class ConnectionManager(
     private val scope: CoroutineScope,
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: Random = Random.Default,
+    private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val computation: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val _supervisors = MutableStateFlow<Map<String, ConnectionSupervisor>>(emptyMap())
     val supervisors: StateFlow<Map<String, ConnectionSupervisor>> = _supervisors.asStateFlow()
@@ -107,5 +111,7 @@ class ConnectionManager(
         clock = clock,
         random = random,
         onConnected = { descriptor -> repository.markConnected(environment.id, descriptor.environmentId) },
+        io = io,
+        computation = computation,
     )
 }
