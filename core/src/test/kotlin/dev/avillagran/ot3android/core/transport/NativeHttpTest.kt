@@ -38,7 +38,7 @@ class NativeHttpTest {
 
     @After
     fun tearDown() {
-        if (::transport.isInitialized) transport.close()
+        if (::transport.isInitialized) runBlocking { transport.shutdown() }
         if (::server.isInitialized) server.close()
     }
 

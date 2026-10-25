@@ -18,8 +18,18 @@ import java.io.Closeable
  */
 interface T3Transport : Closeable {
 
-    /** Connects (or switches) this handle. A failed switch keeps the previous session. */
+    /**
+     * Connects (or switches) this handle. A failed switch keeps the previous session and its
+     * streams. A successful one ends every open stream with `closed = true, error = null`,
+     * indistinguishable from a host cancel: a supervisor must not back off on that update.
+     */
     suspend fun connect(route: ConnectRoute)
+
+    /**
+     * Drops the session but keeps the handle, so [connect] can follow. Open streams end with
+     * `closed = true, error = null`, as after [connect]; a supervisor must not back off on that.
+     */
+    suspend fun disconnect()
 
     /** ABI and library versions, operations and limits. Offline. */
     suspend fun capabilities(): JSONObject
@@ -56,6 +66,9 @@ interface T3Transport : Closeable {
      * collector stops. Updates that carry nothing new are skipped. When the stream ends, the
      * closed update (with its `error`) is emitted last and the flow completes; resume by
      * collecting again with `afterSequence` = that update's `cursor`, after the host's backoff.
+     * A poll that fails with [T3Exception] ends the stream the same way, with that code as the
+     * error; `error = null` means the stream was cancelled ([connect], [disconnect], [close]).
+     * Only opening the stream (validation, `not_connected`, `subscription_limit`) throws.
      *
      * [compactTurnItems] stays false: the lib does not restore compact stream snapshots yet
      * (docs/LIB_REQUESTS.md, phase 1 item 2).
@@ -73,6 +86,13 @@ interface T3Transport : Closeable {
      * with `stream_timeout` within about 3 s. Returns how many streams were probed.
      */
     suspend fun wakeSubscriptions(): Int
+
+    /**
+     * Frees the handle without blocking the caller; idempotent. Open streams end with
+     * `closed = true, error = null`, indistinguishable from a host cancel (a supervisor must
+     * not back off on that). Any call after it is a caller bug (`IllegalStateException`).
+     */
+    override fun close()
 }
 
 /** How [T3Transport.connect] reaches an environment. Credentials never appear in [toString]. */

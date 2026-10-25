@@ -88,9 +88,18 @@ internal class FakeWebSocketServer(private val script: (request: JSONObject, soc
         }
 
         /** One Effect RPC chunk of stream values. */
-        fun chunk(vararg values: JSONObject) {
-            val bytes = JSONObject().put("_tag", "Chunk").put("requestId", "1").put("values", JSONArray(values.toList()))
-                .toString().toByteArray(Charsets.UTF_8)
+        fun chunk(vararg values: JSONObject) =
+            send(JSONObject().put("_tag", "Chunk").put("requestId", "1").put("values", JSONArray(values.toList())))
+
+        /** The Effect RPC `Exit` that ends the stream server-side. */
+        fun exit() = send(
+            JSONObject().put("_tag", "Exit").put("requestId", "1")
+                .put("exit", JSONObject().put("_tag", "Failure").put("cause", JSONObject().put("_tag", "Die"))),
+        )
+
+        /** One server text frame. */
+        fun send(frame: JSONObject) {
+            val bytes = frame.toString().toByteArray(Charsets.UTF_8)
             val header = ByteArrayOutputStream()
             header.write(0x81)
             when {

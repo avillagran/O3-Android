@@ -24,7 +24,7 @@ class NativeSmokeTest {
 
     @After
     fun tearDown() {
-        if (::transport.isInitialized) transport.close()
+        if (::transport.isInitialized) runBlocking { transport.shutdown() }
     }
 
     @Test

@@ -1,10 +1,16 @@
 package dev.avillagran.ot3android.core.transport
 
+import dev.avillagran.t3.T3Batch
 import dev.avillagran.t3.T3Client
+import dev.avillagran.t3.T3Exception
 import dev.avillagran.t3.ThreadStream
 import dev.avillagran.t3.ThreadUpdate
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -13,14 +19,15 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
  * [T3Transport] over lib-t3-rust's [T3Client] (JNI). Every native call runs on [io]; the
  * client blocks, so nothing here may run on the main thread.
  *
- * [close] cancels the native streams, waits for in-flight calls and frees the handle; it is
- * idempotent and may block, so call it from a worker.
+ * [close] returns at once: the native close (cancel the streams, wait for in-flight calls up to
+ * their native deadline, free the handle) runs on an internal IO scope. [shutdown] waits for it.
  */
 class NativeT3Transport(
     private val client: T3Client = T3Client(),
@@ -33,6 +40,10 @@ class NativeT3Transport(
             is ConnectRoute.Relay ->
                 client.connectRelay(route.relayUrl, route.cloudJwt, route.environmentId, route.clientId, route.options)
         }
+    }
+
+    override suspend fun disconnect() {
+        native { client.execute(op("disconnect")) }
     }
 
     override suspend fun capabilities(): JSONObject = native { client.execute(op("capabilities")) as JSONObject }
@@ -69,7 +80,16 @@ class NativeT3Transport(
 
     override suspend fun wakeSubscriptions(): Int = native { client.wakeSubscriptions() }
 
-    override fun close() = client.close()
+    private val closer = CoroutineScope(io + SupervisorJob())
+    private val closing: Deferred<Unit> by lazy { closer.async { client.close() } }
+
+    /** Starts the native close in the background (fire and forget); idempotent. */
+    override fun close() {
+        closing.start()
+    }
+
+    /** [close], then waits until the handle is freed; rethrows what the native close threw. */
+    suspend fun shutdown() = closing.await()
 
     private suspend fun <T> native(block: () -> T): T = withContext(io) { block() }
 
@@ -77,7 +97,8 @@ class NativeT3Transport(
      * Polls [open]'s stream on [io] until it closes or the collector goes away. Closing the
      * stream on cancellation wakes a poll blocked in native code at once. No buffer: the
      * lib's bounded queue is the buffer, and a collector that falls behind ends the stream
-     * with `stream_backpressure` instead of holding snapshots in memory here.
+     * with `stream_backpressure` instead of holding snapshots in memory here. A poll that
+     * fails ends the stream with a closed update instead of an exception (see [endedBy]).
      */
     private fun updates(open: () -> ThreadStream): Flow<ThreadUpdate> = channelFlow {
         val stream = open()
@@ -88,7 +109,8 @@ class NativeT3Transport(
                     stream.poll(POLL_TIMEOUT_MS)
                 } catch (error: Exception) {
                     // A poll cut short by cancellation (stream closed under it) is not a failure.
-                    if (isActive) throw error else break
+                    if (!isActive) break
+                    stream.endedBy(error) ?: throw error
                 }
                 if (!update.isNews(previous)) continue
                 send(update)
@@ -104,6 +126,27 @@ class NativeT3Transport(
         const val POLL_TIMEOUT_MS = 1000
 
         fun op(name: String): JSONObject = JSONObject().put("op", name)
+
+        /**
+         * The closed update for a poll that threw. A successful connect or disconnect drops the
+         * subscription from the handle, so a poll after it fails with `unknown_subscription`, and
+         * one after [close] with `client_closed`: both are a cancel (`error = null`), like the
+         * closed batch an in-flight poll gets. Any other [T3Exception] keeps its code.
+         */
+        fun ThreadStream.endedBy(error: Exception): ThreadUpdate? {
+            val (code, reason) = when {
+                error is T3Exception && error.code == "unknown_subscription" -> null to null
+                error is T3Exception -> error.code to error.reason
+                error is IllegalStateException && error.message == "client_closed" -> null to null
+                else -> return null
+            }
+            val batch = T3Batch(JSONArray(), closed = true, error = code, errorMessage = reason, cursor = cursor, start = start)
+            return ThreadUpdate(
+                snapshot = null, events = emptyList(), repaint = false, synchronized = false, cursor = cursor,
+                start = start, idle = false, completionMarker = false, closed = true, error = code,
+                errorMessage = reason, batch = batch,
+            )
+        }
 
         /** A poll that timed out with nothing new: no items, no chunk end, same flags. */
         fun ThreadUpdate.isNews(previous: ThreadUpdate?): Boolean =

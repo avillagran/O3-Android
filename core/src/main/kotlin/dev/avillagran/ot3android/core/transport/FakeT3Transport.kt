@@ -78,6 +78,10 @@ class FakeT3Transport(
         connected = true
     }
 
+    override suspend fun disconnect() {
+        connected = false
+    }
+
     override suspend fun capabilities(): JSONObject = capabilities
 
     override suspend fun describe(): JSONObject = describe
