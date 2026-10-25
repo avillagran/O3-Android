@@ -287,6 +287,27 @@ factory, the fake's scripting). Supersedes the entry above.
 - **Schema 2** adds both tables with a manual `MIGRATION_1_2` whose SQL is Room's own
   (`core/schemas/.../2.json`), tested with `MigrationTestHelper`.
 
+## 2026-10-25: The emulator is the reference device, started only through `scripts/emulator.sh`
+
+UI screenshot comparisons and instrumented tests run on one emulator: AVD `ot3a` (pixel_6,
+API 34 google_apis x86_64, 2 GB), `-gpu swiftshader_indirect`, cold boot, console port
+5580. `scripts/emulator.sh` is the only supported way to start it; see
+[EMULATOR.md](EMULATOR.md).
+
+- The 2026-10-24 boot failures came from the soft `RLIMIT_NOFILE` of 1073741816 that
+  T3/agent shells inherit. Before spawning each helper, qemu walks every fd up to that
+  limit while holding the big QEMU lock, and its hang detector kills it. The script lowers
+  the soft limit to 4096 before launching. It is the only fix needed: no emulator
+  downgrade, image change or host change.
+- SwiftShader, not the host GPU: rendering is deterministic and the same as in CI, which
+  is what screenshot comparisons need, and it works headless.
+- A non-default port and adb only with `-s emulator-5580`, so a phone on wireless adb is
+  never addressed. `connectedAndroidTest` runs with `ANDROID_SERIAL` set; without it AGP
+  uses (and uninstalls the app from) every connected device.
+- CI runs `:core:connectedDebugAndroidTest` on the same image with
+  `reactivecircus/android-emulator-runner`. `:app` instrumented tests stay local until
+  their three failing tests are fixed.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
