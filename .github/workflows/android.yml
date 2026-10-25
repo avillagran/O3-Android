@@ -68,7 +68,7 @@ jobs:
           OT3A_REQUIRE_HOST_JNI: "1"
         run: >-
           ./gradlew --no-daemon
-          :core:testDebugUnitTest
+          :core:testDebugUnitTest :app:testDebugUnitTest
           :core:lintDebug :app:lintDebug
           :app:assembleDebug
           :core:assembleDebugAndroidTest :app:assembleDebugAndroidTest

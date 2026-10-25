@@ -229,10 +229,10 @@ None of the eight is on the ABI: `describe` has no `projection`, `sidebar`, `she
 (for example `{"op":"domain","fn":"<module>.<fn>","args":{...}}`, listed in `describe`
 next to the RPC functions, same error envelope) would serve items 1 to 7.
 
-**Blocking for phase 1: items 1, 3 and 8.** Items 2, 4, 5, 6 and 7 are nice to have:
-phase 1 can work around them (no compact snapshots, commands built from the
-`describe` argument schema, a Kotlin retry loop, URL + token entry, no older history)
-at some cost in behaviour or bandwidth.
+**Blocking for phase 1: items 1, 3, 6 and 8** (6 since 2026-10-25, when pairing by link
+shipped). Items 2, 4, 5 and 7 are nice to have: phase 1 can work around them (no compact
+snapshots, commands built from the `describe` argument schema, a Kotlin retry loop, no
+older history) at some cost in behaviour or bandwidth.
 
 ### 1. Apply thread events: `projection.apply` or a reduced thread view (blocking)
 
@@ -324,16 +324,40 @@ at some cost in behaviour or bandwidth.
   Wakeup probing is already on the ABI (`wakeSubscriptions`, `T3Subscription.wake()`,
   `ThreadStream.wake()`), so no separate probe operation is requested.
 
-### 6. Pairing-link parser (nice to have)
+### 6. Pairing-link parser (blocking since 2026-10-25)
 
-- Proposed: `connectionCatalog.pairingTarget` `{raw, code}` → `{httpBaseUrl,
-  pairingCode}`.
-- Why: phase 1 connects by pairing link; the link forms (direct, hosted, host + code)
-  and their validation are protocol knowledge. `pairBearer` takes the already split
+Also U17 in the UI specification's requests below, which gates UI-6. UI_SPEC section 4.2
+planned URL + token only until it lands; pairing shipped earlier on a temporary port, so
+it now blocks removing that port rather than the screen.
+
+- Proposed: an offline operation on the JSON ABI, with no handle state and no network:
+  `{"op":"pairingTarget","raw":"<link or host[:port]>","code":"<typed code or empty>"}` →
+  `{"httpBaseUrl":"https://host:port","pairingCode":"…"}`, failing with the function's codes
+  (`invalid_endpoint`, `invalid_pairing_code`). It would be listed in `capabilities`'
+  operations. Plus a Kotlin wrapper next to the `pairBearer` one (item 8), for example
+  `T3Client.pairingTarget(raw: String, code: String = ""): PairingTarget` with
+  `PairingTarget(httpBaseUrl, pairingCode)` and the code redacted from `toString`. (The pure
+  `{"op":"domain",…}` form above would also do.)
+- Why: pairing by link and QR shipped in ot3-Android on 2026-10-25, and every pairing
+  starts by splitting the link. The link forms and their validation are protocol knowledge
+  (the hosted `?host=` form, which parameter wins, scheme mapping, user info and port 0
+  rejections, size and control-character limits), and `pairBearer` takes the already split
   `httpBaseUrl` and `pairingCode`.
-- In Rust today: `connection_catalog::pairing_target` (`src/connection_catalog.rs:5`);
-  the catalog functions `view`, `mutate` and `register` (`:73`, `:107`, `:213`) could
-  follow, with storage staying in Kotlin.
+- Evidence: without it, ot3-Android carries `core/pairing/PairingLink.kt`, a port of
+  `pairing_target` that also has to re-implement the part of the WHATWG URL parser the
+  function relies on (host normalization, IPv4 shorthand, IPv6 compression, default
+  ports, form decoding of the fragment). It matches the Rust function on the 70 inputs of
+  `PairingLinkTest`, captured by calling `pairing_target` at v0.3.2, plus the lib's own test
+  ported case by case. Known differences remain on inputs no T3 link produces (IDNA 2003
+  instead of UTS #46). It goes stale whenever the lib's rules change.
+- Update 2026-10-25: lib-t3-rust v0.3.3 (`5cfb7ac`) exposes it through the
+  connection-free `domain` operation as `connectionCatalog.pairingTarget` `{link,
+  pairingCode?}` → `{httpBaseUrl, pairingCode}`, with a `T3Api` wrapper. The app still pins
+  v0.3.2, so `PairingLink.kt` stays until it moves to v0.3.3; `PairingLinkTest`'s table
+  can then check the wrapper instead.
+- In Rust today: `connection_catalog::pairing_target` (`src/connection_catalog.rs:5-58`,
+  test at `:265-290`); the catalog functions `view`, `mutate` and `register` (`:73`, `:107`,
+  `:213`) could follow, with storage staying in Kotlin.
 
 ### 7. History paging (nice to have)
 
@@ -360,6 +384,12 @@ at some cost in behaviour or bandwidth.
   `requestOk` take `method`, `path`, `body`; `fetchDescriptor`, `pairBearer`,
   `boundedThread`, `rpcWithTimeout`, `capabilities`). `T3Client.kt` at v0.3.1 (and
   v0.3.2) wraps none of them, and `request(path, protocol)` is GET-only.
+- Update 2026-10-25: pairing now calls `pairBearer` through `execute` in
+  `NativeT3Transport.pairBearer`, building `{"op":"pairBearer","httpBaseUrl",
+  "pairingCode","environmentId","client":{label, deviceType, os},"connect"}` and reading
+  `{accessToken, tokenType, environmentId, descriptor, scope, expiresIn, connected}` by hand.
+  `NativePairingTest` pins that shape against a local server. A `T3Client.pairBearer`
+  returning a typed result with the token redacted from `toString` would replace both.
 
 ## 2026-10-25: v0.3.2 through the app's transport layer
 
@@ -532,3 +562,49 @@ Proposed fix, common to every row: expose the Rust function (moving it from ot3'
 into the lib first where the row says "ot3 only") through the connection-free operation,
 add it to `describe` with typed args, generate the `T3Api` wrapper, and cover it with a
 fixture test whose JSON the app can reuse as screenshot-test input.
+
+## 2026-10-25: v0.3.2 pairing through the app's transport layer
+
+Checked with `NativeT3Transport.pairBearer` over the v0.3.2 release AAR and the host
+`libt3_jni.so` (`26e67a7`): `NativePairingTest` against a local server serving the
+descriptor and `POST /oauth/token`, and one live pairing against a local T3
+0.1.3-nightly.20261025.3669 from a `t3 pair` link (`LivePairingTest`). The session it
+created was revoked afterwards. Confirmed as documented: the descriptor is read and its
+`environmentId` checked (UUID, expected id) before the code is sent; input errors
+(`invalid_pairing_code`, `invalid_pairing_client`, `invalid_endpoint`) fail before any
+request; the form-encoded token exchange carries the client's label, device type and OS;
+`connect: true` connects the handle. Item 6 above (U17) moved to blocking with this
+work.
+
+### 1. `pairing_rejected` also covers server errors
+
+- What: `pair_bearer` maps every failed exchange to `pairing_rejected`: `unauthorized` (401,
+  403) and every `http_<n>`, including 5xx (`src/pairing.rs`, the `map_err` after
+  `decode`). An app then tells the user the code is bad ("expired or already used, run
+  `t3 pair` again") when the server failed or a proxy in front of it answered 502.
+  Re-running `t3 pair` does not help with that, and each run mints another credential.
+- Evidence: `NativePairingTest.aRefusedCodeIsPairingRejected` gets `pairing_rejected` for
+  400, 401, 403 and 500 alike. The OAuth error body (`{"error":"invalid_grant"}` in the
+  fixture) is dropped, so the app cannot tell an expired code from an unknown one either.
+- Proposed fix: keep `pairing_rejected` for 400, 401 and 403 (an OAuth refusal), and
+  return `http_<n>` for anything else, as every other operation does. Put the OAuth
+  `error` value (when it is a short ASCII token) in the exception's `reason`.
+
+### 2. Pairing again leaves the previous session alive, and Kotlin cannot revoke it
+
+- What: re-pairing an environment that is already saved (a lost or reset token,
+  `unauthorized` after a server change) gets a new session. The app replaces the stored
+  token, but the old session stays active on the server, and every re-pair adds one
+  more. ot3 retires its own stale sessions with `Connection::revoke_stale_sessions`
+  (`src/pairing.rs:189-210`: `GET /api/auth/clients`, a host policy, `POST
+  /api/auth/clients/revoke` `{sessionId}`). That function is Rust-only: no ABI operation,
+  no `describe` entry, and `T3Client.request` is GET-only.
+- Evidence: the live run's session showed up in `t3 auth session list` with the client
+  label the app sent. It could only be removed from the server's CLI (`t3 auth session
+  revoke`), not from the app.
+- Proposed fix: two typed operations on a connected handle, `auth.sessions` →
+  `{current: sessionId, sessions: [{sessionId, client{label, deviceType}, issuedAt,
+  lastConnectedAt, connected}]}` and `auth.revokeSession {sessionId}` (refusing the current
+  session). Then the app revokes the session whose token it just replaced. Alternatively,
+  a `pairBearer` option `replaceSession: <old token>` that revokes it once the new session
+  works.
