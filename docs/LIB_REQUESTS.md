@@ -431,3 +431,52 @@ adapter (`core/transport/ShellUpdates.kt`, which reads `update.batch.items` in o
 derives the cursor without the metadata frame); `ShellReducer` only consumes it. The
 proposed fix above (or item 3, `shell.reduce`) removes both.
 
+### 2. `rpc_rejected` carries no machine-readable field or reason code
+
+Found 2026-10-25 while building the thread screen's send (v0.3.2, `T3Exception` and
+`src/api/orchestration.rs`; nothing was sent to a live server).
+
+- What: when the server refuses a command, the app gets `T3Exception("rpc_rejected",
+  reason)` with `reason` as free text (a schema error or a sentence). Nothing says which
+  argument was refused or why in a stable form, so the app cannot react to it (for
+  example drop `creationSource: "mobile"`, which the lib's validator allows, if a server
+  refuses it) without parsing English or schema text. The previous send code did exactly
+  that (it looked for `creationSource` or `"mobile"` in `reason` and resent with `"web"`);
+  it was removed in favour of always sending `"web"`, as ot3 does.
+- Evidence: `CREATION_SOURCES = ["web", "mobile", "mcp", "provider", "server"]`
+  (`src/api/orchestration.rs:11`), while ot3 always sends `"web"` (`src/write.rs:149` in
+  omarchy-t3-code) and so does the lib's own compaction command (`src/compaction.rs:154`);
+  no live server has been seen accepting `"mobile"`. `T3Exception` has `code`, `reason` and `requiredScope` only.
+- Proposed fix: add `rejectedField` and `rejectedReason` (a stable code such as
+  `invalid_enum`, `too_long`, `not_found`) to `T3Exception` when the server's rejection
+  names them, or, for this case, list the values the connected server accepts for
+  `creationSource` in the descriptor or in `describe`, so the app never needs a rejection
+  to learn them.
+
+### 3. `ThreadUpdate` cannot say whether the lib's reducer applied an event
+
+Found 2026-10-25 with the thread screen (v0.3.2), read-only against the same server.
+
+- What: a host that follows a thread stream has to decide, per event, whether its view
+  changed, was left alone (a row it does not show), or does not know the type. The lib
+  knows (`projection::apply` returns `bool`), but `ThreadUpdate` only carries the raw
+  items. The first version of the thread screen marked the view stale and refetched
+  `boundedThread` for every type outside a small Kotlin list; on a live thread that is a
+  refetch per `turn-item.updated`, i.e. a refetch storm while an agent works.
+  ot3-Android now mirrors the lib's apply table in Kotlin
+  (`core/.../thread/ThreadProjectionShim.kt`: applied, ignored, unknown to the lib), which
+  is protocol knowledge outside the lib and goes stale with every new event type.
+- Evidence: the live thread used for the check held 477 turn items, 340 nodes and 106
+  messages, and the first event after subscribing was `thread.visited`, a type that is
+  not in `src/projection.rs`'s table (`apply` returns false: only the cursor moves).
+- Proposed fix: preferred, phase 1 item 1 (a reduced thread view owned by the
+  subscription), which removes the shim altogether. Short of that, a per-item
+  `applied: Boolean` in `ThreadUpdate` (the result of the lib's `projection::apply` on a
+  projection the lib holds for the subscription), so the host never classifies event
+  types itself.
+
+**Phase 1 item 1 is now the main phase-1 blocker** (2026-10-25). Items 3 and 8 still
+block, but item 1 is the one with live cost: the bounded snapshot of a busy thread is large
+(477 turn items, 340 nodes, `payloadBudgetExceeded = true`), so refetching it is not an
+answer to an event it cannot apply, and the Kotlin mirror of `projection::apply` it
+forces is the largest piece of protocol logic left in the app.

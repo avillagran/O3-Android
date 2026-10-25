@@ -234,6 +234,59 @@ factory, the fake's scripting). Supersedes the entry above.
 - `room-runtime` is now an `api` dependency of `core`, since `Ot3Database` is part of
   its public surface and `AppGraph` builds the repository from it.
 
+## 2026-10-25: Live thread: temporary projection shim, rate-limited refetch, outbox and drafts
+
+- **`ThreadSession`** (`core.thread`, pure Kotlin) owns one open thread: `boundedThread`,
+  then `threadStream` from its `snapshotSequence`, publishing `StateFlow<ThreadView>`
+  (messages, working, active run, pending requests, model selection, stream state, stale)
+  on `repaint` only. It runs on the environment supervisor's handle
+  (`ConnectionSupervisor.connection`, a `Connection(transport, epoch)`) and pauses when that
+  goes null, so background stops, wakes and token problems stay with the supervisor. A new
+  epoch restarts the stream with a fresh backoff, resuming from the held sequence.
+  Reconnects follow the supervisor's rules with its own `Backoff`; a stream closed with no
+  error is a cancel and reopens from the cursor after 250 ms (backing off after three quick
+  ones in a row).
+- **The shim is one file that mirrors the lib's `projection::apply` in three classes**
+  (`ThreadProjectionShim.kt`): *applied* (`message.updated`, `run.created|updated` with the
+  `activeRunId` rule, `run.background-work-cancelled`, `runtime-request.updated`, and any
+  `thread.*` naming this thread, with `thread.pull-request-link-updated` patching its link
+  as the lib does); *ignored* (every other type in the lib's table: turn items, plans,
+  attempts, nodes, subagents, provider rows, checkpoints, context rows); *unknown to the
+  lib* (`thread.visited`, seen live, and anything new), which only moves the cursor, as the
+  lib and ot3 do. No event ever causes a refetch. This replaces the first version, which
+  refetched on every type outside a short list (a refetch per turn item while an agent
+  works) and guessed `message.created|deleted`. Messages are not capped (the lib caps them
+  at 160); runs keep the lib's 64. "Working" and Stop use ot3's `active_run_id`.
+- **Refetch only when events may have been lost**: the stream ended with
+  `stream_backpressure` or `stream_closed`, a snapshot was malformed (no `projection` or
+  no `snapshotSequence`), or the shim failed on an item; at most once per 10 s, waiting
+  for the end of the interval, with the view kept on screen and marked stale. Bugs
+  (`IllegalStateException` other than a closed handle, other runtime errors) are
+  `internal_error` and wait for Retry.
+- **`creationSource: "web"`** on every message, as ot3 sends. The lib also allows
+  `"mobile"`, but it is unverified live, and a rejection gives no machine-readable reason
+  to fall back on (LIB_REQUESTS.md, "v0.3.2 through the app's transport layer" item 2).
+  Both LIB_REQUESTS items found here (no rejection field, no per-event `applied`) are
+  solved best by phase 1 item 1, now the main phase-1 blocker.
+- **Outbox in Room** (`outbox`: id = `commandId`, environmentId, threadId, commandJson,
+  createdAt, state). `MessageSender` mints `ot3a-<uuid>` ids once, persists before sending
+  and sends from the app scope under `NonCancellable`; only `rpc_outcome_unknown` keeps an
+  entry, and Resend sends its stored bytes unchanged. A row still `sending` at the next
+  process start becomes `unknown`. Only `unknown` rows are shown, each with Resend and
+  Discard, and while one exists for a thread its Send is disabled. Interrupts are
+  repeatable and are not persisted. The `message.dispatch` arguments are built in Kotlin from the lib's validator
+  (LIB_REQUESTS.md phase 1 item 4 would move that into Rust); Rust validates them again.
+- **Drafts in Room** (`drafts`: threadKey `<environment id>/<thread id>`, text, updatedAt),
+  written 400 ms after the last change and once more when the screen goes away; empty text
+  deletes the row. While a send is in flight the composer is locked; once the command is
+  in the outbox the persisted draft is cleared (the row owns the text, so a crash cannot
+  leave it in both). Accepted clears the draft, `rpc_outcome_unknown` moves the text to
+  its outbox row, any other failure puts it back. Resend never touches the draft. This
+  logic is `ThreadComposer` in `core`, so it is unit-tested.
+  Room rather than DataStore because the outbox already needs Room and both are per thread.
+- **Schema 2** adds both tables with a manual `MIGRATION_1_2` whose SQL is Room's own
+  (`core/schemas/.../2.json`), tested with `MigrationTestHelper`.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

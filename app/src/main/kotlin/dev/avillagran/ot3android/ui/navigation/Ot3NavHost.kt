@@ -15,8 +15,8 @@ import dev.avillagran.ot3android.ui.environments.EnvironmentsScreen
 import dev.avillagran.ot3android.ui.environments.EnvironmentsViewModel
 import dev.avillagran.ot3android.ui.sidebar.SidebarScreen
 import dev.avillagran.ot3android.ui.sidebar.SidebarViewModel
-import dev.avillagran.ot3android.ui.thread.ThreadPlaceholderScreen
-import dev.avillagran.ot3android.ui.thread.ThreadPlaceholderViewModel
+import dev.avillagran.ot3android.ui.thread.ThreadScreen
+import dev.avillagran.ot3android.ui.thread.ThreadViewModel
 
 /**
  * String routes for now; typed (serializable) routes are a pending decision in
@@ -89,8 +89,18 @@ fun Ot3NavHost(startDestination: String, navController: NavHostController = reme
         ) { entry ->
             val environmentId = entry.arguments?.getString("environmentId").orEmpty()
             val threadId = entry.arguments?.getString("threadId").orEmpty()
-            ThreadPlaceholderScreen(
-                viewModel = appViewModel { graph -> ThreadPlaceholderViewModel(environmentId, threadId, graph.connectionManager) },
+            ThreadScreen(
+                viewModel = appViewModel { graph ->
+                    ThreadViewModel(
+                        environmentId,
+                        threadId,
+                        graph.connectionManager,
+                        graph.draftRepository,
+                        graph.outboxRepository,
+                        graph.messageSender,
+                        graph.appScope,
+                    )
+                },
                 onBack = { navController.popBackStack() },
             )
         }

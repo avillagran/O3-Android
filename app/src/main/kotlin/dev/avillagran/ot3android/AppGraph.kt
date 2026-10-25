@@ -9,12 +9,16 @@ import dev.avillagran.ot3android.core.data.local.Ot3Database
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.security.CredentialStore
+import dev.avillagran.ot3android.core.thread.DraftRepository
+import dev.avillagran.ot3android.core.thread.MessageSender
+import dev.avillagran.ot3android.core.thread.OutboxRepository
 import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -64,6 +68,19 @@ class AppGraph(
     }
 
     val serverProbe: ServerProbe by lazy { ServerProbe(transportFactory) }
+
+    val outboxRepository: OutboxRepository by lazy { OutboxRepository(database.outboxDao()) }
+
+    val draftRepository: DraftRepository by lazy { DraftRepository(database.draftDao()) }
+
+    /** Sends in [appScope], so a send survives its screen. */
+    val messageSender: MessageSender by lazy { MessageSender(outboxRepository, appScope) }
+
+    init {
+        // A send cut by the previous process dying has an unknown outcome: offer Resend.
+        val startedAt = System.currentTimeMillis()
+        appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
+    }
 
     private companion object {
         const val TAG = "Ot3AppGraph"

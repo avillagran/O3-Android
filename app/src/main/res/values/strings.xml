@@ -67,6 +67,26 @@
     <string name="status_working">Working</string>
     <string name="status_failed">Failed</string>
 
-    <!-- Thread placeholder -->
-    <string name="thread_placeholder">The thread view arrives in the next version.</string>
+    <!-- Thread -->
+    <string name="thread_empty">No messages yet</string>
+    <string name="thread_interrupt">Stop</string>
+    <string name="thread_stale">Out of date · refreshing</string>
+    <string name="thread_stream_retrying">%1$s · reconnecting</string>
+    <string name="thread_stream_subscription_limit">Too many live threads are open on this connection · retrying</string>
+    <string name="thread_stream_failed">Could not open the thread: %1$s</string>
+    <string name="thread_request_approval">Waiting for your approval (%1$s)</string>
+    <string name="thread_request_answer">Waiting for your answer</string>
+    <string name="thread_request_elsewhere">Answering from this app comes in a later version.</string>
+    <string name="thread_unconfirmed">Not confirmed by the server: “%1$s”</string>
+    <string name="thread_unconfirmed_plain">A message was not confirmed by the server</string>
+    <string name="thread_resend">Resend</string>
+    <string name="thread_discard">Discard</string>
+    <string name="thread_composer_hint">Message</string>
+    <string name="thread_send">Send</string>
+    <string name="thread_message_typing">Typing</string>
+    <string name="thread_notice_unknown">The server did not confirm the message. It may have been sent.</string>
+    <string name="thread_notice_rejected">The server refused it: %1$s</string>
+    <string name="thread_notice_rejected_plain">The server refused it.</string>
+    <string name="thread_notice_scope">This token cannot do that (it needs %1$s).</string>
+    <string name="thread_notice_not_connected">Not connected.</string>
 </resources>
