@@ -56,7 +56,8 @@ sealed interface ConnectionState {
  * - `unauthorized` stops and waits for [retry];
  * - [FATAL] errors stop with no retry time;
  * - anything else (`stream_closed`, `http_<n>`, ...) drops the shell and starts over with a
- *   fresh snapshot.
+ *   fresh snapshot. An exception that is not a [T3Exception] (a bug, or a lib failure
+ *   without a stable code) counts as [INTERNAL_ERROR]: it backs off and starts over too.
  *
  * Stream updates are applied with [ShellReducer.reduce] and the resume cursor follows
  * `shellCursor`, both through the `ShellUpdates.kt` adapter, so a metadata-only snapshot
@@ -173,6 +174,11 @@ class ConnectionSupervisor(
                 while (retryNow.tryReceive().isSuccess) Unit
                 withTimeoutOrNull(delayMs) { retryNow.receive() }
             }
+        } catch (error: Exception) {
+            // Never end silently: the state says so, retry() starts over, and the scope's
+            // exception handler logs the class.
+            if (error !is CancellationException) _state.value = ConnectionState.Unreachable(INTERNAL_ERROR, null)
+            throw error
         } finally {
             if (transport === client) transport = null
             withContext(NonCancellable + io) { client.close() }
@@ -210,6 +216,10 @@ class ConnectionSupervisor(
             return closedWith ?: STREAM_CLOSED
         } catch (error: T3Exception) {
             return error.code
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            return INTERNAL_ERROR
         } finally {
             connectedAt?.let { backoff.connectionLasted(clock() - it) }
         }
@@ -249,6 +259,9 @@ class ConnectionSupervisor(
 
         /** Not a lib code: the environment has no stored token. */
         const val MISSING_TOKEN = "missing_token"
+
+        /** Not a lib code: something other than a [T3Exception] failed. */
+        const val INTERNAL_ERROR = "internal_error"
 
         /** Errors after which the stream resumes from the held shell's sequence. */
         val TRANSIENT = setOf("stream_timeout", "disconnected", "rpc_connection_failed", "unreachable")

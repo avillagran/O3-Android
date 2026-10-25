@@ -10,7 +10,7 @@ import dev.avillagran.ot3android.core.shell.ProjectGroup
 import dev.avillagran.ot3android.core.shell.Sidebar
 import dev.avillagran.ot3android.core.shell.SidebarModel
 import dev.avillagran.ot3android.core.shell.SidebarRow
-import dev.avillagran.t3.T3Exception
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,8 +111,11 @@ class SidebarViewModel(
             refreshing.value = true
             try {
                 current.refresh()
-            } catch (_: T3Exception) {
-                // The connection state already says why; refresh just ends.
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // A T3Exception is already in the connection state; anything else is a bug the
+                // next stream update or reconnect recovers from. Either way refresh just ends.
             } finally {
                 refreshing.value = false
             }

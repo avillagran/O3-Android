@@ -228,6 +228,26 @@ class ConnectionSupervisorTest {
     }
 
     @Test
+    fun anExceptionThatIsNotAT3ExceptionBacksOffAsAnInternalError() = runTest {
+        var failures = 1
+        shellAnswer = {
+            if (failures-- > 0) throw IllegalStateException("not a lib code")
+            body(shellSequence, listOf(project("p1")), listOf(thread("t1")))
+        }
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+
+        val waiting = supervisor.state.value as ConnectionState.Unreachable
+        assertEquals(ConnectionSupervisor.INTERNAL_ERROR, waiting.error)
+        assertTrue("backs off instead of stopping", supervisor.isRunning)
+
+        advanceTimeBy(waiting.nextRetryAt!! - testScheduler.currentTime + 1)
+        runCurrent()
+        assertTrue(supervisor.state.value is ConnectionState.Connected)
+    }
+
+    @Test
     fun fatalErrorsAndAMissingTokenDoNotRetry() = runTest {
         token = null
         val supervisor = supervisor()

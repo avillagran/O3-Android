@@ -2,11 +2,13 @@ package dev.avillagran.ot3android.ui.connect
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import dev.avillagran.ot3android.core.connection.ServerDescriptor
 import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.core.connection.normalizeOrigin
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.t3.T3Exception
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -112,6 +114,12 @@ class ConnectViewModel(
                 block()
             } catch (error: T3Exception) {
                 fail(ConnectError.Failed(error.code))
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // Not a lib failure (no stable code): say so without the message, which may
+                // carry what the user typed.
+                fail(ConnectError.Failed(ConnectionSupervisor.INTERNAL_ERROR))
             } finally {
                 _state.update { it.copy(busy = null) }
             }

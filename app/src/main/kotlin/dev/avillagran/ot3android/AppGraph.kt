@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android
 
 import android.content.Context
+import android.util.Log
 import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
@@ -10,6 +11,7 @@ import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.security.CredentialStore
 import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,8 +31,15 @@ class AppGraph(
 ) {
     private val appContext = context.applicationContext
 
-    /** Lives as long as the process; connection supervisors run here. */
-    val appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    /**
+     * Lives as long as the process; connection supervisors run here. A coroutine that fails
+     * is logged by its exception class only: messages may carry server data or what the user
+     * typed, never a token, but are not logged either way.
+     */
+    val appScope: CoroutineScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Default +
+            CoroutineExceptionHandler { _, error -> Log.e(TAG, "Uncaught ${error.javaClass.name} in appScope") },
+    )
 
     val database: Ot3Database by lazy { Ot3Database.create(appContext) }
 
@@ -55,4 +64,8 @@ class AppGraph(
     }
 
     val serverProbe: ServerProbe by lazy { ServerProbe(transportFactory) }
+
+    private companion object {
+        const val TAG = "Ot3AppGraph"
+    }
 }
