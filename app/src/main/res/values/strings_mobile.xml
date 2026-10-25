@@ -27,4 +27,5 @@
     <string name="mobile_env_connection_failed">Connection failed</string>
     <string name="mobile_env_retrying_attempt">Retrying · attempt %1$s</string>
     <string name="mobile_component_catalog">UI components</string>
+    <string name="mobile_snooze_until">Snooze until</string>
 </resources>
