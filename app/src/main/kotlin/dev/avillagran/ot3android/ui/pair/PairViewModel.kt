@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.ui.pair
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.avillagran.ot3android.core.pairing.PairingFailure
 import dev.avillagran.ot3android.core.pairing.PairingService
 import dev.avillagran.ot3android.core.pairing.PairingState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,18 +52,28 @@ class PairViewModel(private val service: PairingService) : ViewModel() {
     fun inspect() {
         if (state.value.busy || link.value.isEmpty()) return
         val current = link.value
-        viewModelScope.launch { service.inspect(current) }
+        viewModelScope.launch { forgetDeadLink(service.inspect(current)) }
     }
 
     /** Pairs; [replace] moves a saved environment at another address instead of adding one. */
     fun confirm(replace: Boolean = false) {
         viewModelScope.launch {
-            if (service.confirm(replace) is PairingState.Paired) link.value = ""
+            val result = service.confirm(replace)
+            if (result is PairingState.Paired) link.value = "" else forgetDeadLink(result)
         }
+    }
+
+    /** A link whose code was refused or cannot be used is not kept, not even masked in the field. */
+    private fun forgetDeadLink(result: PairingState) {
+        if (result is PairingState.Failed && result.failure in DEAD_CODE) link.value = ""
     }
 
     /** The screen calls this once it has navigated away from [PairingState.Paired]. */
     fun pairedHandled() {
         viewModelScope.launch { service.reset() }
+    }
+
+    private companion object {
+        val DEAD_CODE = setOf(PairingFailure.Rejected, PairingFailure.InvalidCode)
     }
 }

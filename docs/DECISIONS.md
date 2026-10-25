@@ -365,7 +365,9 @@ factory, the fake's scripting). Supersedes the entry above.
   launching intent and never sits in the app task's recent-tasks record. `MainActivity` is
   `singleTask` and has no VIEW filter; a running instance is brought to the front.
 - **Links travel in memory only** (`PairingInbox` in `AppGraph`), never as a navigation
-  argument or saved state, because they carry a one-time code.
+  argument or saved state, because they carry a one-time code. The pairing screen drops the
+  link once paired, and also when the server refused its code or the code is malformed,
+  since it cannot be used again.
 - **`FLAG_SECURE` while pairing**: the pairing and scanner screens set it on the activity's
   window while they are composed (`ui/pair/SecureWindow.kt`, counted so that the
   transition between the two never clears it), so the link, the code it holds and the
