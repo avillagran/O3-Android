@@ -12,8 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 
 object ConnectScreenTags {
@@ -33,10 +35,10 @@ fun ConnectScreen(onContinue: () -> Unit, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("ot3", style = MaterialTheme.typography.displayMedium)
-            Text("Connect to a T3 Code server", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displayMedium)
+            Text(stringResource(R.string.connect_title), style = MaterialTheme.typography.titleMedium)
             Button(onClick = onContinue, modifier = Modifier.testTag(ConnectScreenTags.CONTINUE)) {
-                Text("Continue")
+                Text(stringResource(R.string.connect_continue))
             }
         }
     }

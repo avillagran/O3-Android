@@ -100,3 +100,5 @@ HTTP paths to the UI layer.
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
   dedicated change once the AAR integration is stable.
+- **Typed navigation routes** (`@Serializable` destinations with Navigation Compose)
+  instead of the current string constants in `Routes`, once screens take arguments.
