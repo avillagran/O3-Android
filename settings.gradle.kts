@@ -24,3 +24,4 @@ rootProject.name = "ot3-android"
 
 include(":app")
 include(":core")
+include(":t3-lib")

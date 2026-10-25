@@ -48,7 +48,15 @@ ksp {
     arg("room.generateKotlin", "true")
 }
 
+// The desktop libt3_jni.so built by scripts/fetch-or-build-lib.sh, for JVM unit tests that
+// drive the real Rust core; those tests are skipped when it is absent.
+val hostJniDir = rootProject.file("libs/host/linux-x86_64").absolutePath
+tasks.withType<Test>().configureEach {
+    systemProperty("java.library.path", hostJniDir)
+}
+
 dependencies {
+    api(project(":t3-lib"))
     implementation(libs.androidx.core.ktx)
     api(libs.kotlinx.coroutines.android)
 
@@ -61,6 +69,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // android.jar only has org.json stubs; the lib's adapter needs a real implementation.
+    testImplementation(libs.org.json)
 
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.ext.junit)
