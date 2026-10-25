@@ -6,6 +6,7 @@ import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.local.Ot3Database
+import dev.avillagran.ot3android.core.data.prefs.AppearancePreferences
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.security.CredentialStore
@@ -14,6 +15,7 @@ import dev.avillagran.ot3android.core.thread.MessageSender
 import dev.avillagran.ot3android.core.thread.OutboxRepository
 import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
+import dev.avillagran.ot3android.ui.theme.OmarchyThemeCatalog
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +53,11 @@ class AppGraph(
 
     val shellCursors: ShellCursorPreferences by lazy { ShellCursorPreferences(appContext) }
 
+    val appearancePreferences: AppearancePreferences by lazy { AppearancePreferences(appContext) }
+
+    /** The bundled Omarchy themes, parsed once off the main thread (started in [init]). */
+    suspend fun themeCatalog(): OmarchyThemeCatalog = OmarchyThemeCatalog.load(appContext)
+
     private val credentialStoreLock = Mutex()
     private var credentialStoreInstance: CredentialStore? = null
 
@@ -80,6 +87,7 @@ class AppGraph(
         // A send cut by the previous process dying has an unknown outcome: offer Resend.
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
+        appScope.launch { themeCatalog() }
     }
 
     private companion object {
