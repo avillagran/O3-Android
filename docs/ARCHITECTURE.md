@@ -19,11 +19,11 @@ not reused. ot3-Android is native Kotlin on a shared Rust core.
    backoff (host-owned per the lib's contract), token choice per scope, persistence
    (Room + DataStore), credentials in Android Keystore / EncryptedSharedPreferences,
    drafts per thread, outbox for non-repeatable mutations with stable command ids.
-3. **UI: Jetpack Compose, Material 3.** Single activity. Sidebar of environments,
-   projects and threads; thread timeline with streaming; composer with attachments,
-   model picker, favorites, mentions and skills; approvals and questions; changes and
-   diff; pull requests; preferences. Dynamic color by default with Omarchy palettes as
-   an option. Phone and tablet (two panes).
+3. **UI: Jetpack Compose, Material 3, in ot3's visual language** on T3 Mobile's screen
+   structure ([UI_SPEC.md](UI_SPEC.md)). Single activity. Home with the threads of every
+   environment; thread timeline with streaming; composer with attachments, model picker,
+   favorites, mentions and skills; approvals and questions; changes and diff; pull
+   requests; preferences. Omarchy themes by default, Material You as an option. Phones and tablets.
 4. **Notifications without a relay.** Optional foreground service following active
    threads over WebSocket with the same working / approval / input semantics as ot3's
    bar widget. FCM is out of scope until there is an own relay.

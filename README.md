@@ -15,7 +15,8 @@ downloads and verifies it and builds the host JNI library for JVM tests from a
 lib-t3-rust checkout at the same tag (the release ships none); source builds remain for
 unreleased lib work. See [docs/LIB_BUILD.md](docs/LIB_BUILD.md) and, for what the app
 needs from the lib, [docs/LIB_REQUESTS.md](docs/LIB_REQUESTS.md); what it expects from a
-T3 server is in [docs/PROTOCOL_NOTES.md](docs/PROTOCOL_NOTES.md).
+T3 server is in [docs/PROTOCOL_NOTES.md](docs/PROTOCOL_NOTES.md). Screens, navigation and
+the visual system are specified in [docs/UI_SPEC.md](docs/UI_SPEC.md).
 
 Independent community project; not an official T3 Code app. MIT License.
 
