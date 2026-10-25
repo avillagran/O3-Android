@@ -155,6 +155,12 @@ factory, the fake's scripting). Supersedes the entry above.
   is the buffer, and a collector that falls behind ends the stream with
   `stream_backpressure` instead of holding snapshots in Kotlin. Nothing reconnects; the
   host resumes from the last update's `cursor`.
+- **Shell adapter** (`ShellUpdates.kt`: `ThreadUpdate.shellSnapshot()`,
+  `isShellMetadataOnly()`, `shellMetadata()`, `shellEvents()`, `shellCursor(previous)`):
+  every shell consumer reads shell updates through it, because lib 0.3.2 treats T3's
+  metadata-only shell `snapshot` as a full shell (LIB_REQUESTS.md, "v0.3.2 through the
+  app's transport layer", finding 1). A stopgap against the no-protocol-in-Kotlin rule,
+  deleted when the lib fix lands.
 - `threadStream` defaults to `compactTurnItems = false` (the lib's `ThreadStream`
   defaults to true) until the lib restores compact stream snapshots (LIB_REQUESTS.md,
   phase 1 item 2).
