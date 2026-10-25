@@ -10,6 +10,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import dev.avillagran.ot3android.ui.theme.Ot3Radii
 import dev.avillagran.ot3android.ui.theme.Ot3Sizes
@@ -32,6 +33,8 @@ fun Ot3Tooltip(
 ) {
     val colors = Ot3Theme.colors
     val shape = RoundedCornerShape(Ot3Radii.control)
+    val state = rememberTooltipState(isPersistent = initiallyVisible)
+    if (initiallyVisible) LaunchedEffect(state) { state.show() }
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above, Ot3Spacing.sm),
         tooltip = {
@@ -44,7 +47,7 @@ fun Ot3Tooltip(
                 Text(text, style = Ot3Theme.typography.material.labelMedium)
             }
         },
-        state = rememberTooltipState(initialIsVisible = initiallyVisible, isPersistent = initiallyVisible),
+        state = state,
         modifier = modifier,
         content = content,
     )

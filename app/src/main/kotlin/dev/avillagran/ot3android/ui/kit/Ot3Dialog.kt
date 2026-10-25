@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import dev.avillagran.ot3android.ui.theme.Ot3Colors
 import dev.avillagran.ot3android.ui.theme.Ot3Radii
@@ -51,7 +52,11 @@ fun Ot3Dialog(
     confirmEnabled: Boolean = true,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    BasicAlertDialog(onDismissRequest = onDismissRequest, modifier = modifier) {
+    BasicAlertDialog(
+        onDismissRequest = onDismissRequest,
+        modifier = modifier.padding(horizontal = DIALOG_MARGIN),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
         val window = (LocalView.current.parent as? DialogWindowProvider)?.window
         SideEffect { window?.setDimAmount(Ot3Colors.Scrim.alpha) }
         Ot3DialogSurface(
@@ -119,3 +124,6 @@ fun Ot3DialogSurface(
 
 /** ot3's dialog is 430 px wide (`ot3:ui/qml/T3ThreadRow.qml:412`). */
 private val DIALOG_WIDTH = 430.dp
+
+/** Space between the dialog and the window edges on a phone. */
+private val DIALOG_MARGIN = 24.dp

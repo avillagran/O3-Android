@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.IntOffset
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.ui.theme.Ot3Sizes
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
@@ -76,7 +77,7 @@ fun Ot3Switch(
         ) {
             Box(
                 Modifier
-                    .offset(x = x, y = inset)
+                    .offset { IntOffset(x.roundToPx(), inset.roundToPx()) }
                     .size(Ot3Sizes.switchKnob)
                     .background(knob, CircleShape),
             )
