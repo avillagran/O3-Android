@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * The single activity. Home is always the start: with nothing saved it offers Add environment.
- * A thread link (`ot3a://thread/...`) opens over Home, at launch or while running.
+ * A thread link (`ot3a://thread/...`) opens over Home, at launch or while running; a pairing
+ * link ([PairingLinkActivity]) opens the pairing screen.
  */
 class MainActivity : ComponentActivity() {
 
@@ -38,12 +39,17 @@ class MainActivity : ComponentActivity() {
             val catalog by produceState<OmarchyThemeCatalog?>(null) { value = appGraph.themeCatalog() }
             val settings by appearance.collectAsStateWithLifecycle(initialValue = null)
             val link by deepLink.collectAsState()
+            val pairingLink by appGraph.pairingInbox.link.collectAsStateWithLifecycle()
             val themeCatalog = catalog
             val appearanceSettings = settings
             if (themeCatalog != null && appearanceSettings != null) {
                 Ot3AppTheme(themeCatalog, appearanceSettings) {
                     Surface(Modifier.fillMaxSize()) {
-                        Ot3NavHost(deepLink = link, onDeepLinkHandled = { deepLink.value = null })
+                        Ot3NavHost(
+                            deepLink = link,
+                            onDeepLinkHandled = { deepLink.value = null },
+                            pairingLinkWaiting = pairingLink != null,
+                        )
                     }
                 }
             }

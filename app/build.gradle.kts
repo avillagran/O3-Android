@@ -112,7 +112,17 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
 
+    // QR scanning: CameraX preview and analysis, decoded with ZXing (pure Java, no native code,
+    // no Play Services). See docs/DECISIONS.md.
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.compose)
+    implementation(libs.zxing.core)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    // android.jar only has org.json stubs; the pairing service reads descriptors with it.
+    testImplementation(libs.org.json)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

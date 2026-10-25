@@ -78,6 +78,17 @@ data object Environments
 @Serializable
 data class AddEnvironment(val mode: String? = null, val pairingUrl: String? = null, val environmentId: String? = null)
 
+/**
+ * Pair with a link or a QR code (4.2). No arguments: a pairing link holds a one-time code, so
+ * it travels through `PairingInbox`, never through the back stack.
+ */
+@Serializable
+data object PairEnvironment
+
+/** The pairing QR scanner; what it reads goes to `PairingInbox`. */
+@Serializable
+data object ScanPairingCode
+
 @Serializable
 data object Usage
 

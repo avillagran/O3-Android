@@ -40,6 +40,12 @@ interface Ot3Screens {
     fun AddEnvironment(route: AddEnvironment)
 
     @Composable
+    fun PairEnvironment()
+
+    @Composable
+    fun ScanPairingCode()
+
+    @Composable
     fun ThreadActions(entry: NavBackStackEntry, route: ThreadActionsSheet)
 
     @Composable
@@ -80,6 +86,8 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<Settings> { screens.Settings() }
         composable<Environments> { screens.Environments() }
         composable<AddEnvironment> { entry -> screens.AddEnvironment(entry.toRoute()) }
+        composable<PairEnvironment> { screens.PairEnvironment() }
+        composable<ScanPairingCode> { screens.ScanPairingCode() }
         composable<Usage> { NotYetScreen("Usage") }
         composable<Archive> { NotYetScreen("Archive") }
         composable<Licenses> { NotYetScreen("Licenses") }

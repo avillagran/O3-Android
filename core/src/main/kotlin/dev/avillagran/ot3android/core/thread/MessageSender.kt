@@ -32,7 +32,8 @@ sealed interface SendResult {
  * `rpc_outcome_unknown` it stays and [retry] resends the stored bytes, which the server
  * deduplicates by `commandId`; on any other failure it is deleted and the caller keeps the
  * draft. The arguments follow the lib's `message.dispatch` validator; Rust validates them
- * again before any socket (docs/LIB_REQUESTS.md phase 1 item 4 would build them there).
+ * again before any socket. Temporary: v0.3.4's `domain` still has no message or
+ * interrupt builder (docs/LIB_REQUESTS.md, "2026-10-25: v0.3.3", finding 2).
  */
 class MessageSender(
     private val outbox: OutboxRepository,

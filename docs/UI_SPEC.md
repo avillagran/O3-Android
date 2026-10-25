@@ -241,27 +241,61 @@ tokyo-night and catppuccin-latte: [ui/tokens.md](ui/tokens.md) section 1.
 
 #### 3.1.3 Choosing a theme
 
-- Settings → Appearance (4.9): **Theme** Follow system / Dark / Light; **Dark theme** and
-  **Light theme**, each one of the Omarchy themes of that appearance, plus **Material
-  You** at the end of each list (T3 Mobile offers the same extra,
-  `t3m:src/lib/mobileTheme.ts:19`). Defaults: tokyo-night and catppuccin-latte (one
-  constant, easy to change).
+Revised 2026-10-25 (Andrés): ot3-Android is "our Omarchy T3", so by default it wears
+**the Omarchy theme that is active on the machine it is connected to**, the way ot3 on
+the desktop follows the live theme (`ot3:ui/qml/T3Palette.qml:47-66`). Picking one of the
+22 themes by hand becomes the fallback, not the normal mode.
+
+- **Follow the environment's theme (default).** On an Omarchy host the active theme is
+  `~/.local/state/omarchy/current/theme/colors.toml`, its name
+  `~/.local/state/omarchy/current/theme.name` (the files ot3 watches,
+  `ot3:ui/qml/T3Palette.qml:49,59`). The app reads them through the environment's T3
+  server with the lib's typed API: the host's HOME from `filesystem.getMetadata` (which
+  expands `~`; T3 does not expand `~` in `readFile`), then
+  `projects.readFile(cwd = HOME, relativePath = ".local/state/omarchy/current/theme/colors.toml",
+  allowMissing = true)`, and converts the TOML with the lib's `theme.tokens(colors, id)`
+  (roles, `appearance`, `statusColors`, `projectPalette`, `projectFills`, `sky`). No TOML
+  parsing or colour derivation in Kotlin. Scope `filesystem:read`.
+- **Refresh:** on connect, on return to the foreground, when the selected environment
+  changes, and by polling `theme.name` every few minutes while the app is visible (Omarchy
+  switches themes with `omarchy-theme-set`; T3 sends no event for it). The last
+  `colors.toml` per environment is cached so the app paints at once on launch.
+- **Which environment wins:** the one whose thread or Home is on screen; in the merged
+  Home, the **main** environment (the last used, or the one marked in Settings). Theme
+  changes cross-fade with ot3's colour-change motion (3.4).
+- **Fallback:** when the environment is not Omarchy (no file, e.g. an Ubuntu host), the
+  file cannot be read (missing scope, error) or the user turns following off, the manual
+  choice applies: Settings → Appearance, **Theme** Follow system / Dark / Light; **Dark
+  theme** and **Light theme**, each one of the Omarchy themes of that appearance (bundled,
+  produced by `theme.tokens` at build time), plus **Material You** at the end of each list
+  (`t3m:src/lib/mobileTheme.ts:19`). Defaults tokyo-night and catppuccin-latte (one
+  constant).
+- **Settings → Appearance** shows, first, the switch **Follow the environment's Omarchy
+  theme** (on by default) with the detected theme name and environment ("Tokyo Night ·
+  omarchy"), or why it is not available ("node is not running Omarchy"); the manual
+  options below it apply when following is off or unavailable.
 - The theme picker previews each theme as a mini Home row (sky strip, a card row with a
-  status label, a slim row), drawn from the JSON.
+  status label, a slim row).
 - Edge-to-edge: transparent system bars; bar icons follow the appearance.
 - Material You derives a `ColorScheme` from the wallpaper and maps it back onto ot3 roles
   (accent = `primary`, background = `surface`, foreground = `onSurface`); status
   colours keep the dark or light default theme's values so "Failed" stays red.
 
+**Single source of colour values:** every role comes from the lib's `theme.tokens`, both
+for the live theme and for the 22 bundled ones. The lib reproduces how ot3 really draws
+(`Qt.rgba(fg, alpha)` over the background, Qt's 8-bit premultiplied blend) and matches
+1 692 channels read from the screen; `docs/ui/tokens.md` golden values follow it (it had
+19 of 50 values off by one per channel, e.g. tokyo-night `dim` `#6b718a`, `surface`
+`#21222e`).
+
 This replaces today's `Ot3Theme(dynamicColor = true)`
 (`app/src/main/kotlin/dev/avillagran/ot3android/ui/theme/Theme.kt:16-33`) and the earlier
-"Dynamic color by default" of `docs/ARCHITECTURE.md` layer 3, which the PR that adds this
-spec already updates.
+"Dynamic color by default" of `docs/ARCHITECTURE.md` layer 3.
 
-Compose API: an immutable `Ot3Colors` provided through `LocalOt3Colors`, built once from
-the JSON; `Ot3Theme { }` wraps `MaterialTheme(colorScheme, typography, shapes)`.
-Components read ot3 roles (`Ot3Theme.colors.working`) for anything ot3-specific and
-Material roles only inside Material components.
+Compose API: an immutable `Ot3Colors` provided through `LocalOt3Colors`, built from a
+`theme.tokens` result (live or bundled); `Ot3Theme { }` wraps `MaterialTheme(colorScheme,
+typography, shapes)`. Components read ot3 roles (`Ot3Theme.colors.working`) for anything
+ot3-specific and Material roles only inside Material components.
 
 ### 3.2 Typography
 
@@ -523,7 +557,8 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
   ot3's plan / done / woke refinements (`ot3:ui/js/SidebarModel.js:5-17`): all through
   `sidebar.view` (U2). Interim: today's `SidebarModel.kt` statuses (`NeedsYou`,
   `Working`, `Failed`, `core/.../shell/SidebarModel.kt:9-22`) mapped to Approval/Input,
-  Working and Failed; no Done, Plan, Woke or Limited until U2.
+  Working and Failed; no Done, Plan, Woke or Limited until U2. (2026-10-25: U2 closed in
+  lib v0.3.3, `SidebarModel.kt` removed; see the note at the top of section 6.)
 
 #### 4.1.4 Order and shelves
 
@@ -543,6 +578,7 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
 - Working shelf only exists when grouping is on (`ot3:ui/qml/T3Panel.qml:556`).
 - Data: `sidebar.view` sections (U2). Interim: `SidebarModel.kt` active/settled split
   (`core/.../shell/SidebarModel.kt:45-64`), extended to several environments.
+  (2026-10-25: superseded by `sidebar.view`; see the note at the top of section 6.)
 
 #### 4.1.5 Actions
 
@@ -1304,6 +1340,16 @@ UI-1 also records the decisions of section 1 in `docs/DECISIONS.md` (the archite
 line on themes already changes with this spec).
 
 ## 6. What the lib would have to expose (for `LIB_REQUESTS.md`)
+
+> **Note (2026-10-25, lib v0.3.4).** Every row of the table below is now exposed by the
+> lib through `{"op":"domain"}` (108 functions in `describe().domain`; v0.3.3 closed U0 to
+> U8, U10, U17, U18 and U21, v0.3.4 the rest), and ot3's string catalog ships in the AAR
+> as the asset `lib-t3-rust/i18n.json` (U16). The "Until then" column and the interim
+> notes in section 4 are therefore historical: `SidebarModel.kt` and
+> `ThreadProjectionShim.kt` no longer exist (the sidebar reads `sidebar.view`, the thread
+> `projection.apply` and `timeline.view`). The function names per row, their status and
+> the tests that exercise them are in [LIB_REQUESTS.md](LIB_REQUESTS.md), "2026-10-25:
+> v0.3.4". Still open there: the shell reducer half of U2 (v0.3.3 finding 1, `shell.apply`).
 
 As of v0.3.2 no presentation module is reachable from Kotlin: the C ABI's operations are
 the transport ones plus `call` / `describe` (`lib:src/ffi.rs:30-37`), and `call` only

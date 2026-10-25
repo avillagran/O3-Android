@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android.core.home
 
+import dev.avillagran.ot3android.core.shell.RowTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -11,9 +12,10 @@ class ThreadActionsTest {
 
     private val row = HomeRow(
         key = "e1/t1", environmentId = "e1", threadId = "t1", title = "Fix", projectId = "p1", projectKey = "e1/p1",
-        projectTitle = "Alpha", environmentLabel = null, branch = "main", path = "/w/alpha", status = RowStatusDetail.None,
-        time = RowTime.None, pinned = false, settled = false, snoozed = false, chip = null, style = RowStyle.Card,
-        swipe = SwipeActions.None,
+        projectTitle = "Alpha", environmentLabel = null, branch = "main", path = "/w/alpha", worktree = false, detail = "", state = "idle",
+        statusLabel = "", statusRole = "muted", time = RowTime("age", 0, "—"), pinned = false, settled = false, snoozed = false,
+        working = false, depth = 0, subagent = false, identity = null, canSnooze = false, autoSettleDisabled = false,
+        style = RowStyle.Card, swipe = SwipeActions.None,
     )
 
     private fun target(row: HomeRow = this.row, scoped: Boolean = false) = ThreadMenuTarget(row, projectScoped = scoped, working = false)

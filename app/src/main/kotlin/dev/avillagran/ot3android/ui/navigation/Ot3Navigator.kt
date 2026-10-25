@@ -93,6 +93,18 @@ class Ot3Navigator(val navController: NavHostController) {
         navController.navigate(AddEnvironment(environmentId = environmentId)) { launchSingleTop = true }
     }
 
+    /**
+     * The pairing screen, for a link that arrived from outside: one already in the Settings
+     * stack is reused (its pairing may be in flight), else it opens over Environments.
+     */
+    fun openPairing() {
+        if (navController.currentBackStackEntry?.destination?.hasRoute(PairEnvironment::class) == true) return
+        if (currentTab != TopTab.Settings) selectTab(TopTab.Settings)
+        if (navController.popBackStack(PairEnvironment, inclusive = false)) return
+        openEnvironments()
+        navController.navigate(PairEnvironment) { launchSingleTop = true }
+    }
+
     /** After saving an environment: back to the list, then to Home, where its threads appear. */
     fun environmentSaved() {
         navController.popBackStack(Environments, inclusive = false)

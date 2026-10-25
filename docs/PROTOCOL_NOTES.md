@@ -141,31 +141,102 @@ threads[], archivedThreads[]}`. Here: 16 projects, 216 threads, 0 archived, abou
   `stream_timeout` within about 3 s and the rule above reopens it. Streams are stopped
   while the app is in the background and resumed from the cursor on `ON_START`.
 
-### Sidebar (minimum, temporary)
+### Sidebar (lib-t3-rust v0.3.3 `sidebar.view`)
 
-An approximation of the lib's `src/sidebar.rs` (`sort_timestamps`, `sidebar_status`) and
-ot3's `ui/js/SidebarModel.js`, kept in `core/shell/SidebarModel.kt` and replaced by
-LIB_REQUESTS.md phase 1 item 3 (`sidebar.view`):
+Since v0.3.3 the sidebar is the lib's `sidebar.view` (`core/shell/SidebarView.kt`): the
+host passes each environment as `{id, name?, shell?, state?}`, where `shell` is the shell
+the app holds (the HTTP snapshot plus the stream events, reduced by the temporary
+`ShellReducer`), and the lib returns ot3's sections in order. Rules that used to be
+listed here (hidden rows, settled, inbox anchor, order, the ten details) now live in the
+lib (`src/sidebar.rs`, `src/sidebar/view.rs`) **[lib]**. What the app relies on:
 
-- hide `archivedAt`, `deletedAt` and `relationshipToParent == "subagent"` (no nesting
-  yet);
-- settled = `settledOverride == "settled" || settledOverride == true ||
-  (settledOverride != "active" && settledAt != null)`;
-- **anchor** (the lib's `inboxAt`) = max(`createdAt`, `unsettledAt`,
-  `latestRunRequestedAt`, `latestRunCompletedAt`); never `updatedAt`, which also moves on
-  metadata writes;
-- **Active**: grouped by project, projects ordered by their newest anchor; inside a
-  project pinned first (`pinOrderKey` ascending, then `pinnedAt`), then rows without an
-  `activeOrderKey` by anchor descending, then rows with one by that key ascending (as
-  text: it is a fractional index), as ot3 orders them;
-- **Settled**: a collapsed header with the count; rows by `settledAt ?:
-  latestRunCompletedAt ?: latestUserMessageAt ?: updatedAt` descending;
-- row status: a `pendingRuntimeRequest` with `blocking != false` and `kind !=
-  "auth_refresh"` → needs you; `activeRunId != null || status == "running"` → working;
-  `status` `failed` or `error` → failed (`lastError` alone is not: it outlives its run);
-  otherwise nothing.
+- every thread row must have a string `title` and a unique valid `id`, otherwise the
+  environment's state is `malformed` and it contributes no rows **[lib]**;
+- archived and deleted rows are dropped; subagent rows only appear nested under their
+  parent (`depth`, `subthreadParentKey`) when it is expanded **[lib]**;
+- `sectionCounts` count top-level rows; the section lists include nested children
+  **[lib]**.
 
-Live: 6 project groups, 7 active rows, 23 settled rows (4 failed).
+Live (2026-10-25, 233 shell threads, 203 of them subagents, 16 projects): `active` 36,
+`working` 0 (not grouped), `snoozed` 0, `settled` 24 rows; `counts` working 1, done 3,
+waiting 0, failed 0; 16 project identities **[observed]**.
+
+## Pairing
+
+Marked as in the thread section below: **[observed]** was seen live on 2026-10-25 against
+T3 0.1.3-nightly.20261025.3669 (the same machine's server, on the LAN address the link
+named) through lib-t3-rust v0.3.2, by one run of `core/.../pairing/LivePairingTest.kt`;
+**[lib]** is read from lib-t3-rust v0.3.2 (`src/pairing.rs`, `src/connection_catalog.rs`)
+or the T3 CLI bundled in that release, and checked against local fixtures
+(`NativePairingTest`, `PairingLinkTest`); **[inferred]** is what this app assumes.
+
+### The link
+
+- `t3 pair --label <label> --ttl 5m` prints `Pairing with <server label> (<origin>).`, a
+  QR code, `Pairing URL: <link>`, `Token: <code>`, `Expires: <ISO time>` and a note
+  ("This URL works only from this machine's local network. From elsewhere, re-run with
+  --tailscale or use T3 Connect.") **[observed]**.
+- The link is `<origin>/pair#token=<code>`: `http://192.168.1.177:8643/pair#token=…` with a
+  12-character code, no query **[observed]**. The CLI builds it as `new URL(origin)`, path
+  `/pair`, any `token` query parameter deleted, and the hash set to
+  `URLSearchParams([["token", code]])`, so the code is form-encoded in the fragment and never
+  reaches a server in a request line **[lib]** (CLI source). `--tailscale` gives the same shape
+  on the tailnet's HTTPS name **[lib]**.
+- The QR code encodes the link (error correction M, quiet zone 2) drawn with half-block
+  characters in the terminal's text colour **[lib]**: on a dark terminal it is light on
+  dark, which the scanner must read inverted.
+- Accepted link forms are those of `connection_catalog::pairing_target` **[lib]**: the
+  code from the fragment's `token`, else the query's `token`, or a separately typed code,
+  which wins; a hosted link (`https://t3.codes/connect?host=<origin>#token=<code>`) points
+  at its `host` parameter, but only when there is a code; `ws`/`wss` map to `http`/`https`;
+  a bare `host:port` gets `https`. Path, query and fragment are dropped from the origin;
+  user info, port 0 and other schemes are `invalid_endpoint`, and a code with control
+  characters or over 16 KiB is `invalid_pairing_code`. `core/pairing/PairingLink.kt` ports
+  it until the lib exposes it (LIB_REQUESTS.md, phase 1 item 6).
+
+### The exchange (`pairBearer`)
+
+1. **Descriptor first, no credential**: `GET /.well-known/t3/environment`. Its
+   `environmentId` must be a UUID (`invalid_t3_environment_id`) and equal to the expected
+   one when given (`t3_environment_mismatch`); only then is the code sent **[lib]**. The app
+   reads the descriptor once to show the server before the user confirms, and passes its
+   `environmentId` to `pairBearer`, so a different server answering by then is refused
+   **[inferred]**.
+2. **`POST /oauth/token`**, `application/x-www-form-urlencoded`, `Accept:
+   application/json`, no `Authorization` **[lib]**, asserted in `NativePairingTest`:
+   `grant_type=urn:ietf:params:oauth:grant-type:token-exchange`, `subject_token=<code>`,
+   `subject_token_type=urn:t3:params:oauth:token-type:environment-bootstrap`,
+   `requested_token_type=urn:ietf:params:oauth:token-type:access_token`, and
+   `client_label`, `client_device_type`, `client_os` when set. The app sends
+   `ot3-Android · <device model>`, `mobile`, `android`.
+3. **Answer**: `token_type` must be `Bearer` and `access_token` a token of at least
+   8 characters without whitespace (`unsupported_pairing_token` otherwise); `scope` and
+   `expires_in` are passed through **[lib]**. The lib's operation returns `{accessToken,
+   tokenType: "Bearer", environmentId, descriptor, scope, expiresIn, connected}`; with
+   `connect: true` it also connects the handle. The app pairs with `connect: false` on a
+   short-lived handle and lets the environment's supervisor connect with the stored token
+   **[inferred]**.
+4. The issued token is a long-lived bearer session: it worked for `connect(Bearer)` and
+   the shell GET right away (16 projects, 227 threads) **[observed]**. The one-time code is
+   spent: `t3 auth pairing list` showed no active link afterwards **[observed]**. The
+   session shows in `t3 auth session list --json` as `{client{label, deviceType}, connected,
+   expiresAt, issuedAt, lastConnectedAt, method: "bearer-access-token", scopes, sessionId,
+   subject}`, with the label `ot3-android-pair-test` **[observed]**; the run used that label
+   for both the link and the client, so which of the two names the session is not settled.
+   It was revoked with `t3 auth session revoke <sessionId>` right after the run.
+
+### Errors
+
+None was seen live (one successful pairing). From the lib, checked against the fixture
+**[lib]**: `invalid_pairing_code` (empty, whitespace or control characters, over 4096
+bytes), `invalid_pairing_client` (a blank or over-256-byte label or OS, a device type
+outside `desktop|mobile|tablet|bot|unknown`), `invalid_endpoint` (not an origin),
+`unreachable`, `not_json`, `malformed` (descriptor without `environmentId`),
+`invalid_t3_environment_id`, `t3_environment_mismatch`, `pairing_rejected` (any non-2xx
+answer to the exchange, including 401 and 403: an unknown, used or expired code),
+`unsupported_pairing_token`. Input errors are found before any request. The app groups
+them into `PairingFailure` (link, no code, bad code, rejected, other server, incompatible,
+unreachable, not T3, internal, other) and shows one sentence for each.
 
 ## Thread stream and sending
 
@@ -225,45 +296,40 @@ Each fact below is marked:
    **[inferred]**. The lib's mirror caps `messages[]` at 160 and `runs[]` at 64, dropping
    the oldest by position **[lib]**; this app keeps the 64 for runs but does not cap
    messages, since the bounded snapshot already decides how much history to send.
-7. **Working and Stop** use ot3's `active_run_id` (`src/lib.rs`) **[lib]**: the newest
+7. **Working and Stop** come from `timeline.view` `threadState` since v0.3.3, which applies ot3's `active_run_id` (`src/lib.rs`) **[lib]**: the newest
    `runs[]` row in `preparing, starting, running, waiting`; `thread.activeRunId` only when
    `runs[]` is empty. The lib's apply rule also keeps `thread.activeRunId` (set by a
    `run.created|updated` with an active status, cleared when that run leaves it) **[lib]**,
    but the snapshot's `thread` has no such key **[observed]**, so `runs[]` comes first.
    Run statuses seen: `completed`, `running` **[observed]**.
-8. **Needs the user**: `runtimeRequests[].status == "pending"` **[lib]** (only `resolved`
-   rows were seen **[observed]**); the prompt is on the request or on its latest turn item
-   with the same `requestId` **[inferred]**: that join is not in the lib. Read-only for now.
+8. **Needs the user**: `timeline.view` `approvals` and `questions` since v0.3.3 (pending
+   `runtimeRequests[]` joined with their `approval_request` / `user_input_request` turn
+   item) **[lib]** (only `resolved` rows were seen **[observed]**). Read-only for now.
 
-### What the temporary shim applies
+### How events are applied (lib-t3-rust v0.3.3)
 
-`core/thread/ThreadProjectionShim.kt` (until the lib exposes `projection.apply` or a
-reduced view, LIB_REQUESTS.md phase 1 item 1) sorts every event the way the lib's
-`projection::apply` does **[lib]**:
-
-- **applied**: `message.updated` (whole-row upsert by `id`); `run.created`, `run.updated`
-  (upsert into `runs[]`, plus the `activeRunId` rule); `run.background-work-cancelled`
-  (patches its run); `runtime-request.updated` (whole-row upsert into `runtimeRequests[]`);
-  any `thread.*` whose `payload.id` is this thread (the payload replaces `thread`), except
-  `thread.pull-request-link-updated`, which patches the matching link in
-  `thread.pullRequests[]`;
-- **ignored** (the lib reduces them into rows this view does not read): `turn-item.updated`,
-  `plan.updated`, `run-attempt.*`, `node.updated`, `subagent.updated`, `provider-*`,
-  `checkpoint*`, `context-*`; the cursor moves, the view does not change;
-- **unknown to the lib** (`thread.visited`, a `thread.*` naming another thread, anything
-  new): only the cursor moves, as in the lib and ot3 (`src/live.rs`). There is no guessed
-  handling of `message.created` or `message.deleted`.
+Since v0.3.3 the session hands each update's `event` objects (`{type, payload}`) to the
+lib's `projection.apply` in one call and builds the screen with `timeline.view`
+(`core/thread/ThreadTimeline.kt`); there is no Kotlin event table any more. Types the lib
+does not know (`thread.visited`, a `thread.*` naming another thread) change nothing and
+only the cursor moves, which the lib reports (`ThreadUpdate.cursor`) **[lib]**.
 
 No event ever triggers a refetch. A fresh `boundedThread` is read only when the stream
-ends with `stream_backpressure` or `stream_closed`, a snapshot is malformed, or the shim
-fails on an item, and at most once per 10 s (a later one waits for the end of the
-interval) **[inferred]**: the lib states no such limit. A stream that closes with no error
-was cancelled (its handle was connected again or dropped): it reopens from the held
-sequence after 250 ms with no snapshot, backing off after three quick cancels in a row
-**[lib]** (the transport's contract). Transient errors (`stream_timeout`, `disconnected`,
-`rpc_connection_failed`, `unreachable`, `subscription_limit`) resume from the held sequence
-with the supervisor's jittered backoff; `unauthorized`, `invalid_thread_id`, `http_404` and
-`internal_error` wait for Retry.
+ends with `stream_backpressure` or `stream_closed`, a snapshot is malformed, or the lib
+refuses the projection (`timeline.view` → `malformed`), and at most once per 10 s (a later
+one waits for the end of the interval) **[inferred]**: the lib states no such limit. A
+stream that closes with no error was cancelled (its handle was connected again or
+dropped): it reopens from the held sequence after 250 ms with no snapshot, backing off
+after three quick cancels in a row **[lib]** (the transport's contract). Transient errors
+(`stream_timeout`, `disconnected`, `rpc_connection_failed`, `unreachable`,
+`subscription_limit`) resume from the held sequence with the supervisor's jittered
+backoff; `unauthorized`, `invalid_thread_id`, `http_404` and `internal_error` wait for
+Retry.
+
+Live (2026-10-25, a running thread, bounded projection of 1.6 MiB: 104 turn items, 346
+nodes, 20 messages): `timeline.view` 45 rows (15 assistant, 5 user, 20 activity, 5
+subagents), each with a `rev`; about 35 ms per `timeline.view` and 50 ms per
+`projection.apply` on node (x86_64, host library) **[observed]**.
 
 ### Sending a message
 

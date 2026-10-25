@@ -59,10 +59,14 @@ class LiveConnectionTest {
             line("descriptor: label=${descriptor.label != null} serverVersion=${descriptor.serverVersion} protocol=${descriptor.orchestrationProtocolVersion}")
             val shell = withTimeout(30_000) { supervisor.shell.first { it != null } }!!
             line("shell: sequence=${shell.sequence != null} projects=${shell.projects.size} threads=${shell.threads.size}")
-            val sidebarModel = dev.avillagran.ot3android.core.shell.SidebarModel
-            val sidebar = sidebarModel.sections(sidebarModel.rows("live", shell, System.currentTimeMillis()), grouped = false)
+            val sidebar = dev.avillagran.ot3android.core.shell.SidebarView.build(
+                dev.avillagran.ot3android.core.transport.DomainEngine.shared,
+                listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment("live", "live", shell)),
+                System.currentTimeMillis(),
+            )
             line("threads: archived=${shell.threads.count { it.archivedAt != null }} deleted=${shell.threads.count { it.deletedAt != null }} subagent=${shell.threads.count { it.relationshipToParent == "subagent" }} statuses=${shell.threads.groupingBy { it.status }.eachCount()}")
-            line("sidebar: activeRows=${sidebar.active.size} snoozed=${sidebar.snoozed.size} settled=${sidebar.settled.size} statuses=${(sidebar.active + sidebar.settled).groupingBy { it.status }.eachCount()}")
+            line("sidebar.view: environments=${sidebar.environments.map { it.state }} active=${sidebar.active.size} working=${sidebar.working.size} snoozed=${sidebar.snoozed.size} settled=${sidebar.settled.size} counts=${sidebar.counts} identities=${sidebar.identities.size}")
+            line("sidebar.view details: ${(sidebar.active + sidebar.snoozed + sidebar.settled).groupingBy { it.detail.ifEmpty { "-" } }.eachCount()}")
             // Let the stream run so its first updates are applied and the cursor persisted.
             withTimeoutOrNull(10_000) { cursors.cursors.first { it.isNotEmpty() } }
             line("cursor persisted: ${cursors.cursors.value.isNotEmpty()}")

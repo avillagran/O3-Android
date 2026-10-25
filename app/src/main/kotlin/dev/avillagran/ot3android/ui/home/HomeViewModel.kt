@@ -20,9 +20,9 @@ import dev.avillagran.ot3android.core.home.MessageSearchState
 import dev.avillagran.ot3android.core.home.Shelf
 import dev.avillagran.ot3android.core.home.ShelfState
 import dev.avillagran.ot3android.core.home.StatusFilter
-import dev.avillagran.ot3android.core.shell.RowStatus
-import dev.avillagran.ot3android.core.shell.ShellThread
-import dev.avillagran.ot3android.core.shell.SidebarModel
+import dev.avillagran.ot3android.core.transport.DomainCalls
+import dev.avillagran.ot3android.core.transport.DomainEngine
+import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,22 +35,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 /**
  * Home's state holder: every saved environment's supervisor (started here) feeds
- * [HomeStateBuilder]; search, filters and paging live here, shelves in [shelfStore]. Scoped
- * to the Chats graph so Home and its sheets share it. All logic is in `core`'s builder.
+ * [HomeStateBuilder], which runs the lib's `sidebar.view` on [domain]'s worker; search,
+ * filters and paging live here, shelves in [shelfStore]. Scoped to the Chats graph so Home
+ * and its sheets share it.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
@@ -58,6 +60,7 @@ class HomeViewModel(
     private val connections: ConnectionManager,
     private val shelfStore: ShelfStore,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val domain: DomainCalls = DomainEngine.shared,
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
@@ -81,10 +84,14 @@ class HomeViewModel(
         }
     }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
+    /** A row of the last view shows an elapsed time or a countdown (the lib's `time.kind`). */
+    private val ticking = MutableStateFlow(false)
+
+    /** The last grouped view's `returns`, passed back to the next one. */
+    @Volatile private var returns: JSONObject? = null
+
     /** Once a second while a row shows an elapsed time or a countdown, else every 30 s for ages. */
-    private val now: Flow<Long> = environments
-        .map { list -> list.any { env -> env.shell?.threads?.any(::ticksEverySecond) == true } }
-        .distinctUntilChanged()
+    private val now: Flow<Long> = ticking
         .flatMapLatest { fast ->
             flow {
                 while (true) {
@@ -104,9 +111,9 @@ class HomeViewModel(
 
     val state: StateFlow<HomeUiState?> = combine(environments, view, shelfStore.shelves, messages, header) { envs, view, shelves, messages, header ->
         Inputs(envs, view, shelves, messages, header)
-    }.combine(now) { inputs, now ->
-        HomeStateBuilder.build(
-            HomeInput(
+    }.combine(now) { inputs, now -> inputs to now }
+        .mapLatest { (inputs, now) ->
+            val input = HomeInput(
                 environments = inputs.environments,
                 query = inputs.view.query,
                 filter = inputs.view.filter,
@@ -115,9 +122,22 @@ class HomeViewModel(
                 messages = inputs.messages,
                 headerStatus = inputs.header,
                 now = now,
-            ),
-        )
-    }.flowOn(Dispatchers.Default)
+                returns = returns.takeIf { inputs.shelves.grouped },
+            )
+            val sidebar = try {
+                HomeStateBuilder.view(domain, input)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: T3Exception) {
+                // The lib refused the input (an environment id it cannot key): keep the last list.
+                return@mapLatest state.value
+            }
+            returns = sidebar.returns
+            HomeStateBuilder.build(input, sidebar).also { state ->
+                ticking.value = state.rows.values.any { it.time.kind == "elapsed" || it.time.kind == "countdown" }
+            }
+        }
+        .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private data class Inputs(
@@ -196,7 +216,4 @@ class HomeViewModel(
         }
         MessageSearch.merge(calls.awaitAll())
     }
-
-    private fun ticksEverySecond(thread: ShellThread): Boolean =
-        SidebarModel.status(thread) == RowStatus.Working || SidebarModel.snoozedUntil(thread) != null
 }

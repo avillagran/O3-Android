@@ -32,7 +32,8 @@ fun rememberOt3NavController(): NavHostController = rememberNavController(rememb
  * The app shell: the three tabs in a `NavigationBar` (hidden while the keyboard is up, as T3
  * Mobile's Android workspace), the nav host with a nested graph per tab, and the sheet host.
  * [screens] defaults to the app's view-model screens; tests pass fakes. [deepLink] is a thread
- * to open (from [ThreadDeepLink]); [onDeepLinkHandled] runs once it is open.
+ * to open (from [ThreadDeepLink]); [onDeepLinkHandled] runs once it is open. While
+ * [pairingLinkWaiting] (a link in `PairingInbox`), the pairing screen opens to take it.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -41,6 +42,7 @@ fun Ot3NavHost(
     screens: Ot3Screens? = null,
     deepLink: Thread? = null,
     onDeepLinkHandled: () -> Unit = {},
+    pairingLinkWaiting: Boolean = false,
 ) {
     val navigator = remember(navController) { Ot3Navigator(navController) }
     LaunchedEffect(navigator, deepLink) {
@@ -49,6 +51,11 @@ fun Ot3NavHost(
         navController.currentBackStackEntryFlow.first()
         navigator.openThread(link.environmentId, link.threadId, link.prompt)
         onDeepLinkHandled()
+    }
+    LaunchedEffect(navigator, pairingLinkWaiting) {
+        if (!pairingLinkWaiting) return@LaunchedEffect
+        navController.currentBackStackEntryFlow.first()
+        navigator.openPairing()
     }
     val resolvedScreens = screens ?: remember(navigator) { AppScreens(navigator) }
     val current = navController.currentBackStackEntryAsState()

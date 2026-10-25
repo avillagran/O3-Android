@@ -7,8 +7,9 @@ import kotlin.random.Random
  * failure up to [capMs], each delay drawn uniformly from [half, full] of that step. A
  * connection that stayed up for [resetAfterMs] starts over from [baseMs].
  *
- * The lib has the same policy in Rust (`reconnect::Backoff`) but does not expose it yet
- * (docs/LIB_REQUESTS.md, phase 1 item 5). Not thread-safe: one per reconnect loop.
+ * The lib has the same policy in Rust (`reconnect::Backoff`) but does not expose it yet, not
+ * even through v0.3.4's `domain` (docs/LIB_REQUESTS.md, phase 1 item 5). Not thread-safe: one
+ * per reconnect loop.
  */
 class Backoff(
     private val random: Random = Random.Default,
