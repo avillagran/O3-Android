@@ -63,6 +63,9 @@ jobs:
           cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
 
       - name: Unit tests, lint and debug build
+        env:
+          # JVM tests that load the host libt3_jni.so fail instead of skipping without it.
+          OT3A_REQUIRE_HOST_JNI: "1"
         run: >-
           ./gradlew --no-daemon
           :core:testDebugUnitTest
