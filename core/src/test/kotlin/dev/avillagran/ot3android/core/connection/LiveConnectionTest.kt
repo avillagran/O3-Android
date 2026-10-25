@@ -59,9 +59,10 @@ class LiveConnectionTest {
             line("descriptor: label=${descriptor.label != null} serverVersion=${descriptor.serverVersion} protocol=${descriptor.orchestrationProtocolVersion}")
             val shell = withTimeout(30_000) { supervisor.shell.first { it != null } }!!
             line("shell: sequence=${shell.sequence != null} projects=${shell.projects.size} threads=${shell.threads.size}")
-            val sidebar = dev.avillagran.ot3android.core.shell.SidebarModel.build(shell)
+            val sidebarModel = dev.avillagran.ot3android.core.shell.SidebarModel
+            val sidebar = sidebarModel.sections(sidebarModel.rows("live", shell, System.currentTimeMillis()), grouped = false)
             line("threads: archived=${shell.threads.count { it.archivedAt != null }} deleted=${shell.threads.count { it.deletedAt != null }} subagent=${shell.threads.count { it.relationshipToParent == "subagent" }} statuses=${shell.threads.groupingBy { it.status }.eachCount()}")
-            line("sidebar: groups=${sidebar.active.size} activeRows=${sidebar.active.sumOf { it.rows.size }} settled=${sidebar.settled.size} statuses=${(sidebar.active.flatMap { it.rows } + sidebar.settled).groupingBy { it.status }.eachCount()}")
+            line("sidebar: activeRows=${sidebar.active.size} snoozed=${sidebar.snoozed.size} settled=${sidebar.settled.size} statuses=${(sidebar.active + sidebar.settled).groupingBy { it.status }.eachCount()}")
             // Let the stream run so its first updates are applied and the cursor persisted.
             withTimeoutOrNull(10_000) { cursors.cursors.first { it.isNotEmpty() } }
             line("cursor persisted: ${cursors.cursors.value.isNotEmpty()}")
