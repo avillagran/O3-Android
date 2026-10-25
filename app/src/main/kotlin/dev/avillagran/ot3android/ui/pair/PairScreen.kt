@@ -122,9 +122,10 @@ fun PairScreen(
                 placeholder = { Text(stringResource(R.string.pair_link_hint)) },
                 singleLine = true,
                 enabled = idle,
-                // The link holds a one-time code: masked like a token.
+                // The link holds a one-time code: masked like a token, and a password keyboard
+                // keeps it out of the keyboard's suggestions and learned words.
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go, autoCorrectEnabled = false),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Go, autoCorrectEnabled = false),
                 trailingIcon = {
                     TextButton(
                         enabled = idle,

@@ -366,7 +366,7 @@ factory, the fake's scripting). Supersedes the entry above.
   redesign replaces it with the Add environment screen of [UI_SPEC.md](UI_SPEC.md) (4.2,
   tranche UI-6), whose QR card, link field and masked code use this `PairingService`. That
   screen keeps CameraX, and the decoder choice above stands. The link field is masked like a
-  token.
+  token and uses a password keyboard, so the keyboard neither suggests nor learns it.
 
 ## Pending decisions
 
