@@ -9,6 +9,9 @@ import dev.avillagran.ot3android.core.data.local.Ot3Database
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.security.CredentialStore
+import dev.avillagran.ot3android.core.thread.DraftRepository
+import dev.avillagran.ot3android.core.thread.MessageSender
+import dev.avillagran.ot3android.core.thread.OutboxRepository
 import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -64,6 +67,13 @@ class AppGraph(
     }
 
     val serverProbe: ServerProbe by lazy { ServerProbe(transportFactory) }
+
+    val outboxRepository: OutboxRepository by lazy { OutboxRepository(database.outboxDao()) }
+
+    val draftRepository: DraftRepository by lazy { DraftRepository(database.draftDao()) }
+
+    /** Sends in [appScope], so a send survives its screen. */
+    val messageSender: MessageSender by lazy { MessageSender(outboxRepository, appScope) }
 
     private companion object {
         const val TAG = "Ot3AppGraph"
