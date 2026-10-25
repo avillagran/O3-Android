@@ -62,6 +62,23 @@ interface T3Transport : DomainCalls, Closeable {
      */
     suspend fun fetchDescriptor(baseUrl: String, environmentId: String? = null): JSONObject
 
+    /**
+     * Exchanges a one-time [pairingCode] for a long-lived bearer session, with no credential:
+     * the lib reads the descriptor at [baseUrl] (its `environmentId` must be a UUID, and equal
+     * to [environmentId] when given), then `POST /oauth/token`. With [connect], this handle
+     * also connects with the new token, which ends its open streams like [connect].
+     * Codes: `invalid_pairing_code`, `invalid_pairing_client`, `invalid_endpoint`,
+     * `unreachable`, `invalid_t3_environment_id`, `t3_environment_mismatch`,
+     * `pairing_rejected` (any refusal: unknown, used or expired code), `unsupported_pairing_token`.
+     */
+    suspend fun pairBearer(
+        baseUrl: String,
+        pairingCode: String,
+        environmentId: String? = null,
+        client: PairingClient = PairingClient(),
+        connect: Boolean = false,
+    ): PairedBearer
+
     /** The restored bounded window of a thread (up to 64 MiB), to paint before its stream. */
     suspend fun boundedThread(threadId: String): JSONObject
 

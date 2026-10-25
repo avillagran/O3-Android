@@ -33,7 +33,16 @@ The lib-t3-rust AAR (and, on x86_64 Linux, the host JNI library for JVM tests) m
 scripts/fetch-or-build-lib.sh --release --host-jni      # AAR from the pinned release
 ./gradlew :core:testDebugUnitTest :app:assembleDebug   # unit tests and debug APK
 ./gradlew :core:lintDebug :app:lintDebug               # lint
-./gradlew connectedDebugAndroidTest                    # Room, credential and Compose UI tests on a device
+```
+
+Instrumented tests (Room, credentials, Compose UI) run on the project emulator; see
+[docs/EMULATOR.md](docs/EMULATOR.md). Always set `ANDROID_SERIAL`, otherwise Gradle uses
+every connected device:
+
+```sh
+scripts/emulator.sh start --headless && scripts/emulator.sh wait
+ANDROID_SERIAL=$(scripts/emulator.sh serial) ./gradlew connectedDebugAndroidTest
+scripts/emulator.sh stop
 ```
 
 An optional, read-only check against a real server runs with the unit tests when
