@@ -454,6 +454,71 @@ scale, Fira Code), whose sampled pixels equal the tokens.
   mark notice, ot3's MIT notice and the machine-translation status of the catalog, for
   Settings → About → Licenses.
 
+## 2026-10-25: UI-1d: typed routes, three tabs, sheet navigator and merged Home state
+
+- **Typed `@Serializable` routes** (Kotlin serialization plugin) for every destination of
+  UI_SPEC 2.1, in a nested graph per tab: `ChatsGraph` (Home, Thread, ThreadChanges,
+  NewThread, NewThreadDraft, AddProject, CommandPalette and Home's sheets),
+  `PullRequestsGraph` (PullRequests, PullRequest, PullRequestFile) and `SettingsGraph`
+  (Settings, Environments, AddEnvironment, Usage, Archive, Licenses). Destinations without a
+  screen show one "not yet" placeholder. This settles the pending decision below.
+- **One `Ot3Navigator`** holds the rules so every screen follows them: switching tabs saves
+  and restores each tab's stack; reselecting the current tab pops to its root (Android
+  convention; T3 Mobile does not say); opening a thread from anywhere switches to Chats and
+  resets its stack to `[Home, Thread]`; Environments and AddEnvironment live under Settings;
+  saving an environment returns to Home. The old `environments → sidebar → thread` graph and
+  `connect` are gone: `AddEnvironment(mode?, pairingUrl?, environmentId?)` is today's URL +
+  token form (`environmentId` edits a saved one) and Home is always the start destination,
+  with "No environments connected" + Add environment on a fresh install.
+- **Thread deep link `ot3a://thread/{environmentId}/{threadId}?prompt=`** is parsed by
+  `ThreadDeepLink` and opened with `openThread`, not declared as a Navigation deep link: an
+  in-app Navigation deep link into a nested graph replaces the back stack with the leaf and
+  drops Home from under the thread.
+- **Sheet navigator:** a custom `Navigator` (`SheetNavigator`, modelled on Navigation's
+  `DialogNavigator`) whose destinations are `FloatingWindow`s declared with `sheet<Route>()`.
+  Each sheet is a real back-stack entry, so it has its own saved state, view-model store and
+  lifecycle, survives process death with the back stack, and back pops it; `SheetHost` draws
+  each entry as an M3 `ModalBottomSheet` (predictive back and swipe-down dismiss pop it) and
+  adds an activity-level back handler so the order holds whichever window has focus. Used
+  for Thread actions, Project actions, Thread list options and Snooze until; they live in
+  the Chats graph and share Home's view model, scoped to the `ChatsGraph` entry.
+- **Back order (2.3):** the top sheet, then the keyboard (the IME consumes back itself),
+  then Home's search (its handler runs only while Home is the current entry), then detail →
+  list. Predictive back is on (`android:enableOnBackInvokedCallback`).
+- **Merged Home state in `core`:** `HomeStateBuilder` is a pure function of every saved
+  environment's connection and shell plus search, filters, shelves and paging; the app's
+  `HomeViewModel` only wires flows (supervisors started there, a 1 s clock while a row shows
+  an elapsed time or a countdown, 30 s otherwise). Rows are keyed `<environment>/<thread>`;
+  the environment label appears only with more than one saved environment (T3 Mobile).
+  Search matches title, project and environment and includes settled rows, whose shelf
+  stays collapsed if the user collapsed it (ot3's user rule); from two characters a
+  "Messages" section adds `orchestration.searchThreads` from every connected environment,
+  250 ms after the last keystroke, merged as ot3 does. Status filter counts follow the
+  project and environment scope, never the search; count pills ignore filters and settled
+  rows. Grouping and the collapsed state of the Working, Snoozed and Settled shelves live
+  in DataStore (`HomePreferences`); settled rows page 10 then 25 at a time (T3 Mobile's
+  `THREAD_LIST_V2_SETTLED_INITIAL_COUNT` / `_PAGE_COUNT`). The header text is T3 Mobile's
+  workspace status, shown 800 ms after it first appears; "You are offline" is modelled but
+  never produced until the app reads the device's network state.
+- **Menus as data:** `ThreadActions` lists ot3's whole thread menu, project menu, swipe
+  actions and snooze presets with ot3's visibility and capability rules
+  (`threadPinning`, `threadSettlement`, `threadSnooze`, `threadTitleRegeneration`,
+  `threadAutoSettleOptOut`, write access) behind an `ActionContext`. Today's context
+  (`ActionContext.Interim`) knows no capability, no write access and no reachable command
+  builder, so the Thread actions sheet offers only Copy ▸ Path / Branch / Thread ID and
+  Filter by {project} / All projects, the Project actions sheet only Copy Path, swipes are
+  modelled but no gesture is attached, and Snooze until lists its presets disabled. Later
+  PRs flip the flags (request item 4 for the builders, UI-5 and UI-6 for the screens).
+- **What stays interim, and what removes it:** row order, shelves and the snooze rule come
+  from the temporary `SidebarModel.kt`, extended to several environments and still the one
+  temporary sidebar file (U2 replaces it; observed returns from Working and subagent
+  nesting are not tracked until then); statuses map `NeedsYou` to Approval or Input,
+  `Working` and `Failed` onto ot3's ten-state enum, with no Done, Plan ready, Woke, Limited,
+  Waiting or Goal (U2); the project chip is the project title's first letter on an accent
+  tint (U21); projects are not grouped by repository (U2). Home, sheets and tabs are plain
+  Material composables until the kit and the visual Home restyle them. ot3 writes the
+  elapsed time as "3m 5s" (`T3Panel.qml:541-545`); this follows the spec's "3m 05s".
+
 ## 2026-10-25: UI-1e: the component kit takes presentation values
 
 - **The kit's models are the lib's fields, one to one.** `ThreadRowModel`, `RowStatus`,
@@ -497,5 +562,3 @@ scale, Fira Code), whose sampled pixels equal the tokens.
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
   dedicated change once the AAR integration is stable.
-- **Typed navigation routes** (`@Serializable` destinations with Navigation Compose)
-  instead of the current string constants in `Routes`, once screens take arguments.

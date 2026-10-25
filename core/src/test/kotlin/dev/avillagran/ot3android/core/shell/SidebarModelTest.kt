@@ -17,6 +17,10 @@ class SidebarModelTest {
 
     private fun row(vararg fields: Pair<String, Any?>) = shell(thread("t", "p1", *fields)).threads.single()
 
+    private val now = ShellReducer.parseTimestamp("2026-10-25T12:00:00.000Z")!!
+
+    private fun build(shell: ShellState, grouped: Boolean = false) = SidebarModel.sections(SidebarModel.rows("e1", shell, now), grouped)
+
     @Test
     fun settledRule() {
         assertTrue(SidebarModel.isSettled(row("settledOverride" to "settled")))
@@ -29,7 +33,7 @@ class SidebarModelTest {
 
     @Test
     fun archivedDeletedAndSubagentThreadsAreHidden() {
-        val sidebar = SidebarModel.build(
+        val sidebar = build(
             shell(
                 thread("visible"),
                 thread("archived", "p1", "archivedAt" to "2026-10-24T09:00:00.000Z"),
@@ -39,13 +43,13 @@ class SidebarModelTest {
             ),
         )
 
-        assertEquals(listOf("visible", "fork"), sidebar.active.flatMap { it.rows }.map { it.thread.id }.sortedDescending())
+        assertEquals(listOf("visible", "fork"), sidebar.active.map { it.thread.id }.sortedDescending())
         assertTrue(sidebar.settled.isEmpty())
     }
 
     @Test
     fun pinnedFirstByOrderKeyThenTheRestNewestFirst() {
-        val sidebar = SidebarModel.build(
+        val sidebar = build(
             shell(
                 thread("old", "p1", "createdAt" to "2026-10-20T00:00:00.000Z"),
                 thread("new", "p1", "createdAt" to "2026-10-24T00:00:00.000Z"),
@@ -55,14 +59,14 @@ class SidebarModelTest {
             ),
         )
 
-        val rows = sidebar.active.single().rows
+        val rows = sidebar.active
         assertEquals(listOf("pinA", "pinA2", "pinB", "new", "old"), rows.map { it.thread.id })
         assertEquals(listOf(true, true, true, false, false), rows.map { it.pinned })
     }
 
     @Test
-    fun activeIsGroupedByProjectMostRecentFirstAndSettledIsSeparate() {
-        val sidebar = SidebarModel.build(
+    fun rowsOfEveryProjectShareOneListAndSettledIsSeparate() {
+        val sidebar = build(
             shell(
                 thread("a1", "p1", "createdAt" to "2026-10-20T00:00:00.000Z"),
                 thread("b1", "p2", "createdAt" to "2026-10-23T00:00:00.000Z"),
@@ -72,9 +76,66 @@ class SidebarModelTest {
             ),
         )
 
-        assertEquals(listOf("Beta", null, "Alpha"), sidebar.active.map { it.title })
-        assertEquals(listOf("p2", "gone", "p1"), sidebar.active.map { it.projectId })
+        assertEquals(listOf("b1", "x1", "a1"), sidebar.active.map { it.thread.id })
         assertEquals(listOf("s-new", "s-old"), sidebar.settled.map { it.thread.id })
+        assertEquals(listOf("e1/b1", "e1/x1", "e1/a1"), sidebar.active.map { it.key })
+    }
+
+    @Test
+    fun groupedFoldsUnpinnedWorkingRowsIntoTheWorkingShelf() {
+        val shell = shell(
+            thread("run", "p1", "activeRunId" to "r1", "latestUserMessageAt" to "2026-10-24T00:00:00.000Z"),
+            thread("run-old", "p1", "activeRunId" to "r2", "latestUserMessageAt" to "2026-10-23T00:00:00.000Z"),
+            thread("run-pinned", "p1", "activeRunId" to "r3", "pinnedAt" to "2026-10-01T00:00:00.000Z"),
+            thread("ask", "p1", "pendingRuntimeRequest" to JSONObject().put("kind", "approval"), "activeRunId" to "r4"),
+            thread("idle", "p1"),
+        )
+
+        val flat = build(shell, grouped = false)
+        assertTrue(flat.working.isEmpty())
+        assertEquals(5, flat.active.size)
+
+        val grouped = build(shell, grouped = true)
+        assertEquals(listOf("run", "run-old"), grouped.working.map { it.thread.id })
+        assertEquals("pinned work and requests stay in the inbox", listOf("run-pinned", "ask", "idle").sorted(), grouped.active.map { it.thread.id }.sorted())
+        assertEquals("run-pinned", grouped.active.first().thread.id)
+    }
+
+    @Test
+    fun snoozeFollowsTheLibsRule() {
+        val until = "2026-10-25T15:00:00.000Z"
+        val at = "2026-10-25T11:00:00.000Z"
+        assertTrue(SidebarModel.isSnoozed(row("snoozedUntil" to until, "snoozedAt" to at), now))
+        assertFalse("expired", SidebarModel.isSnoozed(row("snoozedUntil" to "2026-10-25T11:59:00.000Z"), now))
+        assertFalse("a request raises it", SidebarModel.isSnoozed(row("snoozedUntil" to until, "pendingRuntimeRequest" to JSONObject()), now))
+        assertFalse("approvals raise it", SidebarModel.isSnoozed(row("snoozedUntil" to until, "hasPendingApprovals" to true), now))
+        assertFalse(
+            "a run completed after the snooze raises it",
+            SidebarModel.isSnoozed(row("snoozedUntil" to until, "snoozedAt" to at, "latestRun" to JSONObject().put("state", "completed").put("completedAt", "2026-10-25T11:30:00.000Z")), now),
+        )
+        assertTrue(
+            "an error from before the snooze does not",
+            SidebarModel.isSnoozed(row("snoozedUntil" to until, "snoozedAt" to at, "runtime" to JSONObject().put("status", "error").put("updatedAt", "2026-10-25T10:00:00.000Z")), now),
+        )
+        assertFalse(
+            "an error after the snooze does",
+            SidebarModel.isSnoozed(row("snoozedUntil" to until, "snoozedAt" to at, "session" to JSONObject().put("status", "failed").put("updatedAt", "2026-10-25T11:10:00.000Z")), now),
+        )
+        val sidebar = build(shell(thread("s", "p1", "snoozedUntil" to until), thread("settled-snoozed", "p1", "snoozedUntil" to until, "settledOverride" to "settled"), thread("a")))
+        assertEquals("snoozed rows leave every other section", listOf("s", "settled-snoozed").sorted(), sidebar.snoozed.map { it.thread.id }.sorted())
+        assertEquals(listOf("a"), sidebar.active.map { it.thread.id })
+        assertTrue(sidebar.settled.isEmpty())
+    }
+
+    @Test
+    fun runStartAndWorktreeComeFromTheRow() {
+        assertEquals(
+            ShellReducer.parseTimestamp("2026-10-25T11:59:00.000Z"),
+            SidebarModel.runStartedAt(row("latestRunStartedAt" to "2026-10-25T11:00:00.000Z", "activityRunStartedAt" to "2026-10-25T11:59:00.000Z")),
+        )
+        assertEquals(null, SidebarModel.runStartedAt(row()))
+        assertEquals("/w/tree", SidebarModel.worktreePath(row("worktreePath" to "/w/tree")))
+        assertEquals(null, SidebarModel.worktreePath(row("worktreePath" to null)))
     }
 
     @Test
@@ -98,7 +159,7 @@ class SidebarModelTest {
 
     @Test
     fun activeRowsFollowTheInboxAnchorThenTheActiveOrderKeyNeverUpdatedAt() {
-        val sidebar = SidebarModel.build(
+        val sidebar = build(
             shell(
                 thread("keyB", "p1", "activeOrderKey" to "b"),
                 thread("keyA", "p1", "activeOrderKey" to "a"),
@@ -112,13 +173,13 @@ class SidebarModelTest {
 
         assertEquals(
             listOf("asked", "reopened", "ran", "touched", "keyA", "keyB"),
-            sidebar.active.single().rows.map { it.thread.id },
+            sidebar.active.map { it.thread.id },
         )
     }
 
     @Test
     fun settledRowsSortBySettledThenLastRunThenLastMessageThenUpdated() {
-        val sidebar = SidebarModel.build(
+        val sidebar = build(
             shell(
                 thread("settled", "p1", "settledOverride" to "settled", "settledAt" to "2026-10-10T00:00:00.000Z"),
                 thread("run", "p1", "settledOverride" to "settled", "latestRunCompletedAt" to "2026-10-12T00:00:00.000Z"),
