@@ -399,6 +399,63 @@ API 34 google_apis x86_64, 2 GB), `-gpu swiftshader_indirect`, cold boot, consol
   screen keeps CameraX, and the decoder choice above stands. The link field is masked like a
   token and uses a password keyboard, so the keyboard neither suggests nor learns it.
 
+## 2026-10-25: lib-t3-rust v0.3.3, the Kotlin shims removed, `DomainEngine`
+
+- **Target v0.3.3** (`5cfb7ac`, release AAR SHA-256 `183e233e…`, see LIB_BUILD.md): ABI 3
+  plus the op `domain`, 37 pure functions with no connection (`describe().domain`).
+- **`DomainCalls` / `DomainEngine`**: `T3Transport` extends `DomainCalls`
+  (`suspend fun domain(fn, args): Any?`, offline, on IO), and `DomainEngine` holds one
+  never-connected `T3Client`, created lazily on IO, for UI state builders that have no
+  environment transport. `DomainEngine.shared` is the process-wide one (concurrent calls
+  are fine: `T3Client` takes a read lock per call). Tests use `DomainEngine(Unconfined)`
+  so the real lib runs inline on a test dispatcher.
+- **Removed**: `core/shell/SidebarModel.kt` (now `SidebarView`, a mapper of
+  `sidebar.view`, project chips from its `projectIdentities`) and
+  `core/thread/ThreadProjectionShim.kt` (now `ThreadSession` + `ThreadTimelines`:
+  `projection.apply` once per update on the held snapshot JSON, `timeline.view` on each
+  repaint, both off the main thread; the whole `timeline.view` result is kept as
+  `ThreadView.timeline` for UI-2). The refetch stays only for `stream_backpressure`,
+  `stream_closed`, a malformed snapshot or a projection the lib refuses, at most once
+  per 10 s. The resume cursor is the lib's (`ThreadUpdate.cursor`).
+- **Kept, still temporary, each with its missing lib function in LIB_REQUESTS.md
+  ("2026-10-25: v0.3.3")**: `ShellReducer.kt` and `ShellUpdates.kt` (no `shell.apply`;
+  the shell metadata snapshot finding is still open), `MessageSender`'s
+  `message.dispatch` and `run.interrupt` arguments (no composer message builder),
+  `Backoff.kt` (no `reconnect.*` domain function). `PairingLink.kt` on `feat/pairing`
+  must switch to `connectionCatalog.pairingTarget`.
+- **Sidebar screen until UI-1**: one environment (`environmentId` filter), a flat active
+  list in the lib's order with a project chip per row (replacing the per-project
+  headers), a snoozed shelf, the settled section, and the lib's English `statusLabel` in
+  the status chip until the i18n catalog lands.
+
+## 2026-10-25: lib-t3-rust v0.3.4; strings and theme colours come from the lib
+
+- **Target v0.3.4** (`e2ec546`, release AAR SHA-256 `b90064ae…`, see LIB_BUILD.md): same
+  ABI, operations and `T3Client`; `describe().domain` grows from 37 to 108 functions, which
+  expose every row of UI_SPEC section 6 (LIB_REQUESTS.md, "2026-10-25: v0.3.4"). The AAR
+  carries ot3's string catalog as the asset `lib-t3-rust/i18n.json` (20 locales, 1 796
+  English sources), which Gradle merges into the app's assets.
+- **Strings are generated at build time from the AAR asset.** The `strings_ot3.xml`
+  generator reads `assets/lib-t3-rust/i18n.json` from `libs/lib-t3-rust-android.aar`
+  instead of an ot3 checkout, so the strings are pinned by `libs/lib-t3-rust.lock` like
+  the rest of the lib; the UI-1 branch switches its generator. English sources the lib
+  returns at run time (`statusLabel`, subagent labels, summary parts) are looked up with
+  `i18n.t` / `i18n.catalog` rather than a Kotlin name table.
+- **Theme colours come from `theme.tokens`.** The theme importer passes each Omarchy
+  `colors.toml` to `theme.tokens` and writes its `roles`, `statusColors`,
+  `projectPalette` / `projectFills`, `sky`, `document` and `appearance`; the UI-1 branch
+  switches its importer. Reason: `docs/ui/tokens.md` (UI-1) computed the foreground- and
+  accent-over-background roles with straight alpha, and 19 of its 50 tokyo-night /
+  catppuccin-latte values are one off on one channel (for example tokyo-night `dim`
+  `#6c708a` against `#6b718a`). ot3 draws `Qt.rgba(fg, α)` over the background with Qt
+  Quick's 8-bit premultiplied blend; the lib reproduces it (`src/theme.rs`) and checked its
+  goldens for Omarchy's 22 themes against what ot3 drew on screen (1 692 channels).
+  `DomainContractTest.u11ThemeTokens*` pins tokyo-night and catppuccin-latte.
+- **Still temporary** (unchanged by v0.3.4): `ShellReducer.kt` / `ShellUpdates.kt`,
+  `MessageSender`'s `message.dispatch` / `run.interrupt` arguments and `Backoff.kt`.
+  `core/pairing/PairingLink.kt`, merged from `feat/pairing`, has to switch to
+  `connectionCatalog.pairingTarget` (available since v0.3.3) in its own change.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

@@ -19,15 +19,15 @@ libs/host/linux-x86_64/lib-t3-rust.properties
 the pin. The AAR, its checksum, its properties and the host library are build outputs
 and are listed in `.gitignore`. Regenerate them; never add them to a commit.
 
-## Current target: v0.3.2 from the GitHub release, ABI 3
+## Current target: v0.3.4 from the GitHub release, ABI 3
 
-The app targets the **lib-t3-rust v0.3.2** release (commit `26e67a7`), C ABI
+The app targets the **lib-t3-rust v0.3.4** release (commit `e2ec546`), C ABI
 `T3_PROTOCOL_ABI_VERSION 3`, unchanged since v0.3.0. The AAR is the release asset
-`lib-t3-rust-android-v0.3.2.aar`, pinned by `libs/lib-t3-rust.lock`:
+`lib-t3-rust-android-v0.3.4.aar`, pinned by `libs/lib-t3-rust.lock`:
 
 ```
-tag=v0.3.2
-sha256=3a07a7e4e6d8e60d0a568c961fafb60d867dce6094e7e9cb003a8e686c1a50fc
+tag=v0.3.4
+sha256=b90064ae893cf0239a3d19b3bf213ebb8c92d6e14da0a8d4a4ff9ae083bfc036
 ```
 
 ```sh
@@ -35,7 +35,7 @@ scripts/fetch-or-build-lib.sh --release --host-jni
 ```
 
 downloads and verifies that AAR (see "Release" below) and builds the host JNI library
-from a lib checkout at the lock's tag (`git -C "$LIB_T3_RUST_DIR" checkout v0.3.2`):
+from a lib checkout at the lock's tag (`git -C "$LIB_T3_RUST_DIR" checkout v0.3.4`):
 the release does not ship one (LIB_REQUESTS.md, finding 7). Without a checkout,
 `--release --no-host-jni` installs the AAR alone. Moving the target means updating the
 lock (tag and SHA-256) in its own change.
@@ -71,12 +71,35 @@ options)`; JNI failures with a stable code arrive as `T3Exception(code)` (not ye
 `StreamFixture` compile error is fixed; and every `v*` tag publishes the AAR with its
 SHA-256 as a GitHub release.
 
-`capabilities` on v0.3.2 reports `abiVersion 3`, `libraryVersion 0.3.2`, `apiVersion
-1`, `functions 116` and 18 `operations`: the 16 base operations plus `call` and
-`describe` (`src/ffi.rs` at the tag). The lib's own references: `README.md`
-("Omi / Kotlin", "Typed API"), `docs/ANDROID.md` and `include/t3_protocol.h`. What the
-app still needs from the lib, and the v0.3.2 status of each earlier finding, is tracked
-in [LIB_REQUESTS.md](LIB_REQUESTS.md).
+v0.3.3 adds the op `domain` on the same ABI (`src/domain/mod.rs`, `src/ffi_call.rs`):
+37 pure functions with no connection and no network (`T3Client.domain(fn, args)`,
+`T3Api(client).domain.<module>.<fn>(…)`), listed under `describe().domain` with their
+args and a one-line result shape. A `domain` request may be up to 72 MiB (a bounded
+thread snapshot); other operations keep 8 MiB. The app uses `projection.apply`,
+`timeline.view` and `sidebar.view` (with its `projectIdentities`, the output of
+`projects.identity`) through `DomainEngine` (`core/.../transport/DomainEngine.kt`).
+
+v0.3.4 keeps the ABI, the operations, `src/stream.rs`, the API registry and
+`T3Client.kt` as they were, and adds 71 `domain` functions (108 in 29 modules):
+`diffReview`, `usageSummary`, `quotaSources`, the rest of `pullRequests`, `branchPicker`,
+`toolInspector`, `planWorkflow`, `gitControls`, `nativeSettings`, `scopedSettings`,
+`checkpointRevert`, `timeline.minimap` / `minimapIndex`, `subagents`, `theme.tokens` (an
+Omarchy `colors.toml` in, ot3's colour roles out) and `i18n.t` / `catalog` / `resolve` /
+`languages` over ot3's string catalog (20 languages, 1 796 English sources). The AAR now
+also carries that catalog as the asset `assets/lib-t3-rust/i18n.json` (2 837 911 bytes,
+the lib's `data/i18n.json`; `tools/package-android`). Gradle merges an AAR's `assets/`
+into the consuming app's assets, so in the APK it is `assets/lib-t3-rust/i18n.json`,
+read at run time with `context.assets.open("lib-t3-rust/i18n.json")`; a build-time
+generator reads the same entry from `libs/lib-t3-rust-android.aar` directly.
+
+`capabilities` on v0.3.4 reports `abiVersion 3`, `libraryVersion 0.3.4`, `apiVersion
+1`, `functions 116`, `domainFunctions 108` and 19 `operations`: the 16 base operations
+plus `call`, `describe` and `domain` (`src/ffi.rs` at the tag); `describe` lists 116
+`functions`, 13 `streams` and 108 `domain` entries (all pinned in `NativeSmokeTest`).
+The lib's own references: `README.md` ("Omi / Kotlin", "Typed API", "Domain
+operations"), `docs/ANDROID.md` (Domain operations, Strings) and
+`include/t3_protocol.h`. What the app still needs from the lib, and the v0.3.4 status of
+each earlier finding, is tracked in [LIB_REQUESTS.md](LIB_REQUESTS.md).
 
 ## Building from source (unreleased work)
 
@@ -211,17 +234,17 @@ the checksum and the AAR layout (`unzip -Z1`), and installs it under the same st
 name. The properties file records `origin=release <tag>`, the commit embedded in the
 AAR, `tag`/`describe` as the release tag and `abiVersion` read from
 `include/t3_protocol.h` at that tag. A release that does not exist (HTTP 404) is
-reported as not published. For v0.3.2:
+reported as not published. For v0.3.4:
 
 ```
-version=0.3.2
-source=26e67a7ce253a4cd84d91ca15071ecf578baf44a
-tag=v0.3.2
-describe=v0.3.2
+version=0.3.4
+source=e2ec5467389adf0885623480d7e2006a7ae3d019
+tag=v0.3.4
+describe=v0.3.4
 abiVersion=3
-origin=release v0.3.2
+origin=release v0.3.4
 repository=https://github.com/avillagran/lib-t3-rust
-sha256=3a07a7e4e6d8e60d0a568c961fafb60d867dce6094e7e9cb003a8e686c1a50fc
+sha256=b90064ae893cf0239a3d19b3bf213ebb8c92d6e14da0a8d4a4ff9ae083bfc036
 installed=...
 ```
 
@@ -249,7 +272,7 @@ shows each asset's digest) and update both lines of the lock in one commit.
 **Host library with a release.** `--release <tag> --host-jni` builds the host JNI
 library from the lib checkout, so the checkout must be at the commit the AAR was
 packaged from (its `source=`); otherwise the script stops before installing anything
-and prints both commits. Releases, v0.3.2 included, do not publish a host library
+and prints both commits. Releases, v0.3.4 included, do not publish a host library
 (LIB_REQUESTS.md, finding 7), so a lib checkout at the lock's tag stays necessary for it.
 
 ## CI recipe
@@ -323,6 +346,8 @@ java -Djava.library.path=libs/host/linux-x86_64 \
 rm -rf "$work"
 # v0.3.1: abi=3 lib=0.3.1 ops=18 functions=116 describe=116 streams=13
 # v0.3.2: abi=3 lib=0.3.2 ops=18 functions=116 describe=116 streams=13
+# v0.3.3: abi=3 lib=0.3.3 ops=19 functions=116 describe=116 streams=13
+# v0.3.4: abi=3 lib=0.3.4 ops=19 functions=116 describe=116 streams=13
 ```
 
 ## The lib's host fixtures
@@ -364,11 +389,16 @@ Status at v0.3.1 (2026-10-24): unchanged. `tools/test-jni` passes (`JNI_PASS`),
 `--lib-fixtures` exits 1 against a v0.3.1 checkout. That is expected until the target
 moves to v0.3.2, where both tools pass (`KOTLIN_JNI_PASS`, `KOTLIN_STREAMS_PASS`).
 
-Status at v0.3.2 (2026-10-24, the target): with the checkout at the tag and the
+Status at v0.3.2 (2026-10-24): with the checkout at the tag and the
 release AAR installed, `scripts/fetch-or-build-lib.sh --lib-fixtures` prints
 `JNI_PASS`, `KOTLIN_JNI_PASS` and `KOTLIN_STREAMS_PASS` and exits 0; it rebuilds
 nothing in `libs/`, since the installed AAR already records the checkout's commit
 and describe.
+
+Status at v0.3.3 (2026-10-25): with the checkout at the tag and the
+release AAR installed, `scripts/fetch-or-build-lib.sh --host-jni-only --lib-fixtures`
+prints `JNI_PASS`, `KOTLIN_JNI_PASS` (now including the domain functions) and
+`KOTLIN_STREAMS_PASS` and exits 0.
 
 ## Checking an AAR
 
@@ -397,3 +427,14 @@ public final void connectRelay(java.lang.String, java.lang.String, java.lang.Str
 public final dev.avillagran.t3.T3Asset assetBytes(org.json.JSONObject, long, java.lang.Integer);
 public final dev.avillagran.t3.T3Asset projectFavicon(java.lang.String, java.lang.String);
 ```
+
+On v0.3.3, `classes.jar` holds 50 classes: `T3Api` gains `T3Api$Domain` and its 16
+module classes (`T3Api$Domain$Sidebar`, `T3Api$Domain$Timeline`, ...), and `T3Client`
+adds `public final java.lang.Object domain(java.lang.String, org.json.JSONObject)`. The
+four `jni/<abi>/libt3_jni.so` keep 16 KiB `LOAD` alignment.
+
+On v0.3.4, `classes.jar` holds 63 classes: 13 more `T3Api$Domain$<Module>` classes (29,
+for example `T3Api$Domain$Theme` with `tokens(String, String?)` and `T3Api$Domain$I18n`
+with `t`, `catalog`, `resolve` and `languages`); `T3Client` is unchanged. The AAR adds
+`assets/lib-t3-rust/i18n.json`; the four `jni/<abi>/libt3_jni.so` keep 16 KiB `LOAD`
+alignment. 21965936 bytes.

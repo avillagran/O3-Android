@@ -3,8 +3,11 @@ package dev.avillagran.ot3android.core.thread
 import dev.avillagran.ot3android.core.connection.Backoff
 import dev.avillagran.ot3android.core.connection.Connection
 import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
+import dev.avillagran.ot3android.core.transport.DomainCalls
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.core.transport.T3Transport
 import dev.avillagran.t3.T3Exception
+import dev.avillagran.t3.ThreadUpdate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +28,7 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import org.json.JSONObject
 import kotlin.random.Random
 
 /** Where the thread's own stream stands; the environment's connection is shown separately. */
@@ -51,11 +55,19 @@ data class ThreadView(
     /** A snapshot has been applied at least once. */
     val loaded: Boolean = false,
     val title: String? = null,
+    /** The user and assistant rows of [timeline], as bubbles. */
     val messages: List<ThreadMessage> = emptyList(),
+    /** `threadState.working` of [timeline]. */
     val working: Boolean = false,
-    /** The run an interrupt targets while [working]. */
+    /** The run an interrupt targets while [working] (`threadState.activeRunId`). */
     val activeRunId: String? = null,
+    /** The lib's `approvals` and `questions`, for the banners. */
     val pendingRequests: List<RuntimeRequest> = emptyList(),
+    /**
+     * The whole `timeline.view` of the held projection (`timeline` rows with `rev`,
+     * `threadState`, `activity`, `tasks`, `queue`, `planView`, ...), for UI-2. Null until loaded.
+     */
+    val timeline: JSONObject? = null,
     /** The thread's `modelSelection` as compact JSON, sent with each message. */
     val modelSelection: String? = null,
     val connectionState: ThreadConnection = ThreadConnection.Waiting,
@@ -73,12 +85,15 @@ data class ThreadView(
  * transport, whose `connect` ended every open stream) restarts the stream with a fresh
  * backoff; the held projection and its sequence survive, so it resumes where it was.
  *
- * Every stream item goes through [ThreadProjectionShim], which applies, ignores or skips it
- * and always moves the cursor: an event never causes a refetch. A fresh `boundedThread` is
- * read only when the stream ends with [REFETCH_ERRORS] (`stream_backpressure`,
- * `stream_closed`) or a snapshot is malformed, and at most once per [refetchIntervalMs] (a
- * later one waits for the rest of the interval); meanwhile the view stays on screen, marked
- * stale. Transient errors resume from the cursor after a jittered [Backoff]; [FATAL] errors
+ * The session holds the projection as the server's JSON. A snapshot (the `boundedThread`
+ * body or a stream `snapshot`) replaces it; each update's events go through the lib's
+ * `projection.apply` in one call, and on each repaint the lib's `timeline.view` builds
+ * [ThreadView] from it, both on [domain]'s worker. The lib ignores event types it does not
+ * know and its cursor ([ThreadUpdate.cursor]) always moves on, so an event never causes a
+ * refetch. A fresh `boundedThread` is read only when the stream ends with [REFETCH_ERRORS]
+ * (`stream_backpressure`, `stream_closed`), a snapshot is malformed or the lib cannot read
+ * the projection, and at most once per [refetchIntervalMs] (a later one waits for the rest
+ * of the interval); meanwhile the view stays on screen, marked stale. Transient errors resume from the cursor after a jittered [Backoff]; [FATAL] errors
  * wait for [retry]; any other error backs off and resumes from the cursor too.
  *
  * A stream that ends with no error was cancelled (its handle was connected again or
@@ -98,11 +113,19 @@ class ThreadSession(
     private val refetchIntervalMs: Long = REFETCH_INTERVAL_MS,
     /** Where items are reduced; snapshots can be large, so not the main thread. */
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    /** The lib's `projection.apply` and `timeline.view`; never on the main thread. */
+    private val domain: DomainCalls = DomainEngine.shared,
 ) {
     private val _view = MutableStateFlow(ThreadView(threadId))
     val view: StateFlow<ThreadView> = _view.asStateFlow()
 
-    private val shim = ThreadProjectionShim()
+    /** The held projection, its stream sequence and its bounded-history fields. */
+    private var projection: JSONObject? = null
+    private var sequence: Long? = null
+    private var history = ThreadTimelines.History.NONE
+
+    /** The projection changed since the last [publish]. */
+    private var dirty = false
     private var needSnapshot = true
     private var stale = false
 
@@ -154,7 +177,7 @@ class ThreadSession(
                 quickCancels = 0
             }
             when (error) {
-                // A snapshot item the shim could not use, or an item it failed on: the held
+                // A snapshot item that could not be used, or a projection the lib refused: the held
                 // projection cannot be trusted, so read a fresh one (rate-limited), no backoff.
                 REFETCH -> {
                     markStale()
@@ -182,12 +205,12 @@ class ThreadSession(
     private suspend fun attempt(transport: T3Transport, backoff: Backoff): String {
         var connectedAt: Long? = null
         try {
-            if (needSnapshot || !shim.hasSnapshot) {
+            if (needSnapshot || projection == null) {
                 awaitRefetchSlot()
-                if (!shim.hasSnapshot) setConnection(ThreadConnection.Loading)
+                if (projection == null) setConnection(ThreadConnection.Loading)
                 lastSnapshotAt = clock()
                 val snapshot = transport.boundedThread(threadId)
-                if (!shim.replace(snapshot)) return MALFORMED_SNAPSHOT
+                if (!replace(snapshot)) return MALFORMED_SNAPSHOT
                 needSnapshot = false
                 stale = false
                 // A fresh snapshot that cannot be shown would fail the same way again.
@@ -196,7 +219,7 @@ class ThreadSession(
             var ended: String? = null
             transport.threadStream(
                 threadId,
-                afterSequence = shim.sequence,
+                afterSequence = sequence,
                 completionMarker = false,
                 boundedSnapshot = true,
                 compactTurnItems = false,
@@ -206,24 +229,23 @@ class ThreadSession(
                     setConnection(ThreadConnection.Live)
                 }
                 try {
-                    val items = update.batch.items
-                    for (i in 0 until items.length()) {
-                        val item = items.optJSONObject(i) ?: continue
-                        when (shim.apply(item)) {
-                            ApplyResult.MALFORMED -> ended = REFETCH
-                            // A stream snapshot replaced everything: no longer stale.
-                            ApplyResult.APPLIED -> if (item.optString("kind") == "snapshot") stale = false
-                            ApplyResult.IGNORED, ApplyResult.UNKNOWN -> Unit
-                        }
-                        if (ended != null) break
-                    }
+                    if (!apply(update)) ended = REFETCH
+                } catch (_: T3Exception) {
+                    // The lib refused the projection or an event: refetch, do not guess.
+                    ended = REFETCH
                 } catch (error: RuntimeException) {
-                    // A payload the shim choked on (JSONException, ...): refetch, do not guess.
                     if (error is CancellationException) throw error
                     ended = REFETCH
                 }
                 if (update.closed && ended == null) ended = update.error ?: CANCELLED
-                if ((update.repaint || update.closed || ended != null) && !publish()) ended = REFETCH
+                if (update.repaint || update.closed || ended != null) {
+                    // Nothing applied (a cursor-only item, a type the lib ignores): no new view.
+                    if (!dirty) {
+                        _view.update { it.copy(sequence = sequence) }
+                    } else if (!publish()) {
+                        ended = REFETCH
+                    }
+                }
                 ended == null
             }.collect()
             return ended ?: ConnectionSupervisor.STREAM_CLOSED
@@ -248,7 +270,7 @@ class ThreadSession(
      * until [retry]. A first load only waits for the backoff.
      */
     private suspend fun awaitRefetchSlot() {
-        if (!shim.hasSnapshot) return
+        if (projection == null) return
         val last = lastSnapshotAt ?: return
         val wait = last + refetchIntervalMs - clock()
         if (wait <= 0) return
@@ -257,42 +279,90 @@ class ThreadSession(
     }
 
     private fun markStale() {
-        if (shim.hasSnapshot) {
+        if (projection != null) {
             stale = true
-            if (!publish()) _view.update { it.copy(stale = true) }
+            _view.update { it.copy(stale = true) }
         }
         needSnapshot = true
+    }
+
+    /**
+     * Holds a snapshot: the `boundedThread` body or a stream `snapshot` item, both
+     * `{snapshotSequence, projection, historyCursor?, hasMoreHistory?, ...}`. False, keeping
+     * what is held, when either of the first two is missing.
+     */
+    private fun replace(snapshot: JSONObject): Boolean {
+        val next = snapshot.optJSONObject("projection") ?: return false
+        val at = (snapshot.opt("snapshotSequence") as? Number)?.toLong() ?: return false
+        projection = next
+        sequence = at
+        history = ThreadTimelines.History.of(snapshot)
+        dirty = true
+        return true
+    }
+
+    /**
+     * One stream update, in the lib's split ([ThreadUpdate.snapshot] then
+     * [ThreadUpdate.events]): the snapshot replaces the projection, every `event` item goes
+     * through `projection.apply` in one call, and the resume cursor is the lib's. False when
+     * a snapshot is malformed or events arrive with no projection to apply them to.
+     */
+    private suspend fun apply(update: ThreadUpdate): Boolean {
+        update.snapshot?.let { snapshot ->
+            if (!replace(snapshot)) return false
+            // A stream snapshot replaced everything: no longer stale.
+            stale = false
+        }
+        // `unknown-event` items carry no event: only the cursor moves for them.
+        val events = update.events.mapNotNull { it.optJSONObject("event") }
+        if (events.isNotEmpty()) {
+            val held = projection ?: return false
+            val result = ThreadTimelines.apply(domain, held, events)
+            projection = result.projection
+            if (result.applied > 0) dirty = true
+        }
+        update.cursor?.let { sequence = it }
+        return true
     }
 
     private fun setConnection(state: ThreadConnection) {
         _view.update { it.copy(connectionState = state) }
     }
 
-    /** Publishes the held projection; false (the view unchanged) when it cannot be read. */
-    private fun publish(): Boolean {
-        val p = shim.projection
+    /**
+     * Publishes the held projection through the lib's `timeline.view`; false (the view
+     * unchanged) when the lib cannot read it. Title and model are the thread row's own fields.
+     */
+    private suspend fun publish(): Boolean {
+        val p = projection ?: return false
         val next = try {
+            val timeline = ThreadTimelines.view(domain, p, history)
+            val thread = p.optJSONObject("thread")
             _view.value.copy(
-                loaded = p != null,
-                title = ThreadProjectionShim.title(p),
-                messages = ThreadProjectionShim.messages(p),
-                working = ThreadProjectionShim.working(p),
-                activeRunId = ThreadProjectionShim.interruptibleRunId(p),
-                pendingRequests = ThreadProjectionShim.pendingRequests(p),
-                modelSelection = ThreadProjectionShim.modelSelection(p)?.toString(),
+                loaded = true,
+                title = thread?.let { if (it.isNull("title")) null else it.optString("title").ifEmpty { null } },
+                messages = timeline.messages,
+                working = timeline.working,
+                activeRunId = timeline.activeRunId,
+                pendingRequests = timeline.pendingRequests,
+                timeline = timeline.raw,
+                modelSelection = thread?.optJSONObject("modelSelection")?.toString(),
                 stale = stale,
-                sequence = shim.sequence,
+                sequence = sequence,
             )
+        } catch (_: T3Exception) {
+            return false
         } catch (error: RuntimeException) {
             if (error is CancellationException) throw error
             return false
         }
+        dirty = false
         _view.update { current -> next.copy(connectionState = current.connectionState) }
         return true
     }
 
     companion object {
-        /** Not a lib code: a stream snapshot was malformed, so the session reads a fresh one. */
+        /** Not a lib code: a stream snapshot was malformed or the lib refused the projection, so the session reads a fresh one. */
         const val REFETCH = "refetch"
 
         /** Not a lib code: the shared client was closed under a call. */

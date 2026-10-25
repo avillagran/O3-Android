@@ -14,7 +14,7 @@ import org.junit.Test
 /**
  * The real Rust core through the AAR's adapter and the host JNI library; no network.
  *
- * The exact pins (0.3.2, 116 functions, 13 streams) are intentional: bumping
+ * The exact pins (0.3.4, 116 functions, 13 streams, 108 domain functions) are intentional: bumping
  * libs/lib-t3-rust.lock must fail here until the lib's changes are read and the pins move
  * with them (docs/DECISIONS.md).
  */
@@ -38,9 +38,12 @@ class NativeSmokeTest {
         val capabilities = transport.capabilities()
 
         assertEquals(3, capabilities.getInt("abiVersion"))
-        assertEquals("0.3.2", capabilities.getString("libraryVersion"))
+        assertEquals("0.3.4", capabilities.getString("libraryVersion"))
+        assertEquals(116, capabilities.getInt("functions"))
+        assertEquals(108, capabilities.getInt("domainFunctions"))
         val operations = capabilities.getJSONArray("operations").strings()
-        assertTrue(operations.toString(), operations.containsAll(listOf("call", "describe", "wakeSubscriptions")))
+        assertEquals(operations.toString(), 19, operations.size)
+        assertTrue(operations.toString(), operations.containsAll(listOf("call", "describe", "domain", "wakeSubscriptions")))
     }
 
     @Test
@@ -49,6 +52,33 @@ class NativeSmokeTest {
 
         assertEquals(116, api.getJSONArray("functions").length())
         assertEquals(13, api.getJSONArray("streams").length())
+        val domain = api.getJSONArray("domain")
+        assertEquals(108, domain.length())
+        val names = List(domain.length()) { domain.getJSONObject(it).getString("fn") }
+        assertTrue(names.toString(), names.containsAll(listOf("projection.apply", "timeline.view", "sidebar.view", "projects.identity")))
+        val modules = names.groupingBy { it.substringBefore('.') }.eachCount()
+        assertEquals(modules.toString(), 29, modules.size)
+        assertEquals(
+            mapOf(
+                "diffReview" to 2, "toolInspector" to 4, "planWorkflow" to 5, "checkpointRevert" to 8, "usageSummary" to 3,
+                "quotaSources" to 4, "pullRequests" to 4, "branchPicker" to 6, "gitControls" to 7, "nativeSettings" to 7,
+                "scopedSettings" to 10, "subagents" to 4, "theme" to 1, "i18n" to 6, "timeline" to 4,
+            ),
+            modules.filterKeys { it in V034_MODULES },
+        )
+    }
+
+    @Test
+    fun domainRunsWithoutAConnection() = runBlocking {
+        assertEquals("O3", transport.domain("projects.monogram", JSONObject().put("name", "ot3-android")))
+    }
+
+    @Test
+    fun domainValidatesArguments() {
+        val unknown = assertThrows(T3Exception::class.java) { runBlocking { transport.domain("sidebar.nope", JSONObject()) } }
+        assertEquals("unknown_function", unknown.code)
+        val missing = assertThrows(T3Exception::class.java) { runBlocking { transport.domain("timeline.view", JSONObject()) } }
+        assertEquals("invalid_projection", missing.code)
     }
 
     @Test
@@ -82,4 +112,12 @@ class NativeSmokeTest {
     }
 
     private fun JSONArray.strings() = List(length()) { getString(it) }
+
+    private companion object {
+        /** The modules v0.3.4 added or extended (timeline.minimap, i18n.t / catalog / resolve / languages). */
+        val V034_MODULES = setOf(
+            "diffReview", "toolInspector", "planWorkflow", "checkpointRevert", "usageSummary", "quotaSources", "pullRequests",
+            "branchPicker", "gitControls", "nativeSettings", "scopedSettings", "subagents", "theme", "i18n", "timeline",
+        )
+    }
 }

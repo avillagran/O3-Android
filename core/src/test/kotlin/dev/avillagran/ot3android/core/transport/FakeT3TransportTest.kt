@@ -45,6 +45,19 @@ class FakeT3TransportTest {
     }
 
     @Test
+    fun domainNeedsNoConnectionAndIsLogged() = runTest {
+        fake.onDomain("projects.monogram") { args -> args.getString("name").take(2).uppercase() }
+
+        assertEquals("OT", fake.domain("projects.monogram", JSONObject().put("name", "ot3")))
+        val unscripted = runCatching { fake.domain("sidebar.view", JSONObject()) }
+
+        assertEquals("unknown_function", (unscripted.exceptionOrNull() as T3Exception).code)
+        assertEquals(listOf("domain", "domain"), fake.log.map { it.method })
+        assertEquals("projects.monogram", fake.log.first().args.first())
+        assertTrue(fake.calls.isEmpty())
+    }
+
+    @Test
     fun unscriptedCallIsUnknownFunction() {
         val error = assertThrows(T3Exception::class.java) {
             runBlocking { fake.call("vcs.nope") }

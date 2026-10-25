@@ -16,10 +16,13 @@ import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.connection.ServerDescriptor
 import dev.avillagran.ot3android.core.shell.ShellReducer
-import dev.avillagran.ot3android.core.shell.SidebarModel
+import dev.avillagran.ot3android.core.shell.SidebarEnvironment
+import dev.avillagran.ot3android.core.shell.SidebarView
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.ui.common.CommonTags
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONArray
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -46,15 +49,20 @@ class SidebarScreenTest {
             .put(
                 "threads",
                 JSONArray()
-                    .put(thread("a1", "p1", "activeRunId" to "run-1"))
+                    .put(thread("a1", "p1", "status" to "running", "latestRunId" to "run-1", "activeRunId" to "run-1"))
                     .put(thread("b1", "p2", "pendingRuntimeRequest" to JSONObject().put("kind", "approval")))
                     .put(thread("s1", "p1", "settledAt" to "2026-10-23T00:00:00.000Z"))
                     .put(thread("sub", "p1", "lineage" to JSONObject().put("relationshipToParent", "subagent"))),
             ),
     )
 
+    /** The lib's `sidebar.view` over [shell], through the app's JNI library. */
+    private val sidebar = runBlocking {
+        SidebarView.build(DomainEngine.shared, listOf(SidebarEnvironment("env-1", "Workstation", shell)), System.currentTimeMillis())
+    }
+
     @Test
-    fun rendersSectionsGroupsAndStatuses() {
+    fun rendersSectionsChipsAndStatuses() {
         val opened = mutableListOf<String>()
         var expanded by mutableStateOf(false)
         composeRule.setContent {
@@ -63,7 +71,7 @@ class SidebarScreenTest {
                     state = SidebarUiState(
                         label = "Workstation",
                         connection = ConnectionState.Connected(ServerDescriptor("env-1", "Workstation", "0.1.3", "linux", 2)),
-                        items = SidebarModel.build(shell).toItems(expanded),
+                        items = sidebar.toItems(expanded),
                     ),
                     onOpenThread = { opened += it },
                     onToggleSettled = { expanded = !expanded },
@@ -76,10 +84,11 @@ class SidebarScreenTest {
         }
 
         composeRule.onNodeWithTag(SidebarScreenTags.ACTIVE_HEADER).assertIsDisplayed()
-        composeRule.onNodeWithTag(SidebarScreenTags.project("p1")).assertTextContains("Alpha")
-        composeRule.onNodeWithTag(SidebarScreenTags.project("p2")).assertTextContains("Beta")
+        composeRule.onNodeWithTag(SidebarScreenTags.project("a1")).assertTextContains(sidebar.identities.getValue("env-1/p1").monogram)
+        composeRule.onNodeWithTag(SidebarScreenTags.project("b1")).assertTextContains(sidebar.identities.getValue("env-1/p2").monogram)
+        composeRule.onNodeWithTag(SidebarScreenTags.thread("a1")).assertTextContains("Alpha", substring = true)
         composeRule.onNodeWithTag(SidebarScreenTags.status("a1")).assertTextContains("Working")
-        composeRule.onNodeWithTag(SidebarScreenTags.status("b1")).assertTextContains("Needs you")
+        composeRule.onNodeWithTag(SidebarScreenTags.status("b1")).assertTextContains("Approval")
         composeRule.onNodeWithTag(SidebarScreenTags.thread("sub")).assertDoesNotExist()
         composeRule.onNodeWithTag(SidebarScreenTags.SETTLED_HEADER).assertTextContains("Settled (1)")
         composeRule.onNodeWithTag(SidebarScreenTags.thread("s1")).assertDoesNotExist()

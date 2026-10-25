@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -36,9 +38,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.connection.ConnectionState
+import dev.avillagran.ot3android.core.shell.ProjectIdentity
 import dev.avillagran.ot3android.core.shell.RowStatus
 import dev.avillagran.ot3android.core.shell.SidebarRow
 import dev.avillagran.ot3android.ui.common.ConnectionChip
@@ -52,10 +56,12 @@ object SidebarScreenTags {
     const val EDIT = "sidebar_edit"
     const val ACTIVE_HEADER = "sidebar_active_header"
     const val SETTLED_HEADER = "sidebar_settled_header"
+    const val SNOOZED_HEADER = "sidebar_snoozed_header"
     const val EMPTY = "sidebar_empty"
     const val LOADING = "sidebar_loading"
     const val NOT_FOUND = "sidebar_not_found"
-    fun project(id: String?) = "sidebar_project_${id.orEmpty()}"
+    /** The project chip of thread [id]'s row. */
+    fun project(id: String) = "sidebar_project_$id"
     fun thread(id: String) = "sidebar_thread_$id"
     fun status(id: String) = "sidebar_status_$id"
 }
@@ -159,16 +165,11 @@ fun SidebarContent(
                                 text = stringResource(R.string.sidebar_section_active),
                                 modifier = Modifier.testTag(SidebarScreenTags.ACTIVE_HEADER),
                             )
-                            is SidebarItem.ProjectHeader -> Text(
-                                text = item.title ?: stringResource(R.string.sidebar_no_project),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)
-                                    .testTag(SidebarScreenTags.project(item.projectId)),
+                            is SidebarItem.SnoozedHeader -> SectionHeader(
+                                text = stringResource(R.string.sidebar_section_snoozed, item.count),
+                                modifier = Modifier.testTag(SidebarScreenTags.SNOOZED_HEADER),
                             )
-                            is SidebarItem.Thread -> ThreadRow(item.row, onClick = { onOpenThread(item.row.thread.id) })
+                            is SidebarItem.Thread -> ThreadRow(item.row, item.identity, onClick = { onOpenThread(item.row.threadId) })
                             is SidebarItem.SettledHeader -> SettledHeader(item, onToggleSettled)
                         }
                     }
@@ -220,16 +221,17 @@ private fun SettledHeader(item: SidebarItem.SettledHeader, onToggle: () -> Unit)
 }
 
 @Composable
-private fun ThreadRow(row: SidebarRow, onClick: () -> Unit) {
-    val thread = row.thread
+private fun ThreadRow(row: SidebarRow, identity: ProjectIdentity?, onClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .testTag(SidebarScreenTags.thread(thread.id)),
+            .padding(start = 16.dp + 16.dp * row.depth, end = 16.dp, top = 10.dp, bottom = 10.dp)
+            .testTag(SidebarScreenTags.thread(row.threadId)),
     ) {
+        ProjectChip(identity, Modifier.testTag(SidebarScreenTags.project(row.threadId)))
+        Spacer(Modifier.width(12.dp))
         if (row.pinned) {
             Icon(
                 painterResource(R.drawable.ic_push_pin),
@@ -241,12 +243,12 @@ private fun ThreadRow(row: SidebarRow, onClick: () -> Unit) {
         }
         Column(Modifier.weight(1f)) {
             Text(
-                thread.title ?: stringResource(R.string.sidebar_untitled),
+                row.title.ifEmpty { stringResource(R.string.sidebar_untitled) },
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            thread.branch?.let {
+            listOfNotNull(row.projectTitle, row.branch).joinToString(" · ").takeIf { it.isNotEmpty() }?.let {
                 Text(
                     it,
                     style = MaterialTheme.typography.bodySmall,
@@ -256,17 +258,44 @@ private fun ThreadRow(row: SidebarRow, onClick: () -> Unit) {
                 )
             }
         }
-        StatusChip(row.status, Modifier.testTag(SidebarScreenTags.status(thread.id)))
+        StatusChip(row, Modifier.testTag(SidebarScreenTags.status(row.threadId)))
     }
 }
 
+/**
+ * The project's monogram in its palette colour (`projects.identity`); the theme's primary
+ * colour until the view is given the theme's `colors` (UI-1).
+ */
 @Composable
-private fun StatusChip(status: RowStatus, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    when (status) {
-        RowStatus.NeedsYou -> StatusLabel(stringResource(R.string.status_needs_you), colors.tertiaryContainer, colors.onTertiaryContainer, modifier)
-        RowStatus.Working -> StatusLabel(stringResource(R.string.status_working), colors.primaryContainer, colors.onPrimaryContainer, modifier)
-        RowStatus.Failed -> StatusLabel(stringResource(R.string.status_failed), colors.errorContainer, colors.onErrorContainer, modifier)
-        RowStatus.Quiet -> Unit
+private fun ProjectChip(identity: ProjectIdentity?, modifier: Modifier = Modifier) {
+    val tint = identity?.color?.let(::parseColor) ?: MaterialTheme.colorScheme.primary
+    Surface(
+        color = tint.copy(alpha = (identity?.fill ?: DEFAULT_FILL).toFloat()),
+        contentColor = tint,
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier.size(28.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(identity?.monogram.orEmpty(), style = MaterialTheme.typography.labelMedium)
+        }
     }
+}
+
+private const val DEFAULT_FILL = 0.14
+
+private fun parseColor(text: String): Color? =
+    runCatching { Color(text.toColorInt()) }.getOrNull()
+
+/** The lib's label ("Approval", "Plan ready", "Working", ...; English until UI-1's catalog). */
+@Composable
+private fun StatusChip(row: SidebarRow, modifier: Modifier = Modifier) {
+    if (row.statusLabel.isEmpty()) return
+    val colors = MaterialTheme.colorScheme
+    val (container, content) = when (row.status) {
+        RowStatus.NeedsYou -> colors.tertiaryContainer to colors.onTertiaryContainer
+        RowStatus.Working -> colors.primaryContainer to colors.onPrimaryContainer
+        RowStatus.Failed -> colors.errorContainer to colors.onErrorContainer
+        RowStatus.Done, RowStatus.Quiet -> colors.secondaryContainer to colors.onSecondaryContainer
+    }
+    StatusLabel(row.statusLabel, container, content, modifier)
 }

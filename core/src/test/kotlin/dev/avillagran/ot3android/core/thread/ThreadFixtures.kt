@@ -1,5 +1,7 @@
 package dev.avillagran.ot3android.core.thread
 
+import dev.avillagran.ot3android.core.transport.DomainEngine
+import kotlinx.coroutines.Dispatchers
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -55,3 +57,9 @@ fun sameJson(a: Any?, b: Any?): Boolean = when {
     a is JSONArray && b is JSONArray -> a.length() == b.length() && (0 until a.length()).all { sameJson(a.opt(it), b.opt(it)) }
     else -> a == b
 }
+
+/**
+ * The real lib's domain functions run inline on the caller's thread, so a test dispatcher's
+ * `runCurrent` sees their results at once (the app's engine runs them on IO).
+ */
+val TestDomain = DomainEngine(Dispatchers.Unconfined)

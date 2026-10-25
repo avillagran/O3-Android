@@ -6,10 +6,14 @@ import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
-import dev.avillagran.ot3android.core.shell.ProjectGroup
+import dev.avillagran.ot3android.core.shell.ProjectIdentity
 import dev.avillagran.ot3android.core.shell.Sidebar
-import dev.avillagran.ot3android.core.shell.SidebarModel
+import dev.avillagran.ot3android.core.shell.SidebarEnvironment
 import dev.avillagran.ot3android.core.shell.SidebarRow
+import dev.avillagran.ot3android.core.shell.SidebarView
+import dev.avillagran.ot3android.core.transport.DomainCalls
+import dev.avillagran.ot3android.core.transport.DomainEngine
+import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,8 +25,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 /** One row of the sidebar's lazy list. */
 sealed interface SidebarItem {
@@ -32,12 +38,13 @@ sealed interface SidebarItem {
         override val key get() = "@active"
     }
 
-    data class ProjectHeader(val projectId: String?, val title: String?) : SidebarItem {
-        override val key get() = "project:${projectId.orEmpty()}"
+    /** A row with its project chip ([identity] null when the lib has none for the project). */
+    data class Thread(val row: SidebarRow, val identity: ProjectIdentity?) : SidebarItem {
+        override val key get() = "thread:${row.key}"
     }
 
-    data class Thread(val row: SidebarRow) : SidebarItem {
-        override val key get() = "thread:${row.thread.id}"
+    data class SnoozedHeader(val count: Int) : SidebarItem {
+        override val key get() = "@snoozed"
     }
 
     data class SettledHeader(val count: Int, val expanded: Boolean) : SidebarItem {
@@ -55,25 +62,36 @@ data class SidebarUiState(
     val notFound: Boolean = false,
 )
 
-/** Flattens a [Sidebar] into list rows; settled rows only when [settledExpanded]. */
+/**
+ * Flattens the lib's [Sidebar] sections, in the lib's order, into list rows: active (with the
+ * working shelf, empty unless grouped), snoozed, then settled only when [settledExpanded].
+ */
 fun Sidebar.toItems(settledExpanded: Boolean): List<SidebarItem> = buildList {
-    if (active.isNotEmpty()) add(SidebarItem.ActiveHeader(active.sumOf { it.rows.size }))
-    active.forEach { group: ProjectGroup ->
-        add(SidebarItem.ProjectHeader(group.projectId, group.title))
-        group.rows.forEach { add(SidebarItem.Thread(it)) }
+    val inbox = active + working
+    fun rows(section: List<SidebarRow>) = section.forEach { add(SidebarItem.Thread(it, identity(it))) }
+    if (inbox.isNotEmpty()) add(SidebarItem.ActiveHeader(inbox.count { it.depth == 0 }))
+    rows(inbox)
+    if (snoozed.isNotEmpty()) {
+        add(SidebarItem.SnoozedHeader(snoozed.count { it.depth == 0 }))
+        rows(snoozed)
     }
     if (settled.isNotEmpty()) {
-        add(SidebarItem.SettledHeader(settled.size, settledExpanded))
-        if (settledExpanded) settled.forEach { add(SidebarItem.Thread(it)) }
+        add(SidebarItem.SettledHeader(settled.count { it.depth == 0 }, settledExpanded))
+        if (settledExpanded) rows(settled)
     }
 }
 
-/** The live sidebar of one environment; starts its supervisor. */
+/**
+ * The live sidebar of one environment; starts its supervisor. The rows come from the lib's
+ * `sidebar.view` over the supervisor's shell, through [domain] (off the main thread).
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SidebarViewModel(
     private val environmentId: String,
     private val repository: EnvironmentRepository,
     private val connections: ConnectionManager,
+    private val domain: DomainCalls = DomainEngine.shared,
+    private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
 
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
@@ -93,9 +111,16 @@ class SidebarViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SidebarUiState())
 
     private fun live(s: ConnectionSupervisor): Flow<SidebarUiState> {
-        val items = combine(s.shell, settledExpanded) { shell, expanded ->
-            shell?.let { SidebarModel.build(it).toItems(expanded) }
+        val sidebar = combine(label, s.shell) { name, shell -> name to shell }.mapLatest { (name, shell) ->
+            shell ?: return@mapLatest null
+            try {
+                SidebarView.build(domain, listOf(SidebarEnvironment(environmentId, name.ifEmpty { null }, shell)), clock(), environmentId)
+            } catch (_: T3Exception) {
+                // An environment id the lib refuses (`invalid_environments`): nothing to list.
+                EMPTY
+            }
         }.flowOn(Dispatchers.Default)
+        val items = combine(sidebar, settledExpanded) { view, expanded -> view?.toItems(expanded) }
         return combine(label, s.state, items, refreshing) { label, connection, rows, refreshing ->
             SidebarUiState(label, connection, rows, refreshing)
         }
@@ -138,5 +163,9 @@ class SidebarViewModel(
                 refreshing.value = false
             }
         }
+    }
+
+    private companion object {
+        val EMPTY = SidebarView.parse(JSONObject())
     }
 }
