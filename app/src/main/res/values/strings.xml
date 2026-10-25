@@ -72,6 +72,7 @@
     <string name="thread_interrupt">Stop</string>
     <string name="thread_stale">Out of date · refreshing</string>
     <string name="thread_stream_retrying">%1$s · reconnecting</string>
+    <string name="thread_stream_subscription_limit">Too many live threads are open on this connection · retrying</string>
     <string name="thread_stream_failed">Could not open the thread: %1$s</string>
     <string name="thread_request_approval">Waiting for your approval (%1$s)</string>
     <string name="thread_request_answer">Waiting for your answer</string>

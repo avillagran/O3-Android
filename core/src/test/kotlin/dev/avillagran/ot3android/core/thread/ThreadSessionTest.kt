@@ -261,4 +261,75 @@ class ThreadSessionTest {
         assertEquals("the old stream was closed", 1, fake.collectors("t1").value)
         assertFalse(session.view.value.stale)
     }
+
+    @Test
+    fun aCancelReopensFromTheCursorWithoutASnapshotOrStale() = runTest {
+        val session = session()
+        runCurrent()
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
+
+        emit(ThreadUpdates.closed(null))
+        assertFalse(session.view.value.stale)
+        assertFalse(session.view.value.connectionState is ThreadConnection.Retrying)
+        advanceTimeBy(ThreadSession.CANCEL_REOPEN_MS + 1)
+        runCurrent()
+
+        assertEquals(listOf<Long?>(10, 11), opens())
+        assertEquals(1, snapshots.get())
+        assertEquals(2, session.view.value.messages.size)
+    }
+
+    @Test
+    fun aHandleThatKeepsCancellingBacksOffAfterThreeQuickReopens() = runTest {
+        val session = session()
+        runCurrent()
+        repeat(ThreadSession.MAX_QUICK_CANCELS) {
+            emit(ThreadUpdates.closed(null))
+            advanceTimeBy(ThreadSession.CANCEL_REOPEN_MS + 1)
+            runCurrent()
+        }
+        assertEquals(ThreadSession.MAX_QUICK_CANCELS + 1, fake.streamOpens.size)
+
+        emit(ThreadUpdates.closed(null))
+        val retrying = session.view.value.connectionState as ThreadConnection.Retrying
+        assertEquals(ThreadSession.DISCONNECTED, retrying.error)
+        advanceTimeBy(ThreadSession.CANCEL_REOPEN_MS + 1)
+        runCurrent()
+        assertEquals("waits for the backoff", ThreadSession.MAX_QUICK_CANCELS + 1, fake.streamOpens.size)
+        skipBackoff(session)
+        assertEquals(ThreadSession.MAX_QUICK_CANCELS + 2, fake.streamOpens.size)
+        assertEquals(1, snapshots.get())
+        assertFalse(session.view.value.stale)
+    }
+
+    @Test
+    fun aCancelFollowedByNoConnectionStops() = runTest {
+        val session = session()
+        runCurrent()
+        emit(ThreadUpdates.closed(null))
+        connection.value = null
+        advanceTimeBy(60_000)
+        runCurrent()
+
+        assertEquals(ThreadConnection.Waiting, session.view.value.connectionState)
+        assertEquals("not reopened", 1, fake.streamOpens.size)
+        assertEquals(0, fake.collectors("t1").value)
+    }
+
+    @Test
+    fun aSubscriptionLimitIsShownAndBacksOff() = runTest {
+        fake.failNextStream(T3Exception("subscription_limit"))
+        val session = session()
+        runCurrent()
+
+        val retrying = session.view.value.connectionState as ThreadConnection.Retrying
+        assertEquals("subscription_limit", retrying.error)
+        assertTrue(session.view.value.loaded)
+        assertFalse(session.view.value.stale)
+        assertTrue(fake.streamOpens.isEmpty())
+
+        skipBackoff(session)
+        assertEquals(listOf<Long?>(10), opens())
+        assertEquals(1, snapshots.get())
+    }
 }

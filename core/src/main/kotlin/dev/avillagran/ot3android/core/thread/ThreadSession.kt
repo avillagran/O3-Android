@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,6 +80,12 @@ data class ThreadView(
  * later one waits for the rest of the interval); meanwhile the view stays on screen, marked
  * stale. Transient errors resume from the cursor after a jittered [Backoff]; [FATAL] errors
  * wait for [retry]; any other error backs off and resumes from the cursor too.
+ *
+ * A stream that ends with no error was cancelled (its handle was connected again or
+ * dropped): that is not a failure, so it reopens from the cursor after [CANCEL_REOPEN_MS],
+ * with no snapshot and no stale mark. After [MAX_QUICK_CANCELS] such reopens in a row, each
+ * cancelled within [QUICK_CANCEL_MS], it backs off instead, so a handle that keeps
+ * cancelling cannot spin. When the connection goes away the session simply stops.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ThreadSession(
@@ -134,9 +141,21 @@ class ThreadSession(
 
     private suspend fun follow(transport: T3Transport) {
         val backoff = Backoff(random)
+        var quickCancels = 0
         while (true) {
-            val error = attempt(transport, backoff)
+            val openedAt = clock()
+            var error = attempt(transport, backoff)
             currentCoroutineContext().ensureActive()
+            if (error == CANCELLED) {
+                quickCancels = if (clock() - openedAt < QUICK_CANCEL_MS) quickCancels + 1 else 1
+                if (quickCancels <= MAX_QUICK_CANCELS) {
+                    delay(CANCEL_REOPEN_MS)
+                    continue
+                }
+                error = DISCONNECTED
+            } else {
+                quickCancels = 0
+            }
             when (error) {
                 // A snapshot item the shim could not use: read a fresh one, no backoff.
                 REFETCH -> {
@@ -198,7 +217,7 @@ class ThreadSession(
                     }
                     if (ended != null) break
                 }
-                if (update.closed && ended == null) ended = update.error ?: ConnectionSupervisor.STREAM_CLOSED
+                if (update.closed && ended == null) ended = update.error ?: CANCELLED
                 if (update.repaint || update.closed || ended != null) publish()
                 ended == null
             }.collect()
@@ -261,6 +280,18 @@ class ThreadSession(
 
         /** Not a lib code: the shared client was closed under a call. */
         const val DISCONNECTED = "disconnected"
+
+        /** Not a lib code: the stream closed with no error (a cancel); never shown. */
+        private const val CANCELLED = "cancelled"
+
+        /** How long a cancelled stream waits before it is reopened. */
+        const val CANCEL_REOPEN_MS = 250L
+
+        /** A cancel this soon after the stream opened counts towards [MAX_QUICK_CANCELS]. */
+        const val QUICK_CANCEL_MS = 5_000L
+
+        /** Quick cancels in a row that reopen at once; the next one backs off. */
+        const val MAX_QUICK_CANCELS = 3
 
         /** Not a lib code: `boundedThread` answered without a `projection` or `snapshotSequence`. */
         const val MALFORMED_SNAPSHOT = "malformed_snapshot"

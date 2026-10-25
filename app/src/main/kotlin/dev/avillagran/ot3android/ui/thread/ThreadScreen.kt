@@ -267,7 +267,12 @@ private fun WorkingLabel() {
 private fun StreamState(connection: ThreadConnection, stale: Boolean, onRetry: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val text = when (connection) {
-        is ThreadConnection.Retrying -> stringResource(R.string.thread_stream_retrying, errorText(connection.error))
+        // The handle's stream slots are taken (other open threads, or the sidebar): say so.
+        is ThreadConnection.Retrying -> if (connection.error == "subscription_limit") {
+            stringResource(R.string.thread_stream_subscription_limit)
+        } else {
+            stringResource(R.string.thread_stream_retrying, errorText(connection.error))
+        }
         is ThreadConnection.Failed -> stringResource(R.string.thread_stream_failed, errorText(connection.error))
         else -> null
     }
