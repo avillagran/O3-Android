@@ -22,7 +22,7 @@ stayed clean at the tag throughout.
 **Status:** every finding below still applies to v0.3.1 (`17d3cb7`). The fixes were
 merged upstream (PR #8) and released as v0.3.2 (`26e67a7`), which is now the target.
 Each finding is re-checked against the v0.3.2 release in
-[2026-10-24: v0.3.2](#2026-10-24-v032): findings 1 to 4 and 6 are closed, 5 is
+[2026-10-25: v0.3.2](#2026-10-25-v032): findings 1 to 4 and 6 are closed, 5 is
 partially closed (`image()`'s `missing_image_bytes`) and 7 is still open.
 
 ### What works
@@ -160,7 +160,7 @@ Proposed fix: build the host library in the release workflow exactly as
 commit as the AAR. `scripts/fetch-or-build-lib.sh --release --host-jni` can then
 download it instead of building it.
 
-## 2026-10-24: v0.3.2
+## 2026-10-25: v0.3.2
 
 Checked against the v0.3.2 GitHub release (`26e67a7`, published 2026-10-25 00:35 UTC),
 consumed through the committed `libs/lib-t3-rust.lock`, on the same machine and
@@ -350,8 +350,9 @@ at some cost in behaviour or bandwidth.
 - Proposed: `T3Client` methods for `fetchDescriptor(httpBaseUrl, environmentId?,
   options?)`, `pairBearer(httpBaseUrl, pairingCode, environmentId?, client?, connect,
   options?)`, `boundedThread(threadId)`, `requestOk(method, path, body?, protocol)`,
-  `rpcWithTimeout(tag, payload, timeoutMs)`, `capabilities()` and `request` with
-  `method` and `body` (POST).
+  `rpcWithTimeout(tag, payload, timeoutMs)`, `capabilities()`, `disconnect()`, `request`
+  with `method` and `body` (POST), and `shell()` (`GET /api/orchestration/shell`, today
+  the one HTTP path ot3-Android builds in Kotlin).
 - Why: phase 1 connects by pairing (`fetchDescriptor`, then `pairBearer`) and reads
   `capabilities` to gate features. Through `execute(JSONObject)` the app would assemble
   operation JSON by hand, which is the protocol knowledge the adapter exists to hold.
@@ -359,3 +360,61 @@ at some cost in behaviour or bandwidth.
   `requestOk` take `method`, `path`, `body`; `fetchDescriptor`, `pairBearer`,
   `boundedThread`, `rpcWithTimeout`, `capabilities`). `T3Client.kt` at v0.3.1 (and
   v0.3.2) wraps none of them, and `request(path, protocol)` is GET-only.
+
+## 2026-10-25: v0.3.2 through the app's transport layer
+
+Checked with `NativeT3Transport` over the v0.3.2 release AAR and the host
+`libt3_jni.so` (`26e67a7`): the JVM tests in `core/src/test/.../transport` and one
+manual, read-only live run against a local T3 server (`connect(Bearer)`,
+`request("/api/orchestration/shell")` (now `shell()`), `shellStream()` and `threadStream(id)`; shapes
+only, no mutation). Confirmed as expected: `capabilities` (`abiVersion 3`,
+`libraryVersion 0.3.2`), `describe` (116 functions, 13 streams), validation before
+connecting (`invalid_cwd`, `unknown_function`, `invalid_thread_id`), `unauthorized` on a
+401, `fetchDescriptor` without a credential, `t3_environment_mismatch`,
+`invalid_connection_options` for both routes, and closing a subscription from another
+thread waking a blocked `poll` at once.
+
+### 1. A shell metadata snapshot replaces the shell and moves the cursor
+
+- What: on `orchestration.subscribeShell`, T3 follows the authoritative snapshot with a
+  second `kind: "snapshot"` item that carries `resolvedRepositoryIdentityRoots` and only
+  refreshes project identities. The lib treats it as a full state: `start_of` returns
+  `Snapshot` for every shell `snapshot` (`src/stream.rs:52-55`) and `advance` sets the
+  cursor to its `snapshot.snapshotSequence` (`:21`, `:33-36`), and `ThreadStream.poll`
+  returns it as `ThreadUpdate.snapshot`, dropping the events before it in the batch
+  (`bindings/android/kotlin/dev/avillagran/t3/T3Client.kt:290`). A host that
+  follows the documented loop ("replace whatever the host held") replaces its sidebar
+  with a shell that has no threads.
+- Evidence: the live shell stream, first two polls: `items=[snapshot]` with
+  `snapshot{archivedThreads[0], projects[16], schemaVersion, snapshotSequence,
+  threads[213]}` and `boundaries=[]`, then `items=[snapshot]` with
+  `{kind, resolvedRepositoryIdentityRoots[16], snapshot{..., projects[16],
+  threads[0]}}` and `boundaries=[1]` (the same server chunk), then `idle`. ot3's reducer
+  treats such an item as metadata only and keeps the cursor (`src/shell_state.rs:87-107`
+  in omarchy-t3-code v0.2.22, test `metadata_refresh_merges_identities_without_moving_the_cursor`
+  at `:223`: "a resume prefix must not skip replayed events"), following T3's
+  client-runtime `state/shellReducer.ts`.
+- Two more consequences of the same rule:
+  - When the metadata item shares a poll batch with the authoritative snapshot (a host
+    that polls a little later than the server writes, as the live run's single chunk
+    shows), `ThreadUpdate.snapshot` is the metadata item, because the last snapshot of a
+    batch wins, and the authoritative snapshot survives only in `batch.items`.
+  - When it is the first item after a resume (`afterSequence` set), `start` says
+    `"snapshot"` instead of `"resume"`, so a host that follows `start` drops the state it
+    resumed from.
+- Proposed fix: keep the metadata item out of `snapshot`. Either give `ThreadUpdate` a
+  `metadata` field (the item, in order, with the events before it kept), or, better and
+  the same work, phase 1 item 3 (`shell.reduce`), which applies it as ot3 does. In both
+  cases `stream::start_of` must not return `Start::Snapshot` for a shell `snapshot` with
+  `resolvedRepositoryIdentityRoots`, and `cursor_of` returns `None` for it (so `advance`
+  leaves the cursor alone). Add the frame to `StreamFixture`, alone and sharing a batch
+  with the authoritative snapshot.
+- Workaround in ot3-Android until then: one shell adapter in `core.transport`
+  (`ThreadUpdate.shellSnapshot()`, `isShellMetadataOnly()` and the helpers next to them)
+  that every shell consumer goes through. It treats a metadata item as metadata only
+  (never replaces the sidebar, never trusts `start` for it), does not adopt the cursor it
+  moved, and reads the authoritative snapshot from `batch.items` when the metadata item
+  shadows it in `ThreadUpdate.snapshot`. This is protocol knowledge in Kotlin, against
+  the rule in ARCHITECTURE.md, accepted only as a stopgap: it is deleted when a lib
+  release with the fix above lands.
+

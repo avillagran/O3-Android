@@ -63,12 +63,22 @@ jobs:
           cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
 
       - name: Unit tests, lint and debug build
+        env:
+          # JVM tests that load the host libt3_jni.so fail instead of skipping without it.
+          OT3A_REQUIRE_HOST_JNI: "1"
         run: >-
           ./gradlew --no-daemon
           :core:testDebugUnitTest
           :core:lintDebug :app:lintDebug
           :app:assembleDebug
           :core:assembleDebugAndroidTest :app:assembleDebugAndroidTest
+
+      - name: The debug APK packages libt3_jni.so for four ABIs
+        run: |
+          apk=app/build/outputs/apk/debug/app-debug.apk
+          unzip -l "$apk" | grep 'lib/.*/libt3_jni.so' || true
+          count=$(unzip -l "$apk" | grep -c 'lib/.*/libt3_jni.so' || true)
+          [[ $count == 4 ]] || { echo "expected 4 lib/<abi>/libt3_jni.so in $apk, found $count" >&2; exit 1; }
 
       - name: Upload test and lint reports
         if: failure()

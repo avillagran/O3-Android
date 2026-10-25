@@ -24,7 +24,11 @@ Requirements: JDK 17 or newer (21 recommended) and an Android SDK with platform 
 Point Gradle at the SDK with `sdk.dir=...` in `local.properties` (not versioned) or
 `ANDROID_HOME`.
 
+The lib-t3-rust AAR (and, on x86_64 Linux, the host JNI library for JVM tests) must be in
+`libs/` before Gradle configures:
+
 ```sh
+scripts/fetch-or-build-lib.sh --release --host-jni      # AAR from the pinned release
 ./gradlew :core:testDebugUnitTest :app:assembleDebug   # unit tests and debug APK
 ./gradlew :core:lintDebug :app:lintDebug               # lint
 ./gradlew connectedDebugAndroidTest                    # Room, credential and Compose UI tests on a device
