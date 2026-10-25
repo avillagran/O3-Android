@@ -7,24 +7,23 @@ import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import dev.avillagran.ot3android.core.shell.ShellThread
+import dev.avillagran.ot3android.core.thread.ComposerState
 import dev.avillagran.ot3android.core.thread.DraftRepository
 import dev.avillagran.ot3android.core.thread.MessageSender
 import dev.avillagran.ot3android.core.thread.OutboxRepository
 import dev.avillagran.ot3android.core.thread.PendingCommand
 import dev.avillagran.ot3android.core.thread.SendResult
+import dev.avillagran.ot3android.core.thread.ThreadComposer
 import dev.avillagran.ot3android.core.thread.ThreadSession
 import dev.avillagran.ot3android.core.thread.ThreadView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -48,39 +47,41 @@ data class ThreadUiState(
     /** The thread's `modelSelection` (compact JSON) from the projection, else the shell row's. */
     val modelSelection: String? = null,
     val connection: ConnectionState = ConnectionState.Disconnected,
-    val draft: String = "",
-    val sending: Boolean = false,
+    val composer: ComposerState = ComposerState(),
     val interrupting: Boolean = false,
-    /** Commands still in the outbox for this thread. */
-    val unconfirmed: List<PendingCommand> = emptyList(),
     val notice: ThreadNotice? = null,
 ) {
     val connected: Boolean get() = connection is ConnectionState.Connected
 
-    val canSend: Boolean get() = draft.isNotBlank() && connected && !sending
+    val draft: String get() = composer.draft
+
+    val sending: Boolean get() = composer.sending
+
+    /** Commands whose outcome is unknown, each with Resend and Discard. */
+    val unconfirmed: List<PendingCommand> get() = composer.unconfirmed
+
+    val canSend: Boolean get() = composer.canSend && connected
 
     val canInterrupt: Boolean get() = view.working && view.activeRunId != null && connected && !interrupting
 }
 
-/** The composer's local state; the rest comes from the session, the supervisor and the outbox. */
+/** The screen's local state; the rest comes from the session, the supervisor and the composer. */
 private data class Local(
-    val draft: String = "",
-    val sending: Boolean = false,
     val interrupting: Boolean = false,
     val notice: ThreadNotice? = null,
 )
 
 /**
- * One open thread: a [ThreadSession] on the environment's supervisor, the composer with its
- * persisted draft, and sends through [MessageSender]. Sends and their bookkeeping run in
- * [appScope], so leaving the screen does not lose an accepted message's draft clearing.
+ * One open thread: a [ThreadSession] on the environment's supervisor, the [ThreadComposer]
+ * with its persisted draft, and interrupts through [MessageSender]. Sends and their
+ * bookkeeping run in [appScope], so leaving the screen does not cut them.
  */
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class ThreadViewModel(
     private val environmentId: String,
     private val threadId: String,
     connections: ConnectionManager,
-    private val drafts: DraftRepository,
+    drafts: DraftRepository,
     outbox: OutboxRepository,
     private val sender: MessageSender,
     private val appScope: CoroutineScope,
@@ -88,13 +89,17 @@ class ThreadViewModel(
 
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
     private val local = MutableStateFlow(Local())
-    @Volatile private var draftLoaded = false
-    @Volatile private var savedDraft = ""
 
     private val session = ThreadSession(
         threadId,
         supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) },
         viewModelScope,
+    )
+
+    private val composer = ThreadComposer(
+        environmentId, threadId, drafts, outbox, sender, viewModelScope, appScope,
+        transport = ::transport,
+        onResult = ::onResult,
     )
 
     private val connection: Flow<ConnectionState> =
@@ -111,17 +116,15 @@ class ThreadViewModel(
         connection,
         shellRow,
         local,
-        outbox.observeThread(environmentId, threadId),
-    ) { view, connection, shellRow, local, unconfirmed ->
+        composer.state,
+    ) { view, connection, shellRow, local, composer ->
         ThreadUiState(
             view = view,
             title = view.title ?: shellRow?.title,
             modelSelection = view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
             connection = connection,
-            draft = local.draft,
-            sending = local.sending,
+            composer = composer,
             interrupting = local.interrupting,
-            unconfirmed = unconfirmed,
             notice = local.notice,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId)))
@@ -133,44 +136,26 @@ class ThreadViewModel(
             supervisor.value = found
         }
         session.start()
-        viewModelScope.launch {
-            val saved = drafts.load(environmentId, threadId)
-            savedDraft = saved
-            // Text typed before the draft loaded wins.
-            if (local.value.draft.isEmpty()) local.update { it.copy(draft = saved) }
-            draftLoaded = true
-        }
-        viewModelScope.launch {
-            local.map { it.draft }.distinctUntilChanged().drop(1).debounce(DRAFT_DEBOUNCE_MS).collect { saveDraft(it) }
-        }
     }
 
     fun onDraftChange(text: String) {
-        local.update { it.copy(draft = text) }
+        composer.onDraftChange(text)
     }
 
     fun send() {
         val current = state.value
-        val text = local.value.draft
-        if (text.isBlank() || !current.connected || local.value.sending) return
-        local.update { it.copy(sending = true, notice = null) }
-        val modelSelection = current.modelSelection
-        appScope.launch {
-            val result = sender.send(transport(), environmentId, threadId, text, modelSelection)
-            finish(result, sentText = text)
-            local.update { it.copy(sending = false) }
-        }
+        if (!current.connected) return
+        if (composer.send(current.modelSelection)) local.update { it.copy(notice = null) }
     }
 
-    /** Resends an unconfirmed command, byte-identical. */
+    /** Resends an unconfirmed command, byte-identical; the draft is not touched. */
     fun retry(commandId: String) {
-        val text = state.value.unconfirmed.firstOrNull { it.commandId == commandId }?.text
         local.update { it.copy(notice = null) }
-        appScope.launch { finish(sender.retry(transport(), commandId), sentText = text) }
+        composer.retry(commandId)
     }
 
     fun discard(commandId: String) {
-        appScope.launch { sender.discard(commandId) }
+        composer.discard(commandId)
     }
 
     fun interrupt() {
@@ -196,15 +181,9 @@ class ThreadViewModel(
         local.update { it.copy(notice = null) }
     }
 
-    private suspend fun finish(result: SendResult, sentText: String?) {
+    private fun onResult(result: SendResult) {
         when (result) {
-            is SendResult.Accepted -> {
-                // Clear only what was sent; text typed meanwhile stays.
-                if (sentText != null && local.value.draft == sentText) {
-                    local.update { it.copy(draft = "") }
-                    saveDraft("")
-                }
-            }
+            is SendResult.Accepted -> Unit
             is SendResult.OutcomeUnknown -> local.update { it.copy(notice = ThreadNotice.Unconfirmed(result.commandId)) }
             is SendResult.Failed -> local.update { it.copy(notice = failed(result)) }
         }
@@ -212,20 +191,8 @@ class ThreadViewModel(
 
     private fun failed(result: SendResult.Failed) = ThreadNotice.Failed(result.code, result.reason, result.requiredScope)
 
-    private suspend fun saveDraft(text: String) {
-        if (!draftLoaded || text == savedDraft) return
-        drafts.save(environmentId, threadId, text)
-        savedDraft = text
-    }
-
     override fun onCleared() {
-        // A change still inside the debounce window is written once more, off the screen's scope.
-        val text = local.value.draft
-        if (draftLoaded && text != savedDraft) appScope.launch { drafts.save(environmentId, threadId, text) }
+        composer.flush()
         session.close()
-    }
-
-    private companion object {
-        const val DRAFT_DEBOUNCE_MS = 400L
     }
 }

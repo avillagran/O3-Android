@@ -1,14 +1,9 @@
 package dev.avillagran.ot3android.core.thread
 
-import dev.avillagran.ot3android.core.data.local.OutboxDao
 import dev.avillagran.ot3android.core.data.local.OutboxEntity
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.t3.T3Exception
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -19,20 +14,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MessageSenderTest {
-
-    private class MemoryOutboxDao : OutboxDao {
-        val rows = MutableStateFlow<Map<String, OutboxEntity>>(emptyMap())
-        override suspend fun insert(entry: OutboxEntity) {
-            check(entry.id !in rows.value) { "duplicate ${entry.id}" }
-            rows.update { it + (entry.id to entry) }
-        }
-        override suspend fun findById(id: String) = rows.value[id]
-        override fun observeThread(environmentId: String, threadId: String): Flow<List<OutboxEntity>> =
-            rows.map { all -> all.values.filter { it.environmentId == environmentId && it.threadId == threadId } }
-        override suspend fun setState(id: String, state: String) =
-            rows.update { all -> all[id]?.let { all + (id to it.copy(state = state)) } ?: all }
-        override suspend fun deleteById(id: String) = rows.update { it - id }
-    }
 
     private val dao = MemoryOutboxDao()
     private val fake = FakeT3Transport()

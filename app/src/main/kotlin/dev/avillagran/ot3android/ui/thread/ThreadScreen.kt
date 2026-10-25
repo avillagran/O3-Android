@@ -74,6 +74,7 @@ object ThreadScreenTags {
     const val STREAM_RETRY = "thread_stream_retry"
     const val COMPOSER = "thread_composer"
     const val SEND = "thread_send"
+    const val SENDING = "thread_sending"
     fun message(id: String) = "thread_message_$id"
     fun streaming(id: String) = "thread_streaming_$id"
     fun request(id: String) = "thread_request_$id"
@@ -365,6 +366,8 @@ private fun Composer(
             OutlinedTextField(
                 value = draft,
                 onValueChange = onDraftChange,
+                // Locked while it is being sent, so the text sent is the text shown.
+                enabled = !sending,
                 placeholder = { Text(stringResource(R.string.thread_composer_hint)) },
                 maxLines = 6,
                 modifier = Modifier.weight(1f).testTag(ThreadScreenTags.COMPOSER),
@@ -372,7 +375,7 @@ private fun Composer(
             Spacer(Modifier.width(4.dp))
             Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                 if (sending) {
-                    CircularProgressIndicator(Modifier.size(24.dp))
+                    CircularProgressIndicator(Modifier.size(24.dp).testTag(ThreadScreenTags.SENDING))
                 } else {
                     IconButton(onClick = onSend, enabled = canSend, modifier = Modifier.testTag(ThreadScreenTags.SEND)) {
                         Icon(painterResource(R.drawable.ic_send), stringResource(R.string.thread_send))

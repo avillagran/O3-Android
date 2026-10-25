@@ -52,13 +52,15 @@ class MessageSender(
         threadId: String,
         text: String,
         modelSelection: String? = null,
+        /** Runs once the command is in the outbox, before it is sent. */
+        onPersisted: suspend () -> Unit = {},
     ): SendResult = detached {
         if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
         val source = creationSource
-        val result = sendNew(transport, environmentId, threadId, text, modelSelection, source)
+        val result = sendNew(transport, environmentId, threadId, text, modelSelection, source, onPersisted)
         if (source == MOBILE && result is SendResult.Failed && result.rejectsCreationSource()) {
             creationSource = WEB
-            sendNew(transport, environmentId, threadId, text, modelSelection, WEB)
+            sendNew(transport, environmentId, threadId, text, modelSelection, WEB, onPersisted)
         } else {
             result
         }
@@ -98,10 +100,17 @@ class MessageSender(
         text: String,
         modelSelection: String?,
         source: String,
+        onPersisted: suspend () -> Unit,
     ): SendResult {
         val commandId = newId()
         val args = messageCommand(commandId, newId(), threadId, text, modelSelection, source).toString()
         outbox.add(environmentId, threadId, commandId, args)
+        try {
+            onPersisted()
+        } catch (error: Exception) {
+            // Only bookkeeping (the caller's draft): the command is persisted, so send it.
+            if (error is CancellationException) throw error
+        }
         return dispatch(transport, commandId, args)
     }
 

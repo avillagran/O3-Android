@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.connection.ServerDescriptor
+import dev.avillagran.ot3android.core.thread.ComposerState
 import dev.avillagran.ot3android.core.thread.PendingCommand
 import dev.avillagran.ot3android.core.thread.RuntimeRequest
 import dev.avillagran.ot3android.core.thread.ThreadConnection
@@ -83,7 +84,7 @@ class ThreadScreenTest {
     fun sendIsEnabledOnlyWithTextWhileConnected() {
         var state by mutableStateOf(ThreadUiState(view = view, connection = connected))
         val sent = mutableListOf<Unit>()
-        setContent({ state }, sent) { text -> state = state.copy(draft = text) }
+        setContent({ state }, sent) { text -> state = state.copy(composer = state.composer.copy(draft = text)) }
 
         composeRule.onNodeWithTag(ThreadScreenTags.SEND).assertIsNotEnabled()
         composeRule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextInput("Try again")
@@ -95,9 +96,30 @@ class ThreadScreenTest {
     }
 
     @Test
+    fun theFieldIsLockedWhileSending() {
+        setContent({ ThreadUiState(view = view, connection = connected, composer = ComposerState(draft = "Hello", sending = true)) })
+
+        composeRule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertIsNotEnabled()
+        composeRule.onNodeWithTag(ThreadScreenTags.SENDING).assertIsDisplayed()
+    }
+
+    @Test
+    fun anUnconfirmedCommandBlocksSendingUntilResolved() {
+        val pending = PendingCommand("ot3a-1", "env-1", "t1", """{"text":"Hello"}""", 1, "unknown")
+        setContent({
+            ThreadUiState(view = view, connection = connected, composer = ComposerState(draft = "Next", unconfirmed = listOf(pending)))
+        })
+
+        composeRule.onNodeWithTag(ThreadScreenTags.SEND).assertIsNotEnabled()
+        composeRule.onNodeWithTag(ThreadScreenTags.resend("ot3a-1")).assertIsEnabled()
+    }
+
+    @Test
     fun showsStaleAndUnconfirmedCommands() {
         val pending = PendingCommand("ot3a-1", "env-1", "t1", """{"text":"Hello"}""", 1, "unknown")
-        setContent({ ThreadUiState(view = view.copy(stale = true), connection = connected, unconfirmed = listOf(pending)) })
+        setContent({
+            ThreadUiState(view = view.copy(stale = true), connection = connected, composer = ComposerState(unconfirmed = listOf(pending)))
+        })
 
         composeRule.onNodeWithTag(ThreadScreenTags.STALE, useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithTag(ThreadScreenTags.unconfirmed("ot3a-1")).assertIsDisplayed()
