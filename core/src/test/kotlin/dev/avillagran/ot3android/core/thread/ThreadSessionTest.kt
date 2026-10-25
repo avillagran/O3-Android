@@ -20,6 +20,8 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -331,5 +333,44 @@ class ThreadSessionTest {
         skipBackoff(session)
         assertEquals(listOf<Long?>(10), opens())
         assertEquals(1, snapshots.get())
+    }
+
+    @Test
+    fun aClosedHandleIsADisconnectButAnyOtherIllegalStateIsAnInternalError() = runTest {
+        fake.onBoundedThread("t1") { throw IllegalStateException("client_closed") }
+        val session = session()
+        runCurrent()
+        assertEquals(ThreadSession.DISCONNECTED, (session.view.value.connectionState as ThreadConnection.Retrying).error)
+
+        fake.onBoundedThread("t1") { throw IllegalStateException("not a handle problem") }
+        skipBackoff(session)
+        assertEquals(ThreadConnection.Failed(ThreadSession.INTERNAL_ERROR), session.view.value.connectionState)
+
+        fake.onBoundedThread("t1") { bounded(5, projection()) }
+        session.retry()
+        runCurrent()
+        assertTrue(session.view.value.loaded)
+        assertEquals(listOf<Long?>(5), opens())
+    }
+
+    @Test
+    fun anItemTheShimFailsOnRefetchesInsteadOfCrashing() = runTest {
+        val session = session()
+        runCurrent()
+        val poisoned = object : JSONArray() {
+            override fun length() = 1
+            override fun optJSONObject(index: Int): JSONObject = throw JSONException("boom")
+        }
+        val update = ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2")))
+        emit(update.copy(batch = update.batch.copy(items = poisoned)))
+
+        assertTrue(session.view.value.stale)
+        assertEquals(listOf("m1"), session.view.value.messages.map { it.id })
+        snapshotSequence = 20
+        advanceTimeBy(ThreadSession.REFETCH_INTERVAL_MS)
+        runCurrent()
+        assertEquals(2, snapshots.get())
+        assertEquals(listOf<Long?>(10, 20), opens())
+        assertFalse(session.view.value.stale)
     }
 }

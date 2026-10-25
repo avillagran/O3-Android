@@ -157,7 +157,8 @@ class ThreadSession(
                 quickCancels = 0
             }
             when (error) {
-                // A snapshot item the shim could not use: read a fresh one, no backoff.
+                // A snapshot item the shim could not use, or an item it failed on: the held
+                // projection cannot be trusted, so read a fresh one (rate-limited), no backoff.
                 REFETCH -> {
                     markStale()
                     continue
@@ -192,7 +193,8 @@ class ThreadSession(
                 if (!shim.replace(snapshot)) return MALFORMED_SNAPSHOT
                 needSnapshot = false
                 stale = false
-                publish()
+                // A fresh snapshot that cannot be shown would fail the same way again.
+                if (!publish()) return INTERNAL_ERROR
             }
             var ended: String? = null
             transport.threadStream(
@@ -206,38 +208,50 @@ class ThreadSession(
                     connectedAt = clock()
                     setConnection(ThreadConnection.Live)
                 }
-                val items = update.batch.items
-                for (i in 0 until items.length()) {
-                    val item = items.optJSONObject(i) ?: continue
-                    when (shim.apply(item)) {
-                        ApplyResult.MALFORMED -> ended = REFETCH
-                        // A stream snapshot replaced everything: no longer stale.
-                        ApplyResult.APPLIED -> if (item.optString("kind") == "snapshot") stale = false
-                        ApplyResult.IGNORED, ApplyResult.UNKNOWN -> Unit
+                try {
+                    val items = update.batch.items
+                    for (i in 0 until items.length()) {
+                        val item = items.optJSONObject(i) ?: continue
+                        when (shim.apply(item)) {
+                            ApplyResult.MALFORMED -> ended = REFETCH
+                            // A stream snapshot replaced everything: no longer stale.
+                            ApplyResult.APPLIED -> if (item.optString("kind") == "snapshot") stale = false
+                            ApplyResult.IGNORED, ApplyResult.UNKNOWN -> Unit
+                        }
+                        if (ended != null) break
                     }
-                    if (ended != null) break
+                } catch (error: RuntimeException) {
+                    // A payload the shim choked on (JSONException, ...): refetch, do not guess.
+                    if (error is CancellationException) throw error
+                    ended = REFETCH
                 }
                 if (update.closed && ended == null) ended = update.error ?: CANCELLED
-                if (update.repaint || update.closed || ended != null) publish()
+                if ((update.repaint || update.closed || ended != null) && !publish()) ended = REFETCH
                 ended == null
             }.collect()
             return ended ?: ConnectionSupervisor.STREAM_CLOSED
         } catch (error: T3Exception) {
             return error.code
+        } catch (error: CancellationException) {
+            throw error
         } catch (error: IllegalStateException) {
-            // The supervisor closed its client under a call (`client_closed`): it is reconnecting.
-            if (error is CancellationException) throw error
-            return DISCONNECTED
+            // The supervisor closed its client under a call: it is reconnecting. Anything
+            // else is a bug, not a connection problem.
+            return if (error.message in CLOSED) DISCONNECTED else INTERNAL_ERROR
+        } catch (_: RuntimeException) {
+            return INTERNAL_ERROR
         } finally {
             connectedAt?.let { backoff.connectionLasted(clock() - it) }
         }
     }
 
     /**
-     * Waits until [refetchIntervalMs] has passed since the last `boundedThread` read (the
-     * trailing edge of the rate limit), or until [retry].
+     * Before a refetch (a snapshot is already held), waits until [refetchIntervalMs] has
+     * passed since the last `boundedThread` read (the trailing edge of the rate limit), or
+     * until [retry]. A first load only waits for the backoff.
      */
     private suspend fun awaitRefetchSlot() {
+        if (!shim.hasSnapshot) return
         val last = lastSnapshotAt ?: return
         val wait = last + refetchIntervalMs - clock()
         if (wait <= 0) return
@@ -248,7 +262,7 @@ class ThreadSession(
     private fun markStale() {
         if (shim.hasSnapshot) {
             stale = true
-            publish()
+            if (!publish()) _view.update { it.copy(stale = true) }
         }
         needSnapshot = true
     }
@@ -257,10 +271,11 @@ class ThreadSession(
         _view.update { it.copy(connectionState = state) }
     }
 
-    private fun publish() {
+    /** Publishes the held projection; false (the view unchanged) when it cannot be read. */
+    private fun publish(): Boolean {
         val p = shim.projection
-        _view.update { current ->
-            current.copy(
+        val next = try {
+            _view.value.copy(
                 loaded = p != null,
                 title = ThreadProjectionShim.title(p),
                 messages = ThreadProjectionShim.messages(p),
@@ -271,7 +286,12 @@ class ThreadSession(
                 stale = stale,
                 sequence = shim.sequence,
             )
+        } catch (error: RuntimeException) {
+            if (error is CancellationException) throw error
+            return false
         }
+        _view.update { current -> next.copy(connectionState = current.connectionState) }
+        return true
     }
 
     companion object {
@@ -280,6 +300,12 @@ class ThreadSession(
 
         /** Not a lib code: the shared client was closed under a call. */
         const val DISCONNECTED = "disconnected"
+
+        /** Not a lib code, the supervisor's: something other than a [T3Exception] failed. */
+        const val INTERNAL_ERROR = ConnectionSupervisor.INTERNAL_ERROR
+
+        /** `IllegalStateException` messages of a handle closed under a call. */
+        private val CLOSED = setOf("client_closed", "subscription_closed")
 
         /** Not a lib code: the stream closed with no error (a cancel); never shown. */
         private const val CANCELLED = "cancelled"
@@ -303,6 +329,6 @@ class ThreadSession(
         val REFETCH_ERRORS = setOf("stream_backpressure", ConnectionSupervisor.STREAM_CLOSED)
 
         /** Errors after which only [retry] (or a new connection) tries again. */
-        val FATAL = setOf("unauthorized", "invalid_thread_id", "http_404")
+        val FATAL = setOf("unauthorized", "invalid_thread_id", "http_404", INTERNAL_ERROR)
     }
 }
