@@ -88,6 +88,8 @@ class ConnectionSupervisor(
     private val onConnected: suspend (ServerDescriptor) -> Unit = {},
     /** Where the (blocking) transport close runs. */
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    /** Where a shell read over HTTP is parsed (it can hold hundreds of threads). */
+    private val computation: CoroutineDispatcher = Dispatchers.Default,
 ) {
     val environmentId: String = environment.id
     private val baseUrl = environment.baseUrl
@@ -151,8 +153,9 @@ class ConnectionSupervisor(
     }
 
     /**
-     * Replaces the shell with a fresh shell GET (pull to refresh). Fails with the lib's
-     * `T3Exception` when not connected or the request fails.
+     * Replaces the shell with a fresh shell GET (pull to refresh), unless the stream has
+     * already moved past it. Fails with the lib's `T3Exception` when not connected or the
+     * request fails. Safe to call from the main thread.
      */
     suspend fun refresh() {
         val current = transport
@@ -160,8 +163,12 @@ class ConnectionSupervisor(
             retry()
             throw T3Exception("not_connected")
         }
-        val fresh = ShellReducer.parse(current.shell())
-        publish(fresh)
+        val fresh = withContext(computation) { ShellReducer.parse(current.shell()) }
+        shellLock.withLock {
+            val heldSequence = held?.sequence
+            val freshSequence = fresh.sequence
+            if (heldSequence == null || freshSequence == null || freshSequence >= heldSequence) replaceHeld(fresh)
+        }
     }
 
     @OptIn(FlowPreview::class)
@@ -228,7 +235,10 @@ class ConnectionSupervisor(
             val descriptor = ServerDescriptor.from(client.fetchDescriptor(baseUrl, serverEnvironmentId))
             val secret = token() ?: return MISSING_TOKEN
             client.connect(ConnectRoute.Bearer(baseUrl, secret))
-            if (shellLock.withLock { held } == null) publish(ShellReducer.parse(client.shell()))
+            if (shellLock.withLock { held } == null) {
+                val fresh = withContext(computation) { ShellReducer.parse(client.shell()) }
+                shellLock.withLock { replaceHeld(fresh) }
+            }
             if (serverEnvironmentId == null) serverEnvironmentId = descriptor.environmentId
             _state.value = ConnectionState.Connected(descriptor)
             try {
@@ -260,8 +270,8 @@ class ConnectionSupervisor(
         }
     }
 
-    /** Replaces the held shell with one read over HTTP, and resumes after its sequence. */
-    private suspend fun publish(fresh: ShellState) = shellLock.withLock {
+    /** Replaces the held shell with one read over HTTP, to resume after its sequence. Call with [shellLock] held. */
+    private fun replaceHeld(fresh: ShellState) {
         held = fresh
         cursor = fresh.sequence
         showHeld()

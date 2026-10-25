@@ -71,6 +71,7 @@ class ConnectionSupervisorTest {
         random = Random(7),
         onConnected = { connected += it },
         io = StandardTestDispatcher(testScheduler),
+        computation = StandardTestDispatcher(testScheduler),
     )
 
     /** Emits once the supervisor's shell stream is collected (the fake drops emits without one). */
@@ -335,5 +336,19 @@ class ConnectionSupervisorTest {
 
         assertEquals(9L, supervisor.shell.value?.sequence)
         assertEquals(2, shellRequests.get())
+    }
+
+    @Test
+    fun refreshNeverGoesBackPastTheStream() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        emit(ThreadUpdates.event(threadUpdated(8, thread("t3"))))
+
+        shellSequence = 7
+        supervisor.refresh()
+
+        assertEquals(8L, supervisor.shell.value?.sequence)
+        assertEquals(listOf("t1", "t2", "t3"), supervisor.shell.value?.threads?.map { it.id })
     }
 }
