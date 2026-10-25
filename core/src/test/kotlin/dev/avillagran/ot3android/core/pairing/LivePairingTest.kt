@@ -50,6 +50,7 @@ class LivePairingTest {
                 transportFactory = NativeT3TransportFactory(),
                 repository = repository,
                 client = PairingClient(label = "ot3-android-pair-test"),
+                stopConnection = {},
                 handOver = { handedOver += it },
             )
 

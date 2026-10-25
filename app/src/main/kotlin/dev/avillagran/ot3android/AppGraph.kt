@@ -77,13 +77,15 @@ class AppGraph(
     val pairingInbox = PairingInbox()
 
     /**
-     * A pairing flow (one per screen). Once paired, any supervisor built from the old settings
-     * is dropped and a fresh one starts with the new token.
+     * A pairing flow (one per screen). A saved environment's supervisor is stopped before its
+     * URL or token changes; once paired, any supervisor built in between is dropped too and a
+     * fresh one starts with the new settings.
      */
     fun pairingService(): PairingService = PairingService(
         transportFactory = transportFactory,
         repository = environmentRepository,
         client = PairingClient(label = pairingLabel()),
+        stopConnection = connectionManager::forget,
         handOver = { id ->
             connectionManager.forget(id)
             connectionManager.supervisor(id)?.start()

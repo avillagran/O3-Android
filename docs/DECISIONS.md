@@ -301,8 +301,12 @@ factory, the fake's scripting). Supersedes the entry above.
   unauthenticated and any server can claim it: the screen warns that the link moves the
   saved environment from the old address to the new one, the default action adds a new
   environment, and a second, explicit Replace moves the saved one. Then the
-  connection layer takes over: `ConnectionManager.forget` drops a supervisor built from the
-  old settings and a fresh one starts. Lib codes are grouped into `PairingFailure` for the
+  connection layer takes over. A saved environment that changes is stopped first
+  (`ConnectionManager.forget`, which returns once its run has ended) and only then gets its
+  new row and token, because a supervisor reads the token at each reconnect but keeps the
+  URL it was built with: stopping it afterwards would leave a window in which it sends the
+  new token to the old address. After the write, any supervisor built in between is dropped
+  and a fresh one starts. Lib codes are grouped into `PairingFailure` for the
   UI; each step uses a short-lived transport. Confirming is a separate step so that a link
   opened from elsewhere (a deep link) never pairs without the user seeing the server.
   Once confirmed, the exchange, the save and the hand-over run to the end even if the user

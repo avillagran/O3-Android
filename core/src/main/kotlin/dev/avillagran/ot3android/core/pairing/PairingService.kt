@@ -111,7 +111,9 @@ sealed interface PairingState {
  * [inspect] reads the descriptor (label, version) → the user confirms → [confirm] exchanges the
  * one-time code with `pairBearer` (no connection), stores the environment (local row keyed by
  * the server's environment id, label from the descriptor) and the issued long-lived token, then
- * calls [handOver] so the connection layer picks it up. An environment already saved for the
+ * calls [handOver] so the connection layer picks it up. A saved environment that is about to
+ * change is first stopped with [stopConnection], so that no reconnect pairs the new token
+ * with its old address. An environment already saved for the
  * same server at the same address keeps its row, label and id and gets the new token. One at
  * another address is never moved silently: the descriptor that matched it is unauthenticated,
  * so pairing adds a new environment unless [confirm] is told to replace the saved one.
@@ -123,6 +125,9 @@ class PairingService(
     private val transportFactory: T3TransportFactory,
     private val repository: EnvironmentRepository,
     private val client: PairingClient,
+    /** Stops the environment's connection and returns once it has ended. */
+    private val stopConnection: suspend (environmentId: String) -> Unit,
+    /** Starts the environment's connection with what was just saved. */
     private val handOver: suspend (environmentId: String) -> Unit,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
@@ -186,6 +191,9 @@ class PairingService(
                 val server = ServerDescriptor.from(paired.descriptor)
                 // Removed since inspect: added again as a new environment.
                 val updating = match?.let { repository.find(it.id) }
+                // Stopped before its row or token changes: a run still going would read the new
+                // token at its next reconnect and send it to the old address.
+                updating?.let { stopConnection(it.id) }
                 val label = updating?.label ?: server.label ?: ready.server.label ?: ready.origin.substringAfter("://")
                 val saved = repository.save(
                     id = updating?.id,

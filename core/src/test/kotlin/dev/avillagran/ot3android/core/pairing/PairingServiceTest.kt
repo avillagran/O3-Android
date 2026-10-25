@@ -1,19 +1,29 @@
 package dev.avillagran.ot3android.core.pairing
 
+import dev.avillagran.ot3android.core.connection.ConnectionManager
+import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.connection.MemoryCursorStore
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.InMemoryEnvironmentDao
 import dev.avillagran.ot3android.core.data.InMemoryTokenStore
+import dev.avillagran.ot3android.core.security.TokenStore
+import dev.avillagran.ot3android.core.shell.ShellFixtures
+import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairedBearer
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -21,13 +31,25 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.random.Random
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PairingServiceTest {
 
     private val dao = InMemoryEnvironmentDao()
     private val tokens = InMemoryTokenStore()
     private var ids = 0
-    private val repository = EnvironmentRepository(dao, { tokens }, MemoryCursorStore(), clock = { 1_000L }, newId = { "local-${++ids}" })
+    /** Runs after each token write. */
+    private var afterTokenWrite: suspend (environmentId: String) -> Unit = {}
+    private val watchedTokens = object : TokenStore by tokens {
+        override suspend fun setToken(environmentId: String, token: String) {
+            tokens.setToken(environmentId, token)
+            afterTokenWrite(environmentId)
+        }
+    }
+    private val cursors = MemoryCursorStore()
+    private val repository = EnvironmentRepository(dao, { watchedTokens }, cursors, clock = { 1_000L }, newId = { "local-${++ids}" })
+    private val stopped = mutableListOf<String>()
     private val handedOver = mutableListOf<String>()
     private val client = PairingClient(label = "ot3 test")
 
@@ -37,15 +59,21 @@ class PairingServiceTest {
     private val factory = FakeT3TransportFactory {
         FakeT3Transport().apply {
             onFetchDescriptor(ORIGIN) { descriptorAnswer() }
+            onFetchDescriptor(OLD_ORIGIN) { descriptor() }
             onPairBearer(ORIGIN) { pairAnswer(it) }
+            onShell { ShellFixtures.body(1, emptyList(), emptyList()) }
         }
     }
 
-    private fun TestScope.service() = PairingService(
+    private fun TestScope.service(
+        stopConnection: suspend (String) -> Unit = { stopped += it },
+        handOver: suspend (String) -> Unit = { handedOver += it },
+    ) = PairingService(
         transportFactory = factory,
         repository = repository,
         client = client,
-        handOver = { handedOver += it },
+        stopConnection = stopConnection,
+        handOver = handOver,
         io = UnconfinedTestDispatcher(testScheduler),
     )
 
@@ -72,6 +100,7 @@ class PairingServiceTest {
         assertEquals("the long-lived token, never the one-time code", ACCESS_TOKEN, tokens.tokens["local-1"])
         assertFalse(tokens.tokens.values.contains(CODE))
         assertEquals(listOf("local-1"), handedOver)
+        assertTrue("nothing saved to stop", stopped.isEmpty())
 
         val request = factory.created.flatMap { it.pairRequests }.single()
         assertEquals(ORIGIN, request.baseUrl)
@@ -135,6 +164,58 @@ class PairingServiceTest {
         assertEquals(ORIGIN, all.single().baseUrl)
         assertEquals(ACCESS_TOKEN, tokens.tokens["local-1"])
         assertEquals(listOf("local-1"), handedOver)
+    }
+
+    @Test
+    fun aSavedEnvironmentIsStoppedBeforeItsTokenChanges() = runTest {
+        repository.save(null, "My box", ORIGIN, ENVIRONMENT, "old-token")
+        val events = mutableListOf<String>()
+        afterTokenWrite = { events += "write $it" }
+        val service = service(stopConnection = { events += "stop $it" }, handOver = { events += "start $it" })
+        service.inspect(LINK)
+
+        service.confirm()
+
+        assertEquals(listOf("stop local-1", "write local-1", "start local-1"), events)
+    }
+
+    @Test
+    fun aRunningSupervisorNeverSendsTheNewTokenToTheOldAddress() = runTest {
+        repository.save(null, "My box", OLD_ORIGIN, ENVIRONMENT, "old-token")
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val manager = ConnectionManager(
+            repository, cursors, factory, backgroundScope,
+            clock = { testScheduler.currentTime }, random = Random(3), io = dispatcher, computation = dispatcher,
+        )
+        val old = manager.supervisor("local-1")!!
+        old.start()
+        runCurrent()
+        assertTrue(old.state.value is ConnectionState.Connected)
+        val oldTransport = factory.created.last()
+        // Were the old run still going once the token is written, its stream breaking now would
+        // make it reconnect (after its backoff) with the token stored by then.
+        afterTokenWrite = {
+            oldTransport.emitError(T3Exception("stream_timeout"))
+            delay(60_000)
+        }
+        val service = service(
+            stopConnection = manager::forget,
+            handOver = { id ->
+                manager.forget(id)
+                manager.supervisor(id)?.start()
+            },
+        )
+        service.inspect(LINK)
+
+        service.confirm(replace = true)
+        advanceTimeBy(120_000)
+        runCurrent()
+
+        val routes = factory.created.flatMap { it.routes }.filterIsInstance<ConnectRoute.Bearer>()
+        assertFalse(old.isRunning)
+        assertTrue("$routes", routes.none { it.baseUrl == OLD_ORIGIN && it.token == ACCESS_TOKEN })
+        assertTrue("$routes", routes.any { it.baseUrl == ORIGIN && it.token == ACCESS_TOKEN })
+        assertTrue(manager.supervisor("local-1")!!.state.value is ConnectionState.Connected)
     }
 
     @Test
