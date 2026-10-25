@@ -7,7 +7,8 @@ import dev.avillagran.ot3android.core.home.ShelfState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -26,7 +27,8 @@ class HomePreferencesTest {
         return try {
             runBlocking { block(HomePreferences(PreferenceDataStoreFactory.create(scope = scope) { file })) }
         } finally {
-            scope.cancel()
+            // Wait until the store has released the file, as a process exit would.
+            runBlocking { scope.coroutineContext[Job]!!.cancelAndJoin() }
         }
     }
 
