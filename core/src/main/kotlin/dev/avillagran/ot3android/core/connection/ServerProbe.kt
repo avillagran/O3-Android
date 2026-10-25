@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.core.connection
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.T3Transport
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
@@ -67,7 +68,10 @@ private fun defaultScheme(hostAndRest: String): String {
  * One-shot checks for the connect screen, each on a fresh transport that is closed after.
  * Failures are the lib's `T3Exception`, unchanged.
  */
-class ServerProbe(private val transportFactory: T3TransportFactory) {
+class ServerProbe(
+    private val transportFactory: T3TransportFactory,
+    private val io: CoroutineDispatcher = Dispatchers.IO,
+) {
 
     /** The descriptor at [baseUrl]: proves it is a T3 server; needs no credential. */
     suspend fun check(baseUrl: String): ServerDescriptor = withTransport { transport ->
@@ -87,12 +91,13 @@ class ServerProbe(private val transportFactory: T3TransportFactory) {
             descriptor
         }
 
+    /** Creating a native transport allocates a lib handle: never on the caller's (main) thread. */
     private suspend fun <T> withTransport(block: suspend (T3Transport) -> T): T {
-        val transport = transportFactory.create()
+        val transport = withContext(io) { transportFactory.create() }
         try {
             return block(transport)
         } finally {
-            withContext(NonCancellable + Dispatchers.IO) { transport.close() }
+            withContext(NonCancellable + io) { transport.close() }
         }
     }
 }
