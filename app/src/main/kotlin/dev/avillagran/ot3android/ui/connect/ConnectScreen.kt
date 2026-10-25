@@ -65,7 +65,11 @@ fun ConnectScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(state.savedEnvironmentId) { state.savedEnvironmentId?.let(onSaved) }
+    LaunchedEffect(state.savedEnvironmentId) {
+        val saved = state.savedEnvironmentId ?: return@LaunchedEffect
+        viewModel.savedHandled()
+        onSaved(saved)
+    }
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
 

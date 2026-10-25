@@ -124,6 +124,22 @@ class SidebarScreenTest {
     }
 
     @Test
+    fun aRemovedEnvironmentSaysSoInsteadOfLoading() {
+        composeRule.setContent {
+            Ot3Theme {
+                SidebarContent(
+                    state = SidebarUiState(notFound = true),
+                    onOpenThread = {}, onToggleSettled = {}, onRefresh = {}, onRetry = {}, onEditEnvironment = {}, onBack = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(SidebarScreenTags.NOT_FOUND).assertIsDisplayed()
+        composeRule.onNodeWithTag(SidebarScreenTags.LOADING).assertDoesNotExist()
+        composeRule.onNodeWithTag(SidebarScreenTags.RETRY).assertDoesNotExist()
+    }
+
+    @Test
     fun aRetriedErrorOffersNoEdit() {
         composeRule.setContent {
             Ot3Theme {

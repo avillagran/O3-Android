@@ -195,6 +195,12 @@ factory, the fake's scripting). Supersedes the entry above.
   `unauthorized`. Streams stop on the process's `ON_STOP` (ProcessLifecycleOwner, so
   rotation does not reconnect), resume on `ON_START`, and are probed with
   `wakeSubscriptions` on `ON_RESUME` and on default-network changes.
+- **Supervisors start lazily**: `ConnectionManager.supervisor(id)` creates one (not
+  started) the first time a screen asks for it, and the sidebar starts it. Nothing
+  connects at process start; the background stops only the ones that were running and
+  the foreground restarts just those. `forget` (edit or removal) waits for the run to end
+  before the caller deletes the row, and each run carries a generation so a run winding
+  down after `stop` never overwrites the state of the next one.
 - **Other screens borrow the supervisor's transport** through
   `ConnectionSupervisor.connection: StateFlow<Connection?>` (`Connection(transport,
   epoch)`): set while `Connected`, null otherwise; `epoch` grows with every `connect`,

@@ -56,7 +56,8 @@ fun connectionStateText(state: ConnectionState?, now: () -> Long = System::curre
     ConnectionState.Unauthorized -> stringResource(R.string.state_unauthorized)
     is ConnectionState.Unreachable -> {
         val retryAt = state.nextRetryAt
-        var clock by remember { mutableLongStateOf(now()) }
+        // A new retry time restarts the countdown from now, not from the previous one's clock.
+        var clock by remember(retryAt) { mutableLongStateOf(now()) }
         LaunchedEffect(retryAt) {
             while (retryAt != null && clock < retryAt) {
                 delay(1_000)

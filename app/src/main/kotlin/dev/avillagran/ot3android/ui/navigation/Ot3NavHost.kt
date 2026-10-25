@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android.ui.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -28,11 +29,12 @@ object Routes {
     const val SIDEBAR = "sidebar/{environmentId}"
     const val THREAD = "thread/{environmentId}/{threadId}"
 
+    // Ids are encoded: a thread id may hold `/`, `?` or `#`. Navigation decodes arguments.
     fun connect(environmentId: String? = null) =
-        if (environmentId == null) "connect" else "connect?environmentId=$environmentId"
+        if (environmentId == null) "connect" else "connect?environmentId=${Uri.encode(environmentId)}"
 
-    fun sidebar(environmentId: String) = "sidebar/$environmentId"
-    fun thread(environmentId: String, threadId: String) = "thread/$environmentId/$threadId"
+    fun sidebar(environmentId: String) = "sidebar/${Uri.encode(environmentId)}"
+    fun thread(environmentId: String, threadId: String) = "thread/${Uri.encode(environmentId)}/${Uri.encode(threadId)}"
 }
 
 @Composable

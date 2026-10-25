@@ -17,8 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -50,6 +51,8 @@ data class SidebarUiState(
     /** Null until the first shell arrives. */
     val items: List<SidebarItem>? = null,
     val refreshing: Boolean = false,
+    /** The environment is not in the catalog (removed while this screen was open, or a stale link). */
+    val notFound: Boolean = false,
 )
 
 /** Flattens a [Sidebar] into list rows; settled rows only when [settledExpanded]. */
@@ -74,23 +77,38 @@ class SidebarViewModel(
 ) : ViewModel() {
 
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
+    private val notFound = MutableStateFlow(false)
     private val settledExpanded = MutableStateFlow(false)
     private val refreshing = MutableStateFlow(false)
     private val label = MutableStateFlow("")
 
-    val state: StateFlow<SidebarUiState> = supervisor.filterNotNull().flatMapLatest { s ->
+    val state: StateFlow<SidebarUiState> = combine(supervisor, notFound) { s, missing -> s to missing }
+        .flatMapLatest { (s, missing) ->
+            when {
+                s != null -> live(s)
+                missing -> flowOf(SidebarUiState(notFound = true))
+                else -> flowOf(SidebarUiState())
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SidebarUiState())
+
+    private fun live(s: ConnectionSupervisor): Flow<SidebarUiState> {
         val items = combine(s.shell, settledExpanded) { shell, expanded ->
             shell?.let { SidebarModel.build(it).toItems(expanded) }
         }.flowOn(Dispatchers.Default)
-        combine(label, s.state, items, refreshing) { label, connection, rows, refreshing ->
+        return combine(label, s.state, items, refreshing) { label, connection, rows, refreshing ->
             SidebarUiState(label, connection, rows, refreshing)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SidebarUiState())
+    }
 
     init {
         viewModelScope.launch {
             label.value = repository.find(environmentId)?.label.orEmpty()
-            val found = connections.supervisor(environmentId) ?: return@launch
+            val found = connections.supervisor(environmentId)
+            if (found == null) {
+                notFound.value = true
+                return@launch
+            }
             found.start()
             supervisor.value = found
         }

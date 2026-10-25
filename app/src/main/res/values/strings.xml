@@ -60,6 +60,9 @@
     <string name="sidebar_empty">No threads</string>
     <string name="sidebar_edit_token">Edit token</string>
     <string name="sidebar_pinned">Pinned</string>
+    <string name="sidebar_expanded">Expanded</string>
+    <string name="sidebar_collapsed">Collapsed</string>
+    <string name="sidebar_not_found">This environment is no longer saved.</string>
     <string name="status_needs_you">Needs you</string>
     <string name="status_working">Working</string>
     <string name="status_failed">Failed</string>

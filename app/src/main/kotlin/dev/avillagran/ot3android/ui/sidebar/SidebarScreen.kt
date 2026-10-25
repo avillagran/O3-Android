@@ -31,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,6 +54,7 @@ object SidebarScreenTags {
     const val SETTLED_HEADER = "sidebar_settled_header"
     const val EMPTY = "sidebar_empty"
     const val LOADING = "sidebar_loading"
+    const val NOT_FOUND = "sidebar_not_found"
     fun project(id: String?) = "sidebar_project_${id.orEmpty()}"
     fun thread(id: String) = "sidebar_thread_$id"
     fun status(id: String) = "sidebar_status_$id"
@@ -112,7 +116,8 @@ fun SidebarContent(
                             Text(stringResource(label))
                         }
                     }
-                    if (state.connection !is ConnectionState.Connected && state.connection != ConnectionState.Connecting) {
+                    val live = state.connection is ConnectionState.Connected || state.connection == ConnectionState.Connecting
+                    if (!live && !state.notFound) {
                         IconButton(onClick = onRetry, modifier = Modifier.testTag(SidebarScreenTags.RETRY)) {
                             Icon(painterResource(R.drawable.ic_refresh), stringResource(R.string.action_retry))
                         }
@@ -128,6 +133,13 @@ fun SidebarContent(
         ) {
             val items = state.items
             when {
+                state.notFound -> Centered {
+                    Text(
+                        stringResource(R.string.sidebar_not_found),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.testTag(SidebarScreenTags.NOT_FOUND),
+                    )
+                }
                 items == null -> Centered {
                     if (state.connection == ConnectionState.Connecting || state.connection is ConnectionState.Connected) {
                         CircularProgressIndicator(Modifier.testTag(SidebarScreenTags.LOADING))
@@ -185,13 +197,15 @@ private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SettledHeader(item: SidebarItem.SettledHeader, onToggle: () -> Unit) {
+    val expansion = stringResource(if (item.expanded) R.string.sidebar_expanded else R.string.sidebar_collapsed)
     Column {
         HorizontalDivider()
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onToggle)
+                .clickable(role = Role.Button, onClick = onToggle)
+                .semantics { stateDescription = expansion }
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .testTag(SidebarScreenTags.SETTLED_HEADER),
         ) {

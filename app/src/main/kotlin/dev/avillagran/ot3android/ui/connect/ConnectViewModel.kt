@@ -104,6 +104,9 @@ class ConnectViewModel(
         }
     }
 
+    /** The screen calls this once it has acted on [ConnectUiState.savedEnvironmentId]. */
+    fun savedHandled() = _state.update { it.copy(savedEnvironmentId = null) }
+
     private fun fail(error: ConnectError) = _state.update { it.copy(error = error) }
 
     private fun run(busy: ConnectBusy, block: suspend () -> Unit) {
