@@ -57,7 +57,7 @@ class MessageSenderTest {
         assertEquals("Hello", args.getString("text"))
         assertEquals(0, args.getJSONArray("attachments").length())
         assertEquals("user", args.getString("createdBy"))
-        assertEquals("mobile", args.getString("creationSource"))
+        assertEquals("what ot3 sends", "web", args.getString("creationSource"))
         assertEquals("start_immediately", args.getJSONObject("dispatchMode").getString("type"))
         assertEquals("auto", args.getString("deliveryIntent"))
         assertEquals("gpt-5", args.getJSONObject("modelSelection").getString("model"))
@@ -98,7 +98,6 @@ class MessageSenderTest {
 
         assertEquals(SendResult.Failed("rpc_rejected", "Thread is archived"), result)
         assertTrue(dao.rows.value.isEmpty())
-        assertEquals("mobile", sender.creationSource)
     }
 
     @Test
@@ -113,25 +112,16 @@ class MessageSenderTest {
     }
 
     @Test
-    fun aServerThatRejectsMobileGetsWebFromThenOn() = runTest {
+    fun aRejectionNamingCreationSourceIsNotRetriedWithAnotherValue() = runTest {
         val sender = MessageSender(OutboxRepository(dao), this, ids)
-        fake.onCall(MessageSender.DISPATCH) { args ->
-            if (args.getString("creationSource") == "mobile") {
-                throw T3Exception("rpc_rejected", "Expected \"web\" | \"mcp\" at [\"creationSource\"], actual \"mobile\"")
-            }
-            JSONObject().put("sequence", 3)
-        }
-        val transport = connected()
+        fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_rejected", "Expected \"mcp\" at [\"creationSource\"]") }
 
-        val result = sender.send(transport, "env-1", "t1", "Hello", null)
-        assertEquals(SendResult.Accepted("ot3a-3", 3), result)
-        assertEquals(listOf("mobile", "web"), fake.calls.map { it.args.getString("creationSource") })
-        assertEquals("fresh ids for the corrected command", "ot3a-4", fake.calls[1].args.getString("messageId"))
-        assertEquals("web", sender.creationSource)
+        val result = sender.send(connected(), "env-1", "t1", "Hello", null)
+
+        assertEquals("rpc_rejected", (result as SendResult.Failed).code)
+        assertEquals("sent once", 1, fake.calls.size)
+        assertEquals("web", fake.calls.single().args.getString("creationSource"))
         assertTrue(dao.rows.value.isEmpty())
-
-        sender.send(transport, "env-1", "t1", "Again", null)
-        assertEquals("web", fake.calls.last().args.getString("creationSource"))
     }
 
     @Test

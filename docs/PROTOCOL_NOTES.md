@@ -238,7 +238,7 @@ jittered backoff. `unauthorized`, `invalid_thread_id` and `http_404` wait for a 
 ```json
 {"type": "message.dispatch", "commandId": "ot3a-<uuid>", "threadId": "...",
  "messageId": "ot3a-<uuid>", "text": "...", "attachments": [], "createdBy": "user",
- "creationSource": "mobile", "dispatchMode": {"type": "start_immediately"},
+ "creationSource": "web", "dispatchMode": {"type": "start_immediately"},
  "deliveryIntent": "auto", "modelSelection": {"...": "the thread's current one"}}
 ```
 
@@ -249,9 +249,10 @@ jittered backoff. `unauthorized`, `invalid_thread_id` and `http_404` wait for a 
   `modelSelection` comes from `projection.thread` and is omitted when the thread has none.
 - The response `{sequence}` means **accepted**, not finished: the user message and the run
   arrive on the stream.
-- `creationSource: "mobile"` is accepted by the lib (`CREATION_SOURCES`). If the server
-  answers `rpc_rejected` naming `creationSource`, the sender switches to `"web"` for the rest
-  of the process and resends once with fresh ids.
+- `creationSource` is always `"web"`, what ot3 sends for a typed message (`src/write.rs`).
+  The lib's validator also allows `"mobile"` (`CREATION_SOURCES`), but no live server has
+  been seen accepting it, so it is not sent (unverified live). A rejection is never retried
+  with another value.
 - **Outbox**: `commandId` and `messageId` are minted once and the exact JSON is stored in
   Room (`outbox`) before sending, from the app scope under `NonCancellable`. Success deletes
   it. `rpc_outcome_unknown` keeps it (`state = "unknown"`) and offers **Resend**, which sends

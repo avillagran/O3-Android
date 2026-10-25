@@ -39,13 +39,6 @@ class MessageSender(
     private val scope: CoroutineScope,
     private val newId: () -> String = { ID_PREFIX + UUID.randomUUID() },
 ) {
-    /**
-     * `creationSource` of new messages: `mobile`, or `web` once a server rejected `mobile`
-     * (the lib accepts both; older servers may not know `mobile`).
-     */
-    @Volatile var creationSource: String = MOBILE
-        private set
-
     suspend fun send(
         transport: T3Transport?,
         environmentId: String,
@@ -56,14 +49,16 @@ class MessageSender(
         onPersisted: suspend () -> Unit = {},
     ): SendResult = detached {
         if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
-        val source = creationSource
-        val result = sendNew(transport, environmentId, threadId, text, modelSelection, source, onPersisted)
-        if (source == MOBILE && result is SendResult.Failed && result.rejectsCreationSource()) {
-            creationSource = WEB
-            sendNew(transport, environmentId, threadId, text, modelSelection, WEB, onPersisted)
-        } else {
-            result
+        val commandId = newId()
+        val args = messageCommand(commandId, newId(), threadId, text, modelSelection).toString()
+        outbox.add(environmentId, threadId, commandId, args)
+        try {
+            onPersisted()
+        } catch (error: Exception) {
+            // Only bookkeeping (the caller's draft): the command is persisted, so send it.
+            if (error is CancellationException) throw error
         }
+        dispatch(transport, commandId, args)
     }
 
     /** Resends a stored command byte-identical; only for an entry still in the outbox. */
@@ -93,27 +88,6 @@ class MessageSender(
         }
     }
 
-    private suspend fun sendNew(
-        transport: T3Transport,
-        environmentId: String,
-        threadId: String,
-        text: String,
-        modelSelection: String?,
-        source: String,
-        onPersisted: suspend () -> Unit,
-    ): SendResult {
-        val commandId = newId()
-        val args = messageCommand(commandId, newId(), threadId, text, modelSelection, source).toString()
-        outbox.add(environmentId, threadId, commandId, args)
-        try {
-            onPersisted()
-        } catch (error: Exception) {
-            // Only bookkeeping (the caller's draft): the command is persisted, so send it.
-            if (error is CancellationException) throw error
-        }
-        return dispatch(transport, commandId, args)
-    }
-
     private suspend fun dispatch(transport: T3Transport, commandId: String, commandJson: String): SendResult = try {
         val response = transport.call(DISPATCH, JSONObject(commandJson))
         outbox.remove(commandId)
@@ -140,8 +114,12 @@ class MessageSender(
     companion object {
         const val DISPATCH = "orchestration.dispatchCommand"
         const val ID_PREFIX = "ot3a-"
-        const val MOBILE = "mobile"
-        const val WEB = "web"
+
+        /**
+         * What ot3 sends for a message typed by the user. The lib also accepts `mobile`, but no
+         * live server has been seen accepting it (docs/PROTOCOL_NOTES.md).
+         */
+        const val CREATION_SOURCE = "web"
         const val OUTCOME_UNKNOWN = "rpc_outcome_unknown"
         const val NOT_CONNECTED = "not_connected"
 
@@ -158,7 +136,6 @@ class MessageSender(
             threadId: String,
             text: String,
             modelSelection: String?,
-            creationSource: String,
         ): JSONObject = JSONObject()
             .put("type", "message.dispatch")
             .put("commandId", commandId)
@@ -167,7 +144,7 @@ class MessageSender(
             .put("text", text)
             .put("attachments", JSONArray())
             .put("createdBy", "user")
-            .put("creationSource", creationSource)
+            .put("creationSource", CREATION_SOURCE)
             .put("dispatchMode", JSONObject().put("type", "start_immediately"))
             .put("deliveryIntent", "auto")
             .apply { if (modelSelection != null) put("modelSelection", JSONObject(modelSelection)) }
@@ -176,8 +153,5 @@ class MessageSender(
             ((response as? JSONObject)?.opt("sequence") as? Number)?.toLong()
 
         private fun T3Exception.toFailed() = SendResult.Failed(code, reason, requiredScope)
-
-        private fun SendResult.Failed.rejectsCreationSource(): Boolean =
-            code == "rpc_rejected" && reason.orEmpty().let { it.contains("creationSource") || it.contains("\"mobile\"") }
     }
 }
