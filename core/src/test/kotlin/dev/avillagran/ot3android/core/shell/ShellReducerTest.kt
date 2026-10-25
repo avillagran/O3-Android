@@ -8,7 +8,7 @@ import dev.avillagran.ot3android.core.shell.ShellFixtures.snapshot
 import dev.avillagran.ot3android.core.shell.ShellFixtures.thread
 import dev.avillagran.ot3android.core.shell.ShellFixtures.threadRemoved
 import dev.avillagran.ot3android.core.shell.ShellFixtures.threadUpdated
-import org.json.JSONArray
+import dev.avillagran.ot3android.core.transport.ThreadUpdates
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -19,7 +19,10 @@ class ShellReducerTest {
 
     private val base = snapshot(5, listOf(project("p1", identity = "repo")), listOf(thread("t1"), thread("t2")))
 
-    private fun reduced(vararg items: JSONObject): ShellState? = ShellReducer.applyAll(null, JSONArray(items.toList()))
+    private fun reduced(vararg items: JSONObject): ShellState? = apply(null, *items)
+
+    private fun apply(state: ShellState?, vararg items: JSONObject): ShellState? =
+        ShellReducer.reduce(state, ThreadUpdates.batch(*items))
 
     @Test
     fun snapshotReplacesTheShellAndSetsTheCursor() {
@@ -29,10 +32,10 @@ class ShellReducerTest {
         assertEquals(listOf("t1", "t2"), shell.threads.map { it.id })
         assertEquals("""{"canonicalKey":"repo"}""", shell.projects.single().repositoryIdentity)
 
-        val replaced = ShellReducer.apply(shell, snapshot(9, listOf(project("p2")), listOf(thread("t9"))))!!
+        val replaced = apply(shell, snapshot(9, listOf(project("p2")), listOf(thread("t9"))))!!
         assertEquals(9L, replaced.sequence)
         assertEquals(listOf("t9"), replaced.threads.map { it.id })
-        assertSame("an identical snapshot changes nothing", replaced, ShellReducer.apply(replaced, snapshot(9, listOf(project("p2")), listOf(thread("t9")))))
+        assertSame("an identical snapshot changes nothing", replaced, apply(replaced, snapshot(9, listOf(project("p2")), listOf(thread("t9")))))
     }
 
     @Test
@@ -88,8 +91,8 @@ class ShellReducerTest {
     fun eventsAtOrBelowTheCursorAreIgnored() {
         val shell = reduced(base, threadRemoved(6, "t2"))!!
 
-        assertSame(shell, ShellReducer.apply(shell, threadRemoved(6, "t1")))
-        assertSame(shell, ShellReducer.apply(shell, threadUpdated(3, thread("t9"))))
+        assertSame(shell, apply(shell, threadRemoved(6, "t1")))
+        assertSame(shell, apply(shell, threadUpdated(3, thread("t9"))))
     }
 
     @Test
@@ -108,7 +111,7 @@ class ShellReducerTest {
         assertEquals(listOf("t1"), shell.threads.map { it.id })
         assertEquals("""{"canonicalKey":"resolved"}""", shell.projects.single().repositoryIdentity)
 
-        val again = ShellReducer.apply(shell, refresh)
+        val again = apply(shell, refresh)
         assertSame("nothing new to merge", shell, again)
     }
 
@@ -123,7 +126,7 @@ class ShellReducerTest {
     @Test
     fun unknownItemsAreIgnored() {
         val shell = reduced(base)!!
-        assertSame(shell, ShellReducer.apply(shell, JSONObject().put("kind", "synchronized")))
-        assertSame(shell, ShellReducer.apply(shell, JSONObject().put("kind", "thread.whatever").put("sequence", 99)))
+        assertSame(shell, apply(shell, JSONObject().put("kind", "synchronized")))
+        assertSame(shell, apply(shell, JSONObject().put("kind", "thread.whatever").put("sequence", 99)))
     }
 }

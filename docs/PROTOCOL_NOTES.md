@@ -25,8 +25,9 @@ read-only. Counts below are from that server and only illustrate sizes.
    another server at the URL fails with `t3_environment_mismatch`.
 3. **`connect(Bearer(baseUrl, token))`** does no network I/O. A bad token only surfaces
    on the first request, as `T3Exception("unauthorized")` for both 401 and 403.
-4. **First request: the shell GET** (`request("/api/orchestration/shell")`; the lib adds
-   the protocol header). This is how the connect screen proves a token.
+4. **First request: the shell GET** (`T3Transport.shell()`, `GET /api/orchestration/shell`
+   through the lib, which adds the protocol header). This is how the connect screen
+   proves a token.
 
 Error codes the UI maps: `invalid_endpoint`; `unreachable` (network); `unauthorized`;
 `not_json` (answered, but probably not a T3 origin); `http_<code>` (any other status);
@@ -101,8 +102,10 @@ threads[], archivedThreads[]}`. Here: 16 projects, 216 threads, 0 archived, abou
   Because of the same-batch case, `ThreadUpdate.snapshot` (the batch's *last* snapshot)
   is the empty metadata one and the authoritative snapshot is lost, and the lib's
   cursor moves to the metadata frame's sequence (docs/LIB_REQUESTS.md). The app
-  therefore reduces `update.batch.items` itself, in order, and takes the cursor from its
-  reduced shell, not from `update.cursor`.
+  therefore reads every shell update through the `core.transport` adapter
+  `ShellUpdates.kt` (`shellSnapshot()`, `shellMetadata()`, `shellEvents()`,
+  `shellCursor(previous)`), which reads `update.batch.items` in order, and resumes from
+  `shellCursor`, not from `update.cursor`.
 - **Repaint** only on `update.repaint` (a server chunk ended or the stream is idle),
   never mid-chunk.
 

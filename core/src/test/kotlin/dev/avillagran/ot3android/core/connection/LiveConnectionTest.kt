@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.core.connection
 import dev.avillagran.ot3android.core.domain.Environment
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.NativeT3Transport
+import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.assumeHostJni
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +46,7 @@ class LiveConnectionTest {
                 environment = Environment(id = "live", label = "live", baseUrl = baseUrl, createdAt = 0),
                 token = { token },
                 cursorStore = cursors,
-                transportFactory = { NativeT3Transport() },
+                transportFactory = NativeT3TransportFactory(),
                 scope = scope,
             )
             supervisor.start()

@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.core.connection
 
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.T3Transport
+import dev.avillagran.ot3android.core.transport.T3TransportFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
@@ -66,7 +67,7 @@ private fun defaultScheme(hostAndRest: String): String {
  * One-shot checks for the connect screen, each on a fresh transport that is closed after.
  * Failures are the lib's `T3Exception`, unchanged.
  */
-class ServerProbe(private val transportFactory: () -> T3Transport) {
+class ServerProbe(private val transportFactory: T3TransportFactory) {
 
     /** The descriptor at [baseUrl]: proves it is a T3 server; needs no credential. */
     suspend fun check(baseUrl: String): ServerDescriptor = withTransport { transport ->
@@ -82,12 +83,12 @@ class ServerProbe(private val transportFactory: () -> T3Transport) {
         withTransport { transport ->
             val descriptor = ServerDescriptor.from(transport.fetchDescriptor(baseUrl, environmentId))
             transport.connect(ConnectRoute.Bearer(baseUrl, token))
-            transport.request(SHELL_PATH)
+            transport.shell()
             descriptor
         }
 
     private suspend fun <T> withTransport(block: suspend (T3Transport) -> T): T {
-        val transport = transportFactory()
+        val transport = transportFactory.create()
         try {
             return block(transport)
         } finally {
@@ -95,6 +96,3 @@ class ServerProbe(private val transportFactory: () -> T3Transport) {
         }
     }
 }
-
-/** The shell snapshot over HTTP; the lib adds the protocol header. */
-const val SHELL_PATH = "/api/orchestration/shell"

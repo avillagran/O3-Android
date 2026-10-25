@@ -2,7 +2,7 @@ package dev.avillagran.ot3android.core.connection
 
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.domain.Environment
-import dev.avillagran.ot3android.core.transport.T3Transport
+import dev.avillagran.ot3android.core.transport.T3TransportFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +24,7 @@ import kotlin.random.Random
 class ConnectionManager(
     private val repository: EnvironmentRepository,
     private val cursorStore: ShellCursorStore,
-    private val transportFactory: () -> T3Transport,
+    private val transportFactory: T3TransportFactory,
     private val scope: CoroutineScope,
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: Random = Random.Default,

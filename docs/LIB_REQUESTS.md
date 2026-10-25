@@ -426,8 +426,8 @@ threads[0]}]`, `boundaries=[2]`). `ThreadStream.poll` keeps only the last `snaps
 authoritative snapshot is not in the update at all; a host that follows the documented
 loop paints an empty sidebar. Metadata frames also recur later in a running stream (one
 for a single project, `resolvedRepositoryIdentityRoots[1]`; one subscription received
-13 `snapshot` items in 40 minutes, 11 of them after the first batch). ot3-Android works around it by reducing
-`update.batch.items` itself and taking the cursor from its reduced shell
-(`core/shell/ShellReducer.kt`, temporary); the proposed fix above (or item 3,
-`shell.reduce`) removes that.
+13 `snapshot` items in 40 minutes, 11 of them after the first batch). ot3-Android works around it with the same
+adapter (`core/transport/ShellUpdates.kt`, which reads `update.batch.items` in order and
+derives the cursor without the metadata frame); `ShellReducer` only consumes it. The
+proposed fix above (or item 3, `shell.reduce`) removes both.
 

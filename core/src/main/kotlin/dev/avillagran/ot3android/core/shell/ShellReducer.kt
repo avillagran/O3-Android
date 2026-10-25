@@ -4,7 +4,11 @@
 // shell behaviour goes into the lib, and this file is deleted when the lib ships item 3.
 package dev.avillagran.ot3android.core.shell
 
-import org.json.JSONArray
+import dev.avillagran.ot3android.core.transport.isShellMetadataOnly
+import dev.avillagran.ot3android.core.transport.shellEvents
+import dev.avillagran.ot3android.core.transport.shellMetadata
+import dev.avillagran.ot3android.core.transport.shellSnapshot
+import dev.avillagran.t3.ThreadUpdate
 import org.json.JSONObject
 
 /** A project row of the shell, reduced to what the sidebar reads. */
@@ -67,22 +71,24 @@ object ShellReducer {
         threads = body.objects("threads").mapNotNull(::thread),
     )
 
-    /** Applies the raw stream items of one poll, in server order. */
-    fun applyAll(state: ShellState?, items: JSONArray): ShellState? {
-        var current = state
-        for (i in 0 until items.length()) {
-            val item = items.optJSONObject(i) ?: continue
-            current = apply(current, item)
-        }
+    /**
+     * Applies one shell stream update. Read through the `ShellUpdates.kt` adapter (the
+     * stopgap for LIB_REQUESTS.md "v0.3.2 through the app's transport layer", finding 1): the
+     * authoritative snapshot, if any, replaces [state]; metadata-only snapshots only merge
+     * project identities; then the events apply in server order.
+     */
+    fun reduce(state: ShellState?, update: ThreadUpdate): ShellState? {
+        var current = update.shellSnapshot()?.let { replace(state, it) } ?: state
+        for (metadata in update.shellMetadata()) current = mergeIdentities(current, metadata)
+        for (event in update.shellEvents()) current = applyEvent(current, event)
         return current
     }
 
     /**
-     * Applies one stream item and returns the new state (the same instance when nothing
+     * Applies one stream event and returns the new state (the same instance when nothing
      * applies). Events wait for a snapshot and are ignored at or below [ShellState.sequence].
      */
-    fun apply(state: ShellState?, item: JSONObject): ShellState? = when (item.optString("kind")) {
-        "snapshot" -> snapshot(state, item)
+    fun applyEvent(state: ShellState?, item: JSONObject): ShellState? = when (item.optString("kind")) {
         "project.updated" -> event(state, item) { shell ->
             val next = item.optJSONObject("project")?.let(::project) ?: return@event shell
             val previous = shell.projects.firstOrNull { it.id == next.id }
@@ -109,10 +115,9 @@ object ShellReducer {
         else -> state
     }
 
-    private fun snapshot(state: ShellState?, item: JSONObject): ShellState? {
+    /** An authoritative `snapshot` item replaces the shell, keeping resolved identities. */
+    private fun replace(state: ShellState?, item: JSONObject): ShellState? {
         val body = item.optJSONObject("snapshot") ?: return state
-        val roots = item.optJSONArray("resolvedRepositoryIdentityRoots")
-        if (roots != null) return mergeIdentities(state, body, roots)
         val next = parse(body)
         if (state == null) return next
         val merged = next.copy(
@@ -122,13 +127,16 @@ object ShellReducer {
     }
 
     /**
-     * A snapshot with `resolvedRepositoryIdentityRoots` is metadata only: its `threads` is
-     * empty and its sequence must not move the cursor ("a resume prefix must not skip
-     * replayed events"). It only refreshes project identities.
+     * A metadata-only snapshot ([isShellMetadataOnly]): its `threads` is empty and its
+     * sequence does not move the cursor ("a resume prefix must not skip replayed events").
+     * It only refreshes the identities of the projects named in its
+     * `resolvedRepositoryIdentityRoots`, or fills ones still unresolved.
      */
-    private fun mergeIdentities(state: ShellState?, body: JSONObject, roots: JSONArray): ShellState? {
+    private fun mergeIdentities(state: ShellState?, item: JSONObject): ShellState? {
         state ?: return null
-        val resolved = (0 until roots.length()).mapNotNull { roots.optString(it, null) }.toSet()
+        val body = item.optJSONObject("snapshot") ?: return state
+        val roots = item.optJSONArray("resolvedRepositoryIdentityRoots")
+        val resolved = (0 until (roots?.length() ?: 0)).mapNotNull { roots?.optString(it, null) }.toSet()
         val candidates = body.objects("projects").mapNotNull(::project).associateBy { it.id }
         var changed = false
         val projects = state.projects.map { project ->

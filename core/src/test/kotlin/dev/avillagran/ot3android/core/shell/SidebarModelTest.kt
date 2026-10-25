@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.core.shell
 import dev.avillagran.ot3android.core.shell.ShellFixtures.project
 import dev.avillagran.ot3android.core.shell.ShellFixtures.snapshot
 import dev.avillagran.ot3android.core.shell.ShellFixtures.thread
+import dev.avillagran.ot3android.core.transport.ThreadUpdates
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,7 +13,7 @@ import org.junit.Test
 class SidebarModelTest {
 
     private fun shell(vararg threads: JSONObject, projects: List<JSONObject> = listOf(project("p1", "Alpha"), project("p2", "Beta"))) =
-        ShellReducer.apply(null, snapshot(1, projects, threads.toList()))!!
+        ShellReducer.reduce(null, ThreadUpdates.batch(snapshot(1, projects, threads.toList())))!!
 
     private fun row(vararg fields: Pair<String, Any?>) = shell(thread("t", "p1", *fields)).threads.single()
 

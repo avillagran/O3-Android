@@ -10,12 +10,12 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.avillagran.ot3android.R
-import dev.avillagran.ot3android.core.connection.SHELL_PATH
 import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.testing.FakeEnvironmentDao
 import dev.avillagran.ot3android.testing.FakeTokenStore
 import dev.avillagran.ot3android.testing.fakeRepository
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
+import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import dev.avillagran.t3.T3Exception
 import org.json.JSONArray
@@ -36,10 +36,10 @@ class ConnectScreenTest {
     private val baseUrl = "http://192.168.1.20:3773"
     private val secret = "very-secret-token-0123"
     private val fake = FakeT3Transport().apply {
-        onDescriptor(baseUrl) {
+        onFetchDescriptor(baseUrl) {
             JSONObject().put("environmentId", "env-1").put("label", "Workstation").put("serverVersion", "0.1.3")
         }
-        onRequest(SHELL_PATH) {
+        onShell {
             JSONObject().put("snapshotSequence", 1).put("projects", JSONArray()).put("threads", JSONArray())
         }
     }
@@ -48,7 +48,7 @@ class ConnectScreenTest {
     private val saved = mutableListOf<String>()
 
     private fun show(): ConnectViewModel {
-        val viewModel = ConnectViewModel(ServerProbe { fake }, fakeRepository(dao, tokens), editingId = null, onSaved = {})
+        val viewModel = ConnectViewModel(ServerProbe(FakeT3TransportFactory { fake }), fakeRepository(dao, tokens), editingId = null, onSaved = {})
         composeRule.setContent {
             Ot3Theme { ConnectScreen(viewModel = viewModel, onSaved = { saved += it }, onBack = null) }
         }
@@ -89,7 +89,7 @@ class ConnectScreenTest {
 
     @Test
     fun aRejectedTokenIsReportedAndNeverShown() {
-        fake.onRequest(SHELL_PATH) { throw T3Exception("unauthorized") }
+        fake.onShell { throw T3Exception("unauthorized") }
         show()
         composeRule.onNodeWithTag(ConnectScreenTags.URL).performTextInput(baseUrl)
         composeRule.onNodeWithTag(ConnectScreenTags.TOKEN).performTextInput(secret)
@@ -104,7 +104,7 @@ class ConnectScreenTest {
 
     @Test
     fun unreachableAndHttpErrorsAreMapped() {
-        fake.onDescriptor(baseUrl) { throw T3Exception("http_502") }
+        fake.onFetchDescriptor(baseUrl) { throw T3Exception("http_502") }
         show()
         composeRule.onNodeWithTag(ConnectScreenTags.URL).performTextInput(baseUrl)
 

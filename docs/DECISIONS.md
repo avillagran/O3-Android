@@ -197,7 +197,7 @@ factory, the fake's scripting). Supersedes the entry above.
   `wakeSubscriptions` on `ON_RESUME` and on default-network changes.
 - **Shell cursor in DataStore** (`ShellCursorPreferences`, file `connection`, key
   `shell_cursor:<local id>`), written on repaint when it moved and removed with the
-  environment or when its URL changes. The cursor is the reduced shell's sequence, not
+  environment or when its URL changes. The cursor is `shellCursor`, not
   `update.cursor`, because the lib moves its cursor on metadata-only snapshots
   (LIB_REQUESTS.md). Today a cold start still takes the shell over HTTP (the shell itself
   is only in memory); the persisted cursor is what a cached shell will resume from.
@@ -211,6 +211,11 @@ factory, the fake's scripting). Supersedes the entry above.
   sidebar rules), each with a header naming LIB_REQUESTS.md phase 1 item 3. `Backoff`
   mirrors the lib's `reconnect::Backoff` (item 5). These do not grow; they are deleted
   when the lib exposes `shell.reduce`/`sidebar.view` and the reconnect policy.
+- **`core/transport/ShellUpdates.kt` is the one stopgap for the metadata-only shell
+  snapshot** (LIB_REQUESTS.md, "v0.3.2 through the app's transport layer", finding 1).
+  `ShellReducer.reduce(state, update)` and the supervisor's cursor read updates only
+  through it (`shellSnapshot`, `shellMetadata`, `shellEvents`, `shellCursor`); neither
+  detects metadata frames itself.
 - `room-runtime` is now an `api` dependency of `core`, since `Ot3Database` is part of
   its public surface and `AppGraph` builds the repository from it.
 

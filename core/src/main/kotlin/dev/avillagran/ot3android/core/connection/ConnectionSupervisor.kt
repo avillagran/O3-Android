@@ -5,6 +5,8 @@ import dev.avillagran.ot3android.core.shell.ShellReducer
 import dev.avillagran.ot3android.core.shell.ShellState
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.T3Transport
+import dev.avillagran.ot3android.core.transport.T3TransportFactory
+import dev.avillagran.ot3android.core.transport.shellCursor
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -23,7 +25,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import org.json.JSONObject
 import kotlin.random.Random
 
 /** Connection state of one environment, as the UI shows it. */
@@ -57,9 +58,10 @@ sealed interface ConnectionState {
  * - anything else (`stream_closed`, `http_<n>`, ...) drops the shell and starts over with a
  *   fresh snapshot.
  *
- * Stream items are applied with [ShellReducer] (raw, in order, so a metadata-only snapshot
- * never replaces the shell or moves the cursor) and [shell] is published only on the
- * update's `repaint`, never mid-chunk. The cursor is persisted in [cursorStore] on repaint.
+ * Stream updates are applied with [ShellReducer.reduce] and the resume cursor follows
+ * `shellCursor`, both through the `ShellUpdates.kt` adapter, so a metadata-only snapshot
+ * never replaces the shell or moves the cursor. [shell] is published only on the update's
+ * `repaint`, never mid-chunk. The cursor is persisted in [cursorStore] on repaint.
  *
  * Pure Kotlin (no Android types); runs in [scope]. The token is read through [token] at each
  * run and never logged.
@@ -68,7 +70,7 @@ class ConnectionSupervisor(
     environment: Environment,
     private val token: suspend () -> String?,
     private val cursorStore: ShellCursorStore,
-    private val transportFactory: () -> T3Transport,
+    private val transportFactory: T3TransportFactory,
     private val scope: CoroutineScope,
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: Random = Random.Default,
@@ -92,6 +94,9 @@ class ConnectionSupervisor(
 
     /** The shell as applied so far; [shell] catches up with it on repaint. */
     private var held: ShellState? = null
+
+    /** Where the shell stream resumes (`afterSequence`) for [held]; see `shellCursor`. */
+    private var cursor: Long? = null
     private val shellLock = Mutex()
     private var persistedCursor: Long? = null
 
@@ -140,13 +145,13 @@ class ConnectionSupervisor(
             retry()
             throw T3Exception("not_connected")
         }
-        val fresh = ShellReducer.parse(current.request(SHELL_PATH) as JSONObject)
-        publish { fresh }
+        val fresh = ShellReducer.parse(current.shell())
+        publish(fresh)
     }
 
     private suspend fun run() {
         val backoff = Backoff(random)
-        val client = transportFactory()
+        val client = transportFactory.create()
         transport = client
         try {
             while (true) {
@@ -182,10 +187,7 @@ class ConnectionSupervisor(
             val descriptor = ServerDescriptor.from(client.fetchDescriptor(baseUrl, serverEnvironmentId))
             val secret = token() ?: return MISSING_TOKEN
             client.connect(ConnectRoute.Bearer(baseUrl, secret))
-            if (shellLock.withLock { held } == null) {
-                val fresh = ShellReducer.parse(client.request(SHELL_PATH) as JSONObject)
-                publish { fresh }
-            }
+            if (shellLock.withLock { held } == null) publish(ShellReducer.parse(client.shell()))
             if (serverEnvironmentId == null) serverEnvironmentId = descriptor.environmentId
             _state.value = ConnectionState.Connected(descriptor)
             try {
@@ -195,11 +197,12 @@ class ConnectionSupervisor(
             }
 
             var closedWith: String? = null
-            val after = shellLock.withLock { held?.sequence }
+            val after = shellLock.withLock { cursor }
             client.shellStream(afterSequence = after).collect { update ->
                 if (connectedAt == null) connectedAt = clock()
                 shellLock.withLock {
-                    held = ShellReducer.applyAll(held, update.batch.items)
+                    held = ShellReducer.reduce(held, update)
+                    cursor = update.shellCursor(cursor)
                     if (update.repaint || update.closed) showHeld()
                 }
                 if (update.closed) closedWith = update.error ?: STREAM_CLOSED
@@ -212,18 +215,20 @@ class ConnectionSupervisor(
         }
     }
 
-    private suspend fun publish(change: (ShellState?) -> ShellState?) = shellLock.withLock {
-        held = change(held)
+    /** Replaces the held shell with one read over HTTP, and resumes after its sequence. */
+    private suspend fun publish(fresh: ShellState) = shellLock.withLock {
+        held = fresh
+        cursor = fresh.sequence
         showHeld()
     }
 
-    /** Publishes [held] and persists its cursor when it moved. Call with [shellLock] held. */
+    /** Publishes [held] and persists [cursor] when it moved. Call with [shellLock] held. */
     private suspend fun showHeld() {
         _shell.value = held
-        val cursor = held?.sequence ?: return
-        if (cursor != persistedCursor) {
-            cursorStore.setCursor(environmentId, cursor)
-            persistedCursor = cursor
+        val at = cursor ?: return
+        if (at != persistedCursor) {
+            cursorStore.setCursor(environmentId, at)
+            persistedCursor = at
         }
     }
 
@@ -231,6 +236,7 @@ class ConnectionSupervisor(
     private suspend fun reset() {
         shellLock.withLock {
             held = null
+            cursor = null
             _shell.value = null
             persistedCursor = null
         }

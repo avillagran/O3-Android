@@ -9,11 +9,15 @@ import org.json.JSONObject
  * Builds [ThreadUpdate]s over a minimal [T3Batch], for [FakeT3Transport] scripts and for the
  * closed update the native transport emits when a poll fails. Items are split the way
  * `ThreadStream.poll` splits them: the last `snapshot` item is [ThreadUpdate.snapshot], the
- * items after it (except `synchronized`) are [ThreadUpdate.events]. Every batch ends a chunk.
+ * items after it (except `synchronized`) are [ThreadUpdate.events]. A batch with items ends a
+ * chunk unless `repaint = false`.
  */
 object ThreadUpdates {
 
-    /** One poll carrying [items] in server order. */
+    /**
+     * One poll carrying [items] in server order. [repaint] false makes it a mid-chunk poll (no
+     * chunk boundary), so a host must not paint it; an idle poll repaints anyway.
+     */
     fun batch(
         vararg items: JSONObject,
         cursor: Long? = null,
@@ -23,6 +27,7 @@ object ThreadUpdates {
         closed: Boolean = false,
         error: String? = null,
         errorMessage: String? = null,
+        repaint: Boolean = true,
     ): ThreadUpdate {
         var snapshot: JSONObject? = null
         val events = mutableListOf<JSONObject>()
@@ -34,7 +39,7 @@ object ThreadUpdates {
                 else -> events.add(item)
             }
         }
-        val boundaries = if (items.isEmpty()) emptyList() else listOf(items.size)
+        val boundaries = if (items.isEmpty() || !repaint) emptyList() else listOf(items.size)
         val batch = T3Batch(
             items = JSONArray(items.toList()), closed = closed, error = error, errorMessage = errorMessage,
             boundaries = boundaries, idle = idle, completionMarker = completionMarker, cursor = cursor, start = start,
