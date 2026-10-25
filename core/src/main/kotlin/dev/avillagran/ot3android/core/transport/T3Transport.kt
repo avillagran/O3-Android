@@ -16,7 +16,7 @@ import java.io.Closeable
  *
  * Results are the lib's own JSON (`org.json`); `describe()` documents every function.
  */
-interface T3Transport : Closeable {
+interface T3Transport : DomainCalls, Closeable {
 
     /**
      * Connects (or switches) this handle. A failed switch keeps the previous session and its
@@ -36,6 +36,13 @@ interface T3Transport : Closeable {
 
     /** The typed API registry: functions, arguments, scopes, replay rules and streams. Offline. */
     suspend fun describe(): JSONObject
+
+    /**
+     * A pure domain function from `describe().domain` ([DomainCalls]). Offline: it needs no
+     * [connect] and keeps working after [disconnect]. UI state builders that hold no
+     * transport use [DomainEngine.shared] instead.
+     */
+    override suspend fun domain(fn: String, args: JSONObject): Any?
 
     /**
      * A typed function from [describe], validated in Rust before any socket and sent once.

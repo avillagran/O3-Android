@@ -22,8 +22,8 @@ import java.util.concurrent.CopyOnWriteArrayList
  * Scripted [T3Transport] for domain and ViewModel tests; no native code. Answers are
  * registered per function (or for the shell) as `suspend` lambdas and may throw
  * [T3Exception] to script failures. Calls that need a connection fail with `not_connected`
- * before [connect], like the lib; unscripted ones fail with `unknown_function`. Every method
- * call is recorded in [log].
+ * before [connect], like the lib; [domain] needs none. Unscripted calls and domain functions
+ * fail with `unknown_function`. Every method call is recorded in [log].
  *
  * Streams: each target (the shell, or one thread) has a hot flow that the test drives with
  * [emitShell], [emitThread] and [emitError] once [collectors] shows the subscriber; an `emit*`
@@ -68,6 +68,7 @@ class FakeT3Transport(
         private set
 
     private val functions = ConcurrentHashMap<String, suspend (JSONObject) -> Any?>()
+    private val domainFunctions = ConcurrentHashMap<String, suspend (JSONObject) -> Any?>()
     private val descriptors = ConcurrentHashMap<String, suspend () -> JSONObject>()
     private val threads = ConcurrentHashMap<String, suspend () -> JSONObject>()
     @Volatile private var shell: (suspend () -> JSONObject)? = null
@@ -86,6 +87,9 @@ class FakeT3Transport(
     val openStreams: StateFlow<Int> = open.asStateFlow()
 
     fun onCall(fn: String, answer: suspend (args: JSONObject) -> Any?) { functions[fn] = answer }
+
+    /** Scripts the domain function [fn]; [answer] may delegate to [DomainEngine] to run the real lib. */
+    fun onDomain(fn: String, answer: suspend (args: JSONObject) -> Any?) { domainFunctions[fn] = answer }
     fun onShell(answer: suspend () -> JSONObject) { shell = answer }
     fun onFetchDescriptor(baseUrl: String, answer: suspend () -> JSONObject) { descriptors[baseUrl] = answer }
     fun onBoundedThread(threadId: String, answer: suspend () -> JSONObject) { threads[threadId] = answer }
@@ -149,6 +153,12 @@ class FakeT3Transport(
         calls.add(Call(fn, args, timeoutMs))
         val answer = functions[fn] ?: throw T3Exception("unknown_function", "not scripted: $fn")
         requireConnected()
+        return answer(args)
+    }
+
+    override suspend fun domain(fn: String, args: JSONObject): Any? {
+        record("domain", fn, args)
+        val answer = domainFunctions[fn] ?: throw T3Exception("unknown_function", "not scripted: $fn")
         return answer(args)
     }
 

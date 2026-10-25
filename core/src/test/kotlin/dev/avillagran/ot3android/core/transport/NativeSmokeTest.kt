@@ -59,6 +59,19 @@ class NativeSmokeTest {
     }
 
     @Test
+    fun domainRunsWithoutAConnection() = runBlocking {
+        assertEquals("O3", transport.domain("projects.monogram", JSONObject().put("name", "ot3-android")))
+    }
+
+    @Test
+    fun domainValidatesArguments() {
+        val unknown = assertThrows(T3Exception::class.java) { runBlocking { transport.domain("sidebar.nope", JSONObject()) } }
+        assertEquals("unknown_function", unknown.code)
+        val missing = assertThrows(T3Exception::class.java) { runBlocking { transport.domain("timeline.view", JSONObject()) } }
+        assertEquals("invalid_projection", missing.code)
+    }
+
+    @Test
     fun callValidatesArgumentsBeforeConnecting() {
         val error = assertThrows(T3Exception::class.java) {
             runBlocking { transport.call("vcs.refreshStatus", JSONObject().put("cwd", "")) }
