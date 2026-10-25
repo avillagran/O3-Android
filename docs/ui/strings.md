@@ -54,3 +54,16 @@ ot3's sentence case and tone.
 | `mobile_select_thread` | Select a thread | the desktop always shows one | `t3m:src/features/layout/WorkspaceEmptyDetail.tsx:46` |
 | `mobile_show_more_settled` | Show more ({count} settled hidden) | ot3 scrolls a separate shelf | `t3m:src/features/threads/thread-list-v2-items.tsx:283-303` |
 | `mobile_notifications_permission` | Allow notifications to hear when a thread needs you | desktop notifications need no permission | `t3m:src/features/settings/SettingsNotificationsRouteScreen.tsx:405-455` |
+| `mobile_tab_chats` | Chats | ot3 has a sidebar, not tabs (PRs and Settings use ot3's "Pull requests" and "Settings") | `t3m:modules/t3-native-controls/android/src/main/java/expo/modules/t3nativecontrols/T3WorkspaceNavigationModule.kt:358` |
+| `mobile_syncing_threads` | Syncing threads… | ot3 shows a sidebar health dot only | `t3m:src/features/home/workspace-connection-status.ts:22,32` |
+| `mobile_loading_threads` | Loading threads… | same | `t3m:src/features/home/workspace-connection-status.ts:22,32` |
+| `mobile_reconnecting_envs` | Reconnecting {count} environments… | same | `t3m:src/features/home/workspace-connection-status.ts:28` |
+| `mobile_you_are_offline` | You are offline | the desktop has no device network state | `t3m:src/features/home/workspace-connection-status.ts:20` |
+| `mobile_thread_list_options` | Thread list options | ot3's filter is a popup without a title | `t3m:src/features/home/home-list-filter-menu.ts:88` |
+| `mobile_filter_environment` | Environment | ot3 filters by status and project only | `t3m:src/features/home/home-list-filter-menu.ts:44` |
+| `mobile_no_environments` | No environments connected | ot3 always has its local backend | `t3m:src/features/home/HomeScreen.tsx:160` |
+| `mobile_connecting_environment` | Connecting to environment | same | `t3m:src/features/home/HomeScreen.tsx:191` |
+| `mobile_env_connecting` | Connecting… | ot3's connection rows show Connected, Offline or Disabled | `t3m:src/features/connection/connectionTone.ts:20` |
+| `mobile_env_connection_failed` | Connection failed | same | `t3m:src/features/connection/connectionTone.ts:32` |
+| `mobile_env_retrying_attempt` | Retrying · attempt {n} | same | `t3m:src/features/connection/ConnectionEnvironmentRow.tsx:134` |
+| `mobile_component_catalog` | UI components | the debug catalog is T3 Mobile's | `t3m:src/Stack.tsx:703` |
