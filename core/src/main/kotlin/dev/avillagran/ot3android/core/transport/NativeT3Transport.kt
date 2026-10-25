@@ -1,6 +1,5 @@
 package dev.avillagran.ot3android.core.transport
 
-import dev.avillagran.t3.T3Batch
 import dev.avillagran.t3.T3Client
 import dev.avillagran.t3.T3Exception
 import dev.avillagran.t3.ThreadStream
@@ -19,7 +18,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -145,12 +143,7 @@ class NativeT3Transport(
                 error is IllegalStateException && error.message == "client_closed" -> null to null
                 else -> return null
             }
-            val batch = T3Batch(JSONArray(), closed = true, error = code, errorMessage = reason, cursor = cursor, start = start)
-            return ThreadUpdate(
-                snapshot = null, events = emptyList(), repaint = false, synchronized = false, cursor = cursor,
-                start = start, idle = false, completionMarker = false, closed = true, error = code,
-                errorMessage = reason, batch = batch,
-            )
+            return ThreadUpdates.closed(code, cursor = cursor, errorMessage = reason, start = start)
         }
 
         /** A poll that timed out with nothing new: no items, no chunk end, same flags. */

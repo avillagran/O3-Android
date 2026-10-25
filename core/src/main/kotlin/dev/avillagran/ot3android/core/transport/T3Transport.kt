@@ -98,7 +98,13 @@ interface T3Transport : Closeable {
     override fun close()
 }
 
-/** How [T3Transport.connect] reaches an environment. Credentials never appear in [toString]. */
+/**
+ * How [T3Transport.connect] reaches an environment. Credentials never appear in [toString].
+ *
+ * `options` is an `org.json.JSONObject`, which has reference equality: two routes with equal
+ * option contents are not `==` unless they share the same instance. Compare routes without
+ * options, or keep one options instance per environment.
+ */
 sealed class ConnectRoute {
 
     /**
