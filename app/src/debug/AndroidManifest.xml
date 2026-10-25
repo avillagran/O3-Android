@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the component catalog (UI_SPEC 3.9) as a second launcher entry. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".debug.catalog.ComponentCatalogActivity"
+            android:exported="true"
+            android:label="@string/mobile_component_catalog"
+            android:taskAffinity="dev.avillagran.ot3android.catalog">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
