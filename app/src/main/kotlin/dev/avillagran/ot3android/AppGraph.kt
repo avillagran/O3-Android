@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -74,6 +75,12 @@ class AppGraph(
 
     /** Sends in [appScope], so a send survives its screen. */
     val messageSender: MessageSender by lazy { MessageSender(outboxRepository, appScope) }
+
+    init {
+        // A send cut by the previous process dying has an unknown outcome: offer Resend.
+        val startedAt = System.currentTimeMillis()
+        appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
+    }
 
     private companion object {
         const val TAG = "Ot3AppGraph"

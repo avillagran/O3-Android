@@ -142,4 +142,26 @@ class ThreadComposerTest {
         answer.complete(JSONObject())
         runCurrent()
     }
+
+    @Test
+    fun aSendCutByACrashComesBackUnconfirmedAtTheNextStart() = runTest {
+        // The previous process persisted the command, cleared the draft, and died mid-send.
+        val before = OutboxEntity("ot3a-old", "env-1", "t1", """{"text":"Hello"}""", 1_000, OutboxEntity.STATE_SENDING)
+        outboxDao.insert(before)
+        // A send of this process that is still in flight is left alone.
+        outboxDao.insert(before.copy(id = "ot3a-new", createdAt = 5_000))
+
+        assertEquals(1, OutboxRepository(outboxDao).recoverInterrupted(startedAt = 2_000))
+        val composer = composer()
+
+        assertEquals(listOf("ot3a-old"), composer.state.value.unconfirmed.map { it.commandId })
+        assertEquals(OutboxEntity.STATE_SENDING, outboxDao.rows.value.getValue("ot3a-new").state)
+        assertEquals("", composer.state.value.draft)
+        composer.onDraftChange("Hello")
+        assertFalse("held until the old one is resolved", composer.send(null))
+
+        composer.discard("ot3a-old")
+        runCurrent()
+        assertTrue(composer.state.value.canSend)
+    }
 }

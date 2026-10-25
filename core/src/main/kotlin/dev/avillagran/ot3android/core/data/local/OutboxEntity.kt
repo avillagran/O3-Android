@@ -22,7 +22,7 @@ data class OutboxEntity(
     val state: String,
 ) {
     companion object {
-        /** Persisted and being sent; after a process death it is as unknown as [STATE_UNKNOWN]. */
+        /** Persisted and being sent; at the next process start it becomes [STATE_UNKNOWN]. */
         const val STATE_SENDING = "sending"
 
         /** Sent, but the server's answer was lost (`rpc_outcome_unknown`). */

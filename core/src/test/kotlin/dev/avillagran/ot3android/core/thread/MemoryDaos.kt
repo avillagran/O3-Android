@@ -29,6 +29,22 @@ class MemoryOutboxDao : OutboxDao {
         rows.update { all -> all[id]?.let { all + (id to it.copy(state = state)) } ?: all }
 
     override suspend fun deleteById(id: String) = rows.update { it - id }
+
+    override suspend fun markInterrupted(before: Long): Int {
+        var changed = 0
+        rows.update { all ->
+            changed = 0
+            all.mapValues { (_, row) ->
+                if (row.state == OutboxEntity.STATE_SENDING && row.createdAt < before) {
+                    changed++
+                    row.copy(state = OutboxEntity.STATE_UNKNOWN)
+                } else {
+                    row
+                }
+            }
+        }
+        return changed
+    }
 }
 
 /** The drafts table in memory. */

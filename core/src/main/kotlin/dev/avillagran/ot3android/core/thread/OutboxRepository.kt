@@ -38,6 +38,13 @@ class OutboxRepository(private val dao: OutboxDao, private val clock: () -> Long
 
     suspend fun remove(commandId: String) = dao.deleteById(commandId)
 
+    /**
+     * At process start: a command still `sending` from before [startedAt] was cut by the
+     * process dying, so whether the server got it is unknown. Marks those `unknown`, which
+     * offers Resend and Discard and holds new sends for their thread.
+     */
+    suspend fun recoverInterrupted(startedAt: Long): Int = dao.markInterrupted(startedAt)
+
     fun observeThread(environmentId: String, threadId: String): Flow<List<PendingCommand>> =
         dao.observeThread(environmentId, threadId).map { rows -> rows.map { it.toPending() } }
 }
