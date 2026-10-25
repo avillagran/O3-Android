@@ -47,8 +47,8 @@ class SidebarModelTest {
     fun pinnedFirstByOrderKeyThenTheRestNewestFirst() {
         val sidebar = SidebarModel.build(
             shell(
-                thread("old", "p1", "updatedAt" to "2026-10-20T00:00:00.000Z"),
-                thread("new", "p1", "updatedAt" to "2026-10-24T00:00:00.000Z"),
+                thread("old", "p1", "createdAt" to "2026-10-20T00:00:00.000Z"),
+                thread("new", "p1", "createdAt" to "2026-10-24T00:00:00.000Z"),
                 thread("pinB", "p1", "pinnedAt" to "2026-10-01T00:00:00.000Z", "pinOrderKey" to "b"),
                 thread("pinA", "p1", "pinnedAt" to "2026-10-02T00:00:00.000Z", "pinOrderKey" to "a"),
                 thread("pinA2", "p1", "pinnedAt" to "2026-10-03T00:00:00.000Z", "pinOrderKey" to "a"),
@@ -64,9 +64,9 @@ class SidebarModelTest {
     fun activeIsGroupedByProjectMostRecentFirstAndSettledIsSeparate() {
         val sidebar = SidebarModel.build(
             shell(
-                thread("a1", "p1", "updatedAt" to "2026-10-20T00:00:00.000Z"),
-                thread("b1", "p2", "updatedAt" to "2026-10-23T00:00:00.000Z"),
-                thread("x1", "gone", "updatedAt" to "2026-10-21T00:00:00.000Z"),
+                thread("a1", "p1", "createdAt" to "2026-10-20T00:00:00.000Z"),
+                thread("b1", "p2", "createdAt" to "2026-10-23T00:00:00.000Z"),
+                thread("x1", "gone", "createdAt" to "2026-10-21T00:00:00.000Z"),
                 thread("s-old", "p1", "settledAt" to "2026-10-10T00:00:00.000Z"),
                 thread("s-new", "p2", "settledAt" to "2026-10-22T00:00:00.000Z"),
             ),
@@ -80,11 +80,53 @@ class SidebarModelTest {
     @Test
     fun rowStatus() {
         assertEquals(RowStatus.NeedsYou, SidebarModel.status(row("pendingRuntimeRequest" to JSONObject().put("kind", "approval"), "status" to "running")))
+        assertEquals(RowStatus.NeedsYou, SidebarModel.status(row("pendingRuntimeRequest" to JSONObject().put("kind", "user_input").put("blocking", true))))
+        assertEquals(
+            "an async question does not hold the thread",
+            RowStatus.Working,
+            SidebarModel.status(row("pendingRuntimeRequest" to JSONObject().put("kind", "user_input").put("blocking", false), "status" to "running")),
+        )
+        assertEquals(RowStatus.Quiet, SidebarModel.status(row("pendingRuntimeRequest" to JSONObject().put("kind", "auth_refresh"))))
         assertEquals(RowStatus.Working, SidebarModel.status(row("activeRunId" to "run-1")))
         assertEquals(RowStatus.Working, SidebarModel.status(row("status" to "running")))
         assertEquals(RowStatus.Failed, SidebarModel.status(row("status" to "failed")))
-        assertEquals(RowStatus.Failed, SidebarModel.status(row("lastError" to "boom")))
+        assertEquals(RowStatus.Failed, SidebarModel.status(row("status" to "error")))
+        assertEquals("lastError alone is not a failure", RowStatus.Quiet, SidebarModel.status(row("lastError" to "boom")))
         assertEquals(RowStatus.Quiet, SidebarModel.status(row("status" to "completed")))
         assertEquals(RowStatus.Quiet, SidebarModel.status(row("status" to "some-future-status")))
+    }
+
+    @Test
+    fun activeRowsFollowTheInboxAnchorThenTheActiveOrderKeyNeverUpdatedAt() {
+        val sidebar = SidebarModel.build(
+            shell(
+                thread("keyB", "p1", "activeOrderKey" to "b"),
+                thread("keyA", "p1", "activeOrderKey" to "a"),
+                // updatedAt moves on metadata writes: it must not lift a row.
+                thread("touched", "p1", "createdAt" to "2026-10-01T00:00:00.000Z", "updatedAt" to "2026-10-30T00:00:00.000Z"),
+                thread("ran", "p1", "createdAt" to "2026-10-01T00:00:00.000Z", "latestRunCompletedAt" to "2026-10-20T00:00:00.000Z"),
+                thread("asked", "p1", "createdAt" to "2026-10-01T00:00:00.000Z", "latestRunRequestedAt" to "2026-10-22T00:00:00.000Z"),
+                thread("reopened", "p1", "createdAt" to "2026-10-01T00:00:00.000Z", "unsettledAt" to "2026-10-21T00:00:00.000Z"),
+            ),
+        )
+
+        assertEquals(
+            listOf("asked", "reopened", "ran", "touched", "keyA", "keyB"),
+            sidebar.active.single().rows.map { it.thread.id },
+        )
+    }
+
+    @Test
+    fun settledRowsSortBySettledThenLastRunThenLastMessageThenUpdated() {
+        val sidebar = SidebarModel.build(
+            shell(
+                thread("settled", "p1", "settledOverride" to "settled", "settledAt" to "2026-10-10T00:00:00.000Z"),
+                thread("run", "p1", "settledOverride" to "settled", "latestRunCompletedAt" to "2026-10-12T00:00:00.000Z"),
+                thread("message", "p1", "settledOverride" to "settled", "latestUserMessageAt" to "2026-10-11T00:00:00.000Z"),
+                thread("updated", "p1", "settledOverride" to "settled", "updatedAt" to "2026-10-09T00:00:00.000Z"),
+            ),
+        )
+
+        assertEquals(listOf("run", "message", "settled", "updated"), sidebar.settled.map { it.thread.id })
     }
 }

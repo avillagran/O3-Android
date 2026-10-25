@@ -67,8 +67,9 @@ threads[], archivedThreads[]}`. Here: 16 projects, 216 threads, 0 archived, abou
 - `settledOverride`: `"settled"`, `"active"`, `true` or null (seen as a string).
   `relationshipToParent`: `"fork"`, `"subagent"` or null (186 of the 216 threads here
   are subagents).
-- Timestamps are ISO-8601 strings (`toISOString()`, UTC with milliseconds), so they
-  sort as text.
+- Timestamps are ISO-8601 strings (`toISOString()`, UTC with milliseconds). The app
+  reads them as epoch milliseconds when it parses a row (ISO-8601 with any offset, or an
+  epoch-millisecond number, as the lib's `stamp` does) and never compares them as text.
 
 ### Shell stream
 
@@ -142,19 +143,26 @@ threads[], archivedThreads[]}`. Here: 16 projects, 216 threads, 0 archived, abou
 
 ### Sidebar (minimum, temporary)
 
-From ot3, kept in `core/shell/SidebarModel.kt` until the lib exposes the sidebar view:
+An approximation of the lib's `src/sidebar.rs` (`sort_timestamps`, `sidebar_status`) and
+ot3's `ui/js/SidebarModel.js`, kept in `core/shell/SidebarModel.kt` and replaced by
+LIB_REQUESTS.md phase 1 item 3 (`sidebar.view`):
 
 - hide `archivedAt`, `deletedAt` and `relationshipToParent == "subagent"` (no nesting
   yet);
 - settled = `settledOverride == "settled" || settledOverride == true ||
   (settledOverride != "active" && settledAt != null)`;
-- **Active**: grouped by project, projects ordered by their most recent `updatedAt`;
-  inside a project pinned first (`pinOrderKey` ascending, then `pinnedAt`), then the
-  rest by `updatedAt` descending;
-- **Settled**: a collapsed header with the count; rows by `settledAt ?: updatedAt`
-  descending;
-- row status: `pendingRuntimeRequest != null` → needs you; `activeRunId != null ||
-  status == "running"` → working; `status == "failed" || lastError != null` → failed;
+- **anchor** (the lib's `inboxAt`) = max(`createdAt`, `unsettledAt`,
+  `latestRunRequestedAt`, `latestRunCompletedAt`); never `updatedAt`, which also moves on
+  metadata writes;
+- **Active**: grouped by project, projects ordered by their newest anchor; inside a
+  project pinned first (`pinOrderKey` ascending, then `pinnedAt`), then rows without an
+  `activeOrderKey` by anchor descending, then rows with one by that key ascending (as
+  text: it is a fractional index), as ot3 orders them;
+- **Settled**: a collapsed header with the count; rows by `settledAt ?:
+  latestRunCompletedAt ?: latestUserMessageAt ?: updatedAt` descending;
+- row status: a `pendingRuntimeRequest` with `blocking != false` and `kind !=
+  "auth_refresh"` → needs you; `activeRunId != null || status == "running"` → working;
+  `status` `failed` or `error` → failed (`lastError` alone is not: it outlives its run);
   otherwise nothing.
 
 Live: 6 project groups, 7 active rows, 23 settled rows (4 failed).

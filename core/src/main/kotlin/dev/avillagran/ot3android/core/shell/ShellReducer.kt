@@ -20,13 +20,17 @@ data class ShellProject(
     val repositoryIdentity: String?,
 )
 
-/** `pendingRuntimeRequest`: the thread waits for the user (approval, input, ...). */
-data class PendingRequest(val id: String?, val kind: String?, val blocking: Boolean)
+/**
+ * `pendingRuntimeRequest`: the thread may wait for the user (approval, input, ...).
+ * [blocking] is null when the server did not say; only `false` means it does not hold the thread.
+ */
+data class PendingRequest(val id: String?, val kind: String?, val blocking: Boolean?)
 
 /**
  * A thread row of the shell, reduced to what the sidebar reads. Every field is optional on
- * the wire. Timestamps stay ISO-8601 strings as sent (T3 writes `toISOString()`, UTC with
- * milliseconds), so they order correctly as text.
+ * the wire. Timestamps are epoch milliseconds, read from ISO-8601 text (T3 writes
+ * `toISOString()`) or an epoch-millisecond number; one that is present but unreadable is 0,
+ * so "is it set" still holds.
  */
 data class ShellThread(
     val id: String,
@@ -37,15 +41,21 @@ data class ShellThread(
     val activeRunId: String?,
     val pendingRuntimeRequest: PendingRequest?,
     val lastError: String?,
-    val settledAt: String?,
+    val settledAt: Long?,
     /** `"settled"`, `"active"` or null; a boolean `true` on the wire becomes `"settled"`. */
     val settledOverride: String?,
-    val pinnedAt: String?,
+    val unsettledAt: Long?,
+    val pinnedAt: Long?,
     val pinOrderKey: String?,
-    val archivedAt: String?,
-    val deletedAt: String?,
-    val createdAt: String?,
-    val updatedAt: String?,
+    /** Manual order of an active, unpinned row (a fractional index: compare as text). */
+    val activeOrderKey: String?,
+    val archivedAt: Long?,
+    val deletedAt: Long?,
+    val createdAt: Long?,
+    val updatedAt: Long?,
+    val latestRunRequestedAt: Long?,
+    val latestRunCompletedAt: Long?,
+    val latestUserMessageAt: Long?,
     val parentThreadId: String?,
     val relationshipToParent: String?,
     val branch: String?,
@@ -193,21 +203,26 @@ object ShellReducer {
             status = json.text("status"),
             activeRunId = json.text("activeRunId"),
             pendingRuntimeRequest = pending?.let {
-                PendingRequest(it.text("id"), it.text("kind"), it.optBoolean("blocking"))
+                PendingRequest(it.text("id"), it.text("kind"), it.opt("blocking") as? Boolean)
             },
             lastError = json.text("lastError"),
-            settledAt = json.text("settledAt"),
+            settledAt = json.timestamp("settledAt"),
             settledOverride = when (val override = json.opt("settledOverride")) {
                 true -> "settled"
                 is String -> override
                 else -> null
             },
-            pinnedAt = json.text("pinnedAt"),
+            unsettledAt = json.timestamp("unsettledAt"),
+            pinnedAt = json.timestamp("pinnedAt"),
             pinOrderKey = json.text("pinOrderKey"),
-            archivedAt = json.text("archivedAt"),
-            deletedAt = json.text("deletedAt"),
-            createdAt = json.text("createdAt"),
-            updatedAt = json.text("updatedAt"),
+            activeOrderKey = json.text("activeOrderKey"),
+            archivedAt = json.timestamp("archivedAt"),
+            deletedAt = json.timestamp("deletedAt"),
+            createdAt = json.timestamp("createdAt"),
+            updatedAt = json.timestamp("updatedAt"),
+            latestRunRequestedAt = json.timestamp("latestRunRequestedAt"),
+            latestRunCompletedAt = json.timestamp("latestRunCompletedAt"),
+            latestUserMessageAt = json.timestamp("latestUserMessageAt"),
             parentThreadId = lineage?.text("parentThreadId"),
             relationshipToParent = lineage?.text("relationshipToParent"),
             branch = json.text("branch"),
@@ -224,6 +239,46 @@ object ShellReducer {
 
     private fun JSONObject.long(key: String): Long? =
         if (isNull(key)) null else (opt(key) as? Number)?.toLong()
+
+    private fun JSONObject.timestamp(key: String): Long? = when (val value = if (isNull(key)) null else opt(key)) {
+        null -> null
+        is Number -> value.toLong()
+        else -> parseTimestamp(value.toString()) ?: 0L
+    }
+
+    private val ISO_8601 = Regex(
+        """(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:[.,](\d+))?)?\s*(Z|z|[+-]\d{2}(?::?\d{2})?)?""",
+    )
+
+    /**
+     * Epoch milliseconds of an ISO-8601 date-time (`2026-10-24T10:00:00.000Z`, any fraction,
+     * `Z` or an offset; none means UTC), or null. By hand because `java.time` needs API 26.
+     */
+    fun parseTimestamp(text: String): Long? {
+        val match = ISO_8601.matchEntire(text.trim()) ?: return null
+        val g = match.groupValues
+        val (year, month, day) = Triple(g[1].toInt(), g[2].toInt(), g[3].toInt())
+        if (month !in 1..12 || day !in 1..31) return null
+        val seconds = g[6].ifEmpty { "0" }.toInt()
+        val millis = g[7].take(3).padEnd(3, '0').toInt()
+        val offsetMinutes = when (val zone = g[8]) {
+            "", "Z", "z" -> 0
+            else -> {
+                val digits = zone.drop(1).replace(":", "")
+                val minutes = digits.take(2).toInt() * 60 + digits.drop(2).ifEmpty { "0" }.toInt()
+                if (zone[0] == '-') -minutes else minutes
+            }
+        }
+        // Days from 1970-01-01 in the proleptic Gregorian calendar (H. Hinnant's days_from_civil).
+        val y = if (month <= 2) year - 1 else year
+        val era = y.floorDiv(400)
+        val yearOfEra = y - era * 400
+        val dayOfYear = (153 * (month + (if (month > 2) -3 else 9)) + 2) / 5 + day - 1
+        val dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
+        val days = era * 146_097L + dayOfEra - 719_468
+        val secondsOfDay = g[4].toInt() * 3600L + g[5].toInt() * 60 + seconds - offsetMinutes * 60L
+        return (days * 86_400 + secondsOfDay) * 1000 + millis
+    }
 
     private fun JSONObject.objects(key: String): List<JSONObject> {
         val array = optJSONArray(key) ?: return emptyList()

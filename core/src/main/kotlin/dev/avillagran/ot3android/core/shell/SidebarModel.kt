@@ -1,8 +1,8 @@
 // TEMPORARY until lib-t3-rust exposes the sidebar view (`sidebar.view` and `sidebar.status`,
-// docs/LIB_REQUESTS.md phase 1 item 3). Minimal rules taken from ot3 (`ui/js/SidebarModel.js`,
-// `src/sidebar.rs`); no snoozing, inbox returns, filters, search or subagent nesting. Do not
-// grow it: new sidebar behaviour goes into the lib, and this file is deleted when the lib
-// ships item 3.
+// docs/LIB_REQUESTS.md phase 1 item 3). An approximation of the lib's `src/sidebar.rs`
+// (`sort_timestamps`, `sidebar_status`) and ot3's `ui/js/SidebarModel.js`: no snoozing, inbox
+// returns, filters, search or subagent nesting. Do not grow it: new sidebar behaviour goes
+// into the lib, and this file is deleted when the lib ships item 3.
 package dev.avillagran.ot3android.core.shell
 
 /** What a row says about its thread. */
@@ -13,7 +13,7 @@ enum class RowStatus {
     /** A run is active. */
     Working,
 
-    /** The thread failed or carries an error. */
+    /** The thread's status is `failed` or `error`. */
     Failed,
 
     /** Nothing to say. */
@@ -51,13 +51,13 @@ object SidebarModel {
             val ordered = threads.sortedWith(activeOrder)
             ProjectGroup(projectId, projectId?.let { titles[it] }, ordered.map(::row))
         }
-        // Projects with the most recent thread first.
+        // Projects with the most recent inbox activity first.
         val orderedGroups = groups.sortedWith(
-            compareByDescending<ProjectGroup> { group -> group.rows.maxOf { it.thread.updatedAt.orEmpty() } }
+            compareByDescending<ProjectGroup> { group -> group.rows.maxOf { inboxAt(it.thread) } }
                 .thenBy { it.title.orEmpty() },
         )
         val settledRows = settled
-            .sortedWith(compareByDescending<ShellThread> { it.settledAt ?: it.updatedAt.orEmpty() }.thenBy { it.id })
+            .sortedWith(compareByDescending<ShellThread> { settledSortAt(it) }.thenBy { it.id })
             .map(::row)
         return Sidebar(orderedGroups, settledRows)
     }
@@ -72,22 +72,52 @@ object SidebarModel {
         else -> thread.settledAt != null
     }
 
-    fun status(thread: ShellThread): RowStatus = when {
-        thread.pendingRuntimeRequest != null -> RowStatus.NeedsYou
-        thread.activeRunId != null || thread.status == "running" -> RowStatus.Working
-        thread.status == "failed" || thread.lastError != null -> RowStatus.Failed
-        else -> RowStatus.Quiet
+    /**
+     * A request that holds the thread (`blocking` not false, and not a background
+     * `auth_refresh`) needs the user; then a run in progress; then a failed status.
+     * `lastError` alone is not a failure: it outlives the run that set it.
+     */
+    fun status(thread: ShellThread): RowStatus {
+        val request = thread.pendingRuntimeRequest
+        return when {
+            request != null && request.blocking != false && request.kind != "auth_refresh" -> RowStatus.NeedsYou
+            thread.activeRunId != null || thread.status == "running" -> RowStatus.Working
+            thread.status == "failed" || thread.status == "error" -> RowStatus.Failed
+            else -> RowStatus.Quiet
+        }
     }
 
-    /** Pinned first (`pinOrderKey`, then `pinnedAt`), then the rest by `updatedAt`, newest first. */
+    /**
+     * The lib's `inboxAt`: the latest of created (or unsettled), run requested and run
+     * completed. Never `updatedAt`, which also moves on metadata writes.
+     */
+    fun inboxAt(thread: ShellThread): Long = maxOf(
+        maxOf(thread.createdAt ?: 0, thread.unsettledAt ?: 0),
+        thread.latestRunRequestedAt ?: 0,
+        thread.latestRunCompletedAt ?: 0,
+    )
+
+    /** The lib's `settledSortAt`, simplified: settled, else last run, else last message, else updated. */
+    fun settledSortAt(thread: ShellThread): Long =
+        thread.settledAt ?: thread.latestRunCompletedAt ?: thread.latestUserMessageAt ?: thread.updatedAt ?: 0
+
+    /**
+     * Pinned first (`pinOrderKey`, then `pinnedAt`). Then, as ot3, rows without an
+     * `activeOrderKey` by [inboxAt] (newest first), then rows with one by that key (as text).
+     */
     private val activeOrder: Comparator<ShellThread> = Comparator { a, b ->
         val aPinned = a.pinnedAt != null
         val bPinned = b.pinnedAt != null
-        when {
+        val aKey = a.activeOrderKey
+        val bKey = b.activeOrderKey
+        val order = when {
             aPinned != bPinned -> if (aPinned) -1 else 1
-            aPinned -> compareValuesBy(a, b, { it.pinOrderKey.orEmpty() }, { it.pinnedAt }, { it.id })
-            else -> compareValuesBy(b, a, { it.updatedAt.orEmpty() }).takeIf { it != 0 } ?: a.id.compareTo(b.id)
+            aPinned -> compareValuesBy(a, b, { it.pinOrderKey.orEmpty() }, { it.pinnedAt })
+            (aKey == null) != (bKey == null) -> if (aKey == null) -1 else 1
+            aKey != null && bKey != null -> aKey.compareTo(bKey)
+            else -> inboxAt(b).compareTo(inboxAt(a))
         }
+        if (order != 0) order else a.id.compareTo(b.id)
     }
 
     private fun row(thread: ShellThread) = SidebarRow(thread, status(thread), pinned = thread.pinnedAt != null)

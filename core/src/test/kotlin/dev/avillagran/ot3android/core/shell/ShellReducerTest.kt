@@ -58,6 +58,29 @@ class ShellReducerTest {
     }
 
     @Test
+    fun timestampsAreReadAsEpochMillis() {
+        val row = thread(
+            "t1", "p1",
+            "createdAt" to "2026-10-24T10:00:00.123Z",
+            "settledAt" to "2026-10-24T12:30:00+02:00",
+            "pinnedAt" to 1_761_300_000_000L,
+            "archivedAt" to "not a date",
+            "deletedAt" to null,
+        )
+        val parsed = reduced(snapshot(1, emptyList(), listOf(row)))!!.threads.single()
+
+        assertEquals(1_792_836_000_123L, parsed.createdAt)
+        assertEquals("the offset is applied", 1_792_837_800_000L, parsed.settledAt)
+        assertEquals(1_761_300_000_000L, parsed.pinnedAt)
+        assertEquals("present but unreadable still counts as set", 0L, parsed.archivedAt)
+        assertNull(parsed.deletedAt)
+        assertEquals(0L, ShellReducer.parseTimestamp("1970-01-01T00:00:00Z"))
+        assertEquals(951_782_400_000L, ShellReducer.parseTimestamp("2000-02-29T00:00:00.000Z"))
+        assertEquals(-86_400_000L, ShellReducer.parseTimestamp("1969-12-31T00:00:00Z"))
+        assertNull(ShellReducer.parseTimestamp("yesterday"))
+    }
+
+    @Test
     fun threadUpdatedUpsertsInPlaceAndMovesTheCursor() {
         val renamed = thread("t1", "p1", "title" to "Renamed")
         val shell = reduced(base, threadUpdated(6, renamed), threadUpdated(7, thread("t3")))!!
