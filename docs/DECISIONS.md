@@ -327,6 +327,89 @@ factory, the fake's scripting). Supersedes the entry above.
   sky has no dependency on the theme PR; Home maps its theme and motion preference onto
   them. Detail: [ui/sky.md](ui/sky.md).
 
+## 2026-10-25: ot3 on a phone; Omarchy themes, `Ot3Theme` and JVM screenshot tests (UI-1a)
+
+**The principle of [UI_SPEC.md](UI_SPEC.md) section 1**, recorded here as section 5 asks:
+
+- ot3-Android is ot3 on a phone. T3 Mobile decides the screen hierarchy, navigation,
+  gestures, sheets and tablet columns; ot3 decides colours, density, typography, icons,
+  component shapes, wording and behaviour; `lib-t3-rust` supplies every derived value.
+- When the references disagree: navigation and gestures follow T3 Mobile (system back,
+  sheets instead of popups and context menus); appearance and wording follow ot3; touch
+  beats density (48 dp targets by widening the hit area; only the slim row grows, 36 → 48
+  dp); platform conventions beat both (edge-to-edge, IME insets, `sp`, RTL); data beats
+  both (no Kotlin heuristics when the lib lacks a value); desktop-only features stay out.
+- Themes: the 22 Omarchy themes ship in the APK, tokyo-night (dark) and catppuccin-latte
+  (light) by default, Material You as an extra entry. This replaces dynamic colour by default.
+- Visual acceptance is by JVM screenshots (Roborazzi, Robolectric native graphics), since
+  the emulator on the development machine is unusable; instrumented UI tests stay for
+  interactions.
+
+**Importer** (`tools/import-omarchy-themes`, docs/ui/omarchy-themes.md):
+
+- **Python 3 standard library** (`tomllib` for `mode` and TOML validity, ot3's regex for
+  colours). It runs offline wherever Omarchy is installed and needs no Gradle module, so
+  `settings.gradle.kts` stays untouched while the UI-1 parts are built in parallel. Its
+  failure modes have Python tests (`tools/tests/`, run in CI); its output is checked by the
+  app's JVM tests through the app's own loader (goldens, 22 themes, 17 dark / 5 light), and
+  a Kotlin port of the formulas must reproduce every role of every theme.
+- Source for the committed JSON: Omarchy 4.0.2 from an `omarchy-mac` checkout (`09f16de`,
+  `version` 4.0.2), passed as the path argument, since this machine has no
+  `/usr/share/omarchy`. Rerunning on the same themes keeps `generatedAt`, so the output is
+  byte-identical.
+- **Rounding**: each channel is the exact composite `bg + (fg − bg) × alpha`, rounded half
+  to even. Two goldens in tokens.md are exact ties and only this rule reproduces them:
+  tokyo-night `divider` green 27 + 150 × 0.09 = 40.5 → 40 (`#272836`; half up gives
+  `#272936`) and catppuccin-latte `rowSelected` blue 245 − 140 × 0.075 = 234.5 → 234
+  (`#e3e5ea`; half up gives `#e3e5eb`). The goldens are unchanged.
+- Two roles beyond tokens.md section 1, `accentContainer` and `failedContainer` (@ 0.14),
+  because the Material mapping needs them and nothing blends at runtime.
+- **Project palette**: ot3 uses `pick(key, accent)`, so a missing key adds the accent
+  (once). omarchy-themes.md said such keys were dropped; corrected there. Only `white`
+  (no `orange`) is affected: its palette gains `#6e6e6e`.
+- **`onAccent` deviates from tokens.md section 2 as written** ("falls back to `foreground`
+  if contrast is under 4.5:1"). Three themes are under 4.5:1 with the background, and
+  the foreground would be worse in each: catppuccin-latte 4.34 → 1.63, miasma 3.86 →
+  2.28, rose-pine 3.14 → 2.12. The importer keeps the background unless the foreground
+  contrasts better, which gives the background for all 22 themes, as ot3 does
+  (`highlightedText`). Open for the owner: keep this, or fall back to white or black
+  (catppuccin-latte 4.91 with white, miasma 5.09 and rose-pine 6.13 with black).
+
+**Compose**:
+
+- `Ot3Colors` (immutable, `LocalOt3Colors`), `Ot3Typography` (`LocalOt3Typography`),
+  `Ot3MotionPolicy` (`LocalOt3Motion`), `Ot3Spacing`, `Ot3Radii`, `Ot3Sizes`,
+  `Ot3Shapes`; `Ot3Theme { }` wraps `MaterialTheme` with the tokens.md section 2 scheme,
+  transparent `surfaceTint` and `LocalTonalElevationEnabled = false`. Material roles and
+  type slots that tokens.md does not map take the nearest ot3 role or size, so no baseline
+  Material colour shows. `Ot3Theme { }` without arguments uses the default theme of the
+  system appearance (previews, tests); the app uses `Ot3AppTheme`.
+- The JSON is parsed once per process, off the main thread, started by `AppGraph`;
+  `MainActivity` draws once the catalog and the appearance settings are read, over a
+  window background equal to the default theme's.
+- Preferences live in `core`'s `AppearancePreferences` (DataStore `appearance`): Follow
+  system / Dark / Light, a dark and a light theme id, the animation preference. The
+  defaults are one constant, `AppearanceSettings.DEFAULT_THEMES`. A stored id that no
+  longer exists or has the wrong appearance reads as the default.
+- **Material You**: accent = `primary`, background = `surface`, foreground = `onSurface`,
+  and `muted` = `outline` (the spec names no source for it); other roles by the importer's
+  formulas; status colours, project palette and sky constants from the default theme of
+  the same appearance. Below Android 12 the default theme is used.
+- **Motion**: Auto and Full → Full; Light; Off. Animator duration scale 0 forces Off; battery
+  saver caps Full to Light. Light only changes the sky (ot3's preference is the
+  starfield's); Off snaps every spec taken from `LocalOt3Motion`.
+- Typography: line height 1.5 for body slots and prose, 1.3 elsewhere; Fira Code 6.2
+  Regular and Medium bundled (docs/LICENSES.md), ligatures left on.
+- System bars: transparent, icons from the resolved appearance (`SystemBarStyle.auto`
+  with ot3's light/dark decision rather than the system's).
+
+**Screenshot tests**: Roborazzi 1.77.0 and Robolectric 4.16.1, SDK 36, native graphics,
+411 × 891 dp at xhdpi (822 × 1782 px), motion Off. `ScreenshotTest.snapshot(name) { }`
+renders in tokyo-night and catppuccin-latte and compares with
+`app/src/test/snapshots/<Class>/<name>.<theme>.png`, without tolerance; CI runs
+`:app:verifyRoborazziDebug`. The first goldens are the token sheet (every role, the type
+scale, Fira Code), whose sampled pixels equal the tokens.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

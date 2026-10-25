@@ -62,13 +62,19 @@ jobs:
           scripts/fetch-or-build-lib.sh --release --host-jni
           cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
 
-      - name: Unit tests, lint and debug build
+      - name: Omarchy theme importer tests
+        run: python3 -I tools/tests/test_import_omarchy_themes.py
+
+      # :app:verifyRoborazziDebug runs the app's JVM tests and compares every screenshot
+      # with its golden in app/src/test/snapshots/.
+      - name: Unit tests, screenshot tests, lint and debug build
         env:
           # JVM tests that load the host libt3_jni.so fail instead of skipping without it.
           OT3A_REQUIRE_HOST_JNI: "1"
         run: >-
           ./gradlew --no-daemon
-          :core:testDebugUnitTest :app:testDebugUnitTest
+          :core:testDebugUnitTest
+          :app:testDebugUnitTest :app:verifyRoborazziDebug :lucide-vectors:test
           :core:lintDebug :app:lintDebug
           :app:assembleDebug
           :core:assembleDebugAndroidTest :app:assembleDebugAndroidTest
@@ -89,3 +95,4 @@ jobs:
             **/build/reports/lint-results-*.html
             **/build/reports/tests/
             **/build/test-results/**/*.xml
+            app/build/outputs/roborazzi/

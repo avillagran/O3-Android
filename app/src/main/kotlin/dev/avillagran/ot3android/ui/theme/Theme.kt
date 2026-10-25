@@ -1,33 +1,126 @@
 package dev.avillagran.ot3android.ui.theme
 
+import android.graphics.Color as AndroidColor
 import android.os.Build
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalTonalElevationEnabled
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import dev.avillagran.ot3android.core.data.prefs.AppearanceMode
+import dev.avillagran.ot3android.core.data.prefs.AppearanceSettings
 
-private val FallbackLightColors = lightColorScheme()
-private val FallbackDarkColors = darkColorScheme()
-
-/** Material 3 theme. Dynamic color on Android 12+ (API 31), baseline scheme below. */
+/**
+ * ot3's look (UI_SPEC 3.1-3.4): [colors] as [LocalOt3Colors] and as the Material scheme of
+ * docs/ui/tokens.md section 2, ot3's type scale, radii and motion. With no arguments it uses
+ * the default theme of the system appearance, which is what previews and tests want; the
+ * app goes through [Ot3AppTheme].
+ */
 @Composable
 fun Ot3Theme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    colors: Ot3Colors = defaultOt3Colors(isSystemInDarkTheme()),
+    typography: Ot3Typography = Ot3Typography.Default,
+    motion: Ot3MotionPolicy = LocalOt3Motion.current,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> FallbackDarkColors
-        else -> FallbackLightColors
+    val colorScheme = remember(colors) { colors.toColorScheme() }
+    CompositionLocalProvider(
+        LocalOt3Colors provides colors,
+        LocalOt3Typography provides typography,
+        LocalOt3Motion provides motion,
+        // ot3 has no tonal elevation; surfaces separate by tint and hairline.
+        LocalTonalElevationEnabled provides false,
+    ) {
+        MaterialTheme(colorScheme = colorScheme, typography = typography.material, shapes = Ot3Shapes, content = content)
     }
+}
 
-    MaterialTheme(colorScheme = colorScheme, content = content)
+/** Reads the current ot3 tokens: `Ot3Theme.colors.working`, `Ot3Theme.typography.mono`. */
+object Ot3Theme {
+    val colors: Ot3Colors
+        @Composable @ReadOnlyComposable get() = LocalOt3Colors.current
+
+    val typography: Ot3Typography
+        @Composable @ReadOnlyComposable get() = LocalOt3Typography.current
+
+    val motion: Ot3MotionPolicy
+        @Composable @ReadOnlyComposable get() = LocalOt3Motion.current
+
+    val spacing get() = Ot3Spacing
+    val radii get() = Ot3Radii
+    val sizes get() = Ot3Sizes
+}
+
+/**
+ * The app's root theme: [settings] picks the appearance and the theme of each appearance
+ * (an unknown id, or Material You below Android 12, falls back to the default), the motion
+ * level follows the preference and the platform, and the system bar icons follow the
+ * appearance on transparent, edge-to-edge bars.
+ */
+@Composable
+fun Ot3AppTheme(
+    catalog: OmarchyThemeCatalog,
+    settings: AppearanceSettings,
+    content: @Composable () -> Unit,
+) {
+    val dark = when (settings.mode) {
+        AppearanceMode.FOLLOW_SYSTEM -> isSystemInDarkTheme()
+        AppearanceMode.DARK -> true
+        AppearanceMode.LIGHT -> false
+    }
+    val themeId = if (dark) settings.darkThemeId else settings.lightThemeId
+    val context = LocalContext.current
+    val colors = remember(catalog, themeId, dark, context) {
+        val fallback = catalog.defaultColors(dark)
+        when {
+            themeId == AppearanceSettings.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+                materialYouColors(if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context), fallback)
+            else -> catalog[themeId]?.takeIf { it.isLight != dark }?.let(Ot3Colors::fromTheme) ?: fallback
+        }
+    }
+    val activity = LocalActivity.current as? ComponentActivity
+    DisposableEffect(activity, colors.isLight) {
+        val style = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT) { !colors.isLight }
+        activity?.enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+        onDispose { }
+    }
+    Ot3Theme(colors = colors, motion = rememberOt3Motion(settings.animation), content = content)
+}
+
+/**
+ * Material You (UI_SPEC 3.1.3): the wallpaper scheme mapped back onto ot3's roles (accent =
+ * primary, background = surface, foreground = onSurface, muted = outline), every other role
+ * derived by the importer's formulas. Status colours, project palette and sky come from
+ * [defaults], the default theme of the same appearance, so "Failed" stays red.
+ */
+fun materialYouColors(scheme: ColorScheme, defaults: Ot3Colors): Ot3Colors = Ot3Colors.derive(
+    themeId = Ot3Colors.MATERIAL_YOU_ID,
+    background = scheme.surface,
+    foreground = scheme.onSurface,
+    accent = scheme.primary,
+    muted = scheme.outline,
+    statusFrom = defaults,
+)
+
+/** The default Omarchy theme of an appearance (AppearanceSettings.DEFAULT_THEMES). */
+fun OmarchyThemeCatalog.defaultColors(dark: Boolean): Ot3Colors {
+    val id = if (dark) AppearanceSettings.DEFAULT_THEMES.dark else AppearanceSettings.DEFAULT_THEMES.light
+    return Ot3Colors.fromTheme(this[id] ?: error("omarchy-themes.json has no default theme $id"))
+}
+
+@Composable
+private fun defaultOt3Colors(dark: Boolean): Ot3Colors {
+    val context = LocalContext.current
+    return remember(dark) { OmarchyThemeCatalog.loadBlocking(context).defaultColors(dark) }
 }

@@ -29,7 +29,7 @@ machine that has Omarchy, into a JSON asset that ships in the APK.
 | `red` | yes | `failed` | `color1` (`omarchy:shell/Commons/Color.qml:159`) |
 | `green`, `yellow`, `blue`, `magenta` | no | `done`, `waiting`, `working`, `input` | accent (`ot3:ui/qml/T3Palette.qml:10-16`) |
 | `orange` | no (missing in white, solitude, last-horizon) | `warning` | yellow, then accent (`ot3:ui/qml/T3Palette.qml:15`) |
-| `cyan`, `bright_blue`, `bright_magenta` | no | project slot palette | dropped from the palette (`ot3:ui/qml/T3Palette.qml:17-22`) |
+| `cyan`, `bright_blue`, `bright_magenta` | no | project slot palette | accent, then removed as a duplicate if the accent is already in the palette (`ot3:ui/qml/T3Palette.qml:17-22`) |
 | `mode` | no | cross-check only | — |
 | `selection`, `*_background`, `*_foreground` variants | — | not read by ot3 | — |
 
@@ -72,7 +72,7 @@ Omarchy adds or changes themes. Shape:
         "cardBorder": "#2b2d3b", "changesCard": "#1e1f2a", "rowSelected": "#252633",
         "rowPressed": "#20222e", "rowDraft": "#202333", "field": "#20212d",
         "fieldBorder": "#2e303f", "switchOff": "#2f3240", "inlineCode": "#282a38",
-        "composerFocus": "#455884",
+        "composerFocus": "#455884", "accentContainer": "#272e43", "failedContainer": "#392835",
         "working": "#7aa2f7", "done": "#9ece6a", "waiting": "#e0af68",
         "failed": "#f7768e", "warning": "#eb927b", "input": "#ad8ee6",
         "onAccent": "#1a1b26"
@@ -87,8 +87,12 @@ Omarchy adds or changes themes. Shape:
 - `name` is the directory name in title case (`tokyo-night` → "Tokyo Night"); Omarchy has
   no display-name field.
 - `roles` are opaque sRGB composites with the alphas listed in [tokens.md](tokens.md)
-  section 1. `projectPalette` keeps ot3's order with duplicates removed
-  (`ot3:ui/qml/T3Palette.qml:17-22`).
+  section 1, plus `accentContainer` (accent @ 0.14) and `failedContainer` (failed @ 0.14)
+  for the Material mapping of tokens.md section 2. Each channel is computed exactly and
+  rounded half to even (two goldens are exact ties).
+- `projectPalette` keeps ot3's order with duplicates removed
+  (`ot3:ui/qml/T3Palette.qml:17-22`). A missing key gives the accent, as ot3's `pick()`
+  does: in Omarchy 4.0.2 only `white` (no `orange`) gains its accent this way.
 - `sky` carries the per-appearance header constants (`ot3:ui/qml/T3Panel.qml:1125-1126`,
   `ot3:ui/qml/T3Starfield.qml:59-63`); see UI_SPEC 3.5.
 
