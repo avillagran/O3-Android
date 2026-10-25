@@ -33,24 +33,24 @@ class CredentialStore private constructor(
      * are gone; the UI should tell the user to pair again.
      */
     val wasReset: Boolean,
-) {
+) : TokenStore {
 
-    suspend fun token(environmentId: String): String? = withContext(Dispatchers.IO) {
+    override suspend fun token(environmentId: String): String? = withContext(Dispatchers.IO) {
         prefs.getString(key(environmentId), null)
     }
 
-    suspend fun setToken(environmentId: String, token: String) = withContext(Dispatchers.IO) {
-        prefs.edit(commit = true) { putString(key(environmentId), token) }
+    override suspend fun setToken(environmentId: String, token: String) {
+        withContext(Dispatchers.IO) { prefs.edit(commit = true) { putString(key(environmentId), token) } }
     }
 
     /**
      * Removes the token of [environmentId].
      *
-     * The environment repository (connection PR) deletes the Room row and calls this in
-     * the same operation, so a removed environment never leaves its token behind.
+     * `EnvironmentRepository` deletes the Room row and calls this in the same operation, so
+     * a removed environment never leaves its token behind.
      */
-    suspend fun delete(environmentId: String) = withContext(Dispatchers.IO) {
-        prefs.edit(commit = true) { remove(key(environmentId)) }
+    override suspend fun delete(environmentId: String) {
+        withContext(Dispatchers.IO) { prefs.edit(commit = true) { remove(key(environmentId)) } }
     }
 
     private fun key(environmentId: String) = "token:$environmentId"
