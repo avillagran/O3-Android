@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Section names of the debug-only component catalog: a developer tool, English only, never in release builds. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="catalog_controls">Buttons, fields and switches</string>
+    <string name="catalog_card_rows">Card rows</string>
+    <string name="catalog_card_variants">Card row variants</string>
+    <string name="catalog_slim_rows">Slim rows</string>
+    <string name="catalog_shelves">Shelves</string>
+    <string name="catalog_badges">Chips, badges and pills</string>
+    <string name="catalog_overlays">Sheet, dialog and tooltip</string>
+    <string name="catalog_animations">Animations</string>
+    <string name="catalog_open_sheet">Open sheet</string>
+    <string name="catalog_open_dialog">Open dialog</string>
+    <string name="catalog_open_destructive">Open delete dialog</string>
+</resources>

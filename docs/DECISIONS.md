@@ -519,6 +519,45 @@ scale, Fira Code), whose sampled pixels equal the tokens.
   Material composables until the kit and the visual Home restyle them. ot3 writes the
   elapsed time as "3m 5s" (`T3Panel.qml:541-545`); this follows the spec's "3m 05s".
 
+## 2026-10-25: UI-1e: the component kit takes presentation values
+
+- **The kit's models are the lib's fields, one to one.** `ThreadRowModel`, `RowStatus`,
+  `RowTime`, `ProjectChipModel`, `PrBadgeModel` and `CountPillsModel` hold what
+  `sidebar.view` and `projects.identity` (lib 0.3.3) return: `statusRole` → `StatusRole`,
+  `statusLabel` → label, `time{kind,label}` → `RowTime`, `color`/`colorSlot`/`fill` →
+  `ProjectChipModel.fromLib`. The kit derives nothing about a thread; what stays in Kotlin is
+  ot3's QML presentation: the detail → icon map (`T3ThreadRow.qml:271-277`), "Working" plus
+  the elapsed time, the done age under the title, the snooze countdown in `working`.
+  `StatusRole.MUTED` (the lib's `muted`, ot3's fg @ 0.6) is its own role rather than `dim`
+  (fg @ 0.57), so the sampled colour is ot3's.
+- **No ripple; ot3's pressed fills.** Rows fill `rowPressed`, icon buttons fg @ 0.07, buttons
+  a lighter accent or fg @ 0.08, shelf headers `rowPressed`, animated over 130 ms. A Material
+  ripple on top of ot3's flat fills would be a second, non-ot3 feedback. Keyboard focus draws
+  ot3's 1 dp accent ring.
+- **Touch targets:** icon buttons, switches, buttons and selects reserve 48 dp
+  (`minimumInteractiveComponentSize` or a 48 dp box) while drawing ot3's sizes; PR badges and
+  the subagent toggle inside rows rely on Compose's own touch-bounds expansion, so the row
+  layout keeps ot3's spacing.
+- **Card rows are 82 dp including 2 dp above and below the card**, as in ot3, so stacked
+  cards sit 4 dp apart without list spacing.
+- **Tooltip colours:** Omarchy's `Color.tooltip` is not in `omarchy-themes.json`; the tooltip
+  takes ot3's popup look (`background`, 1 dp `cardBorder`, radius 7) until the importer
+  carries the tooltip palette.
+- **Sheet stops:** Material 3 1.4 has no custom detents, so `Ot3SheetStops.PARTIAL_AND_TALL`
+  uses Material's partial stop (half the window) and then 0.92; the per-sheet fractions of
+  UI_SPEC 2.2 (0.55, 0.65…) wait for custom detents. The sheet's 1 dp top hairline is drawn
+  by the full-width handle slot because `ModalBottomSheet` ignores borders on its surface.
+- **Dialogs** are `BasicAlertDialog` with ot3's card (`Ot3DialogSurface`), 24 dp from the
+  window edges, and the window dim set to 0.5 to match the sheet scrim.
+- **Live activity text with motion Off is drawn whole**, not at ot3's resting half opacity,
+  so a live label does not read as disabled when animations are off.
+- **The component catalog lives in the `debug` source set** with its own launcher entry
+  ("UI components"), so it ships in no release build and needs no route in the app's
+  navigation; its goldens run from `src/testDebug`. Screen captures (sheet, dialogs,
+  tooltip) drive the test clock by hand; under Robolectric a text field inside a dialog
+  window never lets Compose go idle, so the Rename dialog's card is captured inline and the
+  window capture uses the Archive dialog.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one

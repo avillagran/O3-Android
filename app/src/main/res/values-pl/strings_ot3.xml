@@ -124,4 +124,17 @@
     <string name="ot3_env_pairing_link">Link parowania</string>
     <string name="ot3_env_pairing_code">Kod parowania</string>
     <string name="ot3_catalog_theme">Motyw</string>
+    <string name="ot3_kit_show">Pokaż</string>
+    <string name="ot3_kit_hide">Ukryj</string>
+    <string name="ot3_kit_on">Włączone</string>
+    <string name="ot3_kit_off">Wyłączone</string>
+    <string name="ot3_kit_draft">Szkic</string>
+    <string name="ot3_kit_subagent">Podagent</string>
+    <string name="ot3_kit_copy_message">Kopiuj wiadomość</string>
+    <string name="ot3_kit_copy_code">Kopiuj kod</string>
+    <string name="ot3_kit_copied">Skopiowano!</string>
+    <string name="ot3_kit_copy_failed">Kopiowanie nie powiodło się</string>
+    <string name="ot3_pr_open">Otwarte</string>
+    <string name="ot3_pr_merged">Scalone</string>
+    <string name="ot3_pr_closed">Zamknięte</string>
 </resources>

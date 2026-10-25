@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import dev.avillagran.ot3android.ui.theme.OmarchyThemeCatalog
 import dev.avillagran.ot3android.ui.theme.Ot3Colors
@@ -44,11 +45,15 @@ abstract class ScreenshotTest {
     /**
      * Renders [content] inside [Ot3Theme] on the theme's background, once per theme in
      * [themes], and captures `<Class>/<name>.<theme id>.png`. Motion is Off, so every
-     * animation is at its end state.
+     * animation is at its end state. With [screen], the capture holds every window, so
+     * sheets, dialogs and tooltips, which open windows of their own, are in it.
      */
-    fun snapshot(name: String, themes: List<String> = THEMES, content: @Composable () -> Unit) {
+    fun snapshot(name: String, themes: List<String> = THEMES, screen: Boolean = false, content: @Composable () -> Unit) {
         val catalog = OmarchyThemeCatalog.loadBlocking(ApplicationProvider.getApplicationContext())
         var current by mutableStateOf(themes.first())
+        // Windows of their own can hold endless animations (a focused field's cursor), so the
+        // clock is driven by hand: long enough for every enter animation to finish.
+        if (screen) composeRule.mainClock.autoAdvance = false
         composeRule.setContent {
             val theme = checkNotNull(catalog[current]) { "no Omarchy theme $current" }
             Ot3Theme(colors = Ot3Colors.fromTheme(theme), motion = Ot3MotionPolicy.Off) {
@@ -58,13 +63,24 @@ abstract class ScreenshotTest {
         for (id in themes) {
             current = id
             composeRule.waitForIdle()
-            composeRule.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/${javaClass.simpleName}/$name.$id.png")
+            // Twice: a popup shown by the first pass is placed in the second.
+            if (screen) {
+                repeat(2) {
+                    composeRule.mainClock.advanceTimeBy(SETTLE_MS)
+                    composeRule.waitForIdle()
+                }
+            }
+            val path = "${roborazziSystemPropertyOutputDirectory()}/${javaClass.simpleName}/$name.$id.png"
+            if (screen) captureScreenRoboImage(path) else composeRule.onRoot().captureRoboImage(path)
         }
     }
 
     companion object {
         /** A 411 × 891 dp phone at xhdpi (822 × 1782 px). */
         const val PHONE = "w411dp-h891dp-port-xhdpi"
+
+        /** How far [snapshot] advances the clock for screen captures. */
+        const val SETTLE_MS = 2_000L
 
         /** The default dark and light themes (UI_SPEC section 5). */
         val THEMES = listOf("tokyo-night", "catppuccin-latte")

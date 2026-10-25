@@ -124,4 +124,17 @@
     <string name="ot3_env_pairing_link">Lien d’association</string>
     <string name="ot3_env_pairing_code">Code d’association</string>
     <string name="ot3_catalog_theme">Thème</string>
+    <string name="ot3_kit_show">Afficher</string>
+    <string name="ot3_kit_hide">Masquer</string>
+    <string name="ot3_kit_on">Activé</string>
+    <string name="ot3_kit_off">Désactivé</string>
+    <string name="ot3_kit_draft">Brouillon</string>
+    <string name="ot3_kit_subagent">Sous-agent</string>
+    <string name="ot3_kit_copy_message">Copier le message</string>
+    <string name="ot3_kit_copy_code">Copier le code</string>
+    <string name="ot3_kit_copied">Copié !</string>
+    <string name="ot3_kit_copy_failed">Échec de la copie</string>
+    <string name="ot3_pr_open">Ouverts</string>
+    <string name="ot3_pr_merged">Fusionnés</string>
+    <string name="ot3_pr_closed">Fermés</string>
 </resources>

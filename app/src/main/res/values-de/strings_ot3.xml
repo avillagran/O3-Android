@@ -124,4 +124,17 @@
     <string name="ot3_env_pairing_link">Kopplungslink</string>
     <string name="ot3_env_pairing_code">Kopplungscode</string>
     <string name="ot3_catalog_theme">Design</string>
+    <string name="ot3_kit_show">Anzeigen</string>
+    <string name="ot3_kit_hide">Ausblenden</string>
+    <string name="ot3_kit_on">Ein</string>
+    <string name="ot3_kit_off">Aus</string>
+    <string name="ot3_kit_draft">Entwurf</string>
+    <string name="ot3_kit_subagent">Unteragent</string>
+    <string name="ot3_kit_copy_message">Nachricht kopieren</string>
+    <string name="ot3_kit_copy_code">Code kopieren</string>
+    <string name="ot3_kit_copied">Kopiert!</string>
+    <string name="ot3_kit_copy_failed">Kopieren fehlgeschlagen</string>
+    <string name="ot3_pr_open">Offen</string>
+    <string name="ot3_pr_merged">Zusammengeführt</string>
+    <string name="ot3_pr_closed">Geschlossen</string>
 </resources>

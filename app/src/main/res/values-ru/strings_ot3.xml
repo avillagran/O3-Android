@@ -124,4 +124,17 @@
     <string name="ot3_env_pairing_link">Ссылка сопряжения</string>
     <string name="ot3_env_pairing_code">Код сопряжения</string>
     <string name="ot3_catalog_theme">Тема</string>
+    <string name="ot3_kit_show">Показать</string>
+    <string name="ot3_kit_hide">Скрыть</string>
+    <string name="ot3_kit_on">Вкл.</string>
+    <string name="ot3_kit_off">Выкл.</string>
+    <string name="ot3_kit_draft">Черновик</string>
+    <string name="ot3_kit_subagent">Субагент</string>
+    <string name="ot3_kit_copy_message">Копировать сообщение</string>
+    <string name="ot3_kit_copy_code">Копировать код</string>
+    <string name="ot3_kit_copied">Скопировано!</string>
+    <string name="ot3_kit_copy_failed">Не удалось скопировать</string>
+    <string name="ot3_pr_open">Открытые</string>
+    <string name="ot3_pr_merged">Слитые</string>
+    <string name="ot3_pr_closed">Закрытые</string>
 </resources>
