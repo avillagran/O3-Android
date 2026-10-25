@@ -287,6 +287,46 @@ factory, the fake's scripting). Supersedes the entry above.
 - **Schema 2** adds both tables with a manual `MIGRATION_1_2` whose SQL is Room's own
   (`core/schemas/.../2.json`), tested with `MigrationTestHelper`.
 
+## 2026-10-25: Sky header in AGSL with a Canvas fallback, ot3's saver pace, Light and Auto
+
+- **AGSL on API 33+, Canvas below.** `STARFIELD_AGSL` is `starfield.frag` uniform for
+  uniform (renames only where AGSL's single namespace needs them: `meteor()` →
+  `meteorAt()`, its local `fade` → `fadeIn`; `qt_Opacity` → `opacity`), plus a
+  `pixelDensity` uniform so every length stays in dp as ot3's px are logical pixels.
+  Drawn with `drawWithCache` + `ShaderBrush` over one `RuntimeShader`, uniforms set in
+  `onDrawBehind`. minSdk is 24, so API 24–32 draws `SkyCanvasPlan`: the same grid hash
+  per star (core disc, sampled halo, tinted at the star's centre) and per comet (tapered
+  quad with `tail²` stops, head glow), no nebula. Both read the math from `SkyMath`, one
+  pure Kotlin file the shader mirrors, so the JVM tests cover the hashes, layers,
+  twinkle, comet schedule and colours; a source test ties the AGSL constants and uniform
+  names to it.
+- **AGSL checked without a device** with skia-python's `RuntimeEffect` (Skia's SkSL
+  front end, which is AGSL's): it compiles, and a rendered frame matches
+  `SkyMath.shade()` within 0.01 / 255 on average (`scripts/check-starfield-agsl.py`,
+  `docs/ui/compare/ui-1c/`). The instrumented `StarfieldShaderCompileTest` builds the
+  `RuntimeShader` on API 33+ when the emulator is back.
+- **Frame pace = ot3's "saver" smoothness** (`T3Ticker.qml:22-27`): 33 ms while
+  something works, under explicit Full, or with a comet on screen; 125 ms for an idle
+  Auto or Light sky (5 dp/s of drift looks the same at 8 fps); Light never below 40 ms
+  without a comet. ot3's default "adaptive" smoothness would run comets at the display
+  rate, which on a 120 Hz phone means most of the time while something works; 33 ms
+  is the UI_SPEC 3.5 budget. The `withFrameNanos` loop runs only while the header has a
+  window bound and the lifecycle is RESUMED, sleeps between ticks instead of waking on
+  every vsync, and redraws through a counter read in the draw phase (no recomposition).
+- **Light** is ot3's meaning (`T3Starfield.qml:47-48`): comets stay in header skies only.
+  The header is Android's only sky, so Light differs from Full only in pace. **Off** is
+  one static frame at the frozen clock. **Auto** is Full plus `onAutoDegrade`: ot3's
+  counter (+1 for a tick over twice its interval, −0.5 otherwise, only while working
+  with no comet on screen) over 90 switches the header to Light and calls back once so
+  the preference can keep it. Animator scale 0 → Off and battery saver → Light are read
+  live by `SkyHeader` (`SkyMotion.limitedBy`).
+- **Energy** is an input (0 idle … 1 working) eased in `SkyClock` over 1 600 ms
+  InOutSine on tick times, not with a Compose animation (which would wake every vsync);
+  the first value applies at once like a QML `Behavior`'s initial value.
+- **Own small types** (`SkyPalette`, `SkyMotion`) instead of the theme classes, so the
+  sky has no dependency on the theme PR; Home maps its theme and motion preference onto
+  them. Detail: [ui/sky.md](ui/sky.md).
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
