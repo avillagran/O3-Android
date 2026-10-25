@@ -359,3 +359,43 @@ at some cost in behaviour or bandwidth.
   `requestOk` take `method`, `path`, `body`; `fetchDescriptor`, `pairBearer`,
   `boundedThread`, `rpcWithTimeout`, `capabilities`). `T3Client.kt` at v0.3.1 (and
   v0.3.2) wraps none of them, and `request(path, protocol)` is GET-only.
+
+## 2026-10-24: v0.3.2 through the app's transport layer
+
+Checked with `NativeT3Transport` over the v0.3.2 release AAR and the host
+`libt3_jni.so` (`26e67a7`): the JVM tests in `core/src/test/.../transport` and one
+manual, read-only live run against a local T3 server (`connect(Bearer)`,
+`request("/api/orchestration/shell")`, `shellStream()` and `threadStream(id)`; shapes
+only, no mutation). Confirmed as expected: `capabilities` (`abiVersion 3`,
+`libraryVersion 0.3.2`), `describe` (116 functions, 13 streams), validation before
+connecting (`invalid_cwd`, `unknown_function`, `invalid_thread_id`), `unauthorized` on a
+401, `fetchDescriptor` without a credential, `t3_environment_mismatch`,
+`invalid_connection_options` for both routes, and closing a subscription from another
+thread waking a blocked `poll` at once.
+
+### 1. A shell metadata snapshot replaces the shell and moves the cursor
+
+- What: on `orchestration.subscribeShell`, T3 follows the authoritative snapshot with a
+  second `kind: "snapshot"` item that carries `resolvedRepositoryIdentityRoots` and only
+  refreshes project identities. The lib treats it as a full state: `start_of` returns
+  `Snapshot` for every shell `snapshot` (`src/stream.rs:52-55`) and `advance` sets the
+  cursor to its `snapshot.snapshotSequence` (`:21`, `:33-36`), and `ThreadStream.poll`
+  returns it as `ThreadUpdate.snapshot`, dropping the events before it in the batch
+  (`bindings/android/kotlin/dev/avillagran/t3/T3Client.kt:290`). A host that
+  follows the documented loop ("replace whatever the host held") replaces its sidebar
+  with a shell that has no threads.
+- Evidence: the live shell stream, first two polls: `items=[snapshot]` with
+  `snapshot{archivedThreads[0], projects[16], schemaVersion, snapshotSequence,
+  threads[213]}` and `boundaries=[]`, then `items=[snapshot]` with
+  `{kind, resolvedRepositoryIdentityRoots[16], snapshot{..., projects[16],
+  threads[0]}}` and `boundaries=[1]` (the same server chunk), then `idle`. ot3's reducer
+  treats such an item as metadata only and keeps the cursor (`src/shell_state.rs:87-107`
+  in omarchy-t3-code v0.2.22, test `metadata_refresh_merges_identities_without_moving_the_cursor`
+  at `:223`: "a resume prefix must not skip replayed events"), following T3's
+  client-runtime `state/shellReducer.ts`.
+- Proposed fix: in `src/stream.rs`, a shell `snapshot` with
+  `resolvedRepositoryIdentityRoots` is neither a `Start::Snapshot` nor a cursor move
+  (`cursor_of` returns `None` for it); `ThreadStream.poll` passes it through `events`
+  instead of `snapshot`, in order. Better, and the same work: phase 1 item 3
+  (`shell.reduce`), which applies it as ot3 does. Add the frame to `StreamFixture`.
+

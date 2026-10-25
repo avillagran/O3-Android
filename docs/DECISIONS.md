@@ -96,6 +96,43 @@ with it and mirrors the surface of the lib's `T3Client` (`connect(route)`, `call
 closed and error, `wake`, `upload`, `image`, `Closeable`); it does not expose RPC tags or
 HTTP paths to the UI layer.
 
+## 2026-10-24: Transport layer over `T3Client`, AAR through a `:t3-lib` module
+
+- **`:t3-lib`** exposes `libs/lib-t3-rust-android.aar` as the artifact of a plain
+  `default` configuration; `core` takes it with `api(project(":t3-lib"))`, so `app` sees
+  the adapter and packages the four `lib/<abi>/libt3_jni.so`. A library module cannot
+  depend on a local `.aar` file directly, and this works with
+  `RepositoriesMode.FAIL_ON_PROJECT_REPOS` (no flatDir). Configuration fails with a
+  pointer to `scripts/fetch-or-build-lib.sh` when the AAR is missing.
+- **`core.transport`**: `T3Transport` (`Closeable`) mirrors `T3Client`: `connect(route)`
+  with `ConnectRoute.Bearer` or `ConnectRoute.Relay` (credentials redacted from
+  `toString`), `capabilities`, `describe`, `call`, `request`, `fetchDescriptor`,
+  `boundedThread`, `shellStream`, `threadStream` and `wakeSubscriptions`. Results are the
+  lib's `org.json` values and failures its `T3Exception`, unchanged: there is no parallel
+  error type and the UI maps `code`. `fetchDescriptor`, `capabilities` and
+  `boundedThread` go through `execute` because `T3Client` has no wrapper for them yet
+  (LIB_REQUESTS.md, phase 1 item 8); no RPC tag or HTTP path is built in Kotlin.
+  `upload`, `image`, `assetBytes` and `projectFavicon` arrive with the screens that need
+  them.
+- **`NativeT3Transport`** runs every native call on `Dispatchers.IO`. Streams are cold
+  flows over `ThreadStream`: each collection opens one subscription, polls it on IO,
+  skips polls with nothing new, emits the closed update last and completes. Cancelling
+  the collector closes the stream, which wakes a poll blocked in native code at once
+  (measured 11 ms instead of up to 1 s). The flow has no buffer: the lib's bounded queue
+  is the buffer, and a collector that falls behind ends the stream with
+  `stream_backpressure` instead of holding snapshots in Kotlin. Nothing reconnects; the
+  host resumes from the last update's `cursor`.
+- `threadStream` defaults to `compactTurnItems = false` (the lib's `ThreadStream`
+  defaults to true) until the lib restores compact stream snapshots (LIB_REQUESTS.md,
+  phase 1 item 2).
+- **`FakeT3Transport`** (scripted answers, `MutableSharedFlow` streams, `not_connected`
+  before `connect`) lives in `core`'s main source set so `app` tests can use it too;
+  Android test fixtures with Kotlin are still experimental in AGP 8.13.
+- JVM unit tests drive the real Rust core through the host `libt3_jni.so`
+  (`java.library.path` set on every `Test` task, `org.json` on the test classpath)
+  against small local HTTP and WebSocket fakes. They skip when the library is absent and
+  fail instead with `OT3A_REQUIRE_HOST_JNI=1`, which CI sets.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
