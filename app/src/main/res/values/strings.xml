@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ot3</string>
+
+    <string name="connect_title">Connect to a T3 Code server</string>
+    <string name="connect_continue">Continue</string>
+
+    <string name="sidebar_empty">No environments yet</string>
+</resources>

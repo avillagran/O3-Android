@@ -1,0 +1,47 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # ubuntu-latest ships an Android SDK (ANDROID_HOME) with accepted licences;
+      # AGP installs any missing platform or build-tools on first use.
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests, lint and debug build
+        run: >-
+          ./gradlew --no-daemon
+          :core:testDebugUnitTest
+          :core:lintDebug :app:lintDebug
+          :app:assembleDebug
+          :core:assembleDebugAndroidTest :app:assembleDebugAndroidTest
+
+      - name: Upload test and lint reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            **/build/reports/lint-results-*.html
+            **/build/reports/tests/
+            **/build/test-results/**/*.xml

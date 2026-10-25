@@ -11,3 +11,17 @@ pairing link, URL and token, OmaBridge, Tailscale, and later T3 Connect.
 Status: **in development, not distributed yet.** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 Independent community project; not an official T3 Code app. MIT License.
+
+## Building
+
+Requirements: JDK 17 or newer (21 recommended) and an Android SDK with platform 36.
+Point Gradle at the SDK with `sdk.dir=...` in `local.properties` (not versioned) or
+`ANDROID_HOME`.
+
+```sh
+./gradlew :core:testDebugUnitTest :app:assembleDebug   # unit tests and debug APK
+./gradlew :core:lintDebug :app:lintDebug               # lint
+./gradlew connectedDebugAndroidTest                    # Room, credential and Compose UI tests on a device
+```
+
+Build and structure decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
