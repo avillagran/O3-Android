@@ -75,6 +75,7 @@ fun PairScreen(
     onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    SecureWindow()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val waiting by inbox.collectAsStateWithLifecycle()
     LaunchedEffect(waiting) {

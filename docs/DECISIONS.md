@@ -358,6 +358,10 @@ factory, the fake's scripting). Supersedes the entry above.
   intent's data after reading it. The system may still keep the launching intent in its
   recent-tasks record; the code is single-use and short-lived (five minutes by default),
   and it is spent once paired, so this is accepted.
+- **`FLAG_SECURE` while pairing**: the pairing and scanner screens set it on the activity's
+  window while they are composed (`ui/pair/SecureWindow.kt`, counted so that the
+  transition between the two never clears it), so the link, the code it holds and the
+  camera view stay out of screenshots, screen recordings and the recents thumbnail.
 - **UI kept minimal and isolated** (`ui/pair/`, one button on the Connect screen). The
   redesign replaces it with the Add environment screen of [UI_SPEC.md](UI_SPEC.md) (4.2,
   tranche UI-6), whose QR card, link field and masked code use this `PairingService`. That

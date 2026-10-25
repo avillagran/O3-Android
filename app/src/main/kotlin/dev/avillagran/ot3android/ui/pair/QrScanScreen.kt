@@ -62,6 +62,7 @@ object QrScanScreenTags {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrScanScreen(onScanned: (String) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    SecureWindow()
     val context = LocalContext.current
     var granted by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
