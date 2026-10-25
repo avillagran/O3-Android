@@ -3,6 +3,9 @@ package dev.avillagran.ot3android.ui.thread
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -75,6 +78,8 @@ class ThreadScreenTest {
         composeRule.onNodeWithTag(ThreadScreenTags.message("m1")).assertIsDisplayed()
         composeRule.onNodeWithTag(ThreadScreenTags.message("m2")).assertIsDisplayed()
         composeRule.onNodeWithTag(ThreadScreenTags.streaming("m2"), useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(ThreadScreenTags.message("m2"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Typing"))
         composeRule.onNodeWithTag(ThreadScreenTags.WORKING, useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithTag(ThreadScreenTags.INTERRUPT).assertIsEnabled()
         composeRule.onNodeWithTag(ThreadScreenTags.request("q1")).assertIsDisplayed()

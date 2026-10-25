@@ -97,10 +97,16 @@ class ThreadProjectionShimTest {
         assertFalse(ThreadProjectionShim.working(shim.projection))
         assertNull(ThreadProjectionShim.activeRunId(shim.projection))
 
-        // A waiting run with no activeRunId still counts as working.
-        shim.replace(ThreadFixtures.bounded(5, projection(runs = listOf(run("r2", "waiting")))))
+        // As ot3: the newest active run counts even when the thread names none (the bounded
+        // snapshot's thread has no activeRunId), and runs[] wins over a stale activeRunId.
+        shim.replace(ThreadFixtures.bounded(5, projection(runs = listOf(run("r1", "running"), run("r2", "waiting")))))
         assertTrue(ThreadProjectionShim.working(shim.projection))
         assertEquals("r2", ThreadProjectionShim.interruptibleRunId(shim.projection))
+        shim.replace(ThreadFixtures.bounded(6, projection(runs = listOf(run("r2", "completed")), activeRunId = "r2")))
+        assertFalse(ThreadProjectionShim.working(shim.projection))
+        // With no runs at all, the thread's activeRunId is all there is.
+        shim.replace(ThreadFixtures.bounded(7, projection(activeRunId = "r3")))
+        assertEquals("r3", ThreadProjectionShim.interruptibleRunId(shim.projection))
     }
 
     @Test

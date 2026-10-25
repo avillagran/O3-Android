@@ -125,6 +125,21 @@ class MessageSenderTest {
     }
 
     @Test
+    fun textTheLibWouldRefuseIsNeverPersisted() = runTest {
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        fake.onCall(MessageSender.DISPATCH) { JSONObject() }
+        val transport = connected()
+        for (text in listOf("", "  \n ", "a\u0000b", "x".repeat(MessageSender.TEXT_MAX + 1))) {
+            assertEquals(SendResult.Failed(MessageSender.INVALID_INPUT, "text"), sender.send(transport, "env-1", "t1", text, null))
+        }
+        assertTrue(dao.rows.value.isEmpty())
+        assertTrue(fake.calls.isEmpty())
+        // The limit counts characters, not UTF-16 units.
+        assertTrue(MessageSender.isSendable("😀".repeat(MessageSender.TEXT_MAX)))
+        assertFalse(MessageSender.isSendable("😀".repeat(MessageSender.TEXT_MAX + 1)))
+    }
+
+    @Test
     fun notConnectedPersistsNothing() = runTest {
         val sender = MessageSender(OutboxRepository(dao), this, ids)
         assertEquals(SendResult.Failed(MessageSender.NOT_CONNECTED), sender.send(null, "env-1", "t1", "Hello", null))

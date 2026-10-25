@@ -49,6 +49,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -221,9 +225,11 @@ private fun Timeline(messages: List<ThreadMessage>) {
 private fun MessageBubble(message: ThreadMessage) {
     val user = message.role == "user"
     val colors = MaterialTheme.colorScheme
+    val typing = stringResource(R.string.thread_message_typing)
     Row(
         horizontalArrangement = if (user) Arrangement.End else Arrangement.Start,
-        modifier = Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(message.id)),
+        modifier = Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(message.id))
+            .semantics { if (message.streaming) stateDescription = typing },
     ) {
         Surface(
             color = if (user) colors.primaryContainer else colors.surfaceVariant,
@@ -235,7 +241,10 @@ private fun MessageBubble(message: ThreadMessage) {
                 SelectionContainer {
                     Text(message.text, style = MaterialTheme.typography.bodyLarge)
                 }
-                if (message.streaming) StreamingCursor(Modifier.testTag(ThreadScreenTags.streaming(message.id)))
+                // Decoration only: the bubble's state description says it is still being written.
+                if (message.streaming) {
+                    StreamingCursor(Modifier.clearAndSetSemantics { testTag = ThreadScreenTags.streaming(message.id) })
+                }
             }
         }
     }
@@ -391,13 +400,18 @@ private fun Composer(
     }
 }
 
+/** The longest rejection reason a snackbar shows; the server's text can be a whole schema error. */
+private const val REASON_MAX = 200
+
+private fun String.truncated(max: Int): String = if (length <= max) this else take(max - 1).trimEnd() + "…"
+
 /** Snackbar text for a notice; codes come from the lib and never carry credentials. */
 @Composable
 private fun noticeText(notice: ThreadNotice): String = when (notice) {
     is ThreadNotice.Unconfirmed -> stringResource(R.string.thread_notice_unknown)
     is ThreadNotice.Failed -> when (notice.code) {
         "rpc_outcome_unknown" -> stringResource(R.string.thread_notice_unknown)
-        "rpc_rejected" -> notice.reason?.let { stringResource(R.string.thread_notice_rejected, it) }
+        "rpc_rejected" -> notice.reason?.let { stringResource(R.string.thread_notice_rejected, it.truncated(REASON_MAX)) }
             ?: stringResource(R.string.thread_notice_rejected_plain)
         "write_not_authorized" -> stringResource(R.string.thread_notice_scope, notice.requiredScope ?: "orchestration:operate")
         "not_connected" -> stringResource(R.string.thread_notice_not_connected)

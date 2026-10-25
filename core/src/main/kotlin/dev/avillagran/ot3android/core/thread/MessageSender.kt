@@ -48,6 +48,7 @@ class MessageSender(
         /** Runs once the command is in the outbox, before it is sent. */
         onPersisted: suspend () -> Unit = {},
     ): SendResult = detached {
+        if (!isSendable(text)) return@detached SendResult.Failed(INVALID_INPUT, "text")
         if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
         val commandId = newId()
         val args = messageCommand(commandId, newId(), threadId, text, modelSelection).toString()
@@ -128,6 +129,20 @@ class MessageSender(
 
         /** Not a lib code: the command is no longer in the outbox. */
         const val NOT_IN_OUTBOX = "not_in_outbox"
+
+        /** The lib's code for arguments its validator refuses. */
+        const val INVALID_INPUT = "invalid_input"
+
+        /** The lib's `message.dispatch` limit on `text`, in characters (`src/api/orchestration.rs`). */
+        const val TEXT_MAX = 120_000
+
+        /**
+         * What the lib's validator accepts as message text with no attachments: not blank, no
+         * NUL, at most [TEXT_MAX] characters (Unicode scalar values, as Rust counts them).
+         * Checked before anything is persisted, so a refused text never reaches the outbox.
+         */
+        fun isSendable(text: String): Boolean =
+            text.isNotBlank() && '\u0000' !in text && text.codePointCount(0, text.length) <= TEXT_MAX
 
         /** `message.dispatch` with every member the lib's validator requires, and no other. */
         fun messageCommand(

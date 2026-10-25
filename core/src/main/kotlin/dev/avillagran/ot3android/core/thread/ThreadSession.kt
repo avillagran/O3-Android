@@ -111,9 +111,6 @@ class ThreadSession(
     private var job: Job? = null
     private val retryNow = Channel<Unit>(Channel.CONFLATED)
 
-    /** The held projection; for callers that need a field the view does not carry. */
-    val projection: org.json.JSONObject? get() = shim.projection
-
     @Synchronized
     fun start() {
         if (job?.isActive == true) return

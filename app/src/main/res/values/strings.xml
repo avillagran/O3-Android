@@ -83,6 +83,7 @@
     <string name="thread_discard">Discard</string>
     <string name="thread_composer_hint">Message</string>
     <string name="thread_send">Send</string>
+    <string name="thread_message_typing">Typing</string>
     <string name="thread_notice_unknown">The server did not confirm the message. It may have been sent.</string>
     <string name="thread_notice_rejected">The server refused it: %1$s</string>
     <string name="thread_notice_rejected_plain">The server refused it.</string>

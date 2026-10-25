@@ -194,16 +194,23 @@ class ThreadProjectionShim {
                 )
             }.sortedBy { it.createdAt.orEmpty() }
 
-        /** A run is preparing, starting, running or waiting, or the thread names an active run. */
-        fun working(projection: JSONObject?): Boolean =
-            activeRunId(projection) != null ||
-                projection.objects("runs").any { it.optString("status") in ACTIVE_RUN }
+        /** The thread has an active run ([activeRunId]); drives the working label and Stop. */
+        fun working(projection: JSONObject?): Boolean = activeRunId(projection) != null
 
-        fun activeRunId(projection: JSONObject?): String? = projection?.optJSONObject("thread")?.text("activeRunId")
+        /**
+         * The active run as ot3 computes it (`active_run_id`, `src/lib.rs`): the newest
+         * `runs[]` row in [ACTIVE_RUN]; only when `runs[]` is empty, `thread.activeRunId`. The
+         * bounded snapshot's `thread` carries no `activeRunId` (seen live with a run
+         * `running`), so `runs[]` must come first; the lib's apply rule keeps both in step.
+         */
+        fun activeRunId(projection: JSONObject?): String? {
+            val runs = projection.objects("runs")
+            if (runs.isEmpty()) return projection?.optJSONObject("thread")?.text("activeRunId")
+            return runs.lastOrNull { it.optString("status") in ACTIVE_RUN }?.text("id")
+        }
 
-        /** The run to interrupt: the thread's active run, else the newest active one. */
+        /** The run Stop interrupts: [activeRunId]. */
         fun interruptibleRunId(projection: JSONObject?): String? = activeRunId(projection)
-            ?: projection.objects("runs").lastOrNull { it.optString("status") in ACTIVE_RUN }?.text("id")
 
         fun title(projection: JSONObject?): String? = projection?.optJSONObject("thread")?.text("title")
 

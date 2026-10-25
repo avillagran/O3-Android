@@ -26,7 +26,7 @@ data class ComposerState(
     val unconfirmed: List<PendingCommand> = emptyList(),
 ) {
     /** True when the draft could be sent now, given a connection. */
-    val canSend: Boolean get() = draft.isNotBlank() && !sending && unconfirmed.isEmpty()
+    val canSend: Boolean get() = !sending && unconfirmed.isEmpty() && MessageSender.isSendable(draft)
 }
 
 /**
