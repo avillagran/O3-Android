@@ -6,7 +6,8 @@ import java.io.File
 
 /**
  * Skips a test unless the desktop libt3_jni (scripts/fetch-or-build-lib.sh) is on
- * java.library.path. With OT3A_REQUIRE_HOST_JNI=1 (CI) a missing library fails instead.
+ * java.library.path. With OT3A_REQUIRE_HOST_JNI=1 (CI) or -Pot3a.requireHostJni=true a missing
+ * library fails instead.
  */
 internal fun assumeHostJni() {
     val name = System.mapLibraryName("t3_jni")
@@ -14,5 +15,6 @@ internal fun assumeHostJni() {
         .split(File.pathSeparator)
         .any { File(it, name).isFile }
     val message = "$name not on java.library.path; run scripts/fetch-or-build-lib.sh"
-    if (System.getenv("OT3A_REQUIRE_HOST_JNI") == "1") assertTrue(message, found) else assumeTrue(message, found)
+    val required = System.getenv("OT3A_REQUIRE_HOST_JNI") == "1" || System.getProperty("ot3a.requireHostJni") == "true"
+    if (required) assertTrue(message, found) else assumeTrue(message, found)
 }

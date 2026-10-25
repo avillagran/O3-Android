@@ -49,10 +49,18 @@ ksp {
 }
 
 // The desktop libt3_jni.so built by scripts/fetch-or-build-lib.sh, for JVM unit tests that
-// drive the real Rust core; those tests are skipped when it is absent.
-val hostJniDir = rootProject.file("libs/host/linux-x86_64").absolutePath
+// drive the real Rust core; those tests are skipped when it is absent, and fail instead with
+// OT3A_REQUIRE_HOST_JNI=1 (CI) or -Pot3a.requireHostJni=true. The library and both switches
+// are test inputs, so adding, rebuilding or requiring it reruns the tests.
+val hostJniDir = rootProject.file("libs/host/linux-x86_64")
+val requireHostJniProperty = providers.gradleProperty("ot3a.requireHostJni").orElse("false")
 tasks.withType<Test>().configureEach {
-    systemProperty("java.library.path", hostJniDir)
+    systemProperty("java.library.path", hostJniDir.absolutePath)
+    systemProperty("ot3a.requireHostJni", requireHostJniProperty.get())
+    inputs.files(fileTree(hostJniDir) { include("*.so") })
+        .withPropertyName("hostJni")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property("requireHostJni", providers.environmentVariable("OT3A_REQUIRE_HOST_JNI").orElse(""))
 }
 
 dependencies {
