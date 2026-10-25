@@ -173,7 +173,7 @@ private fun CameraPreview(
     var unavailable by remember { mutableStateOf(false) }
     LaunchedEffect(lifecycleOwner) {
         val executor = Executors.newSingleThreadExecutor()
-        val decoder = QrDecoder()
+        val reader = FrameReader()
         val done = AtomicBoolean(false)
         var lastRejectedAt = 0L
         val mainExecutor = ContextCompat.getMainExecutor(context)
@@ -185,7 +185,7 @@ private fun CameraPreview(
                 setAnalyzer(executor) { image ->
                     image.use {
                         if (done.get()) return@use
-                        val text = decoder.decode(it) ?: return@use
+                        val text = reader.read(it) ?: return@use
                         if (!currentAccept(text)) {
                             val now = SystemClock.elapsedRealtime()
                             if (now - lastRejectedAt >= REJECT_REPEAT_MS) {
@@ -227,12 +227,22 @@ private fun CameraPreview(
     }
 }
 
-/** The frame's Y plane, copied row by row (the last row may be shorter than the stride). */
-private fun QrDecoder.decode(image: ImageProxy): String? {
-    val plane = image.planes.firstOrNull() ?: return null
-    val buffer = plane.buffer.duplicate().apply { rewind() }
-    val stride = plane.rowStride
-    val luma = ByteArray(stride * image.height)
-    buffer.get(luma, 0, minOf(buffer.remaining(), luma.size))
-    return decode(luma, image.width, image.height, stride)
+/**
+ * Reads the QR code in a frame's Y plane, copied into one buffer reused across frames (a new
+ * one only when the frame size changes). Not thread-safe; one per analyzer thread.
+ */
+private class FrameReader {
+    private val decoder = QrDecoder()
+    private var luma = ByteArray(0)
+
+    fun read(image: ImageProxy): String? {
+        val plane = image.planes.firstOrNull() ?: return null
+        val buffer = plane.buffer.duplicate().apply { rewind() }
+        val stride = plane.rowStride
+        val size = stride * image.height
+        if (luma.size != size) luma = ByteArray(size)
+        // The last row may be shorter than the stride; the bytes past it are never read.
+        buffer.get(luma, 0, minOf(buffer.remaining(), size))
+        return decoder.decode(luma, image.width, image.height, stride)
+    }
 }
