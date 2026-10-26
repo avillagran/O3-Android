@@ -17,7 +17,9 @@ import dev.avillagran.ot3android.ui.thread.objects
 import org.json.JSONObject
 import java.text.DateFormat
 import java.text.NumberFormat
-import javax.xml.datatype.DatatypeFactory
+import java.text.SimpleDateFormat
+import java.text.ParsePosition
+import java.util.Locale
 import java.util.Date
 
 /** Renders the native public projection as-is: no account pooling or pace calculation. */
@@ -75,5 +77,13 @@ private fun LimitAccount(title: String, detail: String, limits: JSONObject?, tag
 @Composable
 private fun formatLimitTime(value: String): String? {
     val locale = LocalConfiguration.current.locales[0]
-    return runCatching { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale).format(DatatypeFactory.newInstance().newXMLGregorianCalendar(value).toGregorianCalendar().time) }.getOrNull()
+    return runCatching { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale).format(limitDate(value) ?: return null) }.getOrNull()
+}
+
+/** The UI shows minutes, so fractional seconds are omitted before platform parsing. */
+internal fun limitDate(value: String): Date? {
+    val seconds = value.replace(Regex("\\.\\d+(?=Z|[+-])"), "")
+    val cursor = ParsePosition(0)
+    val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.ROOT).apply { isLenient = false }.parse(seconds, cursor)
+    return date?.takeIf { cursor.index == seconds.length }
 }

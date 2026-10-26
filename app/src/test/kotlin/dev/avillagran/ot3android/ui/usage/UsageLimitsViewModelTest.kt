@@ -68,6 +68,12 @@ class UsageLimitsViewModelTest {
         assertEquals(2, opens); assertEquals(2, model.state.value.limits!!.getInt("generation"))
     }
 
+    @Test fun resetDatesParseOffsetsAndFractionalSeconds() {
+        assertEquals(limitDate("2026-10-26T18:00:00Z"), limitDate("2026-10-26T15:00:00.123456-03:00"))
+        assertNull(limitDate("2026-99-99T18:00:00Z"))
+        assertNull(limitDate("2026-10-26T18:00:00Zjunk"))
+    }
+
     @Test fun providerProbeGateCountsFailuresAndIsPerEnvironment() = runTest {
         var now = 0L
         val gate = ProviderRefreshGate { now }

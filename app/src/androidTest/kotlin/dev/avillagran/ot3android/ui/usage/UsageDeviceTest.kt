@@ -25,6 +25,8 @@ class UsageDeviceTest {
             rule.onNodeWithTag("usage_tab_limits").performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("38% used").assertIsDisplayed()
+            rule.onAllNodes(hasText("Resets ", substring = true)).onFirst().assertExists()
+            rule.onAllNodes(hasText("Checked ", substring = true)).onFirst().assertExists()
             scenario.onActivity { assertEquals(1, it.fixture.transport.serverConfigCollectors().value); it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
             rule.waitForIdle()
             rule.onNodeWithTag("usage_tab_limits").assertIsSelected()
