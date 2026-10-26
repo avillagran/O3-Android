@@ -15,6 +15,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import dev.avillagran.ot3android.R
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontStyle
@@ -68,7 +72,8 @@ private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSON
     val id = row.getString("id")
     val user = role == "user"
     val colors = Ot3Theme.colors
-    Row(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id)), horizontalArrangement = if (user) Arrangement.End else Arrangement.Start) {
+    val typing = stringResource(R.string.thread_message_typing)
+    Row(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id)).semantics { if (row.optBoolean("streaming")) stateDescription = typing }, horizontalArrangement = if (user) Arrangement.End else Arrangement.Start) {
         Surface(color = if (user) colors.surface else colors.background, shape = RoundedCornerShape(16.dp),
             modifier = Modifier.widthIn(max = 760.dp).then(if (user) Modifier.fillMaxWidth(.85f) else Modifier.fillMaxWidth())) {
             Column(Modifier.padding(if (user) 12.dp else 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -92,7 +97,7 @@ private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSON
                     "secret" -> Text("Secret request · use desktop to respond", color = colors.dim)
                     else -> Text("Unsupported timeline row: $role", color = colors.dim, modifier = Modifier.testTag("thread_unknown_$id"))
                 }
-                if (row.optBoolean("streaming")) Ot3Spinner(size = 12.dp)
+                if (row.optBoolean("streaming")) Ot3Spinner(Modifier.testTag(ThreadScreenTags.streaming(id)), size = 12.dp)
                 if (role == "user" || role == "assistant") CopyText(row.optString("text"), "message_$id")
             }
         }

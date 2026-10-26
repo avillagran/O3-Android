@@ -214,7 +214,7 @@ fun ThreadContent(
                     !state.view.loaded -> Ot3Spinner(
                         Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp,
                     )
-                    state.view.timeline?.optJSONArray("timeline")?.length() == 0 && state.view.messages.isEmpty() -> Text(
+                    (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(
                         stringResource(R.string.thread_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY),
