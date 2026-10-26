@@ -5,10 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import dev.avillagran.ot3android.core.transport.DomainEngine
-import dev.avillagran.ot3android.testing.assumeHostJni
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
-import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Rule
@@ -22,11 +19,7 @@ class TimelineReaderTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     @Test fun rustMarkdownHasHeadingsListsLinksEmphasisAndCopyableCode() {
-        assumeHostJni()
-        val view = runBlocking { DomainEngine.shared.domain("timeline.view", JSONObject().put("projection", JSONObject("""{
-          "thread":{"id":"chat"},"messages":[{"id":"answer","role":"assistant","createdAt":1,
-          "text":"# Native reader\n\n**Bold** and *emphasis* with [reference](https://example.org)\n\n- First\n- Second\n\n```kotlin\nval answer = 42\n```"}]
-        }"""))) as JSONObject }
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/reader.view.json")).readText())
         check(view.getJSONArray("timeline").getJSONObject(0).has("blocks"))
         rule.setContent { Ot3Theme { TimelineReader(view, emptyList()) } }
         rule.onNodeWithText("Native reader").assertIsDisplayed()
