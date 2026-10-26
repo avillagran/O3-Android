@@ -63,6 +63,9 @@ class ThreadWorkspaceDeviceTest {
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
         rule.onNodeWithTag("thread_sidebar_toggle").performClick()
         rule.onNodeWithTag(HomeTags.row("node/chat")).performClick() // Reselecting is a no-op.
+        // Await the exact same reading item after the native orientation/reveal reflow.
+        // Do not scroll to it: that would hide a lost reading anchor.
+        rule.waitUntil(10_000) { rule.onNodeWithTag(ThreadScreenTags.message("m29")).isDisplayed() }
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         rule.runOnIdle {
             assertEquals(1, streamCount())
@@ -75,6 +78,7 @@ class ThreadWorkspaceDeviceTest {
             }
         }
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
+        rule.waitUntil(10_000) { rule.onNodeWithTag(ThreadScreenTags.message("m29")).isDisplayed() }
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         rule.runOnIdle {
             assertEquals(1, streamCount())

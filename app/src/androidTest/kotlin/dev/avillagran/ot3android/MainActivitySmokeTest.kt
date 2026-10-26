@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -53,6 +54,11 @@ class MainActivitySmokeTest {
                 composeRule.onAllNodesWithTag("thread_sidebar_toggle").fetchSemanticsNodes().isNotEmpty()
             }
             composeRule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed().performClick()
+            // Opening the drawer mounts Home and starts its asynchronous Room/domain state.
+            // A clickable workspace control does not imply that content is laid out yet.
+            composeRule.waitUntil(10_000) {
+                composeRule.onNodeWithTag(HomeTags.NO_ENVIRONMENTS).isDisplayed()
+            }
             composeRule.onNodeWithTag(HomeTags.NO_ENVIRONMENTS).assertIsDisplayed()
             composeRule.onNodeWithTag("thread_sidebar_toggle").performClick()
             composeRule.onNodeWithTag(dev.avillagran.ot3android.ui.thread.ThreadScreenTags.LOADING).assertIsDisplayed()
