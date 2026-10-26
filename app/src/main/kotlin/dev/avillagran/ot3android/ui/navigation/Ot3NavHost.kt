@@ -1,192 +1,103 @@
 package dev.avillagran.ot3android.ui.navigation
 
-import android.net.Uri
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.FloatingWindow
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import dev.avillagran.ot3android.appGraph
-import dev.avillagran.ot3android.appViewModel
-import dev.avillagran.ot3android.ui.connect.ConnectScreen
-import dev.avillagran.ot3android.ui.connect.ConnectViewModel
-import dev.avillagran.ot3android.ui.environments.EnvironmentsScreen
-import dev.avillagran.ot3android.ui.environments.EnvironmentsViewModel
-import dev.avillagran.ot3android.ui.pair.PairScreen
-import dev.avillagran.ot3android.ui.pair.PairViewModel
-import dev.avillagran.ot3android.ui.pair.QrScanScreen
-import dev.avillagran.ot3android.ui.settings.AppearanceSettingsScreen
-import dev.avillagran.ot3android.ui.settings.AppearanceSettingsViewModel
-import dev.avillagran.ot3android.ui.sidebar.SidebarScreen
-import dev.avillagran.ot3android.ui.sidebar.SidebarViewModel
-import dev.avillagran.ot3android.ui.thread.ThreadScreen
-import dev.avillagran.ot3android.ui.thread.ThreadViewModel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+
+/** A nav controller that also knows the [SheetNavigator]. */
+@Composable
+fun rememberOt3NavController(): NavHostController = rememberNavController(remember { SheetNavigator() })
 
 /**
- * String routes for now; typed (serializable) routes are a pending decision in
- * docs/DECISIONS.md. `environmentId` in routes is the local catalog id
- * (`Environment.id`), not the server's environment UUID.
+ * The app shell: the three tabs in a `NavigationBar` (hidden while the keyboard is up, as T3
+ * Mobile's Android workspace), the nav host with a nested graph per tab, and the sheet host.
+ * [screens] defaults to the app's view-model screens; tests pass fakes. [deepLink] is a thread
+ * to open (from [ThreadDeepLink]); [onDeepLinkHandled] runs once it is open. While
+ * [pairingLinkWaiting] (a link in `PairingInbox`), the pairing screen opens to take it.
  */
-object Routes {
-    const val ENVIRONMENTS = "environments"
-    const val CONNECT = "connect?environmentId={environmentId}"
-    const val SIDEBAR = "sidebar/{environmentId}"
-    const val THREAD = "thread/{environmentId}/{threadId}"
-
-    // No arguments: a pairing link holds a one-time code and travels through PairingInbox.
-    const val PAIR = "pair"
-    const val SCAN = "pair/scan"
-    const val APPEARANCE = "settings/appearance"
-
-    // Ids are encoded: a thread id may hold `/`, `?` or `#`. Navigation decodes arguments.
-    fun connect(environmentId: String? = null) =
-        if (environmentId == null) "connect" else "connect?environmentId=${Uri.encode(environmentId)}"
-
-    fun sidebar(environmentId: String) = "sidebar/${Uri.encode(environmentId)}"
-    fun thread(environmentId: String, threadId: String) = "thread/${Uri.encode(environmentId)}/${Uri.encode(threadId)}"
-}
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun Ot3NavHost(startDestination: String, navController: NavHostController = rememberNavController()) {
-    val inbox = LocalContext.current.appGraph.pairingInbox
-    // A pairing link from outside (deep link) opens the pairing screen, reusing one already in
-    // the back stack; the screen takes the link once it is started.
-    val waitingLink by inbox.link.collectAsStateWithLifecycle()
-    LaunchedEffect(waitingLink != null) {
-        if (waitingLink != null && navController.currentDestination?.route != Routes.PAIR) {
-            navController.navigate(Routes.PAIR) {
-                popUpTo(Routes.PAIR)
-                launchSingleTop = true
-            }
-        }
+fun Ot3NavHost(
+    navController: NavHostController = rememberOt3NavController(),
+    screens: Ot3Screens? = null,
+    deepLink: Thread? = null,
+    onDeepLinkHandled: () -> Unit = {},
+    pairingLinkWaiting: Boolean = false,
+) {
+    val navigator = remember(navController) { Ot3Navigator(navController) }
+    LaunchedEffect(navigator, deepLink) {
+        val link = deepLink ?: return@LaunchedEffect
+        // The NavHost is subcomposed by the Scaffold: wait until its graph is set.
+        navController.currentBackStackEntryFlow.first()
+        navigator.openThread(link.environmentId, link.threadId, link.prompt)
+        onDeepLinkHandled()
     }
-    // The catalog becomes the root, then the saved environment's sidebar opens.
-    val openSaved: (String) -> Unit = { id ->
-        navController.navigate(Routes.ENVIRONMENTS) { popUpTo(navController.graph.id) { inclusive = true } }
-        navController.navigate(Routes.sidebar(id))
+    LaunchedEffect(navigator, pairingLinkWaiting) {
+        if (!pairingLinkWaiting) return@LaunchedEffect
+        navController.currentBackStackEntryFlow.first()
+        navigator.openPairing()
     }
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable(Routes.ENVIRONMENTS) {
-            EnvironmentsScreen(
-                viewModel = appViewModel { graph -> EnvironmentsViewModel(graph.environmentRepository, graph.connectionManager) },
-                onOpen = { id -> navController.navigate(Routes.sidebar(id)) },
-                onAdd = { navController.navigate(Routes.connect()) },
-                onEdit = { id -> navController.navigate(Routes.connect(id)) },
-                onAppearance = { navController.navigate(Routes.APPEARANCE) },
-            )
-        }
-        composable(Routes.APPEARANCE) {
-            AppearanceSettingsScreen(
-                viewModel = appViewModel { graph ->
-                    AppearanceSettingsViewModel(graph.themePreferences, graph.liveThemeSource, graph.environmentRepository)
-                },
-                onBack = { navController.popBackStack() },
-            )
-        }
-        composable(
-            Routes.CONNECT,
-            arguments = listOf(navArgument("environmentId") { type = NavType.StringType; nullable = true; defaultValue = null }),
-        ) { entry ->
-            val editingId = entry.arguments?.getString("environmentId")
-            ConnectScreen(
-                viewModel = appViewModel { graph ->
-                    ConnectViewModel(graph.serverProbe, graph.environmentRepository, editingId, graph.connectionManager::forget)
-                },
-                onSaved = openSaved,
-                onPair = if (editingId == null) {
-                    { navController.navigate(Routes.PAIR) }
-                } else {
-                    null
-                },
-                onBack = if (navController.previousBackStackEntry != null) {
-                    { navController.popBackStack() }
-                } else {
-                    null
-                },
-            )
-        }
-        composable(Routes.PAIR) {
-            PairScreen(
-                viewModel = appViewModel { graph -> PairViewModel(graph.pairingService()) },
-                inbox = inbox.link,
-                takeFromInbox = inbox::take,
-                onScan = { navController.navigate(Routes.SCAN) },
-                onPaired = openSaved,
-                onBack = if (navController.previousBackStackEntry != null) {
-                    { navController.popBackStack() }
-                } else {
-                    null
-                },
-            )
-        }
-        composable(Routes.SCAN) {
-            QrScanScreen(
-                onScanned = { text ->
-                    // Back to the pairing screen first, so it is the one that takes the link.
-                    navController.popBackStack()
-                    inbox.offer(text, scanned = true)
-                },
-                onBack = { navController.popBackStack() },
-            )
-        }
-        composable(Routes.SIDEBAR, arguments = listOf(navArgument("environmentId") { type = NavType.StringType })) { entry ->
-            val environmentId = entry.arguments?.getString("environmentId").orEmpty()
-            OnScreenEnvironment(environmentId)
-            SidebarScreen(
-                viewModel = appViewModel { graph ->
-                    SidebarViewModel(environmentId, graph.environmentRepository, graph.connectionManager)
-                },
-                onOpenThread = { threadId -> navController.navigate(Routes.thread(environmentId, threadId)) },
-                onEditEnvironment = { navController.navigate(Routes.connect(environmentId)) },
-                onBack = { navController.popBackStack() },
-            )
-        }
-        composable(
-            Routes.THREAD,
-            arguments = listOf(
-                navArgument("environmentId") { type = NavType.StringType },
-                navArgument("threadId") { type = NavType.StringType },
-            ),
-        ) { entry ->
-            val environmentId = entry.arguments?.getString("environmentId").orEmpty()
-            val threadId = entry.arguments?.getString("threadId").orEmpty()
-            OnScreenEnvironment(environmentId)
-            ThreadScreen(
-                viewModel = appViewModel { graph ->
-                    ThreadViewModel(
-                        environmentId,
-                        threadId,
-                        graph.connectionManager,
-                        graph.draftRepository,
-                        graph.outboxRepository,
-                        graph.messageSender,
-                        graph.appScope,
-                    )
-                },
-                onBack = { navController.popBackStack() },
-            )
-        }
+    val resolvedScreens = screens ?: remember(navigator) { AppScreens(navigator) }
+    val current = navController.currentBackStackEntryAsState()
+    // Built once: the graph must not change on recomposition; isTop reads the current entry.
+    val graph: NavGraphBuilder.() -> Unit = remember(resolvedScreens, current) {
+        { ot3Graph(resolvedScreens) { entry -> entry.id == current.value?.id } }
+    }
+    val visibleEntries = navController.visibleEntries.collectAsState()
+    val contentDestination = visibleEntries.value.lastOrNull {
+        it.destination !is FloatingWindow
+    }?.destination
+    Scaffold(
+        contentWindowInsets = WindowInsets(0),
+        bottomBar = {
+            if (contentDestination?.hasRoute(Thread::class) != true && !WindowInsets.isImeVisible) Ot3NavigationBar(navigator, TopTab.of(current.value))
+        },
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = ChatsGraph,
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
+            builder = graph,
+        )
+        SheetHost(navController.sheetNavigator)
     }
 }
 
-/**
- * This screen shows one environment: the app wears its live theme while the screen is up
- * (UI_SPEC 3.1.3), and it becomes the last used one.
- */
+/** Chats / Pull requests / Settings. Plain Material until the kit restyles it. */
 @Composable
-private fun OnScreenEnvironment(environmentId: String) {
-    val graph = LocalContext.current.appGraph
-    DisposableEffect(environmentId) {
-        val claim = graph.liveThemeSource.showOnScreen(environmentId)
-        graph.appScope.launch { graph.selectionPreferences.setLastEnvironmentId(environmentId) }
-        onDispose { claim.close() }
+private fun Ot3NavigationBar(navigator: Ot3Navigator, selected: TopTab?) {
+    NavigationBar(Modifier.testTag(NavTags.BAR)) {
+        TopTab.entries.forEach { tab ->
+            NavigationBarItem(
+                selected = tab == selected,
+                onClick = { navigator.selectTab(tab) },
+                icon = { Icon(painterResource(tab.icon), contentDescription = null) },
+                label = { Text(stringResource(tab.label)) },
+                modifier = Modifier.testTag(NavTags.tab(tab)),
+            )
+        }
     }
 }

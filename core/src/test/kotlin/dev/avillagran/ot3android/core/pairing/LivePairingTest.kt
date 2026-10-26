@@ -6,6 +6,7 @@ import dev.avillagran.ot3android.core.data.InMemoryEnvironmentDao
 import dev.avillagran.ot3android.core.data.InMemoryTokenStore
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.NativeT3Transport
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.ot3android.core.transport.assumeHostJni
@@ -36,7 +37,7 @@ class LivePairingTest {
         assumeHostJni()
         try {
             val link = File(linkFile!!).readText().trim()
-            val parsed = PairingLink.parse(link)
+            val parsed = PairingTargets.parse(DomainEngine.shared, link)
             line("link: origin=${parsed.httpBaseUrl} code=${if (parsed.pairingCode.isEmpty()) "missing" else "present"}")
             val target = originOverride?.let { origin ->
                 line("origin overridden: $origin")

@@ -131,12 +131,13 @@ that had been running for hours, during a large Rust + Gradle build.
 
 ## CI
 
-The `core-instrumented` job in `.github/workflows/android.yml` runs
-`:core:connectedDebugAndroidTest` on ubuntu-latest with
+The `instrumented` job in `.github/workflows/android.yml` runs
+`:core:connectedDebugAndroidTest` and `:app:connectedDebugAndroidTest` on ubuntu-latest with
 `reactivecircus/android-emulator-runner@v2`: same image (API 34, google_apis, x86_64,
 pixel_6, 2 GB), `-gpu swiftshader_indirect -no-snapshot`, animations off, KVM enabled
-through a udev rule. Only `:core` runs there: its tests (Room migrations,
-`CredentialStore`) use their own database and keys and do not depend on app state.
+through a udev rule. Until UI-1f only `:core` ran there; `:app` joined once all its
+instrumented tests passed on the reference emulator (2026-10-25: core 4/4, app 17/17). The
+CI emulator is fresh per run, so the app's data starts empty.
 
 ## Evidence log (2026-10-25)
 

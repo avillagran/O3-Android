@@ -8,6 +8,8 @@ import dev.avillagran.ot3android.core.pairing.PairingFailure
 import dev.avillagran.ot3android.core.pairing.PairingService
 import dev.avillagran.ot3android.core.pairing.PairingState
 import dev.avillagran.ot3android.core.security.TokenStore
+import dev.avillagran.ot3android.testing.assumeHostJni
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairedBearer
@@ -44,11 +46,17 @@ class PairViewModelTest {
     }
     private val repository = EnvironmentRepository(MemoryDao(), { MemoryTokens() }, NoCursors)
     private val viewModel by lazy {
-        PairViewModel(PairingService(factory, repository, PairingClient(label = "ot3 test"), {}, {}, io = dispatcher))
+        PairViewModel(
+            PairingService(factory, repository, PairingClient(label = "ot3 test"), {}, {}, io = dispatcher, domain = DomainEngine(dispatcher)),
+        )
     }
 
     @Before
-    fun setUp() = Dispatchers.setMain(dispatcher)
+    fun setUp() {
+        // Links are read by the lib's `connectionCatalog.pairingTarget` (host JNI library).
+        assumeHostJni()
+        Dispatchers.setMain(dispatcher)
+    }
 
     @After
     fun tearDown() = Dispatchers.resetMain()

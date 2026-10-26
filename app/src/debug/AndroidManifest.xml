@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the component catalog (UI_SPEC 3.9) opened explicitly, never a launcher. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name=".debug.workspace.WorkspaceFixtureActivity"
+            android:exported="true" android:label="UI-1h offline fixture"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".debug.catalog.ComponentCatalogActivity"
+            android:exported="true"
+            android:label="@string/mobile_component_catalog"
+            android:taskAffinity="dev.avillagran.ot3android.catalog">
+
+        </activity>
+    </application>
+</manifest>

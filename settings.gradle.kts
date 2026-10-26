@@ -25,3 +25,5 @@ rootProject.name = "ot3-android"
 include(":app")
 include(":core")
 include(":t3-lib")
+include(":lucide-vectors")
+project(":lucide-vectors").projectDir = file("tools/lucide-vectors")

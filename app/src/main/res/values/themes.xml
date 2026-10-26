@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Ot3Android" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Until Compose draws, the window shows the default light theme's background
+         (catppuccin-latte, assets/themes/omarchy-themes.json). -->
+    <style name="Theme.Ot3Android" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ot3_window_background</item>
+    </style>
 </resources>

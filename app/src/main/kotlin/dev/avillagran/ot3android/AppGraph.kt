@@ -8,6 +8,8 @@ import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.local.Ot3Database
 import dev.avillagran.ot3android.core.data.prefs.AppearancePreferences
+
+import dev.avillagran.ot3android.core.data.prefs.HomePreferences
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.pairing.PairingService
@@ -24,6 +26,7 @@ import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
 import dev.avillagran.ot3android.ui.pair.PairingInbox
+import dev.avillagran.ot3android.ui.theme.OmarchyThemeCatalog
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +67,14 @@ class AppGraph(
 
     val shellCursors: ShellCursorPreferences by lazy { ShellCursorPreferences(appContext) }
 
+    val appearancePreferences: AppearancePreferences by lazy { AppearancePreferences(appContext) }
+
+    /** Home's grouping and collapsed shelves. */
+    val homePreferences: HomePreferences by lazy { HomePreferences(appContext) }
+
+    /** The bundled Omarchy themes, parsed once off the main thread (started in [init]). */
+    suspend fun themeCatalog(): OmarchyThemeCatalog = OmarchyThemeCatalog.load(appContext)
+
     private val credentialStoreLock = Mutex()
     private var credentialStoreInstance: CredentialStore? = null
 
@@ -84,7 +95,7 @@ class AppGraph(
      * The live-theme settings over the manual choice. `AppearancePreferences(context)` shares
      * the process-wide `appearance` DataStore, so building it here costs no second store.
      */
-    val themePreferences: ThemePreferences by lazy { ThemePreferences(appContext, AppearancePreferences(appContext)) }
+    val themePreferences: ThemePreferences by lazy { ThemePreferences(appContext, appearancePreferences) }
 
     /**
      * The environment's live Omarchy theme (UI_SPEC 3.1.3), started on first use. Following an
@@ -140,6 +151,7 @@ class AppGraph(
         // A send cut by the previous process dying has an unknown outcome: offer Resend.
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
+        appScope.launch { themeCatalog() }
     }
 
     private companion object {

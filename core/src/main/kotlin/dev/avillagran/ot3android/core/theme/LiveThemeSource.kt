@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -120,7 +122,7 @@ class LiveThemeSource(
     private suspend fun follow(environmentId: String, label: String) {
         val follower = Follower(environmentId, label)
         follower.showCached()
-        combine(connections(environmentId), visible) { connection, visible -> connection.takeIf { visible } }
+        visible.flatMapLatest { shown -> if (shown) connections(environmentId) else flowOf(null) }
             .distinctUntilChanged()
             .collectLatest { connection ->
                 if (connection == null) return@collectLatest

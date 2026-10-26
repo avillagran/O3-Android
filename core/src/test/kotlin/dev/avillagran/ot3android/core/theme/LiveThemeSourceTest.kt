@@ -67,6 +67,7 @@ class LiveThemeSourceTest {
     private val environments = MutableStateFlow(listOf(env("a", "node")))
     private val lastUsed = MutableStateFlow<String?>(null)
     private val connections = mutableMapOf<String, MutableStateFlow<Connection?>>()
+    private val requestedConnections = mutableListOf<String>()
 
     private fun connection(id: String) = connections.getOrPut(id) { MutableStateFlow(null) }
 
@@ -77,7 +78,7 @@ class LiveThemeSourceTest {
         settings = settings,
         environments = environments,
         lastUsedEnvironmentId = lastUsed,
-        connections = { id -> connection(id) },
+        connections = { id -> requestedConnections += id; connection(id) },
     ).also { it.start() }
 
     @Test
@@ -164,9 +165,11 @@ class LiveThemeSourceTest {
         runCurrent()
         // Not visible yet: nothing read.
         assertEquals(0, host.transport.calls.size)
+        assertEquals(emptyList<String>(), requestedConnections)
 
         source.setVisible(true)
         runCurrent()
+        assertEquals(listOf("a"), requestedConnections)
         assertEquals(1, host.reads("colors.toml"))
         assertEquals(1, host.reads("theme.name"))
 

@@ -1,9 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import javax.inject.Inject
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.roborazzi)
+    // Typed navigation routes (@Serializable destinations, UI_SPEC 2.1).
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -34,12 +38,76 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Robolectric reads the merged resources and assets (themes JSON, Fira Code).
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+}
+
+// The desktop libt3_jni.so (scripts/fetch-or-build-lib.sh) for JVM tests that call the lib's
+// domain functions (pairing links, Home), as in :core; skipped without it, failing instead with
+// OT3A_REQUIRE_HOST_JNI=1 (CI) or -Pot3a.requireHostJni=true.
+val hostJniDir = rootProject.file("libs/host/linux-x86_64")
+val requireHostJniProperty = providers.gradleProperty("ot3a.requireHostJni").orElse("false")
+tasks.withType<Test>().configureEach {
+    systemProperty("java.library.path", hostJniDir.absolutePath)
+    systemProperty("ot3a.requireHostJni", requireHostJniProperty.get())
+    inputs.files(fileTree(hostJniDir) { include("*.so") })
+        .withPropertyName("hostJni")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property("requireHostJni", providers.environmentVariable("OT3A_REQUIRE_HOST_JNI").orElse(""))
+}
+
+// Screenshot goldens (docs/UI_SPEC.md section 5): recordRoborazziDebug writes them,
+// verifyRoborazziDebug fails on any difference.
+roborazzi {
+    outputDir.set(file("src/test/snapshots"))
 }
 
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
+}
+
+// ot3's icons: the SVGs in src/main/svg/lucide become res/drawable/ic_<name>.xml at build
+// time, converted by tools/lucide-vectors (UI_SPEC 3.8; Ot3Icons lists them by name).
+val lucideVectors: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+    }
+}
+
+abstract class GenerateOt3Icons : DefaultTask() {
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val svgDir: DirectoryProperty
+
+    @get:Classpath
+    abstract val converter: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @get:Inject
+    abstract val exec: ExecOperations
+
+    @TaskAction
+    fun generate() {
+        exec.javaexec {
+            classpath = converter
+            mainClass.set("dev.avillagran.ot3android.vectors.MainKt")
+            args(svgDir.get().asFile.absolutePath, outputDir.get().asFile.absolutePath)
+        }
+    }
+}
+
+val generateOt3Icons = tasks.register<GenerateOt3Icons>("generateOt3Icons") {
+    svgDir.set(layout.projectDirectory.dir("src/main/svg/lucide"))
+    converter.from(lucideVectors)
 }
 
 dependencies {
@@ -73,9 +141,28 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
+
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.espresso.core)
+
+    testImplementation(libs.junit)
+
+    lucideVectors(project(":lucide-vectors"))
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.res?.addGeneratedSourceDirectory(generateOt3Icons, GenerateOt3Icons::outputDir)
+    }
 }

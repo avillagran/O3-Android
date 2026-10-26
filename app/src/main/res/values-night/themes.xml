@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Ot3Android" parent="android:Theme.Material.NoActionBar" />
+    <!-- The default dark theme's background (tokyo-night). -->
+    <style name="Theme.Ot3Android" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ot3_window_background</item>
+    </style>
 </resources>

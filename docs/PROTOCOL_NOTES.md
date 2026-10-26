@@ -168,7 +168,7 @@ T3 0.1.3-nightly.20261025.3669 (the same machine's server, on the LAN address th
 named) through lib-t3-rust v0.3.2, by one run of `core/.../pairing/LivePairingTest.kt`;
 **[lib]** is read from lib-t3-rust v0.3.2 (`src/pairing.rs`, `src/connection_catalog.rs`)
 or the T3 CLI bundled in that release, and checked against local fixtures
-(`NativePairingTest`, `PairingLinkTest`); **[inferred]** is what this app assumes.
+(`NativePairingTest`, `PairingTargetsTest`); **[inferred]** is what this app assumes.
 
 ### The link
 
@@ -191,8 +191,8 @@ or the T3 CLI bundled in that release, and checked against local fixtures
   at its `host` parameter, but only when there is a code; `ws`/`wss` map to `http`/`https`;
   a bare `host:port` gets `https`. Path, query and fragment are dropped from the origin;
   user info, port 0 and other schemes are `invalid_endpoint`, and a code with control
-  characters or over 16 KiB is `invalid_pairing_code`. `core/pairing/PairingLink.kt` ports
-  it until the lib exposes it (LIB_REQUESTS.md, phase 1 item 6).
+  characters or over 16 KiB is `invalid_pairing_code`. The app calls it as the domain
+  function `connectionCatalog.pairingTarget` (`core/pairing/PairingTargets.kt`).
 
 ### The exchange (`pairBearer`)
 
