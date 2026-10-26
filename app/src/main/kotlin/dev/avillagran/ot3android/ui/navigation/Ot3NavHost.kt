@@ -10,6 +10,9 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -76,7 +79,12 @@ fun Ot3NavHost(
             if (contentDestination?.hasRoute(Thread::class) != true && !WindowInsets.isImeVisible) Ot3NavigationBar(navigator, TopTab.of(current.value))
         },
     ) { padding ->
+        val motion = Ot3Theme.motion
         NavHost(
+            enterTransition = { fadeIn(motion.pane()) },
+            exitTransition = { fadeOut(motion.pane()) },
+            popEnterTransition = { fadeIn(motion.pane()) },
+            popExitTransition = { fadeOut(motion.pane()) },
             navController = navController,
             startDestination = ChatsGraph,
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),

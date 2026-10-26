@@ -5,7 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameNanos
+import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import dev.avillagran.ot3android.ui.theme.LocalOt3Motion
 
 /**
@@ -21,9 +21,9 @@ internal fun rememberKitClock(running: Boolean, still: Float = 0f): State<Float>
             time.floatValue = still
             return@LaunchedEffect
         }
-        val start = withFrameNanos { it }
+        val start = withInfiniteAnimationFrameNanos { it }
         while (true) {
-            withFrameNanos { now -> time.floatValue = (now - start) / 1_000_000_000f }
+            withInfiniteAnimationFrameNanos { now -> time.floatValue = (now - start) / 1_000_000_000f }
         }
     }
     return time

@@ -38,12 +38,13 @@ object Ot3Motion {
     /** Switch knob, OutCubic (`ot3:ui/qml/T3Switch.qml:17`). */
     const val SWITCH_MS = 120
 
-    /** Row arrival: opacity OutCubic, drift −18 → 0 dp OutBack 1.2 (`ot3:ui/qml/T3ThreadRow.qml:127-136`). */
-    const val ROW_ARRIVE_MS = 360
+    /** Row arrival: 520 × 0.8 ms, pause 20%, opacity OutCubic, drift −18 → 0 dp OutBack 1.2 (`ot3:ui/qml/T3ThreadRow.qml:127-136`). */
+    const val ROW_ARRIVE_MS = 416
+    const val ROW_ARRIVE_DELAY_MS = 83
     const val ROW_ARRIVE_DRIFT_DP = -18f
 
-    /** Row departure, InCubic (`ot3:ui/qml/T3ThreadRow.qml:138-142`). */
-    const val ROW_DEPART_MS = 300
+    /** Row departure: 520 × 0.6 ms, InCubic (`ot3:ui/qml/T3ThreadRow.qml:138-142`). */
+    const val ROW_DEPART_MS = 312
 
     /** Row moving between shelves, InOutCubic (`ot3:ui/qml/T3Panel.qml:586,757`). */
     const val SHELF_MOVE_MS = 520
@@ -58,12 +59,15 @@ object Ot3Motion {
     const val SHIMMER_CYCLE_MS = 2200
     const val SHIMMER_BAND_DP = 72f
 
+    /** T3Reveal software/spring path (T3Reveal.qml:34), natural-size content clipped at the edge. */
+    const val REVEAL_MS = 520
+
     /** Panes, cubic (`t3m:src/features/layout/workspace-pane-animation.ts:8-11`). */
     const val PANE_MS = 260
 
-    val EaseOutCubic: Easing = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)
-    val EaseInCubic: Easing = CubicBezierEasing(0.32f, 0f, 0.67f, 0f)
-    val EaseInOutCubic: Easing = CubicBezierEasing(0.65f, 0f, 0.35f, 1f)
+    val EaseOutCubic: Easing = Easing { t -> val u = 1f - t; 1f - u * u * u }
+    val EaseInCubic: Easing = Easing { t -> t * t * t }
+    val EaseInOutCubic: Easing = Easing { t -> if (t < 0.5f) 4f * t * t * t else { val u = -2f * t + 2f; 1f - u * u * u / 2f } }
 
     /** Qt's OutBack with overshoot [overshoot]: `t' = t − 1; t'² ((s + 1) t' + s) + 1`. */
     fun easeOutBack(overshoot: Float): Easing = Easing { t ->
@@ -115,15 +119,19 @@ data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationP
 
     fun <T> switchKnob(): AnimationSpec<T> = tween(Ot3Motion.SWITCH_MS, Ot3Motion.EaseOutCubic)
 
-    fun <T> rowArriveFade(): FiniteAnimationSpec<T> = tween(Ot3Motion.ROW_ARRIVE_MS, Ot3Motion.EaseOutCubic)
+    fun <T> rowArriveFade(): FiniteAnimationSpec<T> = spec(androidx.compose.animation.core.tween(Ot3Motion.ROW_ARRIVE_MS - Ot3Motion.ROW_ARRIVE_DELAY_MS,
+            delayMillis = Ot3Motion.ROW_ARRIVE_DELAY_MS, easing = Ot3Motion.EaseOutCubic))
 
-    fun <T> rowArriveDrift(): FiniteAnimationSpec<T> = tween(Ot3Motion.ROW_ARRIVE_MS, Ot3Motion.RowDriftEasing)
+    fun <T> rowArriveDrift(): FiniteAnimationSpec<T> = spec(androidx.compose.animation.core.tween(Ot3Motion.ROW_ARRIVE_MS - Ot3Motion.ROW_ARRIVE_DELAY_MS,
+            delayMillis = Ot3Motion.ROW_ARRIVE_DELAY_MS, easing = Ot3Motion.RowDriftEasing))
 
     fun <T> rowDepart(): FiniteAnimationSpec<T> = tween(Ot3Motion.ROW_DEPART_MS, Ot3Motion.EaseInCubic)
 
     fun <T> shelfMove(): FiniteAnimationSpec<T> = tween(Ot3Motion.SHELF_MOVE_MS, Ot3Motion.EaseInOutCubic)
 
     fun <T> statusPop(): FiniteAnimationSpec<T> = tween(Ot3Motion.STATUS_POP_MS, Ot3Motion.StatusPopEasing)
+
+    fun <T> reveal(): FiniteAnimationSpec<T> = tween(Ot3Motion.REVEAL_MS, Ot3Motion.easeOutBack(1.3f))
 
     fun <T> pane(): FiniteAnimationSpec<T> = tween(Ot3Motion.PANE_MS, Ot3Motion.EaseInOutCubic)
 

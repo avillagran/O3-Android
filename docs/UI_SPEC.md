@@ -1467,3 +1467,38 @@ covers it, but it keeps ot3 and Android from drifting. When this spec is accepte
 8. Approvals and questions sit above the composer as ot3 cards; questions stay paged; the composer is hidden while a question waits.
 9. Seven PRs: visual system and Home, timeline, composer, approvals, changes/diff/PRs, settings/palette/usage, tablets; each with JVM screenshot goldens compared to ot3 captures.
 10. The lib needs 26 exposures (U0–U25), 18 of them new, led by the timeline view, the multi-environment sidebar view, activity, changed files and Markdown blocks.
+
+## UI1i acceptance addendum — vertical correction (2026-10-25)
+
+Andrés rejected the UI1h vertical capture for dead space and missing ot3 style/motion.
+UI1h remains navigation evidence, not visual sign-off. UI1i must be reviewed with
+[measures, original before/after captures and video](ui/compare/ui-1i/README.md).
+A fixture can prove reproducible state/layout; it does not grant aesthetic acceptance.
+
+- Home owns the top safe inset once. The sky covers the real brand/search composition;
+  no duplicate top padding or floating-action reservation. Keep 48 dp touch targets,
+  native font scaling, horizontal safeDrawing/cutout protection and real system bars.
+- Use SkyHeader/SkyBrandRow in production Home, real logo, count pills and existing
+  card/slim row roles. Working energy comes from the lib. Do not draw sky in chat.
+- Ship the source row aura (work comet, attention glints, 1300 ms change star), guarded
+  AGSL plus Canvas fallback, pressed/selected feedback and visible surface motion.
+  App Off/system animator scale 0 stop clocks/transitions; attention stays static.
+- Sidebar reveal keeps the child's natural 280 dp width and clips from its edge using
+  T3Reveal's safe spring path: 520 ms, OutBack 1.3, slide/opacity. Mobile navigation
+  keeps the 260 ms fade. Arrival uses 416 ms total (83 ms pause + 333 ms OutCubic fade /
+  OutBack 1.2 drift); departure opacity uses 312 ms, placement 520 ms InOutCubic.
+  Selectable shader reveal styles, pace and complete cross-shelf flight remain named
+  motion follow-ups, not silently claimed as complete.
+- Chat chrome is 56 dp below the safe area; timeline meets the minimal composer with
+  no app-footer gap, also with the real IME. User surface and assistant prose use ot3
+  roles, 6 dp corners and readable 14 sp body. This does **not** complete chat parity.
+- Only MainActivity is a launcher, including debug builds. Catalog/fixture launch is
+  explicit. Regression tests preserve one stream, draft and reading position through
+  rotation, collapse and recreation. AGSL/forced Canvas must draw nonuniform star
+  pixels; a successful shader constructor alone is insufficient.
+
+The next implementation is [UI2's full timeline view, followed by UI3's composer
+contracts](ui/compare/ui-1i/CONTINUITY.md). UI2 starts from the already retained
+`ThreadView.timeline`/`timeline.view`, with no protocol derivation in Kotlin. Review
+must keep live transport, physical Xiaomi, aesthetic approval and release build claims
+separate from emulator fixture checks.

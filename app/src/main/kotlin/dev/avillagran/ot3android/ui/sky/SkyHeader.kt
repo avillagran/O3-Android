@@ -58,6 +58,7 @@ fun SkyHeader(
     energy: Float,
     modifier: Modifier = Modifier,
     brandHeight: Dp = SkyDefaults.BrandHeight,
+    forceCanvas: Boolean = false,
     onAutoDegrade: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -100,7 +101,7 @@ fun SkyHeader(
     }
 
     // Typed as Shader so nothing below API 33 touches RuntimeShader.
-    val shader: Shader? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) remember { StarfieldShaders.create() } else null
+    val shader: Shader? = if (!forceCanvas && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) remember { runCatching { StarfieldShaders.create() }.getOrNull() } else null
     Box(
         modifier
             .onGloballyPositioned { visible = it.boundsInWindow().let { b -> b.width > 0f && b.height > 0f } }
@@ -150,15 +151,9 @@ internal fun DrawScope.drawSkyCanvas(plan: SkyCanvasPlan) {
         for (s in plan.stars) {
             val color = s.color.toColor()
             val center = Offset(s.x, s.y)
-            drawCircle(
-                Brush.radialGradient(
-                    *SkyCanvasPlan.HALO_STOPS.map { (f, a) -> f to color.copy(alpha = 0.3f * s.alpha * a) }.toTypedArray(),
-                    center = center,
-                    radius = s.haloRadius,
-                ),
-                radius = s.haloRadius,
-                center = center,
-            )
+            // A sampled Gaussian halo uses plain circles. Creating a radial GPU shader for
+            // every star is unnecessary on the fallback path (and fragile on software GPUs).
+            drawHalo(color, center, s.haloRadius, 0.3f * s.alpha)
             drawCircle(color.copy(alpha = s.alpha), radius = s.coreRadius, center = center)
         }
         for (c in plan.comets) {
@@ -184,17 +179,19 @@ internal fun DrawScope.drawSkyCanvas(plan: SkyCanvasPlan) {
                 ),
             )
             val head = Offset(c.headX, c.headY)
-            drawCircle(
-                Brush.radialGradient(
-                    *SkyCanvasPlan.HALO_STOPS.map { (f, a) -> f to color.copy(alpha = c.alpha * a) }.toTypedArray(),
-                    center = head,
-                    radius = SkyCanvasPlan.GLOW_RADIUS,
-                ),
-                radius = SkyCanvasPlan.GLOW_RADIUS,
-                center = head,
-            )
+            drawHalo(color, head, SkyCanvasPlan.GLOW_RADIUS, c.alpha)
         }
     }
 }
 
 private fun SkyRgba.toColor(): Color = Color(r.coerceIn(0f, 1f), g.coerceIn(0f, 1f), b.coerceIn(0f, 1f), a.coerceIn(0f, 1f))
+
+private fun DrawScope.drawHalo(color: Color, center: Offset, radius: Float, alpha: Float) {
+    var previous = 0f
+    for (i in 6 downTo 1) {
+        val profile = SkyCanvasPlan.HALO_STOPS[i].second
+        val band = ((profile - previous) * alpha).coerceIn(0f, 1f)
+        drawCircle(color.copy(alpha = band), radius * i / 6f, center)
+        previous = profile
+    }
+}
