@@ -926,3 +926,38 @@ Lib requests U26 and U27 are in LIB_REQUESTS.md, "2026-10-25: usage limits and r
   are guarded by current supervisor identity and foreground state, so a forgotten
   transport cannot be revived and a background consumer waits for foreground resume.
   Regression tests cover shared consumers, replacement and deferred background starts.
+## 2026-10-26 — UI-N: notifications and Live Updates without a relay
+
+Andrés asked for the official T3 app's Android 16 experience (status bar chip, lock
+screen and shade card while an agent works; normal alerts for approval, question, done and
+failed) with no FCM, relay or push server. Specified in UI_SPEC 4.14; tranche UI-N runs
+after UI-2a's timeline reader and the bridge catalog integration; earlier tranches keep
+their names and states.
+
+- **Semantics in Rust.** Counts are `sidebar.view` `counts`; phases, card, alerts, dedupe,
+  first-observation silence, freshness, deadlines and chip kind are requested as
+  `awareness.view` (LIB_REQUESTS U28). Kotlin only maps the result onto Android
+  notifications. The runtime does not start before U28.
+- **One shell stream per environment.** The follow service holds leases on the existing
+  `ConnectionSupervisor`s; `ON_STOP` releases only UI leases. No second connection,
+  reconnection loop or credential path.
+- **`specialUse` foreground service**, opt-in, started only from a visible app, stopped
+  after 15 idle minutes (T3's finished-card lifetime), on Disconnect, toggle off,
+  `onTimeout` or revocation. `dataSync` rejected for its targetSdk 35+ 6 h / 24 h cap and
+  its transfer-only purpose.
+- **Promotion is requested, never assumed.** Promotion request only while active and
+  ongoing, uncolourised; Settings shows `canPostPromotedNotifications()`; only
+  `FLAG_PROMOTED_ONGOING` on a posted card counts as evidence. Live Update settings use
+  `Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS` (present in the SDK; the guide's
+  `ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS` is not).
+- **Approve never approves from a notification.** Every action opens the thread deep link;
+  confirmation and the `approvals.command` / outbox path are UI-4's visible card.
+- **Lock screen** defaults to Full, matching Andrés’s requested thread/project/host card;
+  Status only ("OT3 · Working") and Hidden remain optional, subject to system privacy settings.
+- **Status icon** is the bundled T3 mark path, recentred and white (`ic_stat_ot3`); no
+  generated or raster image. Adaptation of T3 Mobile's MIT module is attributed in
+  `docs/LICENSES.md` and `app/.../notifications/NOTICE.md`.
+- **Upstream policy (Andrés, 2026-10-26, latest instruction):** findings that belong to
+  T3 Code are prepared as a local patch or written finding for review and are **not**
+  sent, nor is any upstream PR opened or reopened, without Andrés's explicit approval.
+  Our work never waits for an upstream merge.

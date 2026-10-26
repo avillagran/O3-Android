@@ -989,6 +989,53 @@ until they land (UI_SPEC rule 6). Live limits themselves need nothing new:
     document; ot3-Android keeps its own Room table (UI_SPEC 4.2.1), so the two functions
     above are what it uses.
 
+## 2026-10-26: UI-N thread awareness (notifications and Live Updates)
+
+Checked against v0.3.4 (`e2ec546`, the pinned AAR) and the companion branch
+`feat/bridge-catalog-sync` (`027a025`): `git grep -i 'notif\|attention\|awareness'` over
+`src/` finds only `reconnect::notify` (network wake-ups, `src/reconnect.rs:89-103`). What
+exists and is enough for counts: `sidebar.view` returns `counts`
+`{working, done, waiting, failed}` (`src/sidebar/view.rs:349-358`, ot3's bar semantics,
+`ot3:ui/js/SidebarModel.js:45-49`) and each row's `pending`, `reason`, `revision`,
+`detail` (`approval` / `input` / `plan` / ...) and `state` (`src/sidebar/view.rs:21-90,
+193-245`). What does not exist: any notion of a transition, a seen baseline, an alert,
+an expiry or a card. UI_SPEC 4.14 needs them; Kotlin must not derive them (ARCHITECTURE
+layer 1, UI_SPEC rule 6), so UI-N's runtime waits for this request.
+
+### U28. `awareness.view`: phases, card, alerts and dedupe (blocking UI-N runtime)
+
+- What: one pure domain function the follow service calls on every shell change (and on
+  a deadline tick), shared by ot3 (desktop alerts and bar) and Android.
+- Why in the lib: three implementations of the same rules exist today, none reachable
+  from Kotlin: T3's phases (`t3:packages/shared/src/agentAwareness.ts:59-135`), T3's
+  transition selection and lifetimes (`t3:infra/relay/src/agentActivity/agentActivityAlerts.ts:14-161`,
+  `agentActivityPayloads.ts:18-35`, `agentActivityAggregate.ts:59`, `fcmPayloads.ts:8-48`)
+  and ot3's seen-state diff (`ot3:src/main.rs:54-144`, keyed by `sidebar.view`'s
+  `revision`, first observation per environment silent through `@initialized`).
+- Proposed call:
+  `awareness.view {environments: [{id, name, shell?, state?}], now, baseline?, onScreen?: {environmentId, threadId}, preferences?: {approval, input, completion, failure}, lifecycle?: "cold"|"resumed"|"running"}`
+  (same `environments` shape as `sidebar.view`; `state` non-null while not connected, so
+  the environment's rows are neither withdrawn nor replayed).
+- Proposed result:
+  - `counts` — identical to `sidebar.view` `counts`.
+  - `rows` — per non-subagent thread with a phase: `{route: {environmentId, threadId}, phase, title, project, host, status, since?, expiresAt}`, priority order (approval/input, failed, running, completed). `phase` is T3's seven-value set; `status` is the i18n source string resolved like `statusLabel`. `since` only when a stable phase-entry time exists (T3 hides its timer because `updatedAt` moves, `t3m:.../AgentActivityPresentation.kt:160-162`).
+  - `card` — `{active, phase, title, subtitle, status, chip?: {kind: "working"|"live"|"approve"|"answer", count}, since?, expiresAt, route, rows ≤ 5}` or null. `expiresAt` absolute: running 2 h, waiting 24 h, finished 15 min after the newest result; never extended by a replay.
+  - `alerts` — `[{id, group: "attention"|"finished", phase, title, body, route, expiresAt?}]`, already deduplicated: `id` stable over retries (`[environmentId, threadId, phase, revision]`); attention on entering approval/input/plan-ready, finished on entering completed/failed and only if fresh (≤ 2 min, T3); none for an environment without a baseline entry, none for `onScreen` (consumed into the baseline, as T3 `AgentNotifications.kt:148-161`), none for settled or snoozed threads.
+  - `summaries` — `[{group, title, lines, route}]` when a group has several alerts ("2 agents need attention" / "2 agents finished" as catalog strings).
+  - `baseline` — opaque JSON the host stores and passes back; bounded (drops threads that left every shell); version field so a lib upgrade can reset it silently.
+  - `nextDeadline` — the earliest `expiresAt`, so the host can schedule one tick instead of polling.
+- Decision for the lib owner: ot3 alerts on `pending` + `revision` (also ready plans and
+  "review" completions); T3 alerts on phase transitions. Proposed: ot3's key (already in
+  `sidebar.view`) with T3's groups, freshness and lifetimes. Either way the rule lives
+  here, with fixtures shared by ot3 and Android.
+- Tests to include: cold start (no baseline → no alerts), reconnect after outage (no
+  replay), retry with same input (no duplicate), on-screen suppression consumed, two
+  threads entering attention together (one summary), finished older than 2 min (no
+  alert), settled/snoozed/subagent excluded, deadline arithmetic, revoked environment
+  removed without a finished alert.
+- Android consumes it through `NotificationContract` (`app/.../notifications/`), already
+  parsing the proposed `card` and `alerts` shapes with fixtures; nothing calls the lib yet.
+
 ### UI2a client integration audit (2026-10-26)
 
 U10 and U25 are consumed by the new native timeline reader: `timeline.view` blocks,
@@ -1005,3 +1052,14 @@ needs it to merge only historical presentation rows without overwriting live con
 and retain the visible id/offset. Until integrated there is an informative history boundary,
 with no action that falsely appears to page. This is a transport request, not a request to
 reimplement history parsing or eligibility in Kotlin. Root coordinates lib work separately.
+
+### U28 update — delivered in lib v0.3.5 (2026-10-26)
+
+The final native awareness.view is released; it is no longer an unimplemented lib
+dependency. Android remains pinned to v0.3.4 for the UI-1 pre-release and will adopt
+v0.3.5 immediately afterwards with the follow service and real native output fixtures.
+The final contract adds locale, preferences.plan, alert.status and summary.body. Optional
+fields are omitted, cold reseeds without alerts, plan-ready attention has waiting_for_input,
+finished deadlines use latestRunCompletedAt, and nextDeadline includes snooze expiry.
+See the lib v0.3.5 README for the full authoritative contract. No Kotlin state/count
+logic is introduced to bridge versions.
