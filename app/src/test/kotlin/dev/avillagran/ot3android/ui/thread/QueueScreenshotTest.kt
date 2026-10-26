@@ -17,7 +17,7 @@ class QueueScreenshotTest : ScreenshotTest() {
     private fun queue(theme: String) {
         val data = JSONObject("""{"canReorder":true,"canSteer":true,"activeRunId":"active","items":[{"runId":"q1","text":"Queued instruction q1","available":true,"attachments":[{"name":"notes.txt"}]},{"runId":"q2","text":"Queued instruction q2","available":true},{"runId":"q3","text":"Queued instruction q3","available":true},{"runId":"q4","text":"Queued instruction q4","available":true}]}""")
         snapshot("strip", themes = listOf(theme)) { Box(Modifier.fillMaxSize()) { ThreadQueue(data, true, {}, {}) } }
-        composeRule.onNodeWithTag("thread_queue").performClick()
+        composeRule.onNode(hasClickAction() and hasAnyAncestor(hasTestTag("thread_queue"))).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
         composeRule.mainClock.advanceTimeBy(1000); composeRule.waitForIdle()
         captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/QueueScreenshotTest/sheet.$theme.png")
         val grip = composeRule.onNodeWithTag("queue_grip_q1").fetchSemanticsNode().boundsInRoot
