@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.ui.navigation
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
@@ -21,10 +22,13 @@ import dev.avillagran.ot3android.ui.environments.EnvironmentsViewModel
 import dev.avillagran.ot3android.ui.pair.PairScreen
 import dev.avillagran.ot3android.ui.pair.PairViewModel
 import dev.avillagran.ot3android.ui.pair.QrScanScreen
+import dev.avillagran.ot3android.ui.settings.AppearanceSettingsScreen
+import dev.avillagran.ot3android.ui.settings.AppearanceSettingsViewModel
 import dev.avillagran.ot3android.ui.sidebar.SidebarScreen
 import dev.avillagran.ot3android.ui.sidebar.SidebarViewModel
 import dev.avillagran.ot3android.ui.thread.ThreadScreen
 import dev.avillagran.ot3android.ui.thread.ThreadViewModel
+import kotlinx.coroutines.launch
 
 /**
  * String routes for now; typed (serializable) routes are a pending decision in
@@ -40,6 +44,7 @@ object Routes {
     // No arguments: a pairing link holds a one-time code and travels through PairingInbox.
     const val PAIR = "pair"
     const val SCAN = "pair/scan"
+    const val APPEARANCE = "settings/appearance"
 
     // Ids are encoded: a thread id may hold `/`, `?` or `#`. Navigation decodes arguments.
     fun connect(environmentId: String? = null) =
@@ -75,6 +80,15 @@ fun Ot3NavHost(startDestination: String, navController: NavHostController = reme
                 onOpen = { id -> navController.navigate(Routes.sidebar(id)) },
                 onAdd = { navController.navigate(Routes.connect()) },
                 onEdit = { id -> navController.navigate(Routes.connect(id)) },
+                onAppearance = { navController.navigate(Routes.APPEARANCE) },
+            )
+        }
+        composable(Routes.APPEARANCE) {
+            AppearanceSettingsScreen(
+                viewModel = appViewModel { graph ->
+                    AppearanceSettingsViewModel(graph.themePreferences, graph.liveThemeSource, graph.environmentRepository)
+                },
+                onBack = { navController.popBackStack() },
             )
         }
         composable(
@@ -125,6 +139,7 @@ fun Ot3NavHost(startDestination: String, navController: NavHostController = reme
         }
         composable(Routes.SIDEBAR, arguments = listOf(navArgument("environmentId") { type = NavType.StringType })) { entry ->
             val environmentId = entry.arguments?.getString("environmentId").orEmpty()
+            OnScreenEnvironment(environmentId)
             SidebarScreen(
                 viewModel = appViewModel { graph ->
                     SidebarViewModel(environmentId, graph.environmentRepository, graph.connectionManager)
@@ -143,6 +158,7 @@ fun Ot3NavHost(startDestination: String, navController: NavHostController = reme
         ) { entry ->
             val environmentId = entry.arguments?.getString("environmentId").orEmpty()
             val threadId = entry.arguments?.getString("threadId").orEmpty()
+            OnScreenEnvironment(environmentId)
             ThreadScreen(
                 viewModel = appViewModel { graph ->
                     ThreadViewModel(
@@ -158,5 +174,19 @@ fun Ot3NavHost(startDestination: String, navController: NavHostController = reme
                 onBack = { navController.popBackStack() },
             )
         }
+    }
+}
+
+/**
+ * This screen shows one environment: the app wears its live theme while the screen is up
+ * (UI_SPEC 3.1.3), and it becomes the last used one.
+ */
+@Composable
+private fun OnScreenEnvironment(environmentId: String) {
+    val graph = LocalContext.current.appGraph
+    DisposableEffect(environmentId) {
+        val claim = graph.liveThemeSource.showOnScreen(environmentId)
+        graph.appScope.launch { graph.selectionPreferences.setLastEnvironmentId(environmentId) }
+        onDispose { claim.close() }
     }
 }

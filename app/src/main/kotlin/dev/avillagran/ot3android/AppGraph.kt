@@ -7,13 +7,19 @@ import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.local.Ot3Database
+import dev.avillagran.ot3android.core.data.prefs.AppearancePreferences
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.pairing.PairingService
 import dev.avillagran.ot3android.core.security.CredentialStore
+import dev.avillagran.ot3android.core.theme.EnvironmentThemeReader
+import dev.avillagran.ot3android.core.theme.FileThemeCache
+import dev.avillagran.ot3android.core.theme.LiveThemeSource
+import dev.avillagran.ot3android.core.theme.ThemePreferences
 import dev.avillagran.ot3android.core.thread.DraftRepository
 import dev.avillagran.ot3android.core.thread.MessageSender
 import dev.avillagran.ot3android.core.thread.OutboxRepository
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
@@ -22,6 +28,9 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -69,6 +78,32 @@ class AppGraph(
 
     val connectionManager: ConnectionManager by lazy {
         ConnectionManager(environmentRepository, shellCursors, transportFactory, appScope)
+    }
+
+    val appearancePreferences: AppearancePreferences by lazy { AppearancePreferences(appContext) }
+
+    val themePreferences: ThemePreferences by lazy { ThemePreferences(appContext, appearancePreferences) }
+
+    /**
+     * The environment's live Omarchy theme (UI_SPEC 3.1.3), started on first use. Following an
+     * environment starts its supervisor, so the main environment connects for its theme.
+     */
+    val liveThemeSource: LiveThemeSource by lazy {
+        LiveThemeSource(
+            scope = appScope,
+            reader = EnvironmentThemeReader(DomainEngine.shared),
+            cache = FileThemeCache(appContext.filesDir.resolve("live-theme")),
+            settings = themePreferences.settings,
+            environments = environmentRepository.environments,
+            lastUsedEnvironmentId = selectionPreferences.lastEnvironmentId,
+            connections = { id ->
+                flow {
+                    val supervisor = connectionManager.supervisor(id)
+                    supervisor?.start()
+                    emitAll(supervisor?.connection ?: flowOf(null))
+                }
+            },
+        ).also { it.start() }
     }
 
     val serverProbe: ServerProbe by lazy { ServerProbe(transportFactory) }

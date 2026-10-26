@@ -37,6 +37,7 @@ object EnvironmentsScreenTags {
     const val ADD = "environments_add"
     const val LIST = "environments_list"
     const val EMPTY = "environments_empty"
+    const val APPEARANCE = "environments_appearance"
     fun row(id: String) = "environment_row_$id"
     fun edit(id: String) = "environment_edit_$id"
     fun delete(id: String) = "environment_delete_$id"
@@ -51,13 +52,23 @@ fun EnvironmentsScreen(
     onAdd: () -> Unit,
     onEdit: (environmentId: String) -> Unit,
     modifier: Modifier = Modifier,
+    onAppearance: () -> Unit = {},
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(
         modifier = modifier.testTag(EnvironmentsScreenTags.ROOT),
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.environments_title)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.environments_title)) },
+                actions = {
+                    TextButton(onClick = onAppearance, modifier = Modifier.testTag(EnvironmentsScreenTags.APPEARANCE)) {
+                        Text(stringResource(R.string.appearance_title))
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAdd, modifier = Modifier.testTag(EnvironmentsScreenTags.ADD)) {
                 Icon(painterResource(R.drawable.ic_add), stringResource(R.string.environments_add))
