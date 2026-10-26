@@ -94,3 +94,26 @@ Cold-boot correction: instrumented tests were started while the asynchronous
 emulator-start command was still running. After awaiting that exact handle,
 the same APK/tests passed without reinstalling. Future reproductions must await
 `scripts/emulator.sh start` completion before invoking Gradle.
+
+## Tab entrance — 2026-10-26
+
+Verified the actual reference at `/tmp/t3code`, commit
+`680152e27b2a961686389ca69a1557cbb2c55f08`:
+`apps/mobile/src/features/usage/UsageRouteScreen.tsx:261-264` keys the body by tab
+and uses `FadeIn.duration(160).reduceMotion(ReduceMotion.System)`. There is no
+outgoing fade or cross-fade. The desktop reference
+`ui/qml/T3UsagePage.qml:8-78` has a single usage popup and no tab transition.
+
+Android now fades the incoming body over 160 ms using one shared presentation
+opacity. Tab/environment controls stay stable; a single LazyColumn retains its
+scroll state. No outgoing composition, extra summary read, or extra quota
+subscription is created by the animation. Animations Off (including the system
+reduced-motion policy) snaps to full opacity, including a preference change during
+an entrance. Metric, period and environment selection remain outside the effect.
+
+Validation: focused JVM motion/screen/view-model tests and lint passed; all six
+existing UsageScreenshotTest Tokyo Night/Latte goldens pass unchanged. The clock
+controlled test checks intermediate opacity, completion, tab restart, and turning
+motion off during an entrance. Screen interaction checks metric and period
+retention and no refresh on a round trip. This increment has JVM evidence only;
+no new emulator recording or physical/live acceptance is claimed.

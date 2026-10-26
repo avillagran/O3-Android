@@ -1782,7 +1782,9 @@ T3 Mobile's place and tabs (`t3m:src/features/settings/SettingsRouteScreen.tsx:2
 - Environment scope: the Settings scope select (4.9); with several environments the page
   shows the selected one, as ot3 asks one environment at a time
   (`ot3:ui/qml/T3Backend.qml:641`).
-- Pull to refresh on both tabs (T3 Mobile); tab switch fades 160 ms.
+- Pull to refresh on both tabs (T3 Mobile); the incoming tab body fades in over
+  160 ms, with system reduced motion respected. There is no outgoing fade or
+  cross-fade (`t3m:src/features/usage/UsageRouteScreen.tsx:261-264`).
 
 #### 4.10.4 Strings
 
@@ -2323,5 +2325,6 @@ quotaSources.apply owns folding and private-field removal. The page renders prov
 and hub accounts with separate used-percentage bars and platform-formatted absolute
 reset/check times. One application-scoped probe per environment per five minutes,
 including failures; cancellation and reconnect generations clear stale data.
-U26 pooling/remaining/pace, compact Home/thread strips and tab fade remain pending.
+U26 pooling/remaining/pace, compact Home/thread strips remain pending. The incoming tab body now uses the
+160 ms T3 Mobile entrance; see [usage evidence](ui/compare/usage/README.md).
 See [limits evidence](ui/compare/usage-limits/README.md).
