@@ -729,6 +729,15 @@ Source references are to the lib at the tag; the lib checkout stayed at the tag 
   ready `message.dispatch` command and only adds `sourcePlanRef` to it, so it does not
   build one.
 
+- **Rechecked 2026-10-26 against tag v0.3.5:** `awareness.view` landed, but the
+  four `composer.*` functions above are unchanged. UI-3 queue mutations and UI-4
+  approvals/questions now use their native builders. New-message queue/steer, attachment
+  dispatch, and the UI-4 plan follow-up still need the common submission builder.
+  `planWorkflow.followUp` supplies text/interactionMode/sourcePlanRef, and
+  `attachSourceRef` decorates an existing dispatch; neither builds/executes the required
+  interaction-mode + message sequence with stable retry ids. Extend the common builder
+  to cover this recipe instead of adding another protocol sequence to Kotlin.
+
 ### 3. The projection crosses JNI twice per stream update
 
 - What: with `projection.apply` and `timeline.view` the whole projection is serialised to

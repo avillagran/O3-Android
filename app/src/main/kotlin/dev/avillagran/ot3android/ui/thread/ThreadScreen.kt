@@ -233,6 +233,7 @@ fun ThreadContent(
                         }
                     }
                 }
+                ThreadTasks(state.view.timeline?.optJSONObject("tasks"))
                 ApprovalCard(state.view.timeline?.optJSONArray("approvals"),
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
                     state.respondingRequest, state.answeredRequests, onApprovalDecision)

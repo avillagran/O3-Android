@@ -32,7 +32,7 @@ Accepted responses show Answered while the stream removes the pending request.
 ## Remaining differences
 
 - Question hardware-number shortcuts, persistent form restoration beyond SavedState, and request lifecycle/error presentation acceptance on device.
-- Secret-card native request flow, ready-plan follow-up banner, tasks and Edit from here.
+- Secret-card native request flow, ready-plan follow-up banner and Edit from here.
 - Approval retry/confirmation UI enrichment and device proof through notification deep links.
 - Same-theme screenshots and short interaction video on emulator, plus live test-thread
   approval/question verification without operating unrelated user threads.
@@ -63,3 +63,20 @@ dismissibility, native payload shapes and identical unknown-result retries.
 Form UI tests inject renderer-neutral Markdown blocks to avoid native library loading
 across Robolectric sandbox classloaders. Production still uses Rust markdown.blocks;
 its native contract is exercised by core tests. This is not a combined device proof.
+
+## Active task strip and motion (2026-10-26)
+
+The real composer stack now displays `timeline.view.tasks`: native current task, counts,
+ordered steps and duration values. The 48dp touch header opens a bounded 180dp list;
+wide layouts show the source segmented progress, with no count/status animations.
+T3Tasks.qml and T3Reveal.qml at 7b5b1de are the source. Native icon assets are attributed.
+
+VerticalReveal ports natural child measurement/clipping and the existing reveal shader
+on its vertical axis: default nebula (560ms InOutCubic), source spring fallback (520ms
+OutBack1.3), and direct instant geometry with reduced motion. No sky is added to chat.
+State/scroll are held outside the revealed region. Exact video/GPU acceptance remains
+pending; Robolectric exercises the software fallback and reduced-motion layout only.
+
+The ready-plan implementation actions remain a real common-builder dependency, verified
+against v0.3.5 and recorded in LIB_REQUESTS §2. No read-only substitute is claimed as a
+completed follow-up workflow. Other UI work continues independently.

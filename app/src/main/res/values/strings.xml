@@ -159,4 +159,6 @@
     <string name="question_previous">Previous question</string>
     <string name="question_next">Next question</string>
     <string name="question_unavailable">This question can no longer be answered.</string>
+    <string name="tasks_title">Tasks</string>
+    <string name="tasks_now">now</string>
 </resources>
