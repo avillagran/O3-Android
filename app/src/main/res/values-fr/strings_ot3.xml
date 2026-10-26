@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Le correctif n\'est pas disponible pour ce fichier.</string>
     <string name="ot3_diff_binary">Fichier binaire — métadonnées uniquement</string>
     <string name="ot3_diff_empty">Aucune modification</string>
+    <string name="ot3_usage_title">Utilisation</string>
+    <string name="ot3_usage_day">Jour</string>
+    <string name="ot3_usage_week">Semaine</string>
+    <string name="ot3_usage_month">Mois</string>
+    <string name="ot3_usage_quarter">Trimestre</string>
+    <string name="ot3_usage_cost">Coût</string>
+    <string name="ot3_usage_tokens">Jetons</string>
+    <string name="ot3_usage_sessions">Sessions</string>
+    <string name="ot3_usage_cache">Économies de cache</string>
+    <string name="ot3_usage_cost_day">Coût par jour</string>
+    <string name="ot3_usage_tokens_day">Jetons par jour</string>
+    <string name="ot3_usage_models">Modèles</string>
+    <string name="ot3_usage_refresh">Actualiser</string>
+    <string name="ot3_usage_offline">Hors ligne</string>
+    <string name="ot3_usage_loading">Chargement…</string>
+    <string name="ot3_usage_unavailable">Indisponible</string>
+    <string name="ot3_usage_unpriced">%1$s enregistrements n’ont pas de prix.</string>
+    <string name="ot3_usage_prices_unavailable">Les prix des modèles sont indisponibles.</string>
 </resources>

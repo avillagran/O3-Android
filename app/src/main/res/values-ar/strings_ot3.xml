@@ -165,4 +165,22 @@
     <string name="ot3_diff_missing">رقعة هذا الملف غير متاحة.</string>
     <string name="ot3_diff_binary">ملف ثنائي — البيانات الوصفية فقط</string>
     <string name="ot3_diff_empty">لا تغييرات</string>
+    <string name="ot3_usage_title">الاستخدام</string>
+    <string name="ot3_usage_day">يوم</string>
+    <string name="ot3_usage_week">أسبوع</string>
+    <string name="ot3_usage_month">شهر</string>
+    <string name="ot3_usage_quarter">ربع سنة</string>
+    <string name="ot3_usage_cost">التكلفة</string>
+    <string name="ot3_usage_tokens">الرموز</string>
+    <string name="ot3_usage_sessions">الجلسات</string>
+    <string name="ot3_usage_cache">توفير التخزين المؤقت</string>
+    <string name="ot3_usage_cost_day">التكلفة اليومية</string>
+    <string name="ot3_usage_tokens_day">الرموز اليومية</string>
+    <string name="ot3_usage_models">النماذج</string>
+    <string name="ot3_usage_refresh">تحديث</string>
+    <string name="ot3_usage_offline">غير متصل</string>
+    <string name="ot3_usage_loading">جارٍ التحميل…</string>
+    <string name="ot3_usage_unavailable">غير متاح</string>
+    <string name="ot3_usage_unpriced">%1$s سجلات بلا سعر.</string>
+    <string name="ot3_usage_prices_unavailable">أسعار النماذج غير متاحة.</string>
 </resources>

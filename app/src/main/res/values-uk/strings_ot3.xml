@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Патч для цього файлу недоступний.</string>
     <string name="ot3_diff_binary">Двійковий файл — лише метадані</string>
     <string name="ot3_diff_empty">Немає змін</string>
+    <string name="ot3_usage_title">Використання</string>
+    <string name="ot3_usage_day">День</string>
+    <string name="ot3_usage_week">Тиждень</string>
+    <string name="ot3_usage_month">Місяць</string>
+    <string name="ot3_usage_quarter">Квартал</string>
+    <string name="ot3_usage_cost">Вартість</string>
+    <string name="ot3_usage_tokens">Токени</string>
+    <string name="ot3_usage_sessions">Сеанси</string>
+    <string name="ot3_usage_cache">Економія на кеші</string>
+    <string name="ot3_usage_cost_day">Вартість за день</string>
+    <string name="ot3_usage_tokens_day">Токени за день</string>
+    <string name="ot3_usage_models">Моделі</string>
+    <string name="ot3_usage_refresh">Оновити</string>
+    <string name="ot3_usage_offline">Не в мережі</string>
+    <string name="ot3_usage_loading">Завантаження…</string>
+    <string name="ot3_usage_unavailable">Недоступно</string>
+    <string name="ot3_usage_unpriced">%1$s записів не мають ціни.</string>
+    <string name="ot3_usage_prices_unavailable">Ціни моделей недоступні.</string>
 </resources>

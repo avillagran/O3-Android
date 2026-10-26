@@ -2285,3 +2285,18 @@ Selecting a bundled Omarchy palette in Appearance now immediately chooses its da
 ### Reader diff increment — 2026-10-26
 
 Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. Split/file tree/hunk folding/preview remain pending.
+
+### Usage implementation checkpoint — 2026-10-26
+
+Settings → Usage implements the cost/token subset of §4.10.3 through the real
+`usageSummary.request` → `server.getUsageSummary` → `usageSummary.aggregate`
+contract. Environment and period are saved with the navigation entry; requests
+cancel on scope changes and results clear while offline. Refresh reads the summary.
+The Limits tab, quota accounts, price refresh, compact formatting/provider icons,
+and device/live acceptance remain open; see [usage evidence](ui/compare/usage/README.md).
+
+Usage landscape checkpoint: controls share a row and four totals share one row
+on phone landscape; portrait retains the 2 × 2 arrangement. API36.1 device test
+covers Settings navigation, period preservation across rotation, refresh and
+scrolling to Models. Captures and video use a synthetic diagnostics server;
+productive/live and physical acceptance remain pending.

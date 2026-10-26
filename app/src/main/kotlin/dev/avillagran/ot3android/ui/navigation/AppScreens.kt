@@ -9,6 +9,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
@@ -123,6 +124,23 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 SettingsEntry.Licenses -> navigator.push(Licenses)
             }
         })
+    }
+
+    @Composable
+    override fun Usage() {
+        val graph = LocalContext.current.appGraph
+        val model = viewModel {
+            dev.avillagran.ot3android.ui.usage.UsageViewModel(
+                graph.environmentRepository.environments,
+                graph.connectionManager::connectionFlow,
+                createSavedStateHandle(),
+            )
+        }
+        val state by model.state.collectAsStateWithLifecycle()
+        dev.avillagran.ot3android.ui.usage.UsageScreen(
+            state, model::selectEnvironment, model::selectPeriod, model::refresh,
+            onBack = { navigator.back() },
+        )
     }
 
     @Composable

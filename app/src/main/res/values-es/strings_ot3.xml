@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">El parche no está disponible para este archivo.</string>
     <string name="ot3_diff_binary">Binario: solo metadatos</string>
     <string name="ot3_diff_empty">Sin cambios</string>
+    <string name="ot3_usage_title">Uso</string>
+    <string name="ot3_usage_day">Día</string>
+    <string name="ot3_usage_week">Semana</string>
+    <string name="ot3_usage_month">Mes</string>
+    <string name="ot3_usage_quarter">Trimestre</string>
+    <string name="ot3_usage_cost">Costo</string>
+    <string name="ot3_usage_tokens">Tokens</string>
+    <string name="ot3_usage_sessions">Sesiones</string>
+    <string name="ot3_usage_cache">Ahorro por caché</string>
+    <string name="ot3_usage_cost_day">Costo por día</string>
+    <string name="ot3_usage_tokens_day">Tokens por día</string>
+    <string name="ot3_usage_models">Modelos</string>
+    <string name="ot3_usage_refresh">Actualizar</string>
+    <string name="ot3_usage_offline">Sin conexión</string>
+    <string name="ot3_usage_loading">Cargando…</string>
+    <string name="ot3_usage_unavailable">No disponible</string>
+    <string name="ot3_usage_unpriced">%1$s registros no tienen precio.</string>
+    <string name="ot3_usage_prices_unavailable">Los precios de los modelos no están disponibles.</string>
 </resources>

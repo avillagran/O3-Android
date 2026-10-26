@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Patchen til denne fil er ikke tilgængelig.</string>
     <string name="ot3_diff_binary">Binær fil — kun metadata</string>
     <string name="ot3_diff_empty">Ingen ændringer</string>
+    <string name="ot3_usage_title">Forbrug</string>
+    <string name="ot3_usage_day">Dag</string>
+    <string name="ot3_usage_week">Uge</string>
+    <string name="ot3_usage_month">Måned</string>
+    <string name="ot3_usage_quarter">Kvartal</string>
+    <string name="ot3_usage_cost">Omkostning</string>
+    <string name="ot3_usage_tokens">Tokens</string>
+    <string name="ot3_usage_sessions">Sessioner</string>
+    <string name="ot3_usage_cache">Cachebesparelse</string>
+    <string name="ot3_usage_cost_day">Pris pr. dag</string>
+    <string name="ot3_usage_tokens_day">Tokens pr. dag</string>
+    <string name="ot3_usage_models">Modeller</string>
+    <string name="ot3_usage_refresh">Opdater</string>
+    <string name="ot3_usage_offline">Offline</string>
+    <string name="ot3_usage_loading">Indlæser…</string>
+    <string name="ot3_usage_unavailable">Utilgængelig</string>
+    <string name="ot3_usage_unpriced">%1$s poster har ingen pris.</string>
+    <string name="ot3_usage_prices_unavailable">Modelpriser er ikke tilgængelige.</string>
 </resources>

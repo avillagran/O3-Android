@@ -999,3 +999,13 @@ Settings now persists approval/input/plan/completion/failure preferences and sen
 ## 2026-10-26 — Omarchy palette selection and refresh
 
 Selecting a bundled Omarchy palette in Appearance now immediately chooses its dark/light mode and disables desktop follow; turning follow back on explicitly restores the environment theme. Previews consume the existing native theme.tokens colors. A refresh button is available, and foreground polling reads colors.toml as well as theme.name so same-name custom edits are detected. Background polling remains disabled; desktop files are read-only. Spanish labels are included. Evidence and live-verification boundaries: docs/ui/compare/omarchy-themes/README.md.
+
+## 2026-10-26 — Usage page reads the shared native projection
+
+Replace the Settings Usage placeholder with the supported cost/token increment.
+Use the existing environment Connection transport and Rust usageSummary request /
+aggregate; no extra shell stream, date-window arithmetic or aggregation in Kotlin.
+Local date formatting uses APIs available at minSdk 24. Period/environment changes
+cancel reads, and connection replacement invalidates the result. Preserve selection
+with the navigation entry SavedStateHandle. Limits and pricing refresh are separate
+remaining work, not inferred from the synthetic summary used in screenshot tests.
