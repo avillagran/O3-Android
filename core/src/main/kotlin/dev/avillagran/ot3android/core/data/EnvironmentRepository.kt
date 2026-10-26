@@ -21,13 +21,20 @@ class EnvironmentRepository(
     private val tokens: suspend () -> TokenStore,
     private val cursors: ShellCursorStore,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val managed: dev.avillagran.ot3android.core.data.local.BridgeManagedDao? = null,
     private val newId: () -> String = { UUID.randomUUID().toString() },
 ) {
     val environments: Flow<List<Environment>> = dao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
     suspend fun find(id: String): Environment? = dao.findById(id)?.toDomain()
 
-    suspend fun token(id: String): String? = tokens().token(id)
+    suspend fun token(id: String): String? {
+        // Discovery has no credential. Revoked/expired rows cannot restart streams
+        // from a previously issued session while waiting for re-enrollment.
+        val origin = managed?.find(id)
+        if (origin != null && (origin.status != "authorized" || (origin.authorizationExpiresAt ?: 0L) <= clock())) return null
+        return tokens().token(id)
+    }
 
     /**
      * Creates or updates an environment. With [id] null, an existing entry for the same
@@ -60,6 +67,7 @@ class EnvironmentRepository(
         )
         if (token != null) tokens().setToken(saved.id, token)
         if (existing != null && existing.baseUrl != saved.baseUrl) cursors.setCursor(saved.id, null)
+        managed?.delete(saved.id)
         dao.upsert(saved.toEntity())
         return saved
     }
@@ -71,6 +79,7 @@ class EnvironmentRepository(
 
     /** Removes the row, its token and its shell cursor together. */
     suspend fun delete(id: String) {
+        managed?.delete(id)
         dao.deleteById(id)
         tokens().delete(id)
         cursors.setCursor(id, null)

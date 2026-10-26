@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-26",
+  "scope": "isolated; no physical/live authenticated NODE validation",
+  "unit": {
+    "tests": 241,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 4
+  },
+  "instrumented": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "device": "emulator-5580 / Android 14",
+  "deviceStopped": true,
+  "sdk": {
+    "host": {
+      "source": "04729573e2f77da651e24e12e3f40a625e34dd51",
+      "abi": "omabridge-mobile-1",
+      "target": "host",
+      "sha256": "77cc8e06e574f4750a8c49dcba0c0cef6a5edec29e61e586aa318603be949899"
+    },
+    "x86_64": {
+      "source": "04729573e2f77da651e24e12e3f40a625e34dd51",
+      "abi": "omabridge-mobile-1",
+      "target": "x86_64",
+      "sha256": "7bd8bb8841b80d35068818f86ff474162e1506f0803d37deadd42b9a6c26f516"
+    },
+    "arm64-v8a": {
+      "source": "04729573e2f77da651e24e12e3f40a625e34dd51",
+      "abi": "omabridge-mobile-1",
+      "target": "arm64-v8a",
+      "sha256": "c0b621165d3e909821b01e8753b25598a836d28e74b54fcc86cc1e1db7242e2f"
+    }
+  },
+  "t3Aar": {
+    "version": "0.3.4",
+    "source": "e2ec5467389adf0885623480d7e2006a7ae3d019",
+    "tag": "v0.3.4",
+    "describe": "v0.3.4",
+    "abiVersion": "3",
+    "origin": "release v0.3.4",
+    "repository": "https://github.com/avillagran/lib-t3-rust",
+    "sha256": "b90064ae893cf0239a3d19b3bf213ebb8c92d6e14da0a8d4a4ff9ae083bfc036",
+    "installed": "2026-10-26T05:06:11Z"
+  },
+  "t3HostJni": {
+    "version": "0.3.4",
+    "source": "e2ec5467389adf0885623480d7e2006a7ae3d019",
+    "tag": "v0.3.4",
+    "describe": "v0.3.4",
+    "abiVersion": "3",
+    "sha256": "f432095e10380c2c125c9ef24f7994046504f2b56e7276fa0f1c0d034eb4c55c"
+  },
+  "checks": [
+    "core JVM tests",
+    "core lintDebug",
+    "app compileDebugKotlin",
+    "Room migration 2->3",
+    "JNI + QUIC + Room catalog test including native close/reopen"
+  ],
+  "limits": [
+    "T3 authority/backend shell reads verified in separate native isolated test",
+    "No single Android-through-authority-to-shells end-to-end test",
+    "No production authority implementation enabled",
+    "No bridge invitation UI/QR entry yet",
+    "Candidate SDK binaries built locally, not released or included by default CI"
+  ]
+}

@@ -24,8 +24,8 @@ class Ot3Application : Application() {
         val connectivity = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         connectivity.registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) = graph.connectionManager.wakeAll()
-                override fun onLost(network: Network) = graph.connectionManager.wakeAll()
+                override fun onAvailable(network: Network) { graph.connectionManager.wakeAll(); graph.bridgeCatalog.reconnect() }
+                override fun onLost(network: Network) { graph.connectionManager.wakeAll(); graph.bridgeCatalog.reconnect() }
             },
         )
     }
@@ -36,7 +36,7 @@ class Ot3Application : Application() {
  * their held shell on ON_START, and probed with `wakeSubscriptions` on ON_RESUME.
  */
 private class ConnectionLifecycle(private val graph: AppGraph) : DefaultLifecycleObserver {
-    override fun onStart(owner: LifecycleOwner) = graph.connectionManager.setForeground(true)
+    override fun onStart(owner: LifecycleOwner) { graph.connectionManager.setForeground(true); graph.bridgeCatalog.setForeground(true) }
     override fun onResume(owner: LifecycleOwner) = graph.connectionManager.wakeAll()
-    override fun onStop(owner: LifecycleOwner) = graph.connectionManager.setForeground(false)
+    override fun onStop(owner: LifecycleOwner) { graph.bridgeCatalog.setForeground(false); graph.connectionManager.setForeground(false) }
 }
