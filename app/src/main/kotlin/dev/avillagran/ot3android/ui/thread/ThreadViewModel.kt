@@ -372,6 +372,16 @@ class ThreadViewModel(
         return domain.domain("toolInspector.parse", org.json.JSONObject(args.toString()).put("response", response)) as org.json.JSONObject
     }
 
+    val imageConnection = supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    suspend fun readImage(attachment: org.json.JSONObject): ByteArray? {
+        val owner = supervisor.value ?: return null
+        val current = owner.connection.value ?: return null
+        val bytes = current.transport.image(attachment.getString("id"), attachment.optString("name"), attachment.getString("mimeType"))
+        return bytes.takeIf { supervisor.value === owner && owner.connection.value === current }
+    }
+
     suspend fun readDiff(summary: org.json.JSONObject, ignoreWhitespace: Boolean): org.json.JSONObject? {
         val owner = supervisor.value ?: return null
         val current = owner.connection.value ?: return null

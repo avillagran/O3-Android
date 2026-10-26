@@ -103,31 +103,34 @@ object ThreadScreenTags {
 @Composable
 fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ThreadContent(
-        state = state,
-        quotaStrip = quotaStrip,
-        onDraftChange = viewModel::onDraftChange,
-        onSend = viewModel::send,
-        onInterrupt = viewModel::interrupt,
-        onResend = viewModel::retry,
-        onDiscard = viewModel::discard,
-        onRetryStream = viewModel::retryStream,
-        onDismissNotice = viewModel::dismissNotice,
-        onBack = onBack,
-        modifier = modifier,
-        onInspect = viewModel::inspect,
-        onReadDiff = viewModel::readDiff,
-        onQueueCommand = viewModel::queueCommand,
-        onEditQueued = viewModel::editQueued,
-        onCancelQueueEdit = viewModel::cancelQueueEdit,
-        onRefreshModels = viewModel::refreshModels,
-        onSelectModel = viewModel::selectModel,
-        onSelectModelOption = viewModel::selectModelOption,
-        onFavoriteModel = viewModel::favoriteModel,
-        onApprovalDecision = viewModel::respondApproval,
-        onQuestionResponse = viewModel::respondQuestion,
-        onRuntimeMode = viewModel::selectRuntimeMode,
-    )
+    val imageConnection by viewModel.imageConnection.collectAsStateWithLifecycle()
+    androidx.compose.runtime.CompositionLocalProvider(LocalReaderImages provides ReaderImages(imageConnection, viewModel::readImage)) {
+        ThreadContent(
+            state = state,
+            quotaStrip = quotaStrip,
+            onDraftChange = viewModel::onDraftChange,
+            onSend = viewModel::send,
+            onInterrupt = viewModel::interrupt,
+            onResend = viewModel::retry,
+            onDiscard = viewModel::discard,
+            onRetryStream = viewModel::retryStream,
+            onDismissNotice = viewModel::dismissNotice,
+            onBack = onBack,
+            modifier = modifier,
+            onInspect = viewModel::inspect,
+            onReadDiff = viewModel::readDiff,
+            onQueueCommand = viewModel::queueCommand,
+            onEditQueued = viewModel::editQueued,
+            onCancelQueueEdit = viewModel::cancelQueueEdit,
+            onRefreshModels = viewModel::refreshModels,
+            onSelectModel = viewModel::selectModel,
+            onSelectModelOption = viewModel::selectModelOption,
+            onFavoriteModel = viewModel::favoriteModel,
+            onApprovalDecision = viewModel::respondApproval,
+            onQuestionResponse = viewModel::respondQuestion,
+            onRuntimeMode = viewModel::selectRuntimeMode,
+        )
+    }
 }
 
 /** Stateless thread screen: top bar, banners, the timeline (newest at the bottom) and the composer. */

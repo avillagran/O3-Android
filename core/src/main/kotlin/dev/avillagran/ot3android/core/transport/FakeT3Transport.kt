@@ -193,6 +193,14 @@ class FakeT3Transport(
         return answer(args)
     }
 
+    var onImage: (suspend (String, String, String) -> ByteArray)? = null
+
+    override suspend fun image(id: String, name: String, mimeType: String): ByteArray {
+        record("image", id, name, mimeType)
+        requireConnected()
+        return (onImage ?: throw T3Exception("image_unavailable"))(id, name, mimeType)
+    }
+
     override suspend fun shell(): JSONObject {
         record("shell")
         requireConnected()

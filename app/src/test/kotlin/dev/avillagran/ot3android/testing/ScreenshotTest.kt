@@ -48,7 +48,7 @@ abstract class ScreenshotTest {
      * animation is at its end state. With [screen], the capture holds every window, so
      * sheets, dialogs and tooltips, which open windows of their own, are in it.
      */
-    fun snapshot(name: String, themes: List<String> = THEMES, screen: Boolean = false, content: @Composable () -> Unit) {
+    fun snapshot(name: String, themes: List<String> = THEMES, screen: Boolean = false, beforeCapture: (() -> Unit)? = null, content: @Composable () -> Unit) {
         val catalog = OmarchyThemeCatalog.loadBlocking(ApplicationProvider.getApplicationContext())
         var current by mutableStateOf(themes.first())
         // Windows of their own can hold endless animations (a focused field's cursor), so the
@@ -69,6 +69,10 @@ abstract class ScreenshotTest {
                     composeRule.mainClock.advanceTimeBy(SETTLE_MS)
                     composeRule.waitForIdle()
                 }
+            }
+            beforeCapture?.invoke()
+            if (beforeCapture != null) {
+                composeRule.waitForIdle()
             }
             val path = "${roborazziSystemPropertyOutputDirectory()}/${javaClass.simpleName}/$name.$id.png"
             if (screen) captureScreenRoboImage(path) else composeRule.onRoot().captureRoboImage(path)

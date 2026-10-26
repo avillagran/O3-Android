@@ -52,6 +52,23 @@ class NativeHttpTest {
     }
 
     @Test
+    fun binaryImageRequiresConnectedNativeSession() {
+        val error = assertThrows(T3Exception::class.java) {
+            runBlocking { transport.image("attachment", "shot.png", "image/png") }
+        }
+        assertEquals("not_connected", error.code)
+    }
+
+    @Test
+    fun binaryImageMetadataIsValidatedByRust() {
+        runBlocking { transport.connect(ConnectRoute.Bearer(server.baseUrl, TOKEN)) }
+        val error = assertThrows(T3Exception::class.java) {
+            runBlocking { transport.image("attachment", "shot.svg", "image/svg+xml") }
+        }
+        assertEquals("invalid_image", error.code)
+    }
+
+    @Test
     fun bearerRequestKeepsUnicode() = runBlocking {
         transport.connect(ConnectRoute.Bearer(server.baseUrl, TOKEN))
 
