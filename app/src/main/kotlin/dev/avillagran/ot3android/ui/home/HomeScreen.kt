@@ -58,6 +58,7 @@ import dev.avillagran.ot3android.core.home.HomeUiState
 import dev.avillagran.ot3android.core.home.MessageMatch
 import dev.avillagran.ot3android.core.home.Shelf
 import dev.avillagran.ot3android.ui.icons.Ot3Icons
+import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
 import dev.avillagran.ot3android.ui.kit.ThreadCardRow
 import dev.avillagran.ot3android.ui.kit.ThreadSlimRow
 
@@ -291,9 +292,9 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit) {
     // mutate, so no gesture is attached until the lib's command builders are reachable.
     val modifier = Modifier.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
     if (row.slim) {
-        ThreadSlimRow(model, onClick = onClick, onLongClick = onLongClick, modifier = modifier)
+        ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, modifier = modifier)
     } else {
-        ThreadCardRow(model, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, modifier = modifier)
+        ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, modifier = modifier)
     }
 }
 

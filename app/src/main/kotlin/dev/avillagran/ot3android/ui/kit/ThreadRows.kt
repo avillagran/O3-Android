@@ -154,9 +154,9 @@ fun ThreadSlimRow(
         selected = selected,
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.height(Ot3Sizes.slimRowHeight),
+        modifier = modifier.heightIn(min = Ot3Sizes.slimRowHeight),
     ) {
-        Box(Modifier.fillMaxHeight().padding(horizontal = Ot3Sizes.cardRowPaddingHorizontal), contentAlignment = Alignment.CenterStart) {
+        Column(Modifier.padding(horizontal = Ot3Sizes.cardRowPaddingHorizontal, vertical = 4.dp)) {
             CaptionLine(row, slim = true, onSubagentsClick = onSubagentsClick, onUnpin = onUnpin) {
                 Text(
                     row.title,
@@ -168,6 +168,13 @@ fun ThreadSlimRow(
                 )
                 row.pullRequest?.let { PrBadge(it, onClick = onPullRequestClick) }
             }
+            Text(
+                listOfNotNull(row.environmentName, row.branch).joinToString(" · "),
+                style = Ot3Theme.typography.material.bodySmall,
+                color = Ot3Theme.colors.dim,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+            )
         }
     }
 }

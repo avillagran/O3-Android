@@ -84,6 +84,18 @@ class Ot3NavigationTest {
     }
 
     @Test
+    fun chatHidesGlobalFooterAndBackRestoresIt() {
+        launch()
+        onUi { navigator.openThread("e1", "t1") }
+        composeRule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+        val entry = navController.currentBackStackEntry
+        onUi { navigator.openThread("e1", "t1") }
+        assertEquals("Reselecting must keep the session owner", entry, navController.currentBackStackEntry)
+        pressBack()
+        composeRule.onNodeWithTag(NavTags.BAR).assertIsDisplayed()
+    }
+
+    @Test
     fun openingAThreadResetsTheChatsStackToHomeAndThread() {
         launch()
         onUi { navigator.openThread("e1", "t1") }
@@ -130,7 +142,7 @@ class Ot3NavigationTest {
     fun tabSwitchingPreservesEachStackAndReselectingReturnsToTheRoot() {
         launch()
         onUi { navigator.openThread("e1", "t1") }
-        composeRule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+        onUi { navigator.selectTab(TopTab.Settings) }
         composeRule.waitForIdle()
         onUi { navigator.push(Environments) }
         assertEquals("Environments", stack().last())
@@ -143,11 +155,11 @@ class Ot3NavigationTest {
         composeRule.waitForIdle()
         assertEquals(Thread("e1", "t1"), navController.currentBackStackEntry?.thread())
 
-        composeRule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+        onUi { navigator.selectTab(TopTab.Settings) }
         composeRule.waitForIdle()
         assertEquals("Environments", stack().last())
 
-        composeRule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+        onUi { navigator.selectTab(TopTab.Settings) }
         composeRule.waitForIdle()
         assertEquals("reselecting pops to the root", "Settings", stack().last())
     }

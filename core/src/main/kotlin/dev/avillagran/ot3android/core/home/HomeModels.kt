@@ -80,7 +80,7 @@ data class HomeRow(
     /** `<environment id>/<project id>`, the Project filter's key; null without a project. */
     val projectKey: String?,
     val projectTitle: String?,
-    /** The environment's name, only when more than one environment is saved. */
+    /** The environment label supplied to sidebar.view, also for a single saved environment. */
     val environmentLabel: String?,
     val branch: String?,
     /** The worktree, else the project's workspace root: Copy ▸ Path. */
@@ -111,6 +111,8 @@ data class HomeRow(
     val autoSettleDisabled: Boolean,
     val style: RowStyle,
     val swipe: SwipeActions,
+    /** Already computed by sidebar.view; no PR inference in the host. */
+    val pullRequestBadge: org.json.JSONObject? = null,
 )
 
 /** One entry of Home's single lazy list. */

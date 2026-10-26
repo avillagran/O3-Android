@@ -6,6 +6,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.toRoute
 import androidx.navigation.NavHostController
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.ui.icons.Ot3Icons
@@ -56,6 +57,11 @@ class Ot3Navigator(val navController: NavHostController) {
 
     /** Opens a thread from anywhere: the Chats tab, its stack reset to `[Home, Thread]`. */
     fun openThread(environmentId: String, threadId: String, prompt: String? = null) {
+        val current = navController.currentBackStackEntry
+        if (current?.destination?.hasRoute(Thread::class) == true) {
+            val selected = current.toRoute<Thread>()
+            if (selected.environmentId == environmentId && selected.threadId == threadId) return
+        }
         if (currentTab != TopTab.Chats) selectTab(TopTab.Chats)
         navController.navigate(Thread(environmentId, threadId, prompt)) {
             popUpTo(Home) { inclusive = false }

@@ -98,7 +98,7 @@ settles the pending decision at `docs/DECISIONS.md:294`), nested graphs per tab.
 
 The three tabs (Chats, PRs, Settings) are T3 Mobile's Android tabs
 (`t3m:modules/t3-native-controls/android/src/main/java/expo/modules/t3nativecontrols/T3WorkspaceNavigationModule.kt:66,357-365`):
-a `NavigationBar` on phones, hidden while the keyboard is up
+a `NavigationBar` on phones, hidden throughout Chat (including its sheets) and while the keyboard is up
 (`t3m:src/features/workspace/AndroidWorkspaceNavigation.android.tsx:78`), and a 72 dp
 rail on tablets (2.4). They replace ot3's sidebar-header PR toggle
 (`ot3:ui/qml/T3Panel.qml:1152`) and footer Preferences button
@@ -172,9 +172,45 @@ positional threshold, `combinedClickable(onLongClick)` with
 The current sidebar's pull to refresh (`app/src/main/kotlin/dev/avillagran/ot3android/ui/sidebar/SidebarScreen.kt:129`)
 goes away; "Refresh" moves to the Home overflow menu, as in ot3's footer.
 
-### 2.4 Tablets and foldables
+### 2.4 Adaptive Chat, tablets and foldables
 
-T3 Mobile's breakpoints, all in `t3m:src/lib/layout.ts`, are kept exactly:
+**Andrés, 2026-10-25 — UI-1h overrides:** phone rotation is free. An open Chat
+in **any landscape phone**, as well as a device with smallest width ≥ 600 dp,
+shows Home as a 280 dp left sidebar and the selected Chat on the right. A visible,
+labelled control contracts/reopens the sidebar; its choice survives rotation and
+activity recreation. Portrait phones show Chat alone. Chat hides the global
+Chats / PRs / Settings footer; the composer remains anchored above IME/system bars
+and an explicit Back returns to Home, restoring the footer. Hardware Back keeps
+its navigation semantics. Home's search Back handler is inactive in the sidebar.
+Selecting the current row is a no-op, including for the navigation entry/session.
+The selected row uses `rowSelected`.
+
+Selection (environment + thread), draft and reading anchor/offset must survive
+rotation, resize and sidebar collapse. The same destination-scoped ThreadViewModel
+owns the session across those layout changes: no additional bounded fetch or
+thread subscription. The lazy timeline uses saveable list state; collapsing the
+sidebar preserves its own list state. Keyboard appearance must leave the composer
+visible in both orientations. No orientation lock on phones.
+
+All Home/sidebar rows, including slim settled/snoozed/subagent rows, show the
+**environment label and branch when present**, alongside the existing status and
+lib-computed PR badge. Missing values are omitted. `environmentName` is the saved
+environment label supplied to `sidebar.view`, never an inferred hostname or OS.
+Field provenance and limits: [UI-1h metadata audit](ui/compare/ui-1h/METADATA.md).
+
+Acceptance for UI-1h: JVM navigation/footer/restoration checks; emulator tests on
+the actual Home/Thread screens with real ViewModels and a deterministic offline
+transport; rotate portrait → landscape → portrait, collapse/reopen and reselect;
+assert draft and reading position, one thread stream and one bounded snapshot;
+Back restores Home/footer. Capture portrait, split, collapsed and IME states plus
+a short emulator video under `docs/ui/compare/ui-1h/`. Record exact commands,
+fixture/live distinction, APK checksum and unverified physical-phone scope.
+
+The remaining tablet/inspector plan below applies where it does not conflict with
+these phone Chat requirements (rail/inspector work remains UI-7).
+
+
+T3 Mobile's reference breakpoints, all in `t3m:src/lib/layout.ts`:
 
 | Layout | Condition | Panes | Source |
 |---|---|---|---|
@@ -198,7 +234,7 @@ T3 Mobile's breakpoints, all in `t3m:src/lib/layout.ts`, are kept exactly:
 - Foldables: with a vertical hinge, the list/detail split snaps to it when the left side
   keeps ≥ 280 dp and the right ≥ 320 dp (`t3m:src/lib/layout.ts:146-162`; posture logic
   `.../T3FoldPostureModule.kt:65-128`).
-- Rotation: portrait on phones, free rotation when the smallest width is ≥ 600 dp
+- Reference rotation policy (overridden for Android Chat by UI-1h above): portrait on phones, free rotation when the smallest width is ≥ 600 dp
   (`t3m:plugins/withAndroidTabletOrientation.cjs:3-24`).
 
 Compose: `NavigationSuiteScaffold` (bar ↔ rail, with the suite type chosen by these

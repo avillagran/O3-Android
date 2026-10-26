@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -66,7 +67,14 @@ interface Ot3Screens {
 fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> Boolean) {
     navigation<ChatsGraph>(startDestination = Home) {
         composable<Home> { entry -> screens.Home(entry, isTop(entry)) }
-        composable<Thread> { entry -> screens.Thread(entry.toRoute()) }
+        composable<Thread> { entry ->
+            val route = entry.toRoute<Thread>()
+            CompositionLocalProvider(LocalSelectedThreadKey provides "${route.environmentId}/${route.threadId}") {
+                ThreadWorkspace(sidebar = { screens.Home(entry, false) }) {
+                    screens.Thread(route)
+                }
+            }
+        }
         composable<ThreadChanges> { NotYetScreen("ThreadChanges") }
         composable<NewThread> { NotYetScreen("NewThread") }
         composable<NewThreadDraft> { NotYetScreen("NewThreadDraft") }

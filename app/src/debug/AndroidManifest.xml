@@ -2,6 +2,9 @@
 <!-- Debug builds only: the component catalog (UI_SPEC 3.9) as a second launcher entry. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
+        <activity android:name=".debug.workspace.WorkspaceFixtureActivity"
+            android:exported="true" android:label="UI-1h offline fixture"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".debug.catalog.ComponentCatalogActivity"
             android:exported="true"
