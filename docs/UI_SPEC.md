@@ -2184,6 +2184,23 @@ contracts](ui/compare/ui-1i/CONTINUITY.md). UI2 starts from the already retained
 must keep live transport, physical Xiaomi, aesthetic approval and release build claims
 separate from emulator fixture checks.
 
+## UI2a implementation status — 2026-10-26
+
+The reader now draws Rust `ThreadView.timeline.timeline`, including neutral Markdown
+blocks, sender/time/copy, folding activity/reasoning with scoped inspector reads, and
+file-change summaries. Workspace-owned sidebar access exists in both orientations and
+survives unloaded/failed thread state. Selected rows retain touch pressed feedback.
+This is an incremental native renderer, **not** a completed parity claim. The exact
+implemented/pending comparison against OT3 7b5b1de is in
+[UI2a evidence](ui/compare/ui-2a/README.md). UI3 model/options/queue/attachments/steer,
+interactive approvals/questions, rich document previews, source controls and history
+transport/session integration remain pending. No new Kotlin protocol/projection layer.
+
+Source correction for UI2a: user message corners are 16 dp, as
+`ot3:ui/qml/T3Panel.qml:1704`; code containers retain 6 dp corners. This supersedes
+the earlier UI1i addendum's 6 dp message-corner statement. The workspace sidebar
+action shares the 56 dp chat toolbar; it does not add another 48 dp header row.
+
 ### 2026-10-26 functional acceptance: bridge-distributed environments
 
 Pairing Android with a desktop bridge must discover and synchronize the client's

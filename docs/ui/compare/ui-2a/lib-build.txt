@@ -1,0 +1,10 @@
+==> Downloading lib-t3-rust-android-v0.3.4.aar from avillagran/lib-t3-rust release v0.3.4
+lib-t3-rust-android-v0.3.4.aar: OK
+==> Installed /home/node/.t3/worktrees/ot3-android/t3-4fc91a29/libs/lib-t3-rust-android.aar (lib-t3-rust 0.3.4, v0.3.4, e2ec5467389adf0885623480d7e2006a7ae3d019, ABI 3, from release v0.3.4)
+==> Building the host JNI library from v0.3.4 (e2ec5467389adf0885623480d7e2006a7ae3d019)
+    Finished `release` profile [optimized] target(s) in 4.85s
+-- Configuring done (0.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/node/Work/lib-t3-rust/target/jni-host
+[100%] Built target t3_jni
+==> Installed /home/node/.t3/worktrees/ot3-android/t3-4fc91a29/libs/host/linux-x86_64/libt3_jni.so (lib-t3-rust 0.3.4, v0.3.4, e2ec5467389adf0885623480d7e2006a7ae3d019)

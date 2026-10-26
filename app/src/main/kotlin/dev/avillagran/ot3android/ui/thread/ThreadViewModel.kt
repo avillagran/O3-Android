@@ -169,6 +169,16 @@ class ThreadViewModel(
         }
     }
 
+    /** On-demand read; scope and response validation belong to Rust. Never dispatches. */
+    suspend fun inspect(reference: org.json.JSONObject): org.json.JSONObject? {
+        val transport = transport() ?: return null
+        val args = org.json.JSONObject().put("reference", reference).put("environment", environmentId).put("threadId", threadId)
+        val domain = dev.avillagran.ot3android.core.transport.DomainEngine.shared
+        val request = domain.domain("toolInspector.request", args) as org.json.JSONObject
+        val response = transport.call(request.getString("method"), request.getJSONObject("payload")) as org.json.JSONObject
+        return domain.domain("toolInspector.parse", org.json.JSONObject(args.toString()).put("response", response)) as org.json.JSONObject
+    }
+
     fun retryStream() {
         session.retry()
         supervisor.value?.retry()

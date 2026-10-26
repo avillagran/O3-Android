@@ -1,0 +1,4 @@
+{
+          "thread":{"id":"chat"},"messages":[{"id":"answer","role":"assistant","createdAt":1,
+          "text":"# Native reader\n\n**Bold** and *emphasis* with [reference](https://example.org)\n\n- First\n- Second\n\n```kotlin\nval answer = 42\n```"}]
+        }

@@ -1001,3 +1001,31 @@ layer 1, UI_SPEC rule 6), so UI-N's runtime waits for this request.
   removed without a finished alert.
 - Android consumes it through `NotificationContract` (`app/.../notifications/`), already
   parsing the proposed `card` and `alerts` shapes with fixtures; nothing calls the lib yet.
+
+### UI2a client integration audit (2026-10-26)
+
+U10 and U25 are consumed by the new native timeline reader: `timeline.view` blocks,
+`toolInspector.request(reference, environment, threadId)` → typed `call` →
+`toolInspector.parse(reference, environment, threadId, response)`. No new contract is
+requested for Markdown, tool output, reasoning or file summaries. UI3's existing contracts
+still need Android integration; this increment does not mark that UI complete.
+
+U18's pure functions exist (`history.path`, `history.envelope`), but the current native
+transport exposes `boundedThread(threadId)` without an authenticated page request. The
+remaining transport request is `historyPage(threadId: String, cursor: String): JSONObject`,
+returning the existing normalized `history.envelope` with its opaque next cursor. Android
+needs it to merge only historical presentation rows without overwriting live control state,
+and retain the visible id/offset. Until integrated there is an informative history boundary,
+with no action that falsely appears to page. This is a transport request, not a request to
+reimplement history parsing or eligibility in Kotlin. Root coordinates lib work separately.
+
+### U28 update — delivered in lib v0.3.5 (2026-10-26)
+
+The final native awareness.view is released; it is no longer an unimplemented lib
+dependency. Android remains pinned to v0.3.4 for the UI-1 pre-release and will adopt
+v0.3.5 immediately afterwards with the follow service and real native output fixtures.
+The final contract adds locale, preferences.plan, alert.status and summary.body. Optional
+fields are omitted, cold reseeds without alerts, plan-ready attention has waiting_for_input,
+finished deadlines use latestRunCompletedAt, and nextDeadline includes snooze expiry.
+See the lib v0.3.5 README for the full authoritative contract. No Kotlin state/count
+logic is introduced to bridge versions.

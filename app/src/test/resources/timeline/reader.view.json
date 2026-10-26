@@ -1,0 +1,131 @@
+{
+  "historyCursor": null,
+  "hasMoreHistory": false,
+  "activity": [],
+  "payloadBudgetExceeded": false,
+  "approvals": [],
+  "questions": [],
+  "threadState": {
+    "contextWindow": null,
+    "providerInstanceId": null,
+    "interactionMode": null,
+    "subagents": [],
+    "latestRunSettled": false,
+    "mergeBackTargetThreadId": null,
+    "startedAt": 0,
+    "working": false,
+    "mergeBackRunId": null,
+    "activeRunId": null,
+    "status": "idle"
+  },
+  "timeline": [{
+    "fileReferences": [],
+    "rev": "331acb2b81ea4ddc",
+    "attachments": [],
+    "role": "assistant",
+    "blocks": [
+      {
+        "spans": [{
+          "text": "Native reader",
+          "type": "text"
+        }],
+        "level": 1,
+        "type": "heading"
+      },
+      {
+        "spans": [
+          {
+            "strong": true,
+            "text": "Bold",
+            "type": "text"
+          },
+          {
+            "text": " and ",
+            "type": "text"
+          },
+          {
+            "emphasis": true,
+            "text": "emphasis",
+            "type": "text"
+          },
+          {
+            "text": " with ",
+            "type": "text"
+          },
+          {
+            "link": {
+              "kind": "web",
+              "href": "https://example.org"
+            },
+            "text": "reference",
+            "type": "text"
+          }
+        ],
+        "type": "paragraph"
+      },
+      {
+        "ordered": false,
+        "start": null,
+        "type": "list",
+        "items": [
+          {"blocks": [{
+            "spans": [{
+              "text": "First",
+              "type": "text"
+            }],
+            "type": "paragraph"
+          }]},
+          {"blocks": [{
+            "spans": [{
+              "text": "Second",
+              "type": "text"
+            }],
+            "type": "paragraph"
+          }]}
+        ]
+      },
+      {
+        "runnable": false,
+        "code": "val answer = 42\n",
+        "index": 0,
+        "language": "kotlin",
+        "type": "code",
+        "command": null
+      }
+    ],
+    "canRewindMessage": false,
+    "codeBlocks": [{
+      "code": "val answer = 42\n",
+      "index": 0,
+      "language": "kotlin",
+      "command": null
+    }],
+    "createdAt": 1000,
+    "searchText": "Native reader\nBold and emphasis with reference\nFirst\nSecond\nval answer = 42\n\n",
+    "streaming": false,
+    "tables": [],
+    "attribution": null,
+    "inputIntent": null,
+    "forkRunId": null,
+    "recallableText": null,
+    "revertReference": null,
+    "id": "answer",
+    "senderThreadId": null,
+    "text": "# Native reader\n\n**Bold** and *emphasis* with [reference](https://example.org)\n\n- First\n- Second\n\n```kotlin\nval answer = 42\n```",
+    "markdownImages": []
+  }],
+  "queue": {
+    "hiddenMessageIds": [],
+    "held": false,
+    "acknowledgedMessageIds": ["answer"],
+    "canReorder": false,
+    "canSteer": false,
+    "items": [],
+    "activeRunId": null
+  },
+  "tasks": null,
+  "planView": {
+    "plans": [],
+    "ready": null
+  }
+}

@@ -66,3 +66,12 @@ older-API/software/compile-failure fallback. Natural width is fixed and the edge
 Departure drift and cross-shelf flight arcs are also pending. The full shader variants remain part of the motion inventory/spec work, not a claim
 that all desktop effects or the complete chat have shipped. UI1i does ship the actual
 Home sky, row comet/glints/change shader, pressed feedback and reduced-motion limits.
+
+## UI2a continuation (2026-10-26)
+
+The next bounded slice is implemented on `feat/ui2-reader-sidebar`; see
+[UI2a](../ui-2a/README.md) for comparison, evidence and outstanding work. Production
+workspace now owns its sidebar control in both orientations. TimelineReader consumes all
+Rust rows and supplied Markdown blocks; scoped activity/reasoning details use the existing
+inspector contract. Composer persistence/outbox stay in ThreadComposer. Full UI2/UI3
+acceptance above is still the target, not a claim that every item has shipped.

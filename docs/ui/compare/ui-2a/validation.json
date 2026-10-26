@@ -1,0 +1,29 @@
+{
+  "app": {
+    "tests": 119,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "core": {
+    "tests": 234,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 4
+  },
+  "emulator": {
+    "combined_final": {
+      "tests": 11,
+      "failures": 0
+    },
+    "root_928e868_equivalent": {
+      "tests": 2,
+      "failures": 0
+    },
+    "serial": "emulator-5580",
+    "physical_used": false
+  },
+  "source_commit": "eba2660785fb69718821a368cce3af1b3be83115",
+  "apk_sha256": "d9076fc8a2fc43ea823e9fbadfa2cf06e4f9cfe0941180baaf37704000e189ee",
+  "apk_bytes": 72295522
+}
