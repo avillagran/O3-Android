@@ -54,6 +54,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,10 +101,11 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ThreadContent(
         state = state,
+        quotaStrip = quotaStrip,
         onDraftChange = viewModel::onDraftChange,
         onSend = viewModel::send,
         onInterrupt = viewModel::interrupt,
@@ -153,6 +156,7 @@ fun ThreadContent(
     onApprovalDecision: (String, String) -> Unit = { _, _ -> },
     onQuestionResponse: (String, String, org.json.JSONObject) -> Unit = { _, _, _ -> },
     onRuntimeMode: (String) -> Unit = {},
+    quotaStrip: @Composable () -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -204,6 +208,13 @@ fun ThreadContent(
                     }
                 },
                 actions = {
+                    var quotaMenu by remember { mutableStateOf(false) }
+                    Box {
+                        Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { quotaMenu = true }, modifier = Modifier.testTag("thread_overflow"))
+                        androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
+                            dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { quotaMenu = false }
+                        }
+                    }
 
                     if (state.view.working) {
                         IconButton(
@@ -264,6 +275,7 @@ fun ThreadContent(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
+            quotaStrip()
             StreamState(state.view.connectionState, state.view.stale, onRetryStream)
             state.view.pendingRequests.filter { state.view.timeline?.has(if (it.kind == "user_input") "questions" else "approvals") != true }
                 .forEach { PendingRequestBanner(it) }

@@ -60,6 +60,8 @@ class AppGraph(
             CoroutineExceptionHandler { _, error -> Log.e(TAG, "Uncaught ${error.javaClass.name} in appScope") },
     )
 
+    val quotaSource by lazy { dev.avillagran.ot3android.ui.usage.SharedQuotaSource(appScope, connectionManager::connectionFlow, providerRefreshGate::refresh) }
+
     val followPreferences by lazy { dev.avillagran.ot3android.core.data.prefs.FollowPreferences(appContext) }
     val followVisibility = dev.avillagran.ot3android.notifications.FollowVisibility()
 

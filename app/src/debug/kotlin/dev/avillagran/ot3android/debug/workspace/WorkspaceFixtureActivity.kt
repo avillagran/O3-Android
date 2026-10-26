@@ -59,13 +59,17 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                                 is HomeIntent.ToggleShelf -> vm.toggleShelf(intent.shelf)
                                 else -> Unit
                             }
+                        }, quotaStrip = {
+                            dev.avillagran.ot3android.ui.usage.QuotaStripHost(source = fixture.quotas, environments = fixture.repository.environments,
+                                onOpenLimits = { navigator.push(dev.avillagran.ot3android.ui.navigation.QuotaLimits()) })
                         })
                     }
-                    @Composable override fun Usage() {
+                    @Composable override fun Usage(initialTab: String, environmentId: String?) {
                         val model: dev.avillagran.ot3android.ui.usage.UsageViewModel = viewModel {
                             dev.avillagran.ot3android.ui.usage.UsageViewModel(
                                 fixture.repository.environments, fixture.connections::connectionFlow,
-                                createSavedStateHandle(),
+                                createSavedStateHandle().apply { if (!contains("tab")) set("tab", initialTab); if (!contains("environment")) set("environment", environmentId) },
+                                quotaSource = fixture.quotas,
                             ) { connection, period ->
                                 dev.avillagran.ot3android.core.usage.UsageReader.read(
                                     connection.transport, period, "2026-10-26", "America/Santiago")
@@ -81,7 +85,10 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                             ThreadViewModel(route.environmentId, route.threadId, fixture.connections,
                                 fixture.drafts, fixture.outbox, fixture.sender, fixture.viewModelScope)
                         }
-                        ThreadScreen(vm, { navigator.back() })
+                        ThreadScreen(vm, { navigator.back() }, quotaStrip = {
+                            dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, false, fixture.quotas, fixture.repository.environments,
+                                onOpenLimits = { navigator.push(dev.avillagran.ot3android.ui.navigation.QuotaLimits(route.environmentId)) })
+                        })
                     }
                 }
             }
@@ -109,6 +116,8 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         override val shelves = MutableStateFlow(ShelfState())
         override suspend fun update(transform: (ShelfState) -> ShelfState) { shelves.value = transform(shelves.value) }
     }
+    val refreshGate = dev.avillagran.ot3android.ui.usage.ProviderRefreshGate()
+    val quotas by lazy { dev.avillagran.ot3android.ui.usage.SharedQuotaSource(viewModelScope, connections::connectionFlow, refreshGate::refresh) }
     private var pricesFresh = request != "prices"
     val transport = FakeT3Transport().apply {
         onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }

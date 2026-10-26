@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.core.data.prefs
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -25,6 +26,7 @@ data class AppearanceSettings(
     val darkThemeId: String = DEFAULT_THEMES.dark,
     val lightThemeId: String = DEFAULT_THEMES.light,
     val animation: AnimationPreference = AnimationPreference.AUTO,
+    val providerUsage: Boolean = false,
 ) {
     companion object {
         /** The default themes, in one place (UI_SPEC 3.1.3). */
@@ -46,9 +48,12 @@ class AppearancePreferences(private val dataStore: DataStore<Preferences>) {
             mode = enumOrDefault(prefs[Keys.MODE], defaults.mode),
             darkThemeId = prefs[Keys.DARK_THEME] ?: defaults.darkThemeId,
             lightThemeId = prefs[Keys.LIGHT_THEME] ?: defaults.lightThemeId,
+            providerUsage = prefs[Keys.PROVIDER_USAGE] ?: false,
             animation = enumOrDefault(prefs[Keys.ANIMATION], defaults.animation),
         )
     }
+
+    suspend fun setProviderUsage(shown: Boolean) { dataStore.edit { it[Keys.PROVIDER_USAGE] = shown } }
 
     suspend fun setMode(mode: AppearanceMode) {
         dataStore.edit { it[Keys.MODE] = mode.name }
@@ -70,6 +75,7 @@ class AppearancePreferences(private val dataStore: DataStore<Preferences>) {
         stored?.let { name -> enumValues<E>().firstOrNull { it.name == name } } ?: default
 
     object Keys {
+        val PROVIDER_USAGE = booleanPreferencesKey("provider_usage")
         val MODE = stringPreferencesKey("mode")
         val DARK_THEME = stringPreferencesKey("dark_theme")
         val LIGHT_THEME = stringPreferencesKey("light_theme")
