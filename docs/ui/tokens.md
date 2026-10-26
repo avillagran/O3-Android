@@ -170,18 +170,116 @@ and switches (`ot3:ui/qml/T3IconButton.qml:25`, `ot3:ui/qml/T3PickerButton.qml:1
 
 ## 5. Motion
 
-| Element | ot3 | Android | Source |
-|---|---|---|---|
-| Colour state changes | 130 ms | `tween(130)` | `ot3:ui/qml/T3ThreadRow.qml:181` |
-| Text field border | 140 ms | `tween(140)` | `ot3:ui/qml/T3TextField.qml:23` |
-| Switch knob | 120 ms OutCubic | `tween(120, EaseOutCubic)` | `ot3:ui/qml/T3Switch.qml:17` |
-| Row arrives | 360 ms, opacity OutCubic, drift −18 → 0 OutBack 1.2 | `animateItem` placement spec with the same curves | `ot3:ui/qml/T3ThreadRow.qml:127-136` |
-| Row departs | 300 ms InCubic | `animateItem` fade-out spec | `ot3:ui/qml/T3ThreadRow.qml:138-142` |
-| Row moves between shelves | 520 ms InOutCubic | `animateItem` placement 520 ms | `ot3:ui/qml/T3Panel.qml:586,757` |
-| Status icon pop | 460 ms OutBack 2.4 | spring approximating OutBack 2.4 | `ot3:ui/qml/T3ThreadRow.qml:283` |
-| Spinner | 1.25 s cycle, arc stretches | same | `ot3:ui/qml/WorkIndicator.qml:21,47` |
-| Live activity shimmer | 72 px band, 2.2 s cycle | 72 dp band, 2.2 s | `ot3:ui/qml/T3ActivityText.qml:18-35` |
-| Navigation and panes | — | predictive back defaults; panes 260 ms cubic (T3 Mobile) | `t3m:src/features/layout/workspace-pane-animation.ts:8-11` |
+Companion to UI_SPEC section 3.4 (rules, surfaces, reduced motion, acceptance). Rewritten
+2026-10-25 from a full read of ot3's QML at the pinned snapshot; it corrects the first
+version of this table (row arrival and departure durations, row-flight curve, missing
+show/hide transitions).
 
-All of it stops when the system animator scale is 0, following T3 Mobile's rule that each
-animation opts into reduced motion (`t3m:src/lib/designTokens.ts:8`).
+### 5.1 `T3Motion.qml`
+
+`T3Motion` is a two-property singleton, not a duration table
+(`ot3:ui/qml/T3Motion.qml:5-12`). It drives one component, `T3Reveal`, the show/hide
+transition of the sidebar, shelf headers and lists, find bar, usage strip, queue, tasks
+and project drafts (`ot3:ui/qml/T3Reveal.qml:18-19,34`; instances `ot3:ui/qml/T3Panel.qml:1107,1227,1246,1272,1291,1315,1341,1504,1520`,
+`ot3:ui/qml/T3Queue.qml:35`, `ot3:ui/qml/T3Tasks.qml:49`, `ot3:ui/qml/T3Composer.qml:272`).
+Every other ot3 animation hard-codes its duration (5.3).
+
+| Property | Values | Default | Set from | Source |
+|---|---|---|---|---|
+| `style` | `nebula`, `warp` ("Hyperspace"), `fold`, `spring`, `instant` | `nebula` | Preferences → Animations → **Show and hide** (`transitionStyle`) | `ot3:ui/qml/T3Motion.qml:8-9`; `ot3:ui/qml/T3Panel.qml:567`; `ot3:ui/qml/T3Preferences.qml:272` |
+| `pace` | slow 1.6, normal 1, fast 0.6 (duration multiplier) | 1 | **Transition speed** (`transitionSpeed`) | `ot3:ui/qml/T3Motion.qml:10-11`; `ot3:ui/qml/T3Panel.qml:568`; `ot3:ui/qml/T3Preferences.qml:273` |
+
+`T3Reveal` per style (`ot3:ui/qml/T3Reveal.qml:30-37`), every duration × `pace`,
+overshoot 1.3:
+
+| Style | ot3 | Compose | Notes |
+|---|---|---|---|
+| nebula (default) | 560 ms InOutCubic | `tween(560 × pace, easing = Ot3Easing.InOutCubic)` on a `progress` 0→1 | layout gap opens only from 60 % of progress, `reach = min(1, extent / 0.6)` (`:26`); content dissolves through `reveal.frag` while moving (`:60-70`) |
+| warp | 460 ms InOutQuart | `tween(460 × pace, Ot3Easing.InOutQuart)` | `reveal.frag` |
+| fold | 500 ms InOutSine | `tween(500 × pace, Ot3Easing.InOutSine)` | `reveal.frag` |
+| spring | 520 ms OutBack 1.3 | `tween(520 × pace, Ot3Easing.outBack(1.3f))` | slide by (1 − extent) × size, opacity min(1, extent × 1.8), scale along the axis max(0.9, progress) (`:47,53,55-59`); ot3 forces it with the software renderer (`:17-19`) |
+| instant | no animation | `snap()` | `:31` |
+
+Compose: `Ot3Reveal(shown, horizontal = false)`, a `Layout` whose measured size is
+`size × reach` and whose content gets the style's `graphicsLayer`; nebula, warp and fold
+apply an AGSL port of `reveal.frag` on API 33+ (`RenderEffect.createRuntimeShaderEffect`)
+and fall back to **spring** below API 33, as ot3 falls back with the software renderer.
+
+### 5.2 Easing curves
+
+QML's easing types are Robert Penner's functions; Compose's `EaseOutCubic` and friends
+are cubic-Bézier approximations, and `CubicBezierEasing` cannot express OutBack with
+ot3's overshoots. `Ot3Easing` therefore implements the exact functions as Compose
+`Easing { t -> … }` (a `fun interface`):
+
+| ot3 (`Easing.*`) | Uses | `Ot3Easing` | Nearest built-in (for previews only) |
+|---|---|---|---|
+| Linear (QML default when no easing is set) | colour behaviours, minimap, mic ring | `LinearEasing` | same |
+| OutCubic | 15 | `1 − (1 − t)³` | `EaseOutCubic` = `CubicBezierEasing(0.33f, 1f, 0.68f, 1f)` |
+| InCubic | 4 | `t³` | `EaseInCubic` |
+| InOutCubic | 4 | `t < .5 ? 4t³ : 1 − (−2t + 2)³ / 2` | `EaseInOutCubic` |
+| InOutQuart | 2 | `t < .5 ? 8t⁴ : 1 − (−2t + 2)⁴ / 2` | `EaseInOutQuart` |
+| InOutSine | 5 | `−(cos(πt) − 1) / 2` | `EaseInOutSine` |
+| OutQuad | 1 | `1 − (1 − t)²` | `EaseOutQuad` |
+| OutBack(s) | 6 (s = 1.2, 1.3, 1.6, 2.2, 2.4) | `u = t − 1; u²((s + 1)u + s) + 1` | `EaseOutBack` is s ≈ 1.70158 only |
+
+Counts are easing declarations in `ui/qml` at the pin. A `spring()` is used only where
+the reference is a spring (T3 Mobile's swipe, 5.4); ot3's OutBack is never replaced by a
+spring, so durations stay exact.
+
+### 5.3 Every ot3 duration, by surface
+
+| Surface | Element | ot3 | Compose | Source |
+|---|---|---|---|---|
+| Rows | Row speed `rowMoveMs` | slow 820, normal 520, fast 300 ms (**Section change speed**) | `Ot3Motion.rowMoveMs` | `ot3:ui/qml/T3Panel.qml:586`; `ot3:ui/qml/T3Preferences.qml:267` |
+| | Row arrives | `arrive(rowMoveMs × 0.8)` = 416 ms: opacity 0 and drift x −18 at once, pause 20 % (83 ms), then 80 % (333 ms) opacity → 1 OutCubic and drift → 0 OutBack 1.2 | `animateItem(fadeInSpec = tween(333, 83, OutCubic))` + `graphicsLayer.translationX` from −18 dp, `tween(333, 83, outBack(1.2f))` (mirrored in RTL) | `ot3:ui/qml/T3Panel.qml:641,657`; `ot3:ui/qml/T3ThreadRow.qml:123,127-136` |
+| | Row departs | `depart(rowMoveMs × 0.6)` = 312 ms: opacity → 0 and drift → +22, both InCubic; the list keeps the slot rowMoveMs + 60 = 580 ms | `animateItem(fadeOutSpec = tween(312, easing = InCubic))` + translationX → +22 dp | `ot3:ui/qml/T3Panel.qml:635,750`; `ot3:ui/qml/T3ThreadRow.qml:138-142` |
+| | Neighbours close or open the gap | rowMoveMs × 0.85 = 442 ms OutCubic | `animateItem(placementSpec = tween(442, easing = OutCubic))` | `ot3:ui/qml/T3Panel.qml:751-754` |
+| | Row moves inside a list | rowMoveMs = 520 ms InOutCubic | placement `tween(520, InOutCubic)` | `ot3:ui/qml/T3Panel.qml:755-758` |
+| | Row changes section (flight) | `t` 0 → 1 over rowMoveMs; **Swoop** (`arc`, default) InOutQuart, **Glide** InOutCubic; bow = sin(πt); arc swing min(26, \|dy\| × 0.14), tilt ±1.4° × bow, scale 1 + 0.04 × bow (glide 0.015), shadow black @ 0.32 × bow, cross-fade smoothstep(0.18, 0.82); a row whose target is hidden (collapsed shelf) sinks and fades with smoothstep(0.55, 1); **Fade** = depart + arrive, **Off** = none | placement `tween(520, InOutQuart)` for the moving key plus a per-key `Animatable` `t` driving `graphicsLayer` (translationX = swing × bow, rotationZ, scale, `shadowElevation`); Fade and Off as ot3 | `ot3:ui/qml/T3RowFlight.qml:17-20,49-61,85-88`; `ot3:ui/qml/T3Panel.qml:585,608,611` |
+| | Status icon change | scale 0.3 → 1, 460 ms OutBack 2.4; opacity 0 → 1, 200 ms OutCubic | two `Animatable`s restarted on label change | `ot3:ui/qml/T3ThreadRow.qml:279-286` |
+| | Status icon tint | 320 ms linear | `animateColorAsState(tween(320, LinearEasing))` | `ot3:ui/qml/T3ThreadRow.qml:272` |
+| | Working icon spin | `circle-dashed` turns 112.5°/s from the sky clock, only while the sky animates | `rotationZ = clock × 112.5f` from the shared `Ot3Ticker` | `ot3:ui/qml/T3ThreadRow.qml:276-278` |
+| | Row background (pressed / selected / draft) | 130 ms linear | `animateColorAsState(tween(130, LinearEasing))` | `ot3:ui/qml/T3ThreadRow.qml:181` |
+| | Draft pen reveal | 280 ms OutCubic; width × reveal, scale 0.4 + 0.6 × reveal | `animateFloatAsState(tween(280, OutCubic))` | `ot3:ui/qml/T3ThreadRow.qml:224-227` |
+| Shelves | Header and list show / hide | `T3Reveal` (5.1) | `Ot3Reveal` | `ot3:ui/qml/T3Panel.qml:1227-1341` |
+| | Chevron | icon swap `chevron-down` / `chevron-up`, not animated | same | `ot3:ui/qml/T3Panel.qml:1242,1287,1336` |
+| Count pills | Digits and pills | not animated | same | `ot3:ui/qml/T3StatusBadges.qml:1-28` |
+| Sky | Energy (idle ↔ busy) | 1 600 ms InOutSine | `animateFloatAsState(tween(1600, InOutSine))` | `ot3:ui/qml/T3Starfield.qml:27-28` |
+| | Drift speed | 5 px/s idle → 42 px/s busy, weighted by energy, × star speed slow 0.5 / normal 1 / fast 1.8 | uniform per frame, dp/s | `ot3:ui/qml/T3Starfield.qml:29,33,106,108`; `ot3:ui/qml/T3Panel.qml:853` |
+| | Meteors | rate 0.85 in the header (0.3 on the panel sky) × **Shooting stars** none 0 / few 0.4 / normal 1 / many 2.2 × energy | uniform | `ot3:ui/qml/T3Panel.qml:850,854,1126`; `ot3:ui/qml/T3Starfield.qml:47-48` |
+| | Frame interval | idle 125 ms, busy 33 ms, explicit Full 16 ms, a meteor on screen 8 ms; Light ≥ 40 ms except during a meteor; Saver caps at 33 ms, Max uses 8 ms; dt clamped to 0.25 s | `withFrameNanos` loop that skips frames to the same intervals | `ot3:ui/qml/T3Starfield.qml:98-99`; `ot3:ui/qml/T3Ticker.qml:22-27,52` |
+| Timeline | Spinner (`WorkIndicator`) | phase time / 1.25 s; head and tail 270° InOutCubic offset 0.6; rotation 225°/s; min sweep 14°; track alpha 0.22; entry opacity 220 ms OutCubic and scale 0.6 → 1 320 ms OutBack 1.6 | `Ot3Spinner` on `Ot3Ticker` | `ot3:ui/qml/WorkIndicator.qml:21-27,35,44,47,49-53` |
+| | Live activity shimmer | 72 px band, 2.2 s cycle, base text opacity 0.50 | 72 dp band, `infiniteRepeatable(tween(2200, LinearEasing))` | `ot3:ui/qml/T3ActivityText.qml:12,17,33` |
+| | New messages, activity expand, jump to latest, copy button | not animated (copy only resets after 1.8 s) | same | `ot3:ui/qml/T3Panel.qml:1934-1940`; `ot3:ui/qml/T3CopyButton.qml:18` |
+| | Minimap marker | 150 ms linear | `tween(150, LinearEasing)` | `ot3:ui/qml/T3TimelineMinimap.qml:103,105` |
+| | Wheel glide | `clamp(\|d\| × 5, 80, 1000)` ms OutCubic | not ported: touch scrolling uses Android's fling | `ot3:ui/js/WheelMotion.js:4,15` |
+| Composer | Focus border, send button colour | 130 ms linear | `tween(130, LinearEasing)` | `ot3:ui/qml/T3Composer.qml:265-266,732` |
+| | Draft saved check | opacity 240 ms in / 140 ms out OutCubic; scale 0.35 → 1, 420 ms OutBack 2.2 in, 140 ms InCubic out | same values | `ot3:ui/qml/T3Composer.qml:683-689` |
+| | Draft saving spinner | opacity 160 ms in / 260 ms out InOutSine | same | `ot3:ui/qml/T3Composer.qml:694` |
+| | Dictation bubble | grow 520 ms OutBack 1.6 / shrink 220 ms InCubic; red dot 1 → 0.35 → 1 over 700 + 700 ms InOutSine, looping; level bars 120 ms OutQuad; mic ring 70 ms linear; glow and border colour 120 ms | out of v1 with dictation (UI_SPEC 4.4.8); values kept for when it lands | `ot3:ui/qml/T3Composer.qml:536,559-562,589,603,624-628,642` |
+| Controls | Switch knob | 120 ms OutCubic | `tween(120, OutCubic)` | `ot3:ui/qml/T3Switch.qml:17` |
+| | Text field border | 140 ms linear | `tween(140, LinearEasing)` | `ot3:ui/qml/T3TextField.qml:23` |
+| | Icon button, picker row press | 130 / 100 ms linear | same | `ot3:ui/qml/T3IconButton.qml:26`; `ot3:ui/qml/T3PickerRow.qml:18` |
+| | Tooltip | in 120 ms, out 80 ms | same | `ot3:ui/style/OmarchyT3/ToolTip.qml:53-54` |
+| Panels | Panel card geometry / opacity | 190 ms OutCubic / 140 ms OutCubic | desktop window chrome: not ported (navigation follows T3 Mobile, 5.4) | `ot3:ui/qml/PinnedKeyboardPanel.qml:400-408,426-429` |
+| Quota and usage | Bars | not animated in ot3 (fills are bindings) | Android adds none either; the strip itself appears through `Ot3Reveal` | `ot3:ui/qml/QuotaStrip.qml:87`; `ot3:ui/qml/T3UsagePage.qml:58,71`; `ot3:ui/qml/T3Panel.qml:1520` |
+| OmaBridge | Indicator | not animated (60 s refresh timer) | same | `ot3:ui/qml/T3OmaBridgeIndicator.qml:29` |
+| Auras | Row comet, pulse, glints, burst | aura fade 600 ms, burst 1 300 ms, pulse sin(clock × 1.8), glints fract(clock × 0.45) | not ported in v1 (UI_SPEC 3.7) | `ot3:ui/qml/T3ThreadRow.qml:144-150,194-195`; `ot3:ui/assets/shaders/threadaura.frag:88,95,108,114` |
+
+### 5.4 T3 Mobile motion kept for navigation
+
+| Element | T3 Mobile | Compose | Source |
+|---|---|---|---|
+| Stack push / pop | react-native-screens default on Android; `none` for Thread and PR in the split layout, and for the Settings tab | Navigation Compose default enter/exit, predictive back on; `EnterTransition.None` for detail replacement in the split layout | `t3m:src/Stack.tsx:947,1059-1063`; `t3m:src/lib/android-workspace-navigation.ts:106-110` |
+| Predictive back | opted in | `android:enableOnBackInvokedCallback="true"`, `PredictiveBackHandler` for sheets and search | `t3m:app.config.ts:311,461` |
+| Panes | 260 ms `Easing.inOut(Easing.cubic)`, `ReduceMotion.System` | `tween(260, Ot3Easing.InOutCubic)` | `t3m:src/features/layout/workspace-pane-animation.ts:8-12` |
+| Sheets | native form sheet; RN modals fade or slide | M3 `ModalBottomSheet` defaults | `t3m:src/native/sheet-surface.ts:1-3`; `t3m:src/features/keyboard/CommandPalette.tsx:417` |
+| Swipe actions | spring damping 26, mass 0.7, stiffness 330, overshoot clamped; dismissal slide and fade 220 ms out-cubic, then the row collapses 180 ms | `spring(dampingRatio = 0.855f, stiffness = 471f)` with the value clamped at the target; `tween(220, OutCubic)` then `tween(180)` height | `t3m:src/features/home/thread-swipe-actions.tsx:54-59,338-351` |
+| Connection dot while connecting | pulse, 1 100 ms out-cubic, repeating | `infiniteRepeatable(tween(1100, OutCubic), RepeatMode.Reverse)` on alpha | `t3m:src/features/connection/ConnectionStatusDot.tsx:58-61` |
+| Usage tabs | `FadeIn.duration(160)` | `fadeIn(tween(160))` | `t3m:src/features/usage/UsageRouteScreen.tsx:261-263` |
+| Extended FAB | expands at y ≤ 8, toggles after 12 px of opposite travel; Compose's own animation | `ExtendedFloatingActionButton(expanded = …)` | `t3m:src/features/home/fab-scroll.ts:13-15`; `t3m:src/features/home/ScrollComposeButton.android.tsx:47-48` |
+| Reduced motion | "each animation must opt into system reduced motion"; `MOBILE_MOTION` adjust 120, enter 200, exit 150 | UI_SPEC 3.4.4 | `t3m:src/lib/designTokens.ts:8-13` |
+
+The spring conversion: Reanimated's (k = 330, c = 26, m = 0.7) has ω = √(k/m) = 21.7 rad/s
+and ζ = c / (2√(km)) = 0.855; Compose's `spring` takes stiffness = ω² = 471 for unit mass.

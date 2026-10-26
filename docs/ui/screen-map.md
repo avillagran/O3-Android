@@ -26,7 +26,7 @@ snapshot; UI_SPEC cites the code directly instead.
 | `:92` | `/projects/$projectKey` | Partial | Project actions sheet (4.1.5) and Settings → Projects (4.9) | UI-1, UI-6 |
 | `:93` | `/settings/appearance` | Adapted/partial | Settings → Appearance (4.9) | UI-6 |
 | `:94` | `/settings/archived` | Implemented core | Settings → Archived threads (4.12) | UI-6 |
-| `:95` | `/settings/connections` | Partial | Settings → Environments (4.2) | UI-6 |
+| `:95` | `/settings/connections` | Partial | Settings → Environments (4.2), routes and route editing (4.2.1), OmaBridge page (4.9.1, blocked) | UI-6; OmaBridge page UI-OB |
 | `:96` | `/settings/diagnostics` | Missing | Out of v1 | — |
 | `:97` | `/settings/general` | Partial | Settings → General, read-only first (4.9) | UI-6 |
 | `:98` | `/settings/integrations` | Partial | Out of v1 (browser and devices) | — |
@@ -39,7 +39,7 @@ snapshot; UI_SPEC cites the code directly instead.
 | `:105` | `/settings/source-control` | Partial | Settings → Source control, read-only first (4.9) | UI-6 |
 | `:106` | `/settings/storage` | Missing UI | Out of v1 | — |
 | `:107` | `/settings` | Partial | Settings tab (4.9) | UI-6 |
-| `:108` | `/usage` | Partial | Settings → Usage, quota strip (4.10) | UI-6 |
+| `:108` | `/usage` | Partial | Settings → Usage with Usage and Limits tabs (4.10.3); compact quota strip in Home (4.10.2) | UI-1 (strip), UI-6 (page) |
 | `:109` | `/welcome` | Partial | First run = Add environment (4.2) | UI-6 |
 
 ## Chat, sidebar and workspace rows (`ot3:docs/audit/CHAT_PARITY.md`)
@@ -92,3 +92,21 @@ snapshot; UI_SPEC cites the code directly instead.
 | 54 (`:77`) | Relationships: parent, fork, subagent | Subthread bar (4.3.6) | UI-2 |
 | 55 (`:78`) | Thread automations | Out of v1 | — |
 | 56–57 (`:79-80`) | Terminal | Out of v1 | — |
+
+## Surfaces outside the audit (added 2026-10-25)
+
+ot3 components that the audit matrices do not list as routes, mapped for the motion,
+usage and OmaBridge requirements (UI_SPEC 3.4, 4.2.1–4.2.2, 4.9.1, 4.10).
+
+| ot3 surface | Source | Android | PR |
+|---|---|---|---|
+| `QuotaStrip` under the thread header, toggled by Show provider usage | `ot3:ui/qml/QuotaStrip.qml:8-126`; `ot3:ui/qml/T3Panel.qml:1153-1158,1520-1537` | Compact quota strip as Home's list header and under the thread top bar (4.10.2) | UI-1 (Home), UI-2 (thread) |
+| Usage page (popup "Usage", Ctrl+U) | `ot3:ui/qml/T3UsagePage.qml:8-78`; `ot3:ui/qml/T3Panel.qml:67,317,892` | Settings → Usage, **Usage** tab (4.10.3) | UI-6 |
+| Provider limits (strip at full size) | `ot3:ui/qml/QuotaStrip.qml:21-120` | Settings → Usage, **Limits** tab (4.10.3) | UI-6 |
+| Routes of an environment (Preferred route, Add route, Remove route) | `ot3:ui/qml/T3Connections.qml:68,71-79` | Environments → environment → routes (4.2.1) | UI-6 |
+| "Connected through OmaBridge · {peer}" / bar mark `omabridge` | `ot3:ui/qml/T3ConnectionOmaBridge.qml:38-44`; `ot3:ui/qml/BarWidget.qml:64-82`; `ot3:ui/qml/T3OmaBridgeIndicator.qml:26-53` | Route-in-use icon in the Home brand row, thread top bar, Environments rows and Thread details (4.2.1) | UI-1 |
+| Per-environment OmaBridge routing (Automatic, Saved route only, Only through OmaBridge) | `ot3:ui/qml/T3ConnectionOmaBridge.qml:61-116` | Plans on OmaBridge peer routes (4.2.2), after OB1 | UI-OB (blocked) |
+| OmaBridge device page (this device, publish, invite / pair, approvals, paired devices, gateways) | `ot3:ui/qml/T3OmaBridgeManage.qml:547-1424`; `ot3:ui/js/OmaBridgeModel.js`; `ot3:ui/js/OmaBridgeText.js` | Settings → Connections → OmaBridge (4.9.1) | UI-OB (blocked on OMABRIDGE_REQUESTS OB1–OB3) |
+| OmaBridge quick popup | `ot3:ui/qml/T3OmaBridgeQuick.qml:14-26` | Approvals dot on the Settings tab and the OmaBridge row (4.9.1) | UI-OB (blocked) |
+| Preferences → Animations | `ot3:ui/qml/T3Preferences.qml:258-275` | Settings → Appearance → Animations (3.4.4) | UI-6 (UI-1 reads the defaults) |
+| `T3Reveal` show / hide, `T3RowFlight`, row motion | `ot3:ui/qml/T3Reveal.qml`; `ot3:ui/qml/T3RowFlight.qml`; `ot3:ui/qml/T3Panel.qml:575-669` | `Ot3Reveal`, row flights and `animateItem` specs (3.4.3; tokens.md 5) | UI-1 |

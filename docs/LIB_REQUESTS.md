@@ -834,3 +834,82 @@ importer to them (DECISIONS.md, 2026-10-25), the later tranches use the rest.
 | v0.3.3 1: no shell reducer in `domain` | Open | No `shell.*` among the 108 entries. |
 | v0.3.3 2: no `message.dispatch` or `run.interrupt` builder | Open | `composer.*` unchanged; `planWorkflow.attachSourceRef` decorates a ready command. |
 | v0.3.3 3: the projection crosses JNI twice per update | Open | `projection.apply` / `timeline.view` signatures unchanged; no handle. |
+
+## 2026-10-25: usage limits and routes
+
+Two requests from the UI specification's motion, usage and OmaBridge requirements
+(UI_SPEC 4.2.1, 4.10, section 6 rows U26 and U27), checked against v0.3.4 (`e2ec546`):
+`describe().domain` and `src/`. Neither blocks a tranche: the screens ship a reduced form
+until they land (UI_SPEC rule 6). Live limits themselves need nothing new:
+`server.subscribeServerConfig` with `usageLimitSources: true` already carries them
+(`bindings/android/describe.json:5710,6037`) and `quotaSources.apply` folds the stream
+(`:1267`).
+
+### U26. `quotaSources.present`: ot3's pooled limits (nice to have)
+
+- What: the quota strip and the Limits tab show, per provider, one bar per window with a
+  segment per account pooled across environments, the remaining percent, the pace, an
+  expected-remaining marker, the earliest reset as "resets in 2h 5m", and notices
+  ("Access denied", "Disconnected; readings may be outdated", "Could not refresh
+  limits", external usage links). ot3 computes all of it in JavaScript ported from T3's
+  `packages/shared/src/usageLimits.ts` (ot3 `ui/js/UsageLimits.js:5-43`,
+  `ui/js/NativeUsageLimits.js:153-567`, provenance `ui/js/NativeUsageLimits.sources.json:2`);
+  T3 Mobile uses the same helpers (`apps/mobile/src/features/usage/UsageLimitsPooled.tsx:302-309`).
+- Why Android needs it: it is derived presentation of protocol data (account identity,
+  workspace disambiguation, fresh-observation choice, pooling, pace); porting 600 lines of
+  it to Kotlin breaks the architecture rule and drifts from ot3.
+- Evidence: the seven usage functions in `describe().domain` are `usageSummary.window`,
+  `request`, `aggregate` and `quotaSources.limits`, `providers`, `sources`, `apply`
+  (`describe.json:1163-1267`); none pools or computes pace (`grep -n
+  'pool\|pace\|elapsed\|resets in' src/quota_sources.rs` finds nothing). `limits` also
+  drops `unavailable.message` and `resetCredits` (`src/quota_sources.rs:23-74`).
+- Proposed: `quotaSources.present {environments: [{id, name, connected, error?,
+  refreshFailed?, state}], now}` where `state` is `quotaSources.apply`'s, returning ot3's
+  `UsageLimits.present` shape:
+
+  ```json
+  {"providers":[{"provider":"codex","label":"Codex",
+     "accounts":[{"key":"…","label":"…","plan":"pro","hosts":"node, laptop",
+                  "windows":[{"label":"5 hours","availablePercent":62,"reset":"resets in 2h 5m"}]}],
+     "windows":[{"id":"five_hour","kind":"session","label":"5 hours","availablePercent":62,
+                 "pace":"ahead","expectedAvailable":71.5,
+                 "segments":[{"key":"…","availablePercent":62,"expectedAvailable":71.5,"reset":"resets in 2h 5m"},null],
+                 "nextReset":"resets in 2h 5m"}],
+     "weekly":{"…":"same window object or null"},"shortWindow":{"…":"same or null"}}],
+   "notices":["node: Disconnected; readings may be outdated"],
+   "external":[{"label":"ChatGPT usage","url":"https://chatgpt.com/#settings/Usage"}]}
+  ```
+
+  English source strings in `reset` and `notices`, so the app translates them with
+  `i18n.t` (the reset should come as `{key, args}` or as `resetsAt` plus a separate
+  `i18n` key if the catalog gains "resets in {time}"). Driver labels from ot3's map
+  (`ui/js/UsageLimits.js:38-41`).
+
+### U27. Routes of an environment: `routeKind`, `routePlan`, route hint (nice to have)
+
+- What: an environment can be saved with several addresses (public, local network,
+  Tailscale, an OmaBridge gateway); the app shows the route in use and falls back when
+  one is unreachable (UI_SPEC 4.2.1).
+- Why Android needs it: classifying an address and ordering attempts are connection
+  policy; ot3 classifies host addresses in Rust (`src/connection_network.rs:48-54`:
+  loopback "This machine", `100.` "Tailscale", other private "Local network", "Tailscale
+  HTTPS") and the lib already groups and orders routes (`src/connection_catalog.rs:73-212`),
+  Rust-only.
+- Evidence: `connectionCatalog.pairingTarget` is the only `connectionCatalog` function in
+  `describe().domain` (`describe.json:733-749`); `view`, `mutate` (`prefer-route`,
+  `remove-route`) and `register` are not exposed; nothing reports a route in use or
+  classifies an address; `grep -rni omabridge src` is empty.
+- Proposed:
+  - `connectionCatalog.routeKind {url, hint?}` → `{kind: "public"|"lan"|"tailscale"|"omabridge"|"loopback", reason}`
+    (`hint` from the link; `lan` for RFC 1918, link-local, `.local` and `.lan`;
+    `tailscale` for `100.64.0.0/10` and `*.ts.net`).
+  - `connectionCatalog.routePlan {routes: [{id, kind, url, order, lastOkAt?, lastOkNetwork?}], network: {type: "wifi"|"cellular"|"ethernet"|"vpn"|"none", id?}, failures?: [{id, error, at}]}`
+    → `{attempts: [{id, timeoutMs}], retryAfterMs?}`: the route that last worked on this
+    network first, then the user's order; skip `lan` on cellular; never fall back after
+    `unauthorized` or `t3_environment_mismatch`.
+  - `connectionCatalog.pairingTarget` also returns `routeHint` when the link carries
+    `route=omabridge` (and `gateway=<name>`), the format proposed in
+    [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB4.
+  - Optionally expose `connectionCatalog.view` / `mutate` for apps that keep T3's catalog
+    document; ot3-Android keeps its own Room table (UI_SPEC 4.2.1), so the two functions
+    above are what it uses.
