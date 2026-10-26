@@ -27,7 +27,7 @@ import java.util.Currency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit) {
+fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit, onRefreshPrices: () -> Unit = {}) {
     val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     var metric by rememberSaveable { mutableStateOf("cost") }
     Scaffold(topBar = {
@@ -79,6 +79,11 @@ fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (S
                             }
                             Text(usageNumber(model.optDouble(metric), metric == "cost"))
                         }
+                    }
+                }
+                if (summary.optLong("unpricedRecords") > 0 || summary.optString("pricing") != "fresh") item {
+                    TextButton(onClick = onRefreshPrices, enabled = !state.busy && !state.offline, modifier = Modifier.testTag("usage_refresh_prices")) {
+                        Text(stringResource(R.string.ot3_usage_refresh_prices))
                     }
                 }
                 if (summary.optLong("unpricedRecords") > 0) item { Text(stringResource(R.string.ot3_usage_unpriced, summary.optLong("unpricedRecords").toString())) }

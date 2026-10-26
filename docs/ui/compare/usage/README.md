@@ -33,7 +33,7 @@ selected environment and period. Refresh re-reads the selected summary.
 ## Remaining differences
 
 - Limits tab, pooled quotas and accounts (U26), pull-to-refresh and tab transition.
-- Explicit Refresh prices (`server.refreshUsageRates`), detailed pricing states.
+- Detailed pricing states beyond the native unavailable/unpriced presentation.
 - ot3 compact k/M/B token format, provider icons and middle-elided model labels.
   Current totals use full localized integers; model names wrap.
 - Live diagnostics scope and Xiaomi acceptance. No physical Usage validation is claimed.
@@ -74,3 +74,23 @@ change; API36.1 instrumentation passed 1/1. A subsequent cold-emulator attempt
 could not resolve the fixture Activity; reinstalling the built debug APK and
 rerunning the same final test passed, including the Models scroll assertion.
 The initial failure is not treated as application acceptance evidence.
+
+
+## Price refresh increment
+
+“Refresh prices” now follows `T3UsagePage.qml:75` and desktop
+`src/usage_summary.rs:21-37`: explicitly call `server.refreshUsageRates`, then
+re-read the selected summary. There is no Android price table or cost arithmetic.
+The action is consumed once, so reconnect/resume cannot replay it; changing
+scope cancels the operation and cannot publish the old environment's result.
+
+Validation: app JVM 203/203, lint and goldens passed; API36.1 instrumented 2/2,
+including one rates call followed by a second summary read and no dispatch.
+[Emulator before refresh](emulator-prices.png) shows the unavailable state.
+Dark/light `unpriced` goldens cover the action and native unpriced count.
+The server is still synthetic; no live pricing-table refresh or physical proof.
+
+Cold-boot correction: instrumented tests were started while the asynchronous
+emulator-start command was still running. After awaiting that exact handle,
+the same APK/tests passed without reinstalling. Future reproductions must await
+`scripts/emulator.sh start` completion before invoking Gradle.

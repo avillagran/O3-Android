@@ -2300,3 +2300,8 @@ on phone landscape; portrait retains the 2 × 2 arrangement. API36.1 device test
 covers Settings navigation, period preservation across rotation, refresh and
 scrolling to Models. Captures and video use a synthetic diagnostics server;
 productive/live and physical acceptance remain pending.
+
+Usage prices checkpoint: the shared “Refresh prices” action calls typed
+`server.refreshUsageRates` then re-reads the selected native summary. Explicit
+actions are consumed once and do not replay on reconnect. App203 JVM and
+API36.1 two instrumented tests pass; live/physical acceptance remains pending.

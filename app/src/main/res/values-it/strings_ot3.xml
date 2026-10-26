@@ -182,4 +182,5 @@
     <string name="ot3_usage_unavailable">Non disponibile</string>
     <string name="ot3_usage_unpriced">%1$s record non hanno un prezzo.</string>
     <string name="ot3_usage_prices_unavailable">I prezzi dei modelli non sono disponibili.</string>
+    <string name="ot3_usage_refresh_prices">Aggiorna prezzi</string>
 </resources>

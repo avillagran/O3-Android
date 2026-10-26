@@ -182,4 +182,5 @@
     <string name="ot3_usage_unavailable">不可用</string>
     <string name="ot3_usage_unpriced">%1$s 条记录没有价格。</string>
     <string name="ot3_usage_prices_unavailable">模型价格不可用。</string>
+    <string name="ot3_usage_refresh_prices">刷新价格</string>
 </resources>
