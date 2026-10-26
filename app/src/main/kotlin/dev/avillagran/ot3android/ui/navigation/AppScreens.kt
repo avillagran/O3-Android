@@ -15,7 +15,6 @@ import dev.avillagran.ot3android.appGraph
 import dev.avillagran.ot3android.appViewModel
 import dev.avillagran.ot3android.core.home.ActionContext
 import dev.avillagran.ot3android.core.home.ProjectAction
-import dev.avillagran.ot3android.core.home.RowStatusDetail
 import dev.avillagran.ot3android.core.home.ThreadAction
 import dev.avillagran.ot3android.core.home.ThreadActions
 import dev.avillagran.ot3android.core.home.ThreadMenuTarget
@@ -30,6 +29,9 @@ import dev.avillagran.ot3android.ui.home.ProjectActionsContent
 import dev.avillagran.ot3android.ui.home.SnoozeUntilContent
 import dev.avillagran.ot3android.ui.home.ThreadActionsContent
 import dev.avillagran.ot3android.ui.home.ThreadListOptionsContent
+import dev.avillagran.ot3android.ui.pair.PairScreen
+import dev.avillagran.ot3android.ui.pair.PairViewModel
+import dev.avillagran.ot3android.ui.pair.QrScanScreen
 import dev.avillagran.ot3android.ui.settings.SettingsEntry
 import dev.avillagran.ot3android.ui.settings.SettingsScreen
 import dev.avillagran.ot3android.ui.thread.ThreadScreen
@@ -128,6 +130,37 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             },
             onSaved = { navigator.environmentSaved() },
             onBack = { navigator.back() },
+            onPair = if (route.environmentId == null) {
+                { navigator.push(PairEnvironment) }
+            } else {
+                null
+            },
+        )
+    }
+
+    @Composable
+    override fun PairEnvironment() {
+        val inbox = LocalContext.current.appGraph.pairingInbox
+        PairScreen(
+            viewModel = appViewModel { graph -> PairViewModel(graph.pairingService()) },
+            inbox = inbox.link,
+            takeFromInbox = inbox::take,
+            onScan = { navigator.push(ScanPairingCode) },
+            onPaired = { navigator.environmentSaved() },
+            onBack = { navigator.back() },
+        )
+    }
+
+    @Composable
+    override fun ScanPairingCode() {
+        val inbox = LocalContext.current.appGraph.pairingInbox
+        QrScanScreen(
+            onScanned = { text ->
+                // Back to the pairing screen first, so it is the one that takes the link.
+                navigator.back()
+                inbox.offer(text, scanned = true)
+            },
+            onBack = { navigator.back() },
         )
     }
 
@@ -141,8 +174,10 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val row = current.rows["${route.environmentId}/${route.threadId}"] ?: return
         val target = ThreadMenuTarget(
             row = row,
-            projectScoped = row.projectKey != null && current.filter.projectKey == row.projectKey,
-            working = row.status == RowStatusDetail.Working,
+            projectScoped = row.projectKey != null && row.projectKey in current.projectScope,
+            working = row.working,
+            autoSettleDisabled = row.autoSettleDisabled,
+            canSnooze = row.canSnooze,
         )
         ThreadActionsContent(row, ThreadActions.menu(target, ActionContext.Interim)) { action ->
             when (action) {
@@ -167,7 +202,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val state by viewModel.state.collectAsStateWithLifecycle()
         val clipboard = LocalClipboard.current
         val scope = rememberCoroutineScope()
-        val project = state?.filterOptions?.projects?.firstOrNull { it.key == "${route.environmentId}/${route.projectId}" }
+        val project = state?.projects?.get("${route.environmentId}/${route.projectId}")
         ProjectActionsContent(project?.title, ThreadActions.projectMenu(project?.workspaceRoot, ActionContext.Interim)) { action ->
             val root = project?.workspaceRoot
             if (action == ProjectAction.CopyPath && root != null) {

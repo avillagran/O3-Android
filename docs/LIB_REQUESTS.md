@@ -23,7 +23,8 @@ stayed clean at the tag throughout.
 merged upstream (PR #8) and released as v0.3.2 (`26e67a7`), which is now the target.
 Each finding is re-checked against the v0.3.2 release in
 [2026-10-25: v0.3.2](#2026-10-25-v032): findings 1 to 4 and 6 are closed, 5 is
-partially closed (`image()`'s `missing_image_bytes`) and 7 is still open.
+partially closed (`image()`'s `missing_image_bytes`) and 7 is still open. Both are
+unchanged at v0.3.4 (see "2026-10-25: v0.3.4").
 
 ### What works
 
@@ -207,6 +208,9 @@ to the `softprops/action-gh-release` files, from the same commit as the AAR.
 
 ## 2026-10-24 — Capabilities requested for Android phase 1 (not defects)
 
+Status at v0.3.3: see "2026-10-25: v0.3.3" below (items 1, 6 and 7 closed, 3 and 4
+partially closed, 2, 5 and 8 open). Unchanged at v0.3.4: see "2026-10-25: v0.3.4".
+
 These are missing pieces of API, not bugs. Each already exists in Rust (in the lib or
 in ot3) but cannot be reached from Kotlin, so phase 1 (connect, live sidebar, read a
 thread with streaming, send, approve and answer, choose a model) would otherwise have
@@ -229,10 +233,10 @@ None of the eight is on the ABI: `describe` has no `projection`, `sidebar`, `she
 (for example `{"op":"domain","fn":"<module>.<fn>","args":{...}}`, listed in `describe`
 next to the RPC functions, same error envelope) would serve items 1 to 7.
 
-**Blocking for phase 1: items 1, 3 and 8.** Items 2, 4, 5, 6 and 7 are nice to have:
-phase 1 can work around them (no compact snapshots, commands built from the
-`describe` argument schema, a Kotlin retry loop, URL + token entry, no older history)
-at some cost in behaviour or bandwidth.
+**Blocking for phase 1: items 1, 3, 6 and 8** (6 since 2026-10-25, when pairing by link
+shipped). Items 2, 4, 5 and 7 are nice to have: phase 1 can work around them (no compact
+snapshots, commands built from the `describe` argument schema, a Kotlin retry loop, no
+older history) at some cost in behaviour or bandwidth.
 
 ### 1. Apply thread events: `projection.apply` or a reduced thread view (blocking)
 
@@ -324,16 +328,45 @@ at some cost in behaviour or bandwidth.
   Wakeup probing is already on the ABI (`wakeSubscriptions`, `T3Subscription.wake()`,
   `ThreadStream.wake()`), so no separate probe operation is requested.
 
-### 6. Pairing-link parser (nice to have)
+### 6. Pairing-link parser (resolved 2026-10-25, v0.3.3; used since UI-1f)
 
-- Proposed: `connectionCatalog.pairingTarget` `{raw, code}` → `{httpBaseUrl,
-  pairingCode}`.
-- Why: phase 1 connects by pairing link; the link forms (direct, hosted, host + code)
-  and their validation are protocol knowledge. `pairBearer` takes the already split
+Also U17 in the UI specification's requests below, which gates UI-6. UI_SPEC section 4.2
+planned URL + token only until it lands; pairing shipped earlier on a temporary port, so
+it now blocks removing that port rather than the screen.
+
+- Proposed: an offline operation on the JSON ABI, with no handle state and no network:
+  `{"op":"pairingTarget","raw":"<link or host[:port]>","code":"<typed code or empty>"}` →
+  `{"httpBaseUrl":"https://host:port","pairingCode":"…"}`, failing with the function's codes
+  (`invalid_endpoint`, `invalid_pairing_code`). It would be listed in `capabilities`'
+  operations. Plus a Kotlin wrapper next to the `pairBearer` one (item 8), for example
+  `T3Client.pairingTarget(raw: String, code: String = ""): PairingTarget` with
+  `PairingTarget(httpBaseUrl, pairingCode)` and the code redacted from `toString`. (The pure
+  `{"op":"domain",…}` form above would also do.)
+- Why: pairing by link and QR shipped in ot3-Android on 2026-10-25, and every pairing
+  starts by splitting the link. The link forms and their validation are protocol knowledge
+  (the hosted `?host=` form, which parameter wins, scheme mapping, user info and port 0
+  rejections, size and control-character limits), and `pairBearer` takes the already split
   `httpBaseUrl` and `pairingCode`.
-- In Rust today: `connection_catalog::pairing_target` (`src/connection_catalog.rs:5`);
-  the catalog functions `view`, `mutate` and `register` (`:73`, `:107`, `:213`) could
-  follow, with storage staying in Kotlin.
+- Evidence: without it, ot3-Android carries `core/pairing/PairingLink.kt`, a port of
+  `pairing_target` that also has to re-implement the part of the WHATWG URL parser the
+  function relies on (host normalization, IPv4 shorthand, IPv6 compression, default
+  ports, form decoding of the fragment). It matches the Rust function on the 70 inputs of
+  `PairingLinkTest`, captured by calling `pairing_target` at v0.3.2, plus the lib's own test
+  ported case by case. Known differences remain on inputs no T3 link produces (IDNA 2003
+  instead of UTS #46). It goes stale whenever the lib's rules change.
+- Update 2026-10-25: lib-t3-rust v0.3.3 (`5cfb7ac`) exposes it through the
+  connection-free `domain` operation as `connectionCatalog.pairingTarget` `{link,
+  pairingCode?}` → `{httpBaseUrl, pairingCode}`, with a `T3Api` wrapper. The app still pins
+  v0.3.2, so `PairingLink.kt` stays until it moves to v0.3.3; `PairingLinkTest`'s table
+  can then check the wrapper instead.
+- Resolved 2026-10-25 (UI-1f): `PairingLink.kt` is deleted. `core/pairing/PairingTargets.kt`
+  calls `connectionCatalog.pairingTarget` through `DomainEngine` and returns the redacted
+  `PairingTarget`; neither the arguments nor the result are logged. `PairingTargetsTest` runs
+  the same 70-input table (and the lib's own test) against the domain operation through the
+  host JNI library: every case matches what the Rust function returned at v0.3.2.
+- In Rust today: `connection_catalog::pairing_target` (`src/connection_catalog.rs:5-58`,
+  test at `:265-290`); the catalog functions `view`, `mutate` and `register` (`:73`, `:107`,
+  `:213`) could follow, with storage staying in Kotlin.
 
 ### 7. History paging (nice to have)
 
@@ -360,6 +393,12 @@ at some cost in behaviour or bandwidth.
   `requestOk` take `method`, `path`, `body`; `fetchDescriptor`, `pairBearer`,
   `boundedThread`, `rpcWithTimeout`, `capabilities`). `T3Client.kt` at v0.3.1 (and
   v0.3.2) wraps none of them, and `request(path, protocol)` is GET-only.
+- Update 2026-10-25: pairing now calls `pairBearer` through `execute` in
+  `NativeT3Transport.pairBearer`, building `{"op":"pairBearer","httpBaseUrl",
+  "pairingCode","environmentId","client":{label, deviceType, os},"connect"}` and reading
+  `{accessToken, tokenType, environmentId, descriptor, scope, expiresIn, connected}` by hand.
+  `NativePairingTest` pins that shape against a local server. A `T3Client.pairBearer`
+  returning a typed result with the token redacted from `toString` would replace both.
 
 ## 2026-10-25: v0.3.2 through the app's transport layer
 
@@ -431,6 +470,10 @@ adapter (`core/transport/ShellUpdates.kt`, which reads `update.batch.items` in o
 derives the cursor without the metadata frame); `ShellReducer` only consumes it. The
 proposed fix above (or item 3, `shell.reduce`) removes both.
 
+**Status at v0.3.4: open.** `src/stream.rs` and `T3Client.kt` are byte-identical to v0.3.3
+(`git diff v0.3.3 v0.3.4` is empty for both), so `start_of` still returns `Snapshot` for a
+metadata snapshot and `ThreadStream.poll` still keeps only the last `snapshot` of a batch.
+
 ### 2. `rpc_rejected` carries no machine-readable field or reason code
 
 Found 2026-10-25 while building the thread screen's send (v0.3.2, `T3Exception` and
@@ -480,3 +523,355 @@ block, but item 1 is the one with live cost: the bounded snapshot of a busy thre
 (477 turn items, 340 nodes, `payloadBudgetExceeded = true`), so refetching it is not an
 answer to an event it cannot apply, and the Kotlin mirror of `projection::apply` it
 forces is the largest piece of protocol logic left in the app.
+
+## 2026-10-25: requests from the UI specification
+
+Status at v0.3.3: see "2026-10-25: v0.3.3" below (U0, U1, U2, U3, U4, U5, U6, U7, U8,
+U10, U17, U18 and U21 closed; the rest in progress in the lib). **Status at v0.3.4: every
+row closed**; see "2026-10-25: v0.3.4" below.
+
+Source: `docs/UI_SPEC.md` section 6 (merged in #7), which maps every screen of ot3-Android
+v1 to the lib function it reads. This section moves the rows marked **new** there, plus
+U2, whose scope the spec extends; the other U rows restate existing items above (U1 =
+phase-1 item 1, U5 / U6 / U7 / U8 = item 4 and the pure-form list, U17 = item 6, U18 =
+item 7). Citation prefixes (`lib:`, `ot3:`) and pins are those of UI_SPEC section 0
+(lib v0.3.2 `26e67a7`, ot3 `7b5b1de`).
+
+All of them rely on the connection-free operation proposed at the start of the phase-1
+section (`{"op":"domain","fn":"<module>.<fn>","args":{...}}`, or the equivalent typed
+`call` without a socket), returning JSON the app renders without further derivation.
+
+**Order agreed with the lib (2026-10-25), already in progress there:** U2, U21, U0, U3,
+U4, U10, U5, U7, U8. Gating per UI tranche: nothing blocks UI-1 (U2 and U21 complete
+it); U0, U3, U4 and U10 gate UI-2; U5, U7 and U8 gate UI-3; U6, U15 and U24 gate UI-4;
+U9, U19, U20 and U22 gate UI-5; U14, U17 and U23 gate UI-6; U12 gates UI-7.
+
+### Extended existing request
+
+| # | Request | In Rust today | Screen | Until then |
+|---|---|---|---|---|
+| U2 | `sidebar.view` + shell reducer (existing item 3), **extended to several environments' shells in one view** and to ot3's ten-state detail and counts | `sidebar::sidebar_status`, `metadata`, `sort_timestamps` (`lib:src/sidebar.rs:6,19,37`); detail, grouping and order only in ot3 (`ot3:ui/js/SidebarModel.js:5-125`, `ot3:ui/js/ProjectModel.js:4-12`) | Home (4.1), count pills | `SidebarModel.kt`, extended to several environments |
+
+### New requests
+
+| # | Request | In Rust today | Screen | Until then |
+|---|---|---|---|---|
+| U0 | **new** Timeline view: ot3's `conversation_timeline` rows (user, assistant, activity groups, changes, context, plan, secret, subagents, error, each with a `rev`) and `live_activity`, from a projection or the reduced view of item 1 | **ot3 only**: `ot3:src/lib.rs:532-617` | Thread (4.3), working pill (4.4.1) | user and assistant messages from `ThreadProjectionShim` (`core/.../thread/ThreadProjectionShim.kt:54`) |
+| U3 | **new** `activity.describe` | `lib:src/activity.rs:38` | Activity blocks (4.3.3) | blocks hidden |
+| U4 | **new** `changes.summaries` | `lib:src/changes.rs:4` | Changed-files card (4.3.4), diff ranges (4.6.2) | card hidden |
+| U9 | **new** `diffReview.present` | `lib:src/diff_review.rs:100` | Diff (4.6) | file list without hunks |
+| U10 | **new** Markdown as renderer-neutral blocks (paragraphs, headings, lists, quotes, tables, code with language and runnable flag, images, links classified GitHub / file / thread / web with ot3's allow-list); the lib says an Android surface "gets its own variant once its renderer is designed" (`lib:README.md:602-612`) | ot3's renderer emits Qt rich text (`ot3:src/lib.rs:119-171`); `code_blocks::parse` already returns fenced blocks as data (`lib:src/code_blocks.rs:12`) | Messages (4.3.2) | display-only CommonMark in Kotlin; only http(s) links tappable |
+| U11 | **new** `theme.tokens`: Omarchy `colors.toml` in, ot3 roles out (3.1) | **ot3 only**: `ot3:ui/qml/T3Palette.qml`, `ot3:ui/qml/T3Panel.qml:380-387`, `ot3:ui/js/DocumentTheme.js` | every screen | precomputed by the generator with goldens |
+| U12 | **new** `timeline.minimap` | **ot3 only**: `ot3:ui/js/TimelineModel.js:4,16` | Tablet minimap (4.3.8) | no minimap |
+| U13 | **new** `subagents.buckets` and labels | **ot3 only**: `ot3:ui/js/Subagents.js:8-54` | Subagent cards (4.3.6) | hidden |
+| U14 | **new** `usageSummary.request` / `aggregate`, `quotaSources.limits` / `providers` / `sources` | `lib:src/usage_summary.rs:23,40`, `lib:src/quota_sources.rs:23,75,86` | Usage (4.10) | page hidden |
+| U15 | **new** `planWorkflow.view` / `followUp` with a renderer that returns Markdown | `lib:src/plan_workflow.rs:191,325` | Plan card and banner (4.3.7) | plan as a message |
+| U16 | **new** ship ot3's string catalog with the lib (or the AAR) | `i18n::translate` has no catalog (`lib:src/i18n.rs:4`); catalog in `ot3:translations/i18n.json` | every screen | generated `strings_ot3.xml` |
+| U19 | **new** `pullRequests.sidebarBadge`, `pullRequests.payload` | `lib:src/pull_requests.rs:82,268` | Row PR badge (3.7), PR comment, review and actions (4.8) | no badge; arguments built from the `describe` schema |
+| U20 | **new** `branchPicker.dedupe` / `selectionTarget` / `mismatch` | `lib:src/branch_picker.rs:9,41,90` | Branch picker, branch mismatch notice (4.7.3, 4.4.1) | refs listed as returned |
+| U21 | **new** project identity: monogram and colour slot | **ot3 only**: `ot3:src/lib.rs:729-755`, `ot3:ui/qml/T3Palette.qml:36-46` | Project chip everywhere (3.7) | first letter of the title, accent tint |
+| U22 | **new** `gitControls.scope` / `actions` / `present` / `buildAction` | `lib:src/git_controls.rs:37,185,203,245` | Git & changes sheet (4.6.3) | status and Review only |
+| U23 | **new** `nativeSettings.snapshot` / `patch`, `scopedSettings.effective` / `projectPatch` | `lib:src/native_settings.rs:107,152`, `lib:src/scoped_settings.rs:38,56` | Settings pages (4.9) | read-only |
+| U24 | **new** `checkpointRevert.canPreview` / `reference` / `command` / `observation` / `recoveryMessage` | `lib:src/checkpoint_revert.rs:7,39,159,208,248` | Edit from here (4.5.4) | not offered |
+| U25 | **new** `toolInspector.scope` / `request` / `parse` | `lib:src/tool_inspector.rs:61,89,236` | Inspector (4.3.3) | not offered |
+
+Proposed fix, common to every row: expose the Rust function (moving it from ot3's crate
+into the lib first where the row says "ot3 only") through the connection-free operation,
+add it to `describe` with typed args, generate the `T3Api` wrapper, and cover it with a
+fixture test whose JSON the app can reuse as screenshot-test input.
+
+## 2026-10-25: v0.3.2 pairing through the app's transport layer
+
+Checked with `NativeT3Transport.pairBearer` over the v0.3.2 release AAR and the host
+`libt3_jni.so` (`26e67a7`): `NativePairingTest` against a local server serving the
+descriptor and `POST /oauth/token`, and one live pairing against a local T3
+0.1.3-nightly.20261025.3669 from a `t3 pair` link (`LivePairingTest`). The session it
+created was revoked afterwards. Confirmed as documented: the descriptor is read and its
+`environmentId` checked (UUID, expected id) before the code is sent; input errors
+(`invalid_pairing_code`, `invalid_pairing_client`, `invalid_endpoint`) fail before any
+request; the form-encoded token exchange carries the client's label, device type and OS;
+`connect: true` connects the handle. Item 6 above (U17) moved to blocking with this
+work.
+
+### 1. `pairing_rejected` also covers server errors
+
+- What: `pair_bearer` maps every failed exchange to `pairing_rejected`: `unauthorized` (401,
+  403) and every `http_<n>`, including 5xx (`src/pairing.rs`, the `map_err` after
+  `decode`). An app then tells the user the code is bad ("expired or already used, run
+  `t3 pair` again") when the server failed or a proxy in front of it answered 502.
+  Re-running `t3 pair` does not help with that, and each run mints another credential.
+- Evidence: `NativePairingTest.aRefusedCodeIsPairingRejected` gets `pairing_rejected` for
+  400, 401, 403 and 500 alike. The OAuth error body (`{"error":"invalid_grant"}` in the
+  fixture) is dropped, so the app cannot tell an expired code from an unknown one either.
+- Proposed fix: keep `pairing_rejected` for 400, 401 and 403 (an OAuth refusal), and
+  return `http_<n>` for anything else, as every other operation does. Put the OAuth
+  `error` value (when it is a short ASCII token) in the exception's `reason`.
+
+### 2. Pairing again leaves the previous session alive, and Kotlin cannot revoke it
+
+- What: re-pairing an environment that is already saved (a lost or reset token,
+  `unauthorized` after a server change) gets a new session. The app replaces the stored
+  token, but the old session stays active on the server, and every re-pair adds one
+  more. ot3 retires its own stale sessions with `Connection::revoke_stale_sessions`
+  (`src/pairing.rs:189-210`: `GET /api/auth/clients`, a host policy, `POST
+  /api/auth/clients/revoke` `{sessionId}`). That function is Rust-only: no ABI operation,
+  no `describe` entry, and `T3Client.request` is GET-only.
+- Evidence: the live run's session showed up in `t3 auth session list` with the client
+  label the app sent. It could only be removed from the server's CLI (`t3 auth session
+  revoke`), not from the app.
+- Proposed fix: two typed operations on a connected handle, `auth.sessions` →
+  `{current: sessionId, sessions: [{sessionId, client{label, deviceType}, issuedAt,
+  lastConnectedAt, connected}]}` and `auth.revokeSession {sessionId}` (refusing the current
+  session). Then the app revokes the session whose token it just replaced. Alternatively,
+  a `pairBearer` option `replaceSession: <old token>` that revokes it once the new session
+  works.
+
+## 2026-10-25: v0.3.3
+
+Checked against the v0.3.3 GitHub release (`5cfb7ac`, published 2026-10-25 18:35 UTC),
+consumed through `libs/lib-t3-rust.lock`, on the same machine and toolchain as above.
+Source references are to the lib at the tag; the lib checkout stayed at the tag and clean.
+
+- `gh release download v0.3.3 -R avillagran/lib-t3-rust`, then `sha256sum`:
+  `183e233edd1b9250976463f952210781eba85f33f64493498e0b169f68c861e4`, equal to the
+  release's `.sha256`; 17367953 bytes.
+- `scripts/fetch-or-build-lib.sh --release --host-jni`: checksum verified against the
+  lock, `version=0.3.3 source=5cfb7ac… tag=v0.3.3 abiVersion=3 origin=release v0.3.3`;
+  host `libt3_jni.so` built from `5cfb7ac`.
+- `scripts/fetch-or-build-lib.sh --host-jni-only --lib-fixtures`: `JNI_PASS`,
+  `KOTLIN_JNI_PASS` (now including the domain functions), `KOTLIN_STREAMS_PASS`, exit 0.
+- `capabilities`: `abiVersion 3`, `libraryVersion 0.3.3`, 19 `operations` (`domain`
+  added), `functions 116`, `domainFunctions 37`; `describe`: 116 `functions`, 13
+  `streams`, 37 `domain` (pinned in `NativeSmokeTest`). `classes.jar` has 50 classes
+  (`T3Api$Domain` and 16 module classes added).
+- Read-only live check against the local T3 (0.1.3-nightly, protocol 2) with a 30-minute
+  token, revoked afterwards: `LiveConnectionTest` and `LiveThreadTest` pass;
+  `sidebar.view` over 233 shell threads (203 subagents) and 16 projects gives `active`
+  36, `snoozed` 0, `settled` 24 rows and 16 project identities; `timeline.view` of a
+  running thread gives 45 rows (15 assistant, 5 user, 20 activity, 5 subagents), each with
+  a `rev`, and the session paints them while live.
+- `git diff v0.3.2 v0.3.3 -- src/stream.rs src/bounded_snapshot.rs src/reconnect.rs
+  src/composer.rs src/api/orchestration.rs` is empty; `T3Client.kt` only adds `domain`.
+
+### Requests from the UI specification
+
+| # | Request | Status | Evidence |
+|---|---|---|---|
+| U0 | Timeline view | **Closed in v0.3.3** | `timeline.view`, `timeline.liveActivity` in `describe.domain`. `ThreadSession` paints from it; `ThreadTimelineTest` (`applyUpsertsMessagesAndKeepsTheActiveRun`, `theKitchenSinkKeepsMessagesAsBubblesAndTheRestForUi2` on the lib's `timeline-projections.json`), `ThreadSessionTest.eventsGoThroughTheLibInOneCallPerUpdate`, `DomainContractTest.u0LiveActivity`. |
+| U1 | Reduced thread view (phase 1 item 1) | **Closed in v0.3.3** | `projection.apply` (with `applied`) + `timeline.view`. `ThreadProjectionShim.kt` is deleted; `ThreadTimelineTest.typesTheLibDoesNotKnowChangeNothing`, `ThreadSessionTest.threadVisitedOnlyMovesTheCursor`. The lib-held reduced view was not taken; its cost is new finding 3. |
+| U2 | `sidebar.view` over several environments | **Closed in v0.3.3** | `sidebar.view` (sections, `sectionCounts`, `counts`, `filterCounts`, `projectGroups`, `projectIdentities`, rows with `detail`, `state`, `statusLabel`, `statusRole`, `time`, `environmentId` filter). `SidebarModel.kt` is deleted; `SidebarViewTest` (the lib's `sidebar-environments.json`: three environments, the ten details, labels and roles, time labels, `environmentId`, malformed shells). The shell reducer half of the request stays open: new finding 1. |
+| U3 | `activity.describe` | **Closed in v0.3.3** | `activity.describe`; `DomainContractTest.u3ActivityDescribe`. No screen calls it yet (UI-2); `timeline.view` activity rows already carry it. |
+| U4 | `changes.summaries` | **Closed in v0.3.3** | `changes.summaries`; `DomainContractTest.u4ChangesSummaries`. No screen yet (UI-2). |
+| U5 | `queue.derive`, `queue.command` | **Closed in v0.3.3** | Both in `describe.domain`; `DomainContractTest.u5QueueDeriveAndCommand`; `timeline.view` returns `queue` too. No screen yet (UI-3). |
+| U6 | `approvals.*`, `questions.*` | **Closed in v0.3.3** | `approvals.pending` / `command`, `questions.pending` / `command`; `DomainContractTest.u6ApprovalsAndQuestions`; the banners now read `timeline.view` `approvals` and `questions` (`ThreadTimelineTest.approvalsAndQuestionsBecomeBanners`). Answering waits for UI-4. |
+| U7 | `models.*` | **Closed in v0.3.3** | `models.catalog`, `preferences`, `favoritePayload`, `runtimeModeCommand`; `DomainContractTest.u7ModelsAndRuntimeMode` (catalog, runtime mode command); `preferences` and `favoritePayload` verified by `describe` only. |
+| U8 | `composer.paths`, `composer.catalog` | **Closed in v0.3.3** | Both plus `composer.fileLink` and `attachmentReference`; `DomainContractTest.u8ComposerCompletions` (paths, file link); `catalog` verified by `describe` only (it needs a provider object). |
+| U10 | Markdown as renderer-neutral blocks | **Closed in v0.3.3** | `markdown.blocks`, `markdown.link` (and `codeBlocks.parse`); assistant rows and plans of `timeline.view` carry `blocks`. `DomainContractTest.u10MarkdownBlocksAndLinks`, `ThreadTimelineTest.blocksFlattenToPlainText` (bubbles show them as plain text until UI-2). |
+| U17 | Pairing-link parser (phase 1 item 6) | **Closed in v0.3.3** | `connectionCatalog.pairingTarget` `{link, pairingCode?}` → `{httpBaseUrl, pairingCode}`; `DomainContractTest.u17PairingTarget`. `feat/pairing` still has a temporary `PairingLink.kt`: that branch must switch to this function. |
+| U18 | History paging (phase 1 item 7) | **Closed in v0.3.3** | `history.path`, `history.envelope`; `DomainContractTest.u18HistoryPath`; `envelope` verified by `describe` only. The app does not page yet. |
+| U21 | Project identity | **Closed in v0.3.3** | `projects.identity`, `projects.monogram`, and `sidebar.view` `projectIdentities`; the sidebar rows show the chip. `DomainContractTest.u21ProjectIdentity`, `SidebarViewTest.rowsCarryKeysProjectsAndChips`, `NativeSmokeTest.domainRunsWithoutAConnection`. |
+| U9, U11, U12, U13, U14, U15, U16, U19, U20, U22, U23, U24, U25 | the rest of section 6 | **In progress in the lib** | None of `diffReview.*`, `theme.*`, `timeline.minimap`, `subagents.*`, `usageSummary.*` / `quotaSources.*`, `planWorkflow.*`, a string catalog, `pullRequests.*`, `branchPicker.*`, `gitControls.*`, `nativeSettings.*` / `scopedSettings.*`, `checkpointRevert.*` or `toolInspector.*` is in the 37 `describe.domain` entries. (`timeline.view` already returns `planView` and subagent summaries, which UI-2 can use before U13 and U15.) |
+
+### Phase 1 capabilities
+
+| Item | Status | Evidence |
+|---|---|---|
+| 1. Apply thread events | **Closed in v0.3.3** | U0 and U1 above. |
+| 2. Compact stream snapshots | Open (unchanged) | `src/stream.rs` and `src/bounded_snapshot.rs` did not change; `compactTurnItems` stays false. |
+| 3. Sidebar view and shell reducer | **Partially closed** | `sidebar.view` closes the view (U2). No shell reducer: `ShellReducer.kt` stays, marked temporary (new finding 1). |
+| 4. Command builders | **Partially closed** | `approvals.command`, `questions.command`, `queue.command`, `models.runtimeModeCommand`, `sidebar.command`, `sidebar.threadAction`, `models.catalog` are in `describe.domain`. Still missing: a `message.dispatch` builder, a `run.interrupt` builder and `projects.command`, so `MessageSender` keeps building those arguments (new finding 2). |
+| 5. Reconnect policy | Open | No `reconnect.*` in `describe.domain` (`src/reconnect.rs` unchanged); `Backoff.kt` stays. |
+| 6. Pairing-link parser | **Closed in v0.3.3** | U17. |
+| 7. History paging | **Closed in v0.3.3** | U18 (pure form). |
+| 8. Kotlin wrappers for the remaining operations | Open | `T3Client.kt` adds only `domain`; `fetchDescriptor`, `pairBearer`, `boundedThread`, `requestOk` and the shell GET are still assembled in `NativeT3Transport`. |
+
+### Earlier findings
+
+| Finding | Status | Evidence |
+|---|---|---|
+| v0.3.2 transport 1: a shell metadata snapshot replaces the shell and moves the cursor | **Open** | `start_of` still returns `Snapshot` for every shell `snapshot` (`src/stream.rs:54`) and `ThreadStream.poll` still keeps only the last one and clears the events before it (`T3Client.kt:297`). Seen again live on 2026-10-25: the first shell batch holds the authoritative snapshot (233 threads) and two metadata snapshots (`resolvedRepositoryIdentityRoots` of 16 and 1 roots, `threads[0]`). `ShellUpdates.kt` stays. New finding 1 would close it. |
+| v0.3.2 transport 2: `rpc_rejected` without a machine-readable field | Open | `T3Exception(code, reason, requiredScope)` unchanged (`T3Client.kt:147`). |
+| v0.3.2 transport 3: no per-event `applied` | **Closed in v0.3.3** | `projection.apply` returns `applied`; the app no longer classifies event types. |
+| v0.3.0 5: `image()` throws `IllegalArgumentException` | Open | `requireNotNull(asset.bytes) { "missing_image_bytes" }` (`T3Client.kt:107`). |
+| v0.3.0 7: releases do not publish the host JNI library | Open | Release v0.3.3 assets: the AAR and its `.sha256` only. |
+
+### 1. No shell reducer in `domain`
+
+- What: `sidebar.view` takes each environment's `shell` as "its
+  `orchestration.getShellSnapshot` (or the live shell stream's state)"
+  (`src/sidebar/view.rs:155-157`), but nothing in the lib turns the shell stream into that
+  state. ot3-Android keeps `core/shell/ShellReducer.kt` (a port of ot3's
+  `src/shell_state.rs`) and `core/transport/ShellUpdates.kt` (the metadata-snapshot
+  workaround) for it: protocol logic outside the lib.
+- Evidence: no `shell.*` function among the 37 `describe.domain` entries; metadata
+  snapshots seen live as above.
+- Proposed fix: `shell.apply` `{shell?, items}` (the raw stream items of one update, in
+  order) → `{shell, cursor, changed}`: an authoritative `snapshot` replaces `shell`
+  keeping resolved repository identities, a snapshot with
+  `resolvedRepositoryIdentityRoots` only merges those identities and does not move the
+  cursor, `project.*` / `thread.*` events apply after it, as ot3's `shell_state.rs`
+  does. This also closes the metadata-snapshot finding for every host.
+- **Status at v0.3.4: open.** No `shell.*` among the 108 `describe.domain` entries.
+
+### 2. No `message.dispatch` or `run.interrupt` builder
+
+- What: sending and Stop build their `orchestration.dispatchCommand` arguments in Kotlin
+  (`MessageSender.messageCommand`, the interrupt command) from the lib's validator.
+- Evidence: `composer.*` in `describe.domain` is `paths`, `catalog`, `fileLink` and
+  `attachmentReference`; `MessageDispatch` stays Rust-only (`src/api/orchestration.rs:345`),
+  as does the `run.interrupt` arm (`:665`).
+- Proposed fix: `composer.message` `{threadId, commandId, messageId, text, attachments?,
+  modelSelection?, dispatchMode?, deliveryIntent?}` → the ready arguments (the host mints
+  and persists the ids before sending, so they stay inputs), and
+  `composer.interruptCommand` `{threadId, runId, commandId}`.
+- **Status at v0.3.4: open.** `composer.*` is unchanged (the same four functions) and
+  `src/api/orchestration.rs` did not change. `planWorkflow.attachSourceRef` takes a
+  ready `message.dispatch` command and only adds `sourcePlanRef` to it, so it does not
+  build one.
+
+### 3. The projection crosses JNI twice per stream update
+
+- What: with `projection.apply` and `timeline.view` the whole projection is serialised to
+  the lib and back on every update, then again for the view.
+- Evidence: live bounded projection of 1.6 MiB (104 turn items, 346 nodes): about 50 ms per
+  `projection.apply` and 35 ms per `timeline.view` (mean of 5, node x86_64, host
+  library), so about 85 ms of CPU per painted update on a desktop and several times that
+  on a phone, plus the JSON copies in Kotlin.
+- Proposed fix (nice to have): keep the projection in the lib, e.g. `projection.open`
+  `{snapshot}` → `{handle}`, `projection.apply` `{handle, events}` → `{applied}`,
+  `timeline.view` `{handle, …}`, and `projection.close`; or let `timeline.view` take
+  `events` to apply first and return the projection only on request.
+- **Status at v0.3.4: open.** `projection.apply` and `timeline.view` take and return the
+  same JSON as in v0.3.3 (`src/projection.rs` unchanged; `src/timeline.rs` only adds the
+  `minimap` module). The new functions that read a projection (`planWorkflow.view`,
+  `checkpointRevert.*`) take it whole as well.
+
+## 2026-10-25: v0.3.4
+
+Checked against the v0.3.4 GitHub release (`e2ec546`, published 2026-10-25 19:29 UTC),
+consumed through `libs/lib-t3-rust.lock`, on the same machine and toolchain as above.
+Source references are to the lib at the tag; the lib checkout was moved to the tag and
+stayed clean.
+
+- `gh release download v0.3.4 -R avillagran/lib-t3-rust -p '*.aar*'`, then `sha256sum -c`
+  and `sha256sum`: `b90064ae893cf0239a3d19b3bf213ebb8c92d6e14da0a8d4a4ff9ae083bfc036`,
+  equal to the release's `.sha256` and to GitHub's asset digest; 21965936 bytes.
+- `scripts/fetch-or-build-lib.sh --release --host-jni`: checksum verified against the
+  lock, `version=0.3.4 source=e2ec546… tag=v0.3.4 abiVersion=3 origin=release v0.3.4`;
+  host `libt3_jni.so` built from `e2ec546`.
+- `scripts/fetch-or-build-lib.sh --host-jni-only --lib-fixtures`: `JNI_PASS`,
+  `KOTLIN_JNI_PASS`, `KOTLIN_STREAMS_PASS`, exit 0.
+- `capabilities`: `abiVersion 3`, `libraryVersion 0.3.4`, 19 `operations`, `functions
+  116`, `domainFunctions 108`; `describe`: 116 `functions`, 13 `streams`, 108 `domain` in
+  29 modules (pinned in `NativeSmokeTest`, with the per-module counts of the 15 modules
+  v0.3.4 added or extended). `classes.jar` has 63 classes (13 more `T3Api$Domain$<Module>`).
+- `unzip -l` of the AAR: `assets/lib-t3-rust/i18n.json` (2837911 bytes, the lib's
+  `data/i18n.json`: 20 locales, 1796 sources each). Gradle merges AAR assets into the app:
+  `app-debug.apk` contains `assets/lib-t3-rust/i18n.json` with the same size, readable
+  with `context.assets.open("lib-t3-rust/i18n.json")`.
+- `git diff v0.3.3 v0.3.4` is empty for `src/stream.rs`, `src/bounded_snapshot.rs`,
+  `src/reconnect.rs`, `src/composer.rs`, `src/projection.rs`, `src/pairing.rs`, `src/api/`, `src/ffi.rs`,
+  `src/ffi_call.rs`, `include/`, `.github/` and `T3Client.kt`: every open finding about
+  them stands.
+
+Evidence names a test in this repository (`core/src/test/.../transport/DomainContractTest.kt`
+unless said otherwise), all run through the host library; "describe only" means the
+function is listed in `describe().domain` with its args but no test here calls it yet.
+
+### Requests from the UI specification
+
+| # | Request | Status | `domain` functions | Evidence |
+|---|---|---|---|---|
+| U0 | Timeline view | **Closed in v0.3.3** | `timeline.view`, `timeline.liveActivity` | `ThreadTimelineTest`, `ThreadSessionTest.eventsGoThroughTheLibInOneCallPerUpdate`, `u0LiveActivity` |
+| U1 | Reduced thread view (phase 1 item 1) | **Closed in v0.3.3** | `projection.apply`, `timeline.view` | `ThreadTimelineTest.typesTheLibDoesNotKnowChangeNothing`, `ThreadSessionTest.threadVisitedOnlyMovesTheCursor` (cost: v0.3.3 finding 3, open) |
+| U2 | `sidebar.view` over several environments | **Closed in v0.3.3** | `sidebar.view` (plus `status`, `metadata`, `detail`, `snapshot`, `command`, `threadAction`, `sortTimestamps`) | `SidebarViewTest`; the shell reducer half stays open (v0.3.3 finding 1) |
+| U3 | `activity.describe` | **Closed in v0.3.3** | `activity.describe` | `u3ActivityDescribe` |
+| U4 | `changes.summaries` | **Closed in v0.3.3** | `changes.summaries` | `u4ChangesSummaries` |
+| U5 | Queue | **Closed in v0.3.3** | `queue.derive`, `queue.command` | `u5QueueDeriveAndCommand` |
+| U6 | Approvals and questions | **Closed in v0.3.3** | `approvals.pending`, `approvals.command`, `questions.pending`, `questions.command` | `u6ApprovalsAndQuestions`, `ThreadTimelineTest.approvalsAndQuestionsBecomeBanners` |
+| U7 | Models | **Closed in v0.3.3** | `models.catalog`, `runtimeModeCommand`; `preferences`, `favoritePayload` | `u7ModelsAndRuntimeMode`; `preferences`, `favoritePayload` describe only |
+| U8 | Composer completions | **Closed in v0.3.3** | `composer.paths`, `fileLink`; `catalog`, `attachmentReference` | `u8ComposerCompletions`; `catalog`, `attachmentReference` describe only |
+| U9 | `diffReview.present` | **Closed in v0.3.4** | `diffReview.present`; `scopedResult` | `u9DiffReviewPresent`; `scopedResult` describe only |
+| U10 | Markdown as renderer-neutral blocks | **Closed in v0.3.3** | `markdown.blocks`, `markdown.link`, `codeBlocks.parse` | `u10MarkdownBlocksAndLinks`, `ThreadTimelineTest.blocksFlattenToPlainText` |
+| U11 | `theme.tokens` | **Closed in v0.3.4** | `theme.tokens` (`colors` = the `colors.toml` text, optional `id`) | `u11ThemeTokensTokyoNight`, `u11ThemeTokensCatppuccinLatte` (Omarchy 4.0.2 files under `core/src/test/resources/omarchy/`: the 14 top-level keys, `appearance`, `roles.dim`, `surface`, `failed`) |
+| U12 | `timeline.minimap` | **Closed in v0.3.4** | `timeline.minimap`, `timeline.minimapIndex` | `u12TimelineMinimap` |
+| U13 | `subagents.buckets` and labels | **Closed in v0.3.4** | `subagents.buckets`; `describe`, `cards`, `fromThread` | `u13SubagentBuckets`; `describe`, `cards`, `fromThread` describe only |
+| U14 | Usage and quotas | **Closed in v0.3.4** | `usageSummary.request`, `quotaSources.limits`; `usageSummary.window`, `aggregate`, `quotaSources.providers`, `sources`, `apply` | `u14UsageRequestAndQuotaLimits`; the rest describe only |
+| U15 | `planWorkflow.view` / `followUp` | **Closed in v0.3.4** | `planWorkflow.view` (plans with `markdown.blocks` blocks); `followUp`, `attachSourceRef`, `implementationTitle`, `mode` | `u15PlanWorkflowView`; the rest describe only |
+| U16 | ot3's string catalog in the lib or the AAR | **Closed in v0.3.4** | `i18n.t`, `i18n.resolve`, `i18n.catalog`; `i18n.languages`; AAR asset `lib-t3-rust/i18n.json` | `u16StringsInSpanishAndArabic` (`Close` → `Cerrar` / `إغلاق`, Arabic `rtl`, 1796 strings for `es`); `languages` describe only; the asset by `unzip -l` of the AAR and the APK |
+| U17 | Pairing-link parser (phase 1 item 6) | **Closed in v0.3.3** | `connectionCatalog.pairingTarget` | `u17PairingTarget`; used by `PairingTargets` since UI-1f, `PairingTargetsTest` runs the 70-input table against it. |
+| U18 | History paging (phase 1 item 7) | **Closed in v0.3.3** | `history.path`; `history.envelope` | `u18HistoryPath`; `envelope` describe only |
+| U19 | `pullRequests.sidebarBadge`, `payload` | **Closed in v0.3.4** | `pullRequests.sidebarBadge`; `request`, `payload`, `threadCommand` | `u19PullRequestBadge`; the rest describe only |
+| U20 | Branch picker | **Closed in v0.3.4** | `branchPicker.selectionTarget`; `dedupe`, `deriveLocal`, `sanitize`, `mismatch`, `temporaryBranch` | `u20BranchPickerSelectionTarget`; the rest describe only |
+| U21 | Project identity | **Closed in v0.3.3** | `projects.identity`, `projects.monogram` | `u21ProjectIdentity`, `SidebarViewTest.rowsCarryKeysProjectsAndChips`, `NativeSmokeTest.domainRunsWithoutAConnection` |
+| U22 | Git & changes sheet | **Closed in v0.3.4** | `gitControls.scope`, `present`, `buildAction` (confirmed actions as `steps [{tag, payload}]`); `resolveScripts`, `actions`, `scopedResult`, `buildVerifiedAction` | `u22GitControlsPresentAndConfirmedAction`; the rest describe only |
+| U23 | Settings | **Closed in v0.3.4** | `nativeSettings.snapshot`, `scopedSettings.effective`; `nativeSettings.patch`, `description`, `modelSelection`, `idleCompaction`, `idleCompactionPatch`, `threadDefaults`, `scopedSettings.projectPatch`, `projectFile`, `validatedTargets`, `writePatch`, `writeWasDropped`, `targetView`, `aggregate`, `page`, `projectCatalogConfig` | `u23NativeAndScopedSettings` (also: no credential in the snapshot); the rest describe only |
+| U24 | Checkpoint revert | **Closed in v0.3.4** | `checkpointRevert.safety`; `canPreview`, `reference`, `command`, `confirmedCommand`, `observation`, `recoveryMessage`, `appendPrompt` | `u24CheckpointRevertSafety`; the rest describe only |
+| U25 | Tool inspector | **Closed in v0.3.4** | `toolInspector.request`; `compactReference`, `scope`, `parse` | `u25ToolInspectorRequest`; the rest describe only |
+
+The functions before the semicolon in each row are the ones the tests call. Nothing in
+the app calls a v0.3.4 function yet: UI-1 switches its string generator and theme
+importer to them (DECISIONS.md, 2026-10-25), the later tranches use the rest.
+
+### Phase 1 capabilities
+
+| Item | Status at v0.3.4 | Evidence |
+|---|---|---|
+| 1. Apply thread events | **Closed in v0.3.3** | U0 and U1. |
+| 2. Compact stream snapshots | Open (unchanged) | `src/stream.rs` and `src/bounded_snapshot.rs` unchanged; `compactTurnItems` stays false. |
+| 3. Sidebar view and shell reducer | **Partially closed** (unchanged) | View closed (U2); no `shell.*` in `describe.domain`, `ShellReducer.kt` stays (v0.3.3 finding 1). |
+| 4. Command builders | **Partially closed** (more builders) | v0.3.4 adds `pullRequests.threadCommand`, `checkpointRevert.command`, `gitControls.buildAction` and the `{method, payload}` of `pullRequests.request` / `payload` and `toolInspector.request`. Still missing: `message.dispatch`, `run.interrupt`, `projects.command` (v0.3.3 finding 2). |
+| 5. Reconnect policy | Open (unchanged) | No `reconnect.*` in `describe.domain`; `src/reconnect.rs` unchanged; `Backoff.kt` stays. |
+| 6. Pairing-link parser | **Closed in v0.3.3** | U17. |
+| 7. History paging | **Closed in v0.3.3** | U18. |
+| 8. Kotlin wrappers for the remaining operations | Open (unchanged) | `T3Client.kt` unchanged; `fetchDescriptor`, `pairBearer`, `boundedThread`, `requestOk` and the shell GET are still assembled in `NativeT3Transport`. |
+
+### Earlier findings
+
+| Finding | Status at v0.3.4 | Evidence |
+|---|---|---|
+| v0.3.2 transport 1: a shell metadata snapshot replaces the shell and moves the cursor | Open | `src/stream.rs` (`start_of`, `:52-62`) and `T3Client.kt` (`ThreadStream.poll`, `:297`) identical to v0.3.3. `ShellUpdates.kt` stays. |
+| v0.3.2 transport 2: `rpc_rejected` without a machine-readable field | Open | `T3Exception(code, reason, requiredScope)` unchanged. |
+| v0.3.0 5: `image()` throws `IllegalArgumentException` | Open | `requireNotNull(asset.bytes) { "missing_image_bytes" }` still at `T3Client.kt:107`. |
+| v0.3.0 7: releases do not publish the host JNI library | Open | Release v0.3.4 assets: the AAR and its `.sha256` only; CI here still checks out the lib to build it. |
+| v0.3.2 pairing 1: `pairing_rejected` also covers server errors | Open | `src/pairing.rs` identical to v0.3.3. |
+| v0.3.2 pairing 2: re-pairing leaves the previous session alive | Open | No `auth.*` session operation; `src/ffi.rs` and the API registry unchanged. |
+| v0.3.3 1: no shell reducer in `domain` | Open | No `shell.*` among the 108 entries. |
+| v0.3.3 2: no `message.dispatch` or `run.interrupt` builder | Open | `composer.*` unchanged; `planWorkflow.attachSourceRef` decorates a ready command. |
+| v0.3.3 3: the projection crosses JNI twice per update | Open | `projection.apply` / `timeline.view` signatures unchanged; no handle. |
+
+## 2026-10-25: UI-1f, after moving to `sidebar.view`, `theme.tokens` and `connectionCatalog.pairingTarget`
+
+What the app still derives in Kotlin after UI-1f, and what would remove it.
+
+### 1. `theme.tokens`: Material containers (nice to have)
+
+- Proposed: two more `roles` (and `layers`) in `theme.tokens`: `accentContainer` (accent
+  @ 0.14) and `failedContainer` (`failed` @ 0.14), with Qt's blend like every other role.
+- Why: Android maps them onto Material's `primaryContainer`, `secondaryContainer` (the
+  navigation bar indicator) and `errorContainer` (tokens.md section 2). ot3 has no such
+  role, so `theme.tokens` does not return them and `Ot3Colors` blends them with straight
+  alpha (`Ot3Blend`), the only colour the app computes. The chip fills
+  (`projectFills`) already have accent @ 0.14 for themes whose accent is a palette slot,
+  but not for hackerman and kanagawa, so they cannot stand in.
+- In Rust today: `theme::drawn` and `LAYERS` (`src/theme.rs:20-37`, `:139`).
+
+### 2. Thread menu rules and snooze presets (nice to have)
+
+- Proposed: the thread menu's items with their visibility and enablement for a row and a
+  capability set (`sidebar.threadAction` builds the command, not the menu), and ot3's
+  snooze presets for a `now` and a time zone.
+- Why: `core/home/ThreadActions.kt` keeps ot3's menu rules (`T3ThreadRow.qml:378-410`) and
+  preset times (`T3ThreadRow.qml:104-110`) in Kotlin. They are presentation rules ot3
+  writes in QML, not protocol, so they are listed here rather than moved silently.
+
+
+## 2026-10-25: UI-1h host metadata audit
+
+`sidebar.view.environmentName` is the caller-provided environment display name,
+not host OS or a machine type (`src/sidebar/view.rs:136`). Android now shows that
+label and the shell's `branch` on all real rows, plus the lib's `pullRequestBadge`.
+No blocker for these fields. For parity with desktop machine glyphs, expose an
+optional authoritative host/machine presentation field through the shared contract;
+until available Android omits the glyph instead of guessing from label/URL.
+See `docs/ui/compare/ui-1h/METADATA.md`. No Kotlin protocol implementation added.

@@ -9,7 +9,7 @@ and answer questions from your phone or tablet, against your own T3 Code servers
 pairing link, URL and token, OmaBridge, Tailscale, and later T3 Connect.
 
 Status: **in development, not distributed yet.** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-The app targets the lib-t3-rust v0.3.2 AAR from its GitHub release, pinned (tag and
+The app targets the lib-t3-rust v0.3.4 AAR from its GitHub release, pinned (tag and
 SHA-256) by `libs/lib-t3-rust.lock`. `scripts/fetch-or-build-lib.sh --release --host-jni`
 downloads and verifies it and builds the host JNI library for JVM tests from a
 lib-t3-rust checkout at the same tag (the release ships none); source builds remain for
@@ -33,7 +33,16 @@ The lib-t3-rust AAR (and, on x86_64 Linux, the host JNI library for JVM tests) m
 scripts/fetch-or-build-lib.sh --release --host-jni      # AAR from the pinned release
 ./gradlew :core:testDebugUnitTest :app:assembleDebug   # unit tests and debug APK
 ./gradlew :core:lintDebug :app:lintDebug               # lint
-./gradlew connectedDebugAndroidTest                    # Room, credential and Compose UI tests on a device
+```
+
+Instrumented tests (Room, credentials, Compose UI) run on the project emulator; see
+[docs/EMULATOR.md](docs/EMULATOR.md). Always set `ANDROID_SERIAL`, otherwise Gradle uses
+every connected device:
+
+```sh
+scripts/emulator.sh start --headless && scripts/emulator.sh wait
+ANDROID_SERIAL=$(scripts/emulator.sh serial) ./gradlew connectedDebugAndroidTest
+scripts/emulator.sh stop
 ```
 
 An optional, read-only check against a real server runs with the unit tests when

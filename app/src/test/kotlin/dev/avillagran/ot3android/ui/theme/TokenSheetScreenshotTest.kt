@@ -37,7 +37,7 @@ private fun TokenSheet() {
     val c = Ot3Theme.colors
     val roles = listOf(
         "background" to c.background, "foreground" to c.foreground, "accent" to c.accent, "muted" to c.muted,
-        "dim" to c.dim, "divider" to c.divider, "surface" to c.surface, "card" to c.card,
+        "dim" to c.dim, "statusMuted" to c.statusMuted, "divider" to c.divider, "surface" to c.surface, "card" to c.card,
         "cardBorder" to c.cardBorder, "changesCard" to c.changesCard, "rowSelected" to c.rowSelected,
         "rowPressed" to c.rowPressed, "rowDraft" to c.rowDraft, "field" to c.field, "fieldBorder" to c.fieldBorder,
         "switchOff" to c.switchOff, "inlineCode" to c.inlineCode, "composerBorder" to c.composerBorder,

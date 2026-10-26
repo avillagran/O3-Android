@@ -62,8 +62,12 @@ jobs:
           scripts/fetch-or-build-lib.sh --release --host-jni
           cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
 
-      - name: Omarchy theme importer tests
-        run: python3 -I tools/tests/test_import_omarchy_themes.py
+      # values*/strings_ot3.xml are generated from the catalog in the pinned AAR and
+      # committed; a lib bump that changes strings fails here until they are regenerated.
+      - name: ot3 strings match the AAR's catalog
+        run: |
+          python3 -I tools/tests/test_import_ot3_strings.py
+          python3 -I tools/import-ot3-strings --check
 
       # :app:verifyRoborazziDebug runs the app's JVM tests and compares every screenshot
       # with its golden in app/src/test/snapshots/.
@@ -96,3 +100,58 @@ jobs:
             **/build/reports/tests/
             **/build/test-results/**/*.xml
             app/build/outputs/roborazzi/
+
+  # Instrumented tests of :core and :app on an emulator (same image as scripts/emulator.sh,
+  # see docs/EMULATOR.md). The emulator is fresh per run, so the app's data starts empty.
+  instrumented:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Only the AAR: instrumented tests run the Android ABIs, not the host JNI library.
+      - name: lib-t3-rust AAR (release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/fetch-or-build-lib.sh --release --no-host-jni
+
+      # Build outside the emulator step so its timeout only covers boot and tests.
+      - name: Build the test APKs
+        run: ./gradlew --no-daemon :core:assembleDebugAndroidTest :app:assembleDebugAndroidTest
+
+      - name: Instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 2048M
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics
+          disable-animations: true
+          script: ./gradlew --no-daemon :core:connectedDebugAndroidTest :app:connectedDebugAndroidTest
+
+      - name: Upload instrumented test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-reports
+          path: |
+            core/build/reports/androidTests/
+            core/build/outputs/androidTest-results/
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/

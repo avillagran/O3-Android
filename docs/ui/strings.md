@@ -10,28 +10,48 @@ the desktop (UI_SPEC rule 4); each one is listed below, written in ot3's voice.
 
 ## Source catalog
 
-- `ot3:translations/i18n.json`: 20 locales (en, es, pt, fr, de, it, nl, pl, ru, uk, ja,
-  ko, zh, ar, tr, sv, da, no, fi, cs) × 1 796 keys, English source strings as keys,
-  `{name}` placeholders (`ot3:translations/COVERAGE.md:3-25`).
+- ot3's catalog (`ot3:translations/i18n.json`): 20 locales (en, es, pt, fr, de, it, nl, pl,
+  ru, uk, ja, ko, zh, ar, tr, sv, da, no, fi, cs) × 1 796 keys, English source strings as
+  keys, `{name}` placeholders (`ot3:translations/COVERAGE.md:3-25`).
+- The app reads it from lib-t3-rust, not from an ot3 checkout: since v0.3.4 the AAR ships
+  the lib's copy (`data/i18n.json`) as the asset `assets/lib-t3-rust/i18n.json`, so the
+  catalog is the one in `libs/lib-t3-rust-android.aar`, pinned by `libs/lib-t3-rust.lock`
+  (LIB_BUILD.md). v0.3.4's asset is byte-identical to `ot3:translations/i18n.json`
+  (sha256 `d72e7658…`).
 - Non-English values are machine-authored drafts (`ot3:translations/COVERAGE.md:27`);
   Android inherits that status and says so in About.
-- The lib has the lookup (`lib:src/i18n.rs:4`, `translate(catalog, locale, source)`, with
-  locale normalisation at `:3`) but no catalog; request U16 in UI_SPEC section 6.
+- The lib also exposes the catalog at run time: `i18n.t` (one source string in one
+  locale), `i18n.catalog` (a locale's whole table), `i18n.resolve` and `i18n.languages`
+  (U16, closed in v0.3.4). The app's own strings use Android resources generated from the
+  asset instead (DECISIONS.md, "UI-1f").
 
 ## Generator
 
-`tools/import-ot3-strings`:
+`tools/import-ot3-strings` (Python, standard library, run as `python3 -I`):
 
 1. Reads `app/src/main/res/ot3-strings.tsv`: `android_name<TAB>ot3 English key`, one row
    per string the app uses.
-2. Looks each key up in `ot3:translations/i18n.json` for every locale; a missing key fails
-   the build step.
-3. Rewrites `{name}` placeholders as positional `%1$s`, `%2$s`… in the order they appear
-   in the English string, and escapes `'`, `"`, `@`, `?` for Android resources.
-4. Writes `values/strings_ot3.xml` and `values-<locale>/strings_ot3.xml`, with ot3's `no`
-   written as `values-nb`, and `values-ar` marked for RTL review.
-5. Leaves `values/strings.xml` (the app's own strings, today 75) and
-   `values/strings_mobile.xml` (the list below) untouched.
+2. Opens `libs/lib-t3-rust-android.aar` (put there by `scripts/fetch-or-build-lib.sh`) as
+   a zip and reads `assets/lib-t3-rust/i18n.json` and the lib version from
+   `META-INF/lib-t3-rust.properties`; it fails if the AAR is missing, has no catalog, or
+   is not the version `libs/lib-t3-rust.lock` pins.
+3. Looks each key up in the catalog for every locale; a missing key, a missing locale or a
+   translation whose `{placeholders}` differ from the English ones fails the run.
+4. Rewrites `{name}` placeholders as positional `%1$s`, `%2$s`… in the order they appear
+   in the English string, and escapes `'`, `"`, `@`, `?` for Android resources (a literal
+   `%` in a formatted string is `%%`).
+5. Writes `values/strings_ot3.xml` and `values-<locale>/strings_ot3.xml`, with ot3's `no`
+   written as `values-nb`, and `values-ar` marked for RTL review. Each file's header names
+   the lib version, the asset and the catalog's sha256, so a rerun on the same AAR is
+   byte-identical.
+6. Leaves `values/strings.xml` (the app's own strings, today 75) and
+   `values/strings_mobile.xml` (the list below) untouched, and fails if a name in the TSV
+   also exists in either.
+
+The outputs are committed; the Gradle build never runs the script and needs no Python.
+`--check` writes nothing and exits non-zero if any output would change; CI runs it (and
+`tools/tests/test_import_ot3_strings.py`) after fetching the AAR, so a lib bump that
+changes strings fails until they are regenerated and committed.
 
 Plurals: ot3 has none (counts are written as "Working ({count})",
 `ot3:ui/qml/T3Panel.qml:1242`); Android keeps those strings as they are instead of
@@ -51,6 +71,7 @@ ot3's sentence case and tone.
 | `mobile_decline_redirect_hint` | Send a message to decline and redirect the agent | ot3 steers without a hint | `t3m:src/features/threads/ThreadDetailScreen.tsx:1601-1603` |
 | `mobile_camera_needed` | Camera access needed to scan the code | no QR scanning on the desktop | `t3m:src/features/connection/ConnectionsNewRouteScreen.tsx:118-125` |
 | `mobile_scan_pairing` | Scan the code from t3 pair or desktop Connections settings | same | `t3m:src/features/connection/ConnectionsNewRouteScreen.tsx:353-359` |
+| `mobile_not_pairing_code` | Not a T3 pairing code | no QR scanning on the desktop; shown while the camera sees a QR code that is not a pairing link (no code, or neither a `/pair` link nor a hosted link with `host`), and scanning goes on | none: ot3-Android's scanner checks the text before taking it (`ui/pair/QrScanScreen.kt`) |
 | `mobile_select_thread` | Select a thread | the desktop always shows one | `t3m:src/features/layout/WorkspaceEmptyDetail.tsx:46` |
 | `mobile_show_more_settled` | Show more ({count} settled hidden) | ot3 scrolls a separate shelf | `t3m:src/features/threads/thread-list-v2-items.tsx:283-303` |
 | `mobile_notifications_permission` | Allow notifications to hear when a thread needs you | desktop notifications need no permission | `t3m:src/features/settings/SettingsNotificationsRouteScreen.tsx:405-455` |

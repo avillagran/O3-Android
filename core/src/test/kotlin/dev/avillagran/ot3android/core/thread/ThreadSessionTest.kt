@@ -10,6 +10,7 @@ import dev.avillagran.ot3android.core.thread.ThreadFixtures.snapshotItem
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.ot3android.core.transport.ThreadUpdates
+import dev.avillagran.ot3android.core.transport.assumeHostJni
 import dev.avillagran.t3.ThreadUpdate
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,12 +21,11 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
@@ -56,6 +56,7 @@ class ThreadSessionTest {
             clock = { testScheduler.currentTime },
             random = Random(7),
             dispatcher = StandardTestDispatcher(testScheduler),
+            domain = TestDomain,
         ).also { it.start() }
     }
 
@@ -67,6 +68,9 @@ class ThreadSessionTest {
     }
 
     private fun opens() = fake.streamOpens.map { it.afterSequence }
+
+    @Before
+    fun setUp() = assumeHostJni()
 
     private fun TestScope.skipBackoff(session: ThreadSession) {
         val retrying = session.view.value.connectionState as ThreadConnection.Retrying
@@ -86,11 +90,11 @@ class ThreadSessionTest {
         assertEquals(1, snapshots.get())
         assertEquals(FakeT3Transport.StreamOpen("t1", 10, false, boundedSnapshot = true, compactTurnItems = false), fake.streamOpens.single())
 
-        emit(ThreadUpdates.batch(event(11, "message.updated", message("m2", "Hi", "2026-10-25T01:00:01.000Z", streaming = true)), repaint = false))
+        emit(ThreadUpdates.batch(event(11, "message.updated", message("m2", "Hi", "2026-10-25T01:00:01.000Z", streaming = true)), cursor = 11, repaint = false))
         assertEquals(ThreadConnection.Live, session.view.value.connectionState)
         assertEquals("not painted mid-chunk", 1, session.view.value.messages.size)
 
-        emit(ThreadUpdates.event(event(12, "run.updated", run("r1", "running"))))
+        emit(ThreadUpdates.event(event(12, "run.updated", run("r1", "running")), cursor = 12))
         val live = session.view.value
         assertEquals(listOf("m1", "m2"), live.messages.map { it.id })
         assertTrue(live.messages.last().streaming)
@@ -104,7 +108,7 @@ class ThreadSessionTest {
     fun aTransientCloseResubscribesFromTheCursorWithoutAnotherSnapshot() = runTest {
         val session = session()
         runCurrent()
-        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", T2)), cursor = 11))
 
         emit(ThreadUpdates.closed("stream_timeout"))
         val retrying = session.view.value.connectionState as ThreadConnection.Retrying
@@ -125,8 +129,8 @@ class ThreadSessionTest {
         emit(ThreadUpdates.closed("disconnected"))
         skipBackoff(session)
 
-        val fresh = projection(messages = listOf(message("n1", "fresh", "3")))
-        emit(ThreadUpdates.batch(snapshotItem(50, fresh), start = "snapshot"))
+        val fresh = projection(messages = listOf(message("n1", "fresh", T3)))
+        emit(ThreadUpdates.batch(snapshotItem(50, fresh), cursor = 50, start = "snapshot"))
         assertEquals(listOf("n1"), session.view.value.messages.map { it.id })
         assertEquals(50L, session.view.value.sequence)
     }
@@ -141,7 +145,7 @@ class ThreadSessionTest {
         assertEquals(1, session.view.value.messages.size)
 
         snapshotSequence = 30
-        snapshotMessages = snapshotMessages + message("m3", "later", "4")
+        snapshotMessages = snapshotMessages + message("m3", "later", T4)
         skipBackoff(session)
         assertEquals("the backoff ended inside the interval: wait for its end", 1, snapshots.get())
         advanceTimeBy(ThreadSession.REFETCH_INTERVAL_MS - testScheduler.currentTime)
@@ -169,7 +173,7 @@ class ThreadSessionTest {
 
         repeat(50) { i ->
             val item = JSONObject().put("id", "i$i").put("type", "command_execution").put("status", "running")
-            emit(ThreadUpdates.event(event(11L + i, "turn-item.updated", item)))
+            emit(ThreadUpdates.event(event(11L + i, "turn-item.updated", item), cursor = 11L + i))
         }
         advanceTimeBy(60_000)
         runCurrent()
@@ -187,7 +191,7 @@ class ThreadSessionTest {
         runCurrent()
         // As observed live: an idle poll, then the event with start = resume.
         emit(ThreadUpdates.idle())
-        emit(ThreadUpdates.batch(event(11, "thread.visited", JSONObject().put("threadId", "t1")), start = "resume"))
+        emit(ThreadUpdates.batch(event(11, "thread.visited", JSONObject().put("threadId", "t1")), cursor = 11, start = "resume"))
         advanceTimeBy(60_000)
         runCurrent()
 
@@ -235,7 +239,7 @@ class ThreadSessionTest {
     fun losingTheConnectionPausesAndResumesFromTheCursor() = runTest {
         val session = session()
         runCurrent()
-        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", T2)), cursor = 11))
 
         connection.value = null
         runCurrent()
@@ -252,7 +256,7 @@ class ThreadSessionTest {
     fun aNewEpochOfTheSameTransportReopensTheStreamFromTheCursor() = runTest {
         val session = session()
         runCurrent()
-        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", T2)), cursor = 11))
 
         // The supervisor connected the same handle again: a new epoch restarts the stream.
         connection.value = Connection(fake, 2)
@@ -268,7 +272,7 @@ class ThreadSessionTest {
     fun aCancelReopensFromTheCursorWithoutASnapshotOrStale() = runTest {
         val session = session()
         runCurrent()
-        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2"))))
+        emit(ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", T2)), cursor = 11))
 
         emit(ThreadUpdates.closed(null))
         assertFalse(session.view.value.stale)
@@ -354,15 +358,12 @@ class ThreadSessionTest {
     }
 
     @Test
-    fun anItemTheShimFailsOnRefetchesInsteadOfCrashing() = runTest {
+    fun aProjectionTheLibCannotReadRefetchesInsteadOfCrashing() = runTest {
         val session = session()
         runCurrent()
-        val poisoned = object : JSONArray() {
-            override fun length() = 1
-            override fun optJSONObject(index: Int): JSONObject = throw JSONException("boom")
-        }
-        val update = ThreadUpdates.event(event(11, "message.updated", message("m2", "Hi", "2")))
-        emit(update.copy(batch = update.batch.copy(items = poisoned)))
+        // projection.apply takes the row; timeline.view then refuses it (`malformed`).
+        val broken = JSONObject().put("id", "m2").put("role", "assistant").put("text", 7)
+        emit(ThreadUpdates.event(event(11, "message.updated", broken), cursor = 11))
 
         assertTrue(session.view.value.stale)
         assertEquals(listOf("m1"), session.view.value.messages.map { it.id })
@@ -372,5 +373,34 @@ class ThreadSessionTest {
         assertEquals(2, snapshots.get())
         assertEquals(listOf<Long?>(10, 20), opens())
         assertFalse(session.view.value.stale)
+    }
+
+    @Test
+    fun eventsGoThroughTheLibInOneCallPerUpdate() = runTest {
+        val session = session()
+        runCurrent()
+        emit(
+            ThreadUpdates.event(
+                event(11, "message.updated", message("m2", "one", T2)),
+                event(12, "message.updated", message("m2", "one two", T2, streaming = true)),
+                ThreadFixtures.unknownEvent(13),
+                event(14, "run.created", run("r9", "starting")),
+                cursor = 14,
+            ),
+        )
+
+        val view = session.view.value
+        assertEquals(listOf("m1", "m2"), view.messages.map { it.id })
+        assertEquals("one two", view.messages.last().text)
+        assertTrue(view.working)
+        assertEquals("r9", view.activeRunId)
+        assertEquals(14L, view.sequence)
+        assertEquals("the timeline.view result is kept for UI-2", "r9", view.timeline!!.getJSONObject("threadState").getString("activeRunId"))
+    }
+
+    private companion object {
+        const val T2 = "2026-10-25T01:00:02.000Z"
+        const val T3 = "2026-10-25T01:00:03.000Z"
+        const val T4 = "2026-10-25T01:00:04.000Z"
     }
 }

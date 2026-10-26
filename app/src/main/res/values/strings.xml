@@ -37,6 +37,36 @@
     <string name="connect_error_subscription_limit">Too many live connections are open to this server.</string>
     <string name="connect_error_internal">Something went wrong in the app.</string>
     <string name="connect_error_generic">Could not connect (%1$s).</string>
+    <string name="connect_pair">Pair with link or QR</string>
+
+    <!-- Pairing -->
+    <string name="pair_title">Pair with link or QR</string>
+    <string name="pair_help">On the computer running T3 Code, run t3 pair, then scan its QR code or paste the link it prints.</string>
+    <string name="pair_link_label">Pairing link</string>
+    <string name="pair_link_hint">http://host:3773/pair#token=…</string>
+    <string name="pair_scan">Scan QR</string>
+    <string name="pair_continue">Continue</string>
+    <string name="pair_link_origin">This link pairs with %1$s. Check that it is your computer, then tap Continue.</string>
+    <string name="pair_confirm">Pair</string>
+    <string name="pair_existing">Already saved as “%1$s”. Pairing replaces its token.</string>
+    <string name="pair_moves">This link moves “%1$s” from %2$s to %3$s.</string>
+    <string name="pair_moves_help">Pair adds it as a new environment and leaves the saved one as it is. Replace moves the saved one to the new address.</string>
+    <string name="pair_replace">Replace</string>
+    <string name="pair_error_invalid_link">That is not a pairing link.</string>
+    <string name="pair_error_no_code">That link has no pairing code.</string>
+    <string name="pair_error_invalid_code">The pairing code in that link is not valid.</string>
+    <string name="pair_error_rejected">The server refused the code: it has expired or was already used. Run t3 pair again.</string>
+    <string name="pair_error_wrong_server">A different T3 environment answers at that address now.</string>
+    <string name="pair_error_incompatible">This T3 server cannot pair this way.</string>
+    <string name="scan_title">Scan pairing QR</string>
+    <string name="scan_hint">Point the camera at the QR code from t3 pair.</string>
+    <string name="scan_permission">The camera is needed to read the QR code. Nothing is recorded.</string>
+    <string name="scan_allow">Allow camera</string>
+    <string name="scan_permission_settings">Camera access is turned off for this app. Allow it in the app’s settings to scan the QR code, or paste the pairing link instead.</string>
+    <string name="scan_open_settings">Open settings</string>
+    <string name="scan_no_camera">No camera is available. Paste the pairing link instead.</string>
+    <!-- Mobile-only (docs/ui/strings.md): ot3 has no QR scanner. -->
+    <string name="mobile_not_pairing_code">Not a T3 pairing code</string>
 
     <!-- Environments -->
     <string name="environments_title">Environments</string>
@@ -89,4 +119,6 @@
     <string name="settings_usage">Usage</string>
     <string name="settings_archive">Archived threads</string>
     <string name="settings_licenses">Licenses</string>
+    <string name="mobile_show_sidebar">Mostrar chats</string>
+    <string name="mobile_hide_sidebar">Contraer chats</string>
 </resources>

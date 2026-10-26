@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
+import dev.avillagran.ot3android.ui.navigation.LocalThreadSidebarControl
 import dev.avillagran.ot3android.core.thread.PendingCommand
 import dev.avillagran.ot3android.core.thread.RuntimeRequest
 import dev.avillagran.ot3android.core.thread.ThreadConnection
@@ -163,6 +164,7 @@ fun ThreadContent(
                     }
                 },
                 actions = {
+                    LocalThreadSidebarControl.current?.invoke()
                     if (state.view.working) {
                         IconButton(
                             onClick = onInterrupt,

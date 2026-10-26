@@ -43,8 +43,8 @@ class ThreadScreenTest {
         loaded = true,
         title = "Fix the build",
         messages = listOf(
-            ThreadMessage("m1", "user", "Why does CI fail?", "2026-10-25T01:00:00.000Z", streaming = false, runId = "r1"),
-            ThreadMessage("m2", "assistant", "Looking at the log", "2026-10-25T01:00:01.000Z", streaming = true, runId = "r1"),
+            ThreadMessage("m1", "user", "Why does CI fail?", 1_792_890_000_000, streaming = false, rev = "a"),
+            ThreadMessage("m2", "assistant", "Looking at the log", 1_792_890_001_000, streaming = true, rev = "b"),
         ),
         working = true,
         activeRunId = "r1",

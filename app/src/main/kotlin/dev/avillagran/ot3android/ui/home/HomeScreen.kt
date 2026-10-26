@@ -1,10 +1,8 @@
 package dev.avillagran.ot3android.ui.home
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +17,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -43,7 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -60,10 +56,11 @@ import dev.avillagran.ot3android.core.home.HomeItem
 import dev.avillagran.ot3android.core.home.HomeRow
 import dev.avillagran.ot3android.core.home.HomeUiState
 import dev.avillagran.ot3android.core.home.MessageMatch
-import dev.avillagran.ot3android.core.home.RowStatusDetail
-import dev.avillagran.ot3android.core.home.RowStyle
 import dev.avillagran.ot3android.core.home.Shelf
 import dev.avillagran.ot3android.ui.icons.Ot3Icons
+import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
+import dev.avillagran.ot3android.ui.kit.ThreadCardRow
+import dev.avillagran.ot3android.ui.kit.ThreadSlimRow
 
 /** Everything Home's UI can ask for; the route turns each into a view-model call or a navigation. */
 sealed interface HomeIntent {
@@ -273,82 +270,31 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+/** A `sidebar.view` row in the kit's card or slim row. */
 @Composable
 private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit) {
     val haptics = LocalHapticFeedback.current
-    val untitled = stringResource(R.string.ot3_row_untitled)
+    val model = row.toThreadRowModel()
+    val onClick = { onIntent(HomeIntent.OpenRow(row)) }
+    val onLongClick = {
+        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+        onIntent(HomeIntent.RowActions(row))
+    }
+    val onProjectLongClick = if (row.projectId != null) {
+        {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            onIntent(HomeIntent.ProjectActions(row))
+        }
+    } else {
+        null
+    }
     // Swipes (Settle, Move to active, Wake, Archive; Snooze) are modelled in row.swipe but all
     // mutate, so no gesture is attached until the lib's command builders are reachable.
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = if (row.style == RowStyle.Card) 82.dp else 48.dp)
-            .combinedClickable(
-                onClick = { onIntent(HomeIntent.OpenRow(row)) },
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onIntent(HomeIntent.RowActions(row))
-                },
-            )
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .testTag(HomeTags.row(row.key)),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        val caption = MaterialTheme.typography.labelSmall
-        val status = if (row.status == RowStatusDetail.None) timeText(row.time) else statusText(row.status)
-        if (row.style == RowStyle.Card) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                ProjectLabel(row, onIntent, haptics)
-                row.environmentLabel?.let { Text(it, style = caption, maxLines = 1) }
-                if (row.pinned) {
-                    Icon(painterResource(Ot3Icons.Pin), contentDescription = stringResource(R.string.sidebar_pinned), modifier = Modifier.size(12.dp))
-                }
-                Spacer(Modifier.weight(1f))
-                Text(status, style = caption, modifier = Modifier.testTag(HomeTags.rowStatus(row.key)))
-            }
-            Text(row.title ?: untitled, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            row.branch?.let { Text(it, style = caption, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        } else {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Chip(row)
-                Text(row.title ?: untitled, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text(timeText(row.time), style = caption, modifier = Modifier.testTag(HomeTags.rowStatus(row.key)))
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ProjectLabel(row: HomeRow, onIntent: (HomeIntent) -> Unit, haptics: HapticFeedback) {
-    Row(
-        Modifier.combinedClickable(
-            enabled = row.projectId != null,
-            onClick = { onIntent(HomeIntent.OpenRow(row)) },
-            onLongClick = {
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                onIntent(HomeIntent.ProjectActions(row))
-            },
-        ).testTag(HomeTags.project(row.key)),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Chip(row)
-        row.projectTitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, maxLines = 1) }
-    }
-}
-
-/** Interim chip (U21): the project's first letter on an accent tint. */
-@Composable
-private fun Chip(row: HomeRow) {
-    val chip = row.chip ?: return
-    val colors = MaterialTheme.colorScheme
-    Box(
-        Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(colors.primary.copy(alpha = 0.14f)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(chip.monogram, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = colors.primary)
+    val modifier = Modifier.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
+    if (row.slim) {
+        ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, modifier = modifier)
+    } else {
+        ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, modifier = modifier)
     }
 }
 
@@ -400,10 +346,6 @@ object HomeTags {
     const val MESSAGES = "home_messages"
 
     fun row(key: String) = "home_row_$key"
-
-    fun rowStatus(key: String) = "home_row_status_$key"
-
-    fun project(key: String) = "home_project_$key"
 
     fun shelf(shelf: Shelf) = "home_shelf_${shelf.name}"
 

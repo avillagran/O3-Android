@@ -9,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,8 @@ import dev.avillagran.ot3android.ui.theme.Ot3Theme
  * apart; radius 6, padding 10 × 8. Three lines: draft mark, project chip and name,
  * environment, pin, subagent toggle and the status (or the time); the title; branch, PR badge
  * and machine. The card fills `rowPressed` while pressed, `rowDraft` with a draft and
- * `rowSelected` when [selected] (tablets). Tap opens, long press opens the actions sheet.
+ * `rowSelected` when [selected] (tablets). Tap opens, long press opens the actions sheet;
+ * a long press on the project chip runs [onProjectLongClick] (the project's actions).
  */
 @Composable
 fun ThreadCardRow(
@@ -64,6 +66,7 @@ fun ThreadCardRow(
     onPullRequestClick: (() -> Unit)? = null,
     onSubagentsClick: (() -> Unit)? = null,
     onUnpin: (() -> Unit)? = null,
+    onProjectLongClick: (() -> Unit)? = null,
 ) {
     val colors = Ot3Theme.colors
     val type = Ot3Theme.typography.material
@@ -82,7 +85,7 @@ fun ThreadCardRow(
                 .alpha(if (row.receding && row.status?.role == StatusRole.WORKING) RECEDING_WORKING_ALPHA else 1f),
             verticalArrangement = Arrangement.spacedBy(Ot3Spacing.xxs),
         ) {
-            CaptionLine(row, slim = false, onSubagentsClick = onSubagentsClick, onUnpin = onUnpin) {
+            CaptionLine(row, slim = false, onSubagentsClick = onSubagentsClick, onUnpin = onUnpin, onChipLongClick = onProjectLongClick?.let { it to onClick }) {
                 Text(
                     listOfNotNull(row.projectName.takeIf { it.isNotEmpty() }, row.environmentName).joinToString(" · "),
                     Modifier.weight(1f),
@@ -152,9 +155,9 @@ fun ThreadSlimRow(
         selected = selected,
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.height(Ot3Sizes.slimRowHeight),
+        modifier = modifier.heightIn(min = Ot3Sizes.slimRowHeight),
     ) {
-        Box(Modifier.fillMaxHeight().padding(horizontal = Ot3Sizes.cardRowPaddingHorizontal), contentAlignment = Alignment.CenterStart) {
+        Column(Modifier.padding(horizontal = Ot3Sizes.cardRowPaddingHorizontal, vertical = 4.dp)) {
             CaptionLine(row, slim = true, onSubagentsClick = onSubagentsClick, onUnpin = onUnpin) {
                 Text(
                     row.title,
@@ -166,6 +169,14 @@ fun ThreadSlimRow(
                 )
                 row.pullRequest?.let { PrBadge(it, onClick = onPullRequestClick) }
             }
+            val metadata = listOfNotNull(row.environmentName, row.branch).joinToString(" · ")
+            if (metadata.isNotEmpty()) Text(
+                metadata,
+                style = Ot3Theme.typography.material.bodySmall,
+                color = Ot3Theme.colors.dim,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+            )
         }
     }
 }
@@ -201,6 +212,7 @@ private fun RowFrame(
     val name = rowAccessibilityName(row)
     Box(
         modifier
+            .then(if (slim) Modifier.height(IntrinsicSize.Min) else Modifier)
             .fillMaxWidth()
             .combinedClickable(
                 interactionSource = interaction,
@@ -245,6 +257,8 @@ private fun CaptionLine(
     slim: Boolean,
     onSubagentsClick: (() -> Unit)?,
     onUnpin: (() -> Unit)?,
+    /** Long press on the chip, and the row's tap so a tap on the chip still opens the row. */
+    onChipLongClick: Pair<() -> Unit, () -> Unit>? = null,
     middle: @Composable RowScope.() -> Unit,
 ) {
     val colors = Ot3Theme.colors
@@ -264,7 +278,12 @@ private fun CaptionLine(
                 size = 14.dp,
             )
         } else {
-            row.project?.let { ProjectChip(it, Modifier.alpha(if (slim) SLIM_CHIP_ALPHA else 1f)) }
+            row.project?.let { chip ->
+                val gesture = onChipLongClick?.let { (longClick, click) ->
+                    Modifier.combinedClickable(onClick = click, onLongClick = longClick)
+                } ?: Modifier
+                ProjectChip(chip, gesture.alpha(if (slim) SLIM_CHIP_ALPHA else 1f))
+            }
         }
         middle()
         if (row.pinned) {

@@ -98,7 +98,7 @@ settles the pending decision at `docs/DECISIONS.md:294`), nested graphs per tab.
 
 The three tabs (Chats, PRs, Settings) are T3 Mobile's Android tabs
 (`t3m:modules/t3-native-controls/android/src/main/java/expo/modules/t3nativecontrols/T3WorkspaceNavigationModule.kt:66,357-365`):
-a `NavigationBar` on phones, hidden while the keyboard is up
+a `NavigationBar` on phones, hidden throughout Chat (including its sheets) and while the keyboard is up
 (`t3m:src/features/workspace/AndroidWorkspaceNavigation.android.tsx:78`), and a 72 dp
 rail on tablets (2.4). They replace ot3's sidebar-header PR toggle
 (`ot3:ui/qml/T3Panel.qml:1152`) and footer Preferences button
@@ -172,9 +172,45 @@ positional threshold, `combinedClickable(onLongClick)` with
 The current sidebar's pull to refresh (`app/src/main/kotlin/dev/avillagran/ot3android/ui/sidebar/SidebarScreen.kt:129`)
 goes away; "Refresh" moves to the Home overflow menu, as in ot3's footer.
 
-### 2.4 Tablets and foldables
+### 2.4 Adaptive Chat, tablets and foldables
 
-T3 Mobile's breakpoints, all in `t3m:src/lib/layout.ts`, are kept exactly:
+**Andrés, 2026-10-25 — UI-1h overrides:** phone rotation is free. An open Chat
+in **any landscape phone**, as well as a device with smallest width ≥ 600 dp,
+shows Home as a 280 dp left sidebar and the selected Chat on the right. A visible,
+labelled control contracts/reopens the sidebar; its choice survives rotation and
+activity recreation. Portrait phones show Chat alone. Chat hides the global
+Chats / PRs / Settings footer; the composer remains anchored above IME/system bars
+and an explicit Back returns to Home, restoring the footer. Hardware Back keeps
+its navigation semantics. Home's search Back handler is inactive in the sidebar.
+Selecting the current row is a no-op, including for the navigation entry/session.
+The selected row uses `rowSelected`.
+
+Selection (environment + thread), draft and reading anchor/offset must survive
+rotation, resize and sidebar collapse. The same destination-scoped ThreadViewModel
+owns the session across those layout changes: no additional bounded fetch or
+thread subscription. The lazy timeline uses saveable list state; collapsing the
+sidebar preserves its own list state. Keyboard appearance must leave the composer
+visible in both orientations. No orientation lock on phones.
+
+All Home/sidebar rows, including slim settled/snoozed/subagent rows, show the
+**environment label and branch when present**, alongside the existing status and
+lib-computed PR badge. Missing values are omitted. `environmentName` is the saved
+environment label supplied to `sidebar.view`, never an inferred hostname or OS.
+Field provenance and limits: [UI-1h metadata audit](ui/compare/ui-1h/METADATA.md).
+
+Acceptance for UI-1h: JVM navigation/footer/restoration checks; emulator tests on
+the actual Home/Thread screens with real ViewModels and a deterministic offline
+transport; rotate portrait → landscape → portrait, collapse/reopen and reselect;
+assert draft and reading position, one thread stream and one bounded snapshot;
+Back restores Home/footer. Capture portrait, split, collapsed and IME states plus
+a short emulator video under `docs/ui/compare/ui-1h/`. Record exact commands,
+fixture/live distinction, APK checksum and unverified physical-phone scope.
+
+The remaining tablet/inspector plan below applies where it does not conflict with
+these phone Chat requirements (rail/inspector work remains UI-7).
+
+
+T3 Mobile's reference breakpoints, all in `t3m:src/lib/layout.ts`:
 
 | Layout | Condition | Panes | Source |
 |---|---|---|---|
@@ -198,7 +234,7 @@ T3 Mobile's breakpoints, all in `t3m:src/lib/layout.ts`, are kept exactly:
 - Foldables: with a vertical hinge, the list/detail split snaps to it when the left side
   keeps ≥ 280 dp and the right ≥ 320 dp (`t3m:src/lib/layout.ts:146-162`; posture logic
   `.../T3FoldPostureModule.kt:65-128`).
-- Rotation: portrait on phones, free rotation when the smallest width is ≥ 600 dp
+- Reference rotation policy (overridden for Android Chat by UI-1h above): portrait on phones, free rotation when the smallest width is ≥ 600 dp
   (`t3m:plugins/withAndroidTabletOrientation.cjs:3-24`).
 
 Compose: `NavigationSuiteScaffold` (bar ↔ rail, with the suite type chosen by these
@@ -241,27 +277,61 @@ tokyo-night and catppuccin-latte: [ui/tokens.md](ui/tokens.md) section 1.
 
 #### 3.1.3 Choosing a theme
 
-- Settings → Appearance (4.9): **Theme** Follow system / Dark / Light; **Dark theme** and
-  **Light theme**, each one of the Omarchy themes of that appearance, plus **Material
-  You** at the end of each list (T3 Mobile offers the same extra,
-  `t3m:src/lib/mobileTheme.ts:19`). Defaults: tokyo-night and catppuccin-latte (one
-  constant, easy to change).
+Revised 2026-10-25 (Andrés): ot3-Android is "our Omarchy T3", so by default it wears
+**the Omarchy theme that is active on the machine it is connected to**, the way ot3 on
+the desktop follows the live theme (`ot3:ui/qml/T3Palette.qml:47-66`). Picking one of the
+22 themes by hand becomes the fallback, not the normal mode.
+
+- **Follow the environment's theme (default).** On an Omarchy host the active theme is
+  `~/.local/state/omarchy/current/theme/colors.toml`, its name
+  `~/.local/state/omarchy/current/theme.name` (the files ot3 watches,
+  `ot3:ui/qml/T3Palette.qml:49,59`). The app reads them through the environment's T3
+  server with the lib's typed API: the host's HOME from `filesystem.getMetadata` (which
+  expands `~`; T3 does not expand `~` in `readFile`), then
+  `projects.readFile(cwd = HOME, relativePath = ".local/state/omarchy/current/theme/colors.toml",
+  allowMissing = true)`, and converts the TOML with the lib's `theme.tokens(colors, id)`
+  (roles, `appearance`, `statusColors`, `projectPalette`, `projectFills`, `sky`). No TOML
+  parsing or colour derivation in Kotlin. Scope `filesystem:read`.
+- **Refresh:** on connect, on return to the foreground, when the selected environment
+  changes, and by polling `theme.name` every few minutes while the app is visible (Omarchy
+  switches themes with `omarchy-theme-set`; T3 sends no event for it). The last
+  `colors.toml` per environment is cached so the app paints at once on launch.
+- **Which environment wins:** the one whose thread or Home is on screen; in the merged
+  Home, the **main** environment (the last used, or the one marked in Settings). Theme
+  changes cross-fade with ot3's colour-change motion (3.4).
+- **Fallback:** when the environment is not Omarchy (no file, e.g. an Ubuntu host), the
+  file cannot be read (missing scope, error) or the user turns following off, the manual
+  choice applies: Settings → Appearance, **Theme** Follow system / Dark / Light; **Dark
+  theme** and **Light theme**, each one of the Omarchy themes of that appearance (bundled,
+  produced by `theme.tokens` at build time), plus **Material You** at the end of each list
+  (`t3m:src/lib/mobileTheme.ts:19`). Defaults tokyo-night and catppuccin-latte (one
+  constant).
+- **Settings → Appearance** shows, first, the switch **Follow the environment's Omarchy
+  theme** (on by default) with the detected theme name and environment ("Tokyo Night ·
+  omarchy"), or why it is not available ("node is not running Omarchy"); the manual
+  options below it apply when following is off or unavailable.
 - The theme picker previews each theme as a mini Home row (sky strip, a card row with a
-  status label, a slim row), drawn from the JSON.
+  status label, a slim row).
 - Edge-to-edge: transparent system bars; bar icons follow the appearance.
 - Material You derives a `ColorScheme` from the wallpaper and maps it back onto ot3 roles
   (accent = `primary`, background = `surface`, foreground = `onSurface`); status
   colours keep the dark or light default theme's values so "Failed" stays red.
 
+**Single source of colour values:** every role comes from the lib's `theme.tokens`, both
+for the live theme and for the 22 bundled ones. The lib reproduces how ot3 really draws
+(`Qt.rgba(fg, alpha)` over the background, Qt's 8-bit premultiplied blend) and matches
+1 692 channels read from the screen; `docs/ui/tokens.md` golden values follow it (it had
+19 of 50 values off by one per channel, e.g. tokyo-night `dim` `#6b718a`, `surface`
+`#21222e`).
+
 This replaces today's `Ot3Theme(dynamicColor = true)`
 (`app/src/main/kotlin/dev/avillagran/ot3android/ui/theme/Theme.kt:16-33`) and the earlier
-"Dynamic color by default" of `docs/ARCHITECTURE.md` layer 3, which the PR that adds this
-spec already updates.
+"Dynamic color by default" of `docs/ARCHITECTURE.md` layer 3.
 
-Compose API: an immutable `Ot3Colors` provided through `LocalOt3Colors`, built once from
-the JSON; `Ot3Theme { }` wraps `MaterialTheme(colorScheme, typography, shapes)`.
-Components read ot3 roles (`Ot3Theme.colors.working`) for anything ot3-specific and
-Material roles only inside Material components.
+Compose API: an immutable `Ot3Colors` provided through `LocalOt3Colors`, built from a
+`theme.tokens` result (live or bundled); `Ot3Theme { }` wraps `MaterialTheme(colorScheme,
+typography, shapes)`. Components read ot3 roles (`Ot3Theme.colors.working`) for anything
+ot3-specific and Material roles only inside Material components.
 
 ### 3.2 Typography
 
@@ -523,7 +593,8 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
   ot3's plan / done / woke refinements (`ot3:ui/js/SidebarModel.js:5-17`): all through
   `sidebar.view` (U2). Interim: today's `SidebarModel.kt` statuses (`NeedsYou`,
   `Working`, `Failed`, `core/.../shell/SidebarModel.kt:9-22`) mapped to Approval/Input,
-  Working and Failed; no Done, Plan, Woke or Limited until U2.
+  Working and Failed; no Done, Plan, Woke or Limited until U2. (2026-10-25: U2 closed in
+  lib v0.3.3, `SidebarModel.kt` removed; see the note at the top of section 6.)
 
 #### 4.1.4 Order and shelves
 
@@ -543,6 +614,7 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
 - Working shelf only exists when grouping is on (`ot3:ui/qml/T3Panel.qml:556`).
 - Data: `sidebar.view` sections (U2). Interim: `SidebarModel.kt` active/settled split
   (`core/.../shell/SidebarModel.kt:45-64`), extended to several environments.
+  (2026-10-25: superseded by `sidebar.view`; see the note at the top of section 6.)
 
 #### 4.1.5 Actions
 
@@ -1304,6 +1376,16 @@ UI-1 also records the decisions of section 1 in `docs/DECISIONS.md` (the archite
 line on themes already changes with this spec).
 
 ## 6. What the lib would have to expose (for `LIB_REQUESTS.md`)
+
+> **Note (2026-10-25, lib v0.3.4).** Every row of the table below is now exposed by the
+> lib through `{"op":"domain"}` (108 functions in `describe().domain`; v0.3.3 closed U0 to
+> U8, U10, U17, U18 and U21, v0.3.4 the rest), and ot3's string catalog ships in the AAR
+> as the asset `lib-t3-rust/i18n.json` (U16). The "Until then" column and the interim
+> notes in section 4 are therefore historical: `SidebarModel.kt` and
+> `ThreadProjectionShim.kt` no longer exist (the sidebar reads `sidebar.view`, the thread
+> `projection.apply` and `timeline.view`). The function names per row, their status and
+> the tests that exercise them are in [LIB_REQUESTS.md](LIB_REQUESTS.md), "2026-10-25:
+> v0.3.4". Still open there: the shell reducer half of U2 (v0.3.3 finding 1, `shell.apply`).
 
 As of v0.3.2 no presentation module is reachable from Kotlin: the C ABI's operations are
 the transport ones plus `call` / `describe` (`lib:src/ffi.rs:30-37`), and `call` only

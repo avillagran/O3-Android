@@ -6,8 +6,6 @@ import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.home.HeaderStatus
 import dev.avillagran.ot3android.core.home.HomeRow
 import dev.avillagran.ot3android.core.home.ProjectAction
-import dev.avillagran.ot3android.core.home.RowStatusDetail
-import dev.avillagran.ot3android.core.home.RowTime
 import dev.avillagran.ot3android.core.home.Shelf
 import dev.avillagran.ot3android.core.home.SnoozeOption
 import dev.avillagran.ot3android.core.home.StatusFilter
@@ -17,23 +15,25 @@ import dev.avillagran.ot3android.ui.common.errorText
 
 /** Texts of Home's state. Plain resources until ui-1b's generated ot3 catalog replaces them. */
 
+/** The lib's `statusLabel` (ot3's English source for [detail]) in the app's language. */
 @Composable
-fun statusText(detail: RowStatusDetail): String = when (detail) {
-    RowStatusDetail.Approval -> stringResource(R.string.ot3_status_approval)
-    RowStatusDetail.Input -> stringResource(R.string.ot3_status_input)
-    RowStatusDetail.PlanReady -> stringResource(R.string.ot3_status_plan)
-    RowStatusDetail.Waiting -> stringResource(R.string.ot3_status_waiting)
-    RowStatusDetail.Goal -> stringResource(R.string.ot3_status_goal)
-    RowStatusDetail.Working -> stringResource(R.string.ot3_status_working)
-    RowStatusDetail.Limited -> stringResource(R.string.ot3_status_limited)
-    RowStatusDetail.Failed -> stringResource(R.string.ot3_status_failed)
-    RowStatusDetail.Woke -> stringResource(R.string.ot3_status_woke)
-    RowStatusDetail.Done -> stringResource(R.string.ot3_status_done)
-    RowStatusDetail.None -> ""
+fun statusText(detail: String, label: String): String = when (detail) {
+    "approval" -> stringResource(R.string.ot3_status_approval)
+    "input" -> stringResource(R.string.ot3_status_input)
+    "plan" -> stringResource(R.string.ot3_status_plan)
+    "waiting" -> stringResource(R.string.ot3_status_waiting)
+    "goal" -> stringResource(R.string.ot3_status_goal)
+    "working" -> stringResource(R.string.ot3_status_working)
+    "limited" -> stringResource(R.string.ot3_status_limited)
+    "failed" -> stringResource(R.string.ot3_status_failed)
+    "woke" -> stringResource(R.string.ot3_status_woke)
+    "done" -> stringResource(R.string.ot3_status_done)
+    else -> label
 }
 
+/** The lib's `time.label` ("12s", "3m", "now", "—"); only "now" is a word. */
 @Composable
-fun timeText(time: RowTime): String = time.text(stringResource(R.string.ot3_row_time_now))
+fun timeText(label: String): String = if (label == "now") stringResource(R.string.ot3_row_time_now) else label
 
 /** The header text; [HeaderStatus.Hidden] is empty. */
 @Composable

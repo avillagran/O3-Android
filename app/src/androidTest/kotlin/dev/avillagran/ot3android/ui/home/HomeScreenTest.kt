@@ -1,7 +1,7 @@
 package dev.avillagran.ot3android.ui.home
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -17,6 +17,8 @@ import dev.avillagran.ot3android.core.home.HomeInput
 import dev.avillagran.ot3android.core.home.HomeStateBuilder
 import dev.avillagran.ot3android.core.home.Shelf
 import dev.avillagran.ot3android.core.shell.ShellReducer
+import dev.avillagran.ot3android.core.transport.DomainEngine
+import kotlinx.coroutines.runBlocking
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONArray
 import org.json.JSONObject
@@ -36,7 +38,10 @@ class HomeScreenTest {
         JSONObject().put("id", id).put("projectId", "p1").put("title", "Thread $id")
             .put("updatedAt", "2026-10-25T11:00:00.000Z").apply { fields.forEach { (k, v) -> put(k, v) } }
 
-    private val state = HomeStateBuilder.build(
+    /** Built by the lib's `sidebar.view` through the app's JNI library. */
+    private val state = runBlocking {
+        HomeStateBuilder.build(
+        DomainEngine.shared,
         HomeInput(
             environments = listOf(
                 HomeEnvironment(
@@ -48,7 +53,7 @@ class HomeScreenTest {
                             .put("projects", JSONArray().put(JSONObject().put("id", "p1").put("title", "Alpha")))
                             .put(
                                 "threads",
-                                JSONArray().put(thread("a", "pendingRuntimeRequest" to JSONObject().put("kind", "approval")))
+                                JSONArray().put(thread("a", "pendingRuntimeRequest" to JSONObject().put("kind", "approval").put("id", "q1")))
                                     .put(thread("s", "settledAt" to "2026-10-24T00:00:00.000Z")),
                             ),
                     ),
@@ -56,14 +61,16 @@ class HomeScreenTest {
             ),
             now = ShellReducer.parseTimestamp("2026-10-25T12:00:00.000Z")!!,
         ),
-    )
+        )
+    }
 
     @Test
     fun rowsAndShelvesEmitIntents() {
         val intents = mutableListOf<HomeIntent>()
         composeRule.setContent { Ot3Theme { HomeScreen(state, isTop = true, onIntent = { intents += it }) } }
 
-        composeRule.onNodeWithTag(HomeTags.rowStatus("e1/a")).assertTextEquals(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.ot3_status_approval))
+        val approval = InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.ot3_status_approval)
+        composeRule.onNodeWithTag(HomeTags.row("e1/a")).assertContentDescriptionContains(approval, substring = true)
         composeRule.onNodeWithTag(HomeTags.row("e1/a")).performClick()
         composeRule.onNodeWithTag(HomeTags.row("e1/a")).performTouchInput { longClick() }
         composeRule.onNodeWithTag(HomeTags.shelf(Shelf.Settled)).assertIsDisplayed().performClick()

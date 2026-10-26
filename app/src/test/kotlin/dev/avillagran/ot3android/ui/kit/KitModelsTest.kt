@@ -60,9 +60,9 @@ class KitModelsTest {
     }
 
     @Test
-    fun `muted is fg at 0_6 over the background`() {
-        // tokyo-night: #a9b1d6 at 0.6 over #1a1b26.
-        assertEquals("#707590", hex(tokyo.statusColor(StatusRole.MUTED)))
+    fun `muted is the lib's statusMuted, fg at 0_6 as Qt draws it`() {
+        // tokyo-night: #a9b1d6 at 0.6 over #1a1b26 (straight alpha would give #707590).
+        assertEquals("#6f758f", hex(tokyo.statusColor(StatusRole.MUTED)))
     }
 
     @Test

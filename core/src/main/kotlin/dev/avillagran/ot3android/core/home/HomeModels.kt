@@ -1,6 +1,8 @@
 package dev.avillagran.ot3android.core.home
 
 import dev.avillagran.ot3android.core.connection.ConnectionState
+import dev.avillagran.ot3android.core.shell.ProjectIdentity
+import dev.avillagran.ot3android.core.shell.RowTime
 import dev.avillagran.ot3android.core.shell.ShellState
 
 /** One saved environment as Home reads it: its catalog entry, connection and shell. */
@@ -12,10 +14,20 @@ data class HomeEnvironment(
     val shell: ShellState?,
 )
 
-/** ot3's Status filter (`ot3:ui/qml/T3Panel.qml:1079-1089`), in ot3's order. */
-enum class StatusFilter { All, Working, Done, Failed, Pending, Settled }
+/** ot3's Status filter (`ot3:ui/qml/T3Panel.qml:1079-1089`), in ot3's order; [libName] is `sidebar.view`'s `filter`. */
+enum class StatusFilter(val libName: String) {
+    All("all"),
+    Working("working"),
+    Done("done"),
+    Failed("failed"),
+    Pending("pending"),
+    Settled("settled"),
+}
 
-/** The Thread list options: status, project (`<environment>/<project>`) and environment. */
+/**
+ * The Thread list options: status, project (a project key `<environment>/<project>` or a
+ * project group's key, as `sidebar.view` takes it) and environment.
+ */
 data class HomeFilter(
     val status: StatusFilter = StatusFilter.All,
     val projectKey: String? = null,
@@ -54,13 +66,10 @@ data class ShelfState(
 /** Card rows (82 dp) for active, pinned and working threads; slim rows (48 dp) for snoozed and settled. */
 enum class RowStyle { Card, Slim }
 
-/** Where a project chip takes its colour. Interim always [Accent]; U21 adds ot3's slots. */
-enum class ChipTint { Accent }
-
-/** The project chip: monogram and tint. Interim (U21): the project title's first letter. */
-data class ProjectChip(val monogram: String, val tint: ChipTint)
-
-/** One thread row of Home. */
+/**
+ * One thread row of Home: a `sidebar.view` row. [detail], [statusLabel], [statusRole] and
+ * [time] are the lib's, unchanged; nothing here is derived in Kotlin.
+ */
 data class HomeRow(
     /** `<environment id>/<thread id>`, unique across environments. */
     val key: String,
@@ -71,19 +80,39 @@ data class HomeRow(
     /** `<environment id>/<project id>`, the Project filter's key; null without a project. */
     val projectKey: String?,
     val projectTitle: String?,
-    /** The environment's name, only when more than one environment is saved. */
+    /** The environment label supplied to sidebar.view, also for a single saved environment. */
     val environmentLabel: String?,
     val branch: String?,
     /** The worktree, else the project's workspace root: Copy ▸ Path. */
     val path: String?,
-    val status: RowStatusDetail,
+    /** The thread runs in a worktree. */
+    val worktree: Boolean,
+    /** `approval`, `input`, `plan`, `waiting`, `goal`, `working`, `limited`, `failed`, `woke`, `done` or "". */
+    val detail: String,
+    /** The lib's shelf bucket: `waiting`, `working`, `failed`, `done`, `woke` or `idle`. */
+    val state: String,
+    /** ot3's English source ("Plan ready"), translated by the UI; "" shows the time instead. */
+    val statusLabel: String,
+    /** `working`, `done`, `failed`, `warning`, `input`, `waiting` or `muted`. */
+    val statusRole: String,
     val time: RowTime,
     val pinned: Boolean,
     val settled: Boolean,
     val snoozed: Boolean,
-    val chip: ProjectChip?,
+    /** A run is active (the lib's `working`, or an `activeRunId`): Archive is off. */
+    val working: Boolean,
+    /** Nesting under the parent row (sub-threads), 0 at the top level. */
+    val depth: Int,
+    val subagent: Boolean,
+    /** The project chip (`projectIdentities`), null without a project. */
+    val identity: ProjectIdentity?,
+    /** The lib's `metadata.canSnooze`. */
+    val canSnooze: Boolean,
+    val autoSettleDisabled: Boolean,
     val style: RowStyle,
     val swipe: SwipeActions,
+    /** Already computed by sidebar.view; no PR inference in the host. */
+    val pullRequestBadge: org.json.JSONObject? = null,
 )
 
 /** One entry of Home's single lazy list. */
@@ -114,12 +143,15 @@ sealed interface HomeItem {
     }
 }
 
-/** ot3's bar badges: working, done (unseen completions) and waiting; never settled threads. */
+/** ot3's bar badges (`sidebar.view` `counts`): working, done (unseen completions) and waiting. */
 data class CountPills(val working: Int = 0, val done: Int = 0, val waiting: Int = 0)
 
 data class StatusCount(val filter: StatusFilter, val count: Int)
 
-/** A project of the Project filter; [workspaceRoot] is what Copy Path copies. */
+/**
+ * A project, or a group of projects, of the Project filter; [key] is what the filter takes and
+ * [workspaceRoot] is what Copy Path copies.
+ */
 data class ProjectOption(val key: String, val title: String, val environmentLabel: String?, val workspaceRoot: String? = null)
 
 data class EnvironmentOption(val id: String, val label: String)
@@ -181,6 +213,10 @@ data class HomeUiState(
     val offline: Boolean = false,
     /** More than one environment is saved: rows and filters name their environment. */
     val multipleEnvironments: Boolean = false,
-    /** Every top-level row by key, filtered or not, for the Thread actions sheet. */
+    /** Every row by key, filtered or not, for the Thread actions sheet. */
     val rows: Map<String, HomeRow> = emptyMap(),
+    /** Every project by its key `<environment>/<project>`, for the Project actions sheet. */
+    val projects: Map<String, ProjectOption> = emptyMap(),
+    /** The project keys the Project filter covers (`projectScope`); empty while it is off. */
+    val projectScope: Set<String> = emptySet(),
 )

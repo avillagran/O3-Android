@@ -84,6 +84,18 @@ class Ot3NavigationTest {
     }
 
     @Test
+    fun chatHidesGlobalFooterAndBackRestoresIt() {
+        launch()
+        onUi { navigator.openThread("e1", "t1") }
+        composeRule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+        val entry = navController.currentBackStackEntry
+        onUi { navigator.openThread("e1", "t1") }
+        assertEquals("Reselecting must keep the session owner", entry, navController.currentBackStackEntry)
+        pressBack()
+        composeRule.onNodeWithTag(NavTags.BAR).assertIsDisplayed()
+    }
+
+    @Test
     fun openingAThreadResetsTheChatsStackToHomeAndThread() {
         launch()
         onUi { navigator.openThread("e1", "t1") }
@@ -104,10 +116,33 @@ class Ot3NavigationTest {
     }
 
     @Test
+    fun aPairingLinkOpensThePairingScreenOnceUnderSettings() {
+        launch()
+        onUi { navigator.openThread("e1", "t1") }
+        onUi { navigator.openPairing() }
+        assertEquals(TopTab.Settings, navigator.currentTab)
+        assertEquals(listOf("Settings", "Environments", "PairEnvironment"), stack().takeLast(3))
+        composeRule.onNodeWithTag("fake_pair").assertIsDisplayed()
+
+        // The scanner on top: a second link goes back to the same pairing entry.
+        onUi { navigator.push(ScanPairingCode) }
+        val pairing = navController.currentBackStack.value.last { it.destination.hasRoute(PairEnvironment::class) }.id
+        onUi { navigator.selectTab(TopTab.Chats) }
+        onUi { navigator.openPairing() }
+        assertEquals("PairEnvironment", stack().last())
+        assertEquals("the screen (and its pairing) is reused", pairing, navController.currentBackStackEntry?.id)
+        onUi { navigator.openPairing() }
+        assertEquals(1, stack().count { it == "PairEnvironment" })
+
+        onUi { navigator.environmentSaved() }
+        assertEquals(TopTab.Chats, navigator.currentTab)
+    }
+
+    @Test
     fun tabSwitchingPreservesEachStackAndReselectingReturnsToTheRoot() {
         launch()
         onUi { navigator.openThread("e1", "t1") }
-        composeRule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+        onUi { navigator.selectTab(TopTab.Settings) }
         composeRule.waitForIdle()
         onUi { navigator.push(Environments) }
         assertEquals("Environments", stack().last())
@@ -120,11 +155,11 @@ class Ot3NavigationTest {
         composeRule.waitForIdle()
         assertEquals(Thread("e1", "t1"), navController.currentBackStackEntry?.thread())
 
-        composeRule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+        onUi { navigator.selectTab(TopTab.Settings) }
         composeRule.waitForIdle()
         assertEquals("Environments", stack().last())
 
-        composeRule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+        onUi { navigator.selectTab(TopTab.Settings) }
         composeRule.waitForIdle()
         assertEquals("reselecting pops to the root", "Settings", stack().last())
     }
@@ -297,6 +332,12 @@ private class FakeScreens : Ot3Screens {
 
     @Composable
     override fun AddEnvironment(route: AddEnvironment) = Tagged("fake_add_environment")
+
+    @Composable
+    override fun PairEnvironment() = Tagged("fake_pair")
+
+    @Composable
+    override fun ScanPairingCode() = Tagged("fake_scan")
 
     @Composable
     override fun ThreadActions(entry: NavBackStackEntry, route: ThreadActionsSheet) {

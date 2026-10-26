@@ -89,7 +89,7 @@ data class ThreadMenuTarget(
     val working: Boolean,
     val autoSettleDisabled: Boolean = false,
     val titleRegenerating: Boolean = false,
-    /** The lib's `metadata.canSnooze` (U2); unknown, so false. */
+    /** The lib's `metadata.canSnooze`, on the `sidebar.view` row. */
     val canSnooze: Boolean = false,
 )
 
