@@ -63,6 +63,22 @@ class NotificationPresentationTest {
             .apply { expiresAt?.let { put("expiresAt", it) } }
 
     @Test
+    fun native035CapturedObjectsBuildCardsAndAlertsWithoutInventingMissingFields() {
+        val output = JSONObject(javaClass.getResource("/notifications/awareness-v0.3.5.json")!!.readText())
+        val running = NotificationContract.card(output.getJSONObject("running").getJSONObject("card"))!!
+        val approval = output.getJSONObject("approval")
+        val card = NotificationContract.card(approval.getJSONObject("card"))!!
+        val alert = NotificationContract.alert(approval.getJSONArray("alerts").getJSONObject(0))!!
+        assertEquals("NODE", running.rows.single().host)
+        assertEquals(ChipKind.Approve, card.chip!!.kind)
+        assertTrue(alert.status.isNotBlank())
+        assertNotNull(AwarenessCardBuilder.build(context, running, 1792036800000L))
+        assertNotNull(AwarenessAlertBuilder.build(context, alert, 1792036800000L))
+        val withoutDeadline = JSONObject(approval.getJSONObject("card").toString()).apply { remove("expiresAt") }
+        assertNull(NotificationContract.card(withoutDeadline)!!.expiresAt)
+    }
+
+    @Test
     fun channelsAreLowActivityAndHighAlerts() {
         Ot3NotificationChannels.ensure(context)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return

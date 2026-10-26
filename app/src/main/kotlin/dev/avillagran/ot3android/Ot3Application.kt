@@ -7,6 +7,12 @@ import android.net.Network
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import dev.avillagran.ot3android.notifications.ThreadFollowService
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 class Ot3Application : Application() {
     lateinit var graph: AppGraph
@@ -37,7 +43,19 @@ class Ot3Application : Application() {
  * theme reads and polls only while visible too.
  */
 private class ConnectionLifecycle(private val graph: AppGraph) : DefaultLifecycleObserver {
+    private var starter: Job? = null
     override fun onStart(owner: LifecycleOwner) {
+        graph.followVisibility.setVisible(true)
+        starter?.cancel()
+        starter = graph.appScope.launch {
+            combine(graph.followPreferences.enabled, graph.connectionManager.states) { enabled, states ->
+                enabled && states.values.any { it is dev.avillagran.ot3android.core.connection.ConnectionState.Connected }
+            }.distinctUntilChanged().collect { start ->
+                if (start && owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                    ThreadFollowService.start(graph.applicationContext)
+                }
+            }
+        }
         graph.connectionManager.setForeground(true)
         graph.bridgeCatalog.setForeground(true)
         graph.liveThemeSource.setVisible(true)
@@ -46,6 +64,8 @@ private class ConnectionLifecycle(private val graph: AppGraph) : DefaultLifecycl
     override fun onResume(owner: LifecycleOwner) = graph.connectionManager.wakeAll()
 
     override fun onStop(owner: LifecycleOwner) {
+        starter?.cancel(); starter = null
+        graph.followVisibility.setVisible(false)
         graph.liveThemeSource.setVisible(false)
         graph.bridgeCatalog.setForeground(false)
         graph.connectionManager.setForeground(false)

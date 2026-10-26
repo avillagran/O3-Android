@@ -266,7 +266,7 @@ class DomainContractTest {
         assertEquals(setOf("locale", "language", "rtl"), arabic.keyNames())
         assertTrue(arabic.getBoolean("rtl"))
         val catalog = call("i18n.catalog", JSONObject().put("locale", "es")) as JSONObject
-        assertEquals(1796, catalog.getJSONObject("strings").length())
+        assertEquals(1804, catalog.getJSONObject("strings").length())
     }
 
     @Test

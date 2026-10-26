@@ -28,6 +28,49 @@ import kotlin.random.Random
 class ConnectionManagerTest {
 
     @Test
+    fun followLeasesShareOneTransportAndOnlyLastBackgroundReleaseStopsIt() = runTest {
+        val manager = manager()
+        val screen = manager.supervisor("id-1")!!
+        manager.startIfCurrent(screen)
+        val first = manager.acquireFollowLease("id-1")!!
+        val second = manager.acquireFollowLease("id-1")!!
+        runCurrent()
+        assertEquals(1, factory.created.size)
+        manager.setForeground(false)
+        runCurrent()
+        assertTrue(screen.isRunning)
+        first.close(); first.close()
+        runCurrent()
+        assertTrue(screen.isRunning)
+        second.close()
+        runCurrent()
+        assertFalse(screen.isRunning)
+        manager.setForeground(true)
+        runCurrent()
+        assertTrue(screen.isRunning)
+        assertEquals(2, factory.created.size)
+    }
+
+    @Test
+    fun followLeaseSurvivesRouteReplacementWithoutRevivingOrphan() = runTest {
+        val manager = manager()
+        val lease = manager.acquireFollowLease("id-1")!!
+        runCurrent()
+        val previous = manager.supervisor("id-1")!!
+        manager.setForeground(false)
+        manager.forget("id-1")
+        val replacement = manager.supervisor("id-1")!!
+        manager.startIfCurrent(replacement)
+        runCurrent()
+        assertTrue(replacement.isRunning)
+        assertFalse(previous.isRunning)
+        assertEquals(2, factory.created.size)
+        lease.close()
+        runCurrent()
+        assertFalse(replacement.isRunning)
+    }
+
+    @Test
     fun deferredConsumersResumeOnForegroundButCannotReviveForgottenSupervisors() = runTest {
         val manager = manager()
         manager.setForeground(false)

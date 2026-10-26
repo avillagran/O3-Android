@@ -48,3 +48,19 @@
 - No upstream submission is authorized without asking Andrés first.
 - Root verification after corrections: 44 presentation cases (API 24/26/33/36) and
   app lint passed; no device was started.
+
+## Root runtime continuation (2026-10-26)
+
+UI-1 prerelease is published; UI-3 and request increment UI-4 are on main. Branch
+feat/notifications-runtime now pins v0.3.5 and implements Follow leases, the native
+ThreadAwareness session adapter, visibility claims, opt-in Settings/permission and
+a specialUse service which posts native cards/alerts/summaries and uses nextDeadline.
+Real native awareness output is committed as the presentation fixture; cold/dedupe/
+on-screen tests invoke Rust itself. Deadline omission is accepted and alert.status/
+summary.body are consumed. New UI strings are mobile-only English fallback.
+
+This is an unaccepted runtime increment: full service lifecycle/revocation/Doze tests,
+API36.1 chip/lockscreen/shade captures and release validation remain pending. A low
+foreground-service tracking notice is currently separate from the native activity card
+so Done/Failed are normal expiring cards. Its duplicate-notice UX needs review.
+The app label is OT3, but exact promoted chip branding is not proven.

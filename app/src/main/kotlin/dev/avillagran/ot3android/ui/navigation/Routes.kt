@@ -71,6 +71,9 @@ data object Settings
 @Serializable
 data object Appearance
 
+@Serializable
+data object Notifications
+
 /** Saved environments (4.2). */
 @Serializable
 data object Environments

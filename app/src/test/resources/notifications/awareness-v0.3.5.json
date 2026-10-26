@@ -1,0 +1,129 @@
+{
+  "running": {
+    "alerts": [],
+    "nextDeadline": 1792044000000,
+    "counts": {
+      "waiting": 0,
+      "working": 1,
+      "failed": 0,
+      "done": 0
+    },
+    "baseline": {
+      "environments": {"node": {}},
+      "version": 1
+    },
+    "rows": [{
+      "phase": "running",
+      "route": {
+        "threadId": "thread",
+        "environmentId": "node"
+      },
+      "host": "NODE",
+      "project": "OT3",
+      "title": "Native awareness fixture",
+      "expiresAt": 1792044000000,
+      "since": 1792036740000,
+      "status": "Working"
+    }],
+    "card": {
+      "phase": "running",
+      "chip": {
+        "kind": "working",
+        "count": 1
+      },
+      "route": {
+        "threadId": "thread",
+        "environmentId": "node"
+      },
+      "subtitle": "OT3 · NODE",
+      "active": true,
+      "rows": [{
+        "phase": "running",
+        "route": {
+          "threadId": "thread",
+          "environmentId": "node"
+        },
+        "host": "NODE",
+        "project": "OT3",
+        "title": "Native awareness fixture",
+        "expiresAt": 1792044000000,
+        "since": 1792036740000,
+        "status": "Working"
+      }],
+      "title": "Native awareness fixture",
+      "expiresAt": 1792044000000,
+      "since": 1792036740000,
+      "status": "Working"
+    },
+    "summaries": []
+  },
+  "approval": {
+    "alerts": [{
+      "phase": "waiting_for_approval",
+      "route": {
+        "threadId": "thread",
+        "environmentId": "node"
+      },
+      "id": "[\"node\",\"thread\",\"waiting_for_approval\",\"1314aedb89162bbf5a2715bab8a3887a93d8640ae8cf1cb1065e72fc12da396a\"]",
+      "body": "Approval: OT3",
+      "title": "Native awareness fixture",
+      "group": "attention",
+      "status": "Approval"
+    }],
+    "nextDeadline": 1792123200000,
+    "counts": {
+      "waiting": 1,
+      "working": 0,
+      "failed": 0,
+      "done": 0
+    },
+    "baseline": {
+      "environments": {"node": {"thread": "1314aedb89162bbf5a2715bab8a3887a93d8640ae8cf1cb1065e72fc12da396a"}},
+      "version": 1
+    },
+    "rows": [{
+      "phase": "waiting_for_approval",
+      "route": {
+        "threadId": "thread",
+        "environmentId": "node"
+      },
+      "host": "NODE",
+      "project": "OT3",
+      "title": "Native awareness fixture",
+      "expiresAt": 1792123200000,
+      "since": 1792036800000,
+      "status": "Approval"
+    }],
+    "card": {
+      "phase": "waiting_for_approval",
+      "chip": {
+        "kind": "approve",
+        "count": 1
+      },
+      "route": {
+        "threadId": "thread",
+        "environmentId": "node"
+      },
+      "subtitle": "OT3 · NODE",
+      "active": true,
+      "rows": [{
+        "phase": "waiting_for_approval",
+        "route": {
+          "threadId": "thread",
+          "environmentId": "node"
+        },
+        "host": "NODE",
+        "project": "OT3",
+        "title": "Native awareness fixture",
+        "expiresAt": 1792123200000,
+        "since": 1792036800000,
+        "status": "Approval"
+      }],
+      "title": "Native awareness fixture",
+      "expiresAt": 1792123200000,
+      "since": 1792036800000,
+      "status": "Approval"
+    },
+    "summaries": []
+  }
+}

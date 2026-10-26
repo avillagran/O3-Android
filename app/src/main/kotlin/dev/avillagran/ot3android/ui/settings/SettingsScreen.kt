@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import dev.avillagran.ot3android.R
 
 /** A Settings row and the destination it pushes. */
-enum class SettingsEntry { Environments, Appearance, Usage, Archive, Licenses }
+enum class SettingsEntry { Environments, Appearance, Notifications, Usage, Archive, Licenses }
 
 /**
  * Settings root (UI_SPEC §4.9), structure only: the pages that exist or have a route. Search,
@@ -34,6 +34,7 @@ fun SettingsScreen(onOpen: (SettingsEntry) -> Unit, modifier: Modifier = Modifie
                 val label = when (entry) {
                     SettingsEntry.Environments -> R.string.ot3_env_title
                     SettingsEntry.Appearance -> R.string.appearance_title
+                    SettingsEntry.Notifications -> R.string.follow_title
                     SettingsEntry.Usage -> R.string.settings_usage
                     SettingsEntry.Archive -> R.string.settings_archive
                     SettingsEntry.Licenses -> R.string.settings_licenses

@@ -961,3 +961,22 @@ their names and states.
   T3 Code are prepared as a local patch or written finding for review and are **not**
   sent, nor is any upstream PR opened or reopened, without Andrés's explicit approval.
   Our work never waits for an upstream merge.
+
+## 2026-10-26 — local follow runtime
+
+- lib v0.3.5 awareness.view owns phases, counts, alerts, suppression baseline and deadlines.
+  Kotlin keeps its baseline only for the service lifetime and cold-seeds after process death.
+- Follow leases borrow ConnectionManager supervisors. Foreground screens share them;
+  backgrounding stops only unleased supervisors. Last background release stops its
+  supervisor, and route replacement retains lease ownership without reviving the orphan.
+- The user opts in from visible Settings after the notification explanation/permission.
+  A specialUse foreground service follows shell snapshots, uses native nextDeadline,
+  wakes existing subscriptions on resume/network changes, and requests no wake lock or
+  battery exemption. It stops on opt-out, empty catalog or 15 idle minutes.
+- A quiet service notice states that local following is running and offers Stop. Native
+  activity cards are separate so completed/failed cards can be ordinary expiring
+  notifications rather than being forced ongoing by the service flag. This creates a
+  second quiet notice while an activity card is shown; device UX acceptance remains open.
+- Service lifecycle/Doze, revoked-authority handling, system promotion/lockscreen and
+  API36.1 emulator evidence still require verification. No promotion is claimed from flags
+  requested on a builder.

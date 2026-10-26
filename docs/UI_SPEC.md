@@ -2246,3 +2246,17 @@ Portrait approval/question/permission screenshots and videos are in ui/compare/u
 They use a deterministic server through production screens/ViewModels/Rust and do not
 close live or exact desktop visual acceptance. Landscape, secret/plan workflows and
 remaining composer actions are still required.
+
+### 2026-10-26 — UI-N runtime implementation checkpoint
+
+The runtime branch pins lib 0.3.5, consumes actual awareness.view output and implements
+Follow leases on the existing supervisors. Settings → Notifications explains local
+following, requests POST_NOTIFICATIONS on opt-in and links system Live Update settings.
+The service is specialUse with a declared subtype, no relay/FCM, no wake lock, existing
+network wakeSubscriptions, native deadlines and 15 idle-minute stop. On-screen claims
+are suppressed only while the process is visible. Full lockscreen card remains default.
+A separate quiet service notice can be stopped and lets native Done/Failed cards be
+normal expiring notifications. This duplicate notice is an explicit open UX difference.
+Runtime device acceptance is still open: lifecycle/process/revocation/Doze checks,
+API36.1 actual promoted flag/chip, lockscreen/shade, settings and alert groups.
+Native output fixtures and lease/native baseline tests do not replace those gates.

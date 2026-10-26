@@ -89,7 +89,11 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             graph.appScope.launch { graph.selectionPreferences.setLastEnvironmentId(route.environmentId) }
             onDispose { claim.close() }
         }
-        // `prompt` prefills the composer once the composer is rebuilt (UI-3).
+        DisposableEffect(route.environmentId, route.threadId) {
+            val claim = graph.followVisibility.claim(dev.avillagran.ot3android.notifications.ThreadRef(route.environmentId, route.threadId))
+            onDispose { claim.close() }
+        }
+        // `prompt` prefill remains part of the composer continuation.
         ThreadScreen(
             viewModel = appViewModel { graph ->
                 ThreadViewModel(
@@ -113,11 +117,18 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             when (entry) {
                 SettingsEntry.Environments -> navigator.push(Environments)
                 SettingsEntry.Appearance -> navigator.push(Appearance)
+                SettingsEntry.Notifications -> navigator.push(Notifications)
                 SettingsEntry.Usage -> navigator.push(Usage)
                 SettingsEntry.Archive -> navigator.push(Archive)
                 SettingsEntry.Licenses -> navigator.push(Licenses)
             }
         })
+    }
+
+    @Composable
+    override fun Notifications() {
+        val graph = LocalContext.current.appGraph
+        dev.avillagran.ot3android.ui.settings.NotificationsScreen(graph.followPreferences) { navigator.back() }
     }
 
     @Composable
