@@ -15,7 +15,7 @@ publish an old result. Invalid thread/range tests call the actual pinned Rust li
 ## Scope and remaining differences
 
 This is the useful narrow-screen read increment, not complete desktop diff parity.
-File tree/navigation, split layout, wrap preference, hunk folding, context expansion,
+Wide-screen file tree, split layout, wrap preference, hunk folding, context expansion,
 syntax highlighting and document preview integration remain. No live-server or phone
 evidence is claimed; fixtures use real ViewModels/JNI/projection with offline transport.
 The patch body is selectable. There are no stage/apply/revert actions.
@@ -31,3 +31,24 @@ video (`diff-read.mp4`) show filtering and return to the reader. Dark/light gold
 are in `ReaderScreenshotTest/diff.*.png`; light full-modal emulator capture is still pending.
 Native input/output fixture: `timeline/diff.input.json` and
 `diff.view.json`; ReaderContractTest checks it against the actual JNI.
+
+## File navigation increment
+
+The modal now follows ot3's narrow file navigation (`T3DiffReview.qml:130-131,178`):
+previous/next controls and a path picker render one native-projected file at a time.
+Selecting a file is local UI state and sends no new request. Whitespace refresh and
+state restoration preserve the selected path; renamed paths fall back to native
+`oldPath`, and a removed selection falls back to the first available file. Each file
+starts at its header. Buttons use the shared OT3 icon/touch feedback component; file
+switching itself has no animation, as in desktop.
+
+This increment does not implement the wide-screen tree or split rendering. Existing
+wrapped rows, native order, binary/missing states and read cancellation stay in place.
+New dark/light `ReaderScreenshotTest/diff-navigation.*.png` images exercise the file
+browser with a native projection fixture. Device evidence for this increment is
+pending; the emulator is reserved by the compact provider-usage task.
+
+Validation for file navigation: app JVM 210/210, screenshot verification, lint and
+assembleDebug pass. The focused dialog test checks boundaries, direct selection,
+binary/missing file rendering, zero extra reads when switching, whitespace refetch
+and recreation. Tokyo Night and Latte goldens were visually inspected.

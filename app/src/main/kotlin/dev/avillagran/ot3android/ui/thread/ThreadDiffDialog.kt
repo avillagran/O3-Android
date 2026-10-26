@@ -15,9 +15,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import dev.avillagran.ot3android.R
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.ui.theme.FiraCode
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import kotlinx.coroutines.CancellationException
@@ -32,6 +34,7 @@ internal fun ThreadDiffDialog(
     onClose: () -> Unit,
 ) {
     var showWhitespace by rememberSaveable { mutableStateOf(false) }
+    var selectedPath by rememberSaveable(summary.toString()) { mutableStateOf("") }
     var retry by remember { mutableIntStateOf(0) }
     val whitespaceLabel = stringResource(R.string.ot3_diff_show_whitespace)
     val currentRead by rememberUpdatedState(read)
@@ -58,18 +61,54 @@ internal fun ThreadDiffDialog(
                         Text(stringResource(R.string.ot3_diff_missing), color = Ot3Theme.colors.failed)
                         TextButton(onClick = { retry++ }, modifier = Modifier.testTag("thread_diff_retry")) { Text(stringResource(R.string.ot3_dialog_retry)) }
                     }
-                    else -> DiffLines(result.data!!, Modifier.weight(1f))
+                    else -> DiffFileBrowser(result.data!!, selectedPath, { selectedPath = it }, Modifier.weight(1f))
                 }
             }
         }
     }
 }
 
+/** Native file order and paths; this selection is local reading state, not a new read. */
+@Composable
+internal fun DiffFileBrowser(view: JSONObject, selectedPath: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+    val files = view.optJSONArray("files").objects()
+    val selectedIndex = files.indexOfFirst { it.optString("path") == selectedPath }
+        .takeIf { it >= 0 } ?: files.indexOfFirst { it.optString("oldPath") == selectedPath }.coerceAtLeast(0)
+    val selected = files.getOrNull(selectedIndex)
+    var menuOpen by remember { mutableStateOf(false) }
+    Column(modifier) {
+        if (selected != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val previousLabel = stringResource(R.string.ot3_diff_previous_file)
+                val nextLabel = stringResource(R.string.ot3_diff_next_file)
+                Ot3IconButton("chevron-right", previousLabel, { onSelect(files[selectedIndex - 1].getString("path")) },
+                    enabled = selectedIndex > 0, iconRotation = 180f, modifier = Modifier.testTag("thread_diff_previous"))
+                Box(Modifier.weight(1f)) {
+                    TextButton(onClick = { menuOpen = true }, modifier = Modifier.fillMaxWidth().testTag("thread_diff_file_picker")) {
+                        Text(selected.getString("path"), maxLines = 1, overflow = TextOverflow.Ellipsis, fontFamily = FiraCode)
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        files.forEachIndexed { index, file ->
+                            DropdownMenuItem(text = { Text(file.getString("path"), fontFamily = FiraCode) },
+                                onClick = { onSelect(file.getString("path")); menuOpen = false },
+                                modifier = Modifier.testTag("thread_diff_file_$index"))
+                        }
+                    }
+                }
+                Ot3IconButton("chevron-right", nextLabel, { onSelect(files[selectedIndex + 1].getString("path")) },
+                    enabled = selectedIndex < files.lastIndex, modifier = Modifier.testTag("thread_diff_next"))
+            }
+        }
+        // Changing files starts at its header; a whitespace refresh keeps the selected path.
+        key(selected?.optString("path")) { DiffLines(view, Modifier.weight(1f), selectedIndex) }
+    }
+}
+
 /** Unified, wrapped patch rows: the native view owns paths, kinds, numbers and limits. */
 @Composable
-internal fun DiffLines(view: JSONObject, modifier: Modifier = Modifier) {
+internal fun DiffLines(view: JSONObject, modifier: Modifier = Modifier, selectedIndex: Int? = null) {
     val colors = Ot3Theme.colors
-    val files = view.optJSONArray("files").objects()
+    val files = view.optJSONArray("files").objects().filterIndexed { index, _ -> selectedIndex == null || index == selectedIndex }
     LazyColumn(modifier.fillMaxWidth().testTag("thread_diff_lines")) {
         if (files.isEmpty()) item("empty") { Text(stringResource(R.string.ot3_diff_empty)) }
         files.forEachIndexed { fileIndex, file ->

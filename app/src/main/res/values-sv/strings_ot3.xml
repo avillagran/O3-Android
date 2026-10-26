@@ -185,4 +185,6 @@
     <string name="ot3_usage_refresh_prices">Uppdatera priser</string>
     <string name="ot3_usage_limits">Gränser</string>
     <string name="ot3_usage_resets_at">Återställs %1$s</string>
+    <string name="ot3_diff_previous_file">Föregående fil</string>
+    <string name="ot3_diff_next_file">Nästa fil</string>
 </resources>

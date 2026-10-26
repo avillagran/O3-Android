@@ -185,4 +185,6 @@
     <string name="ot3_usage_refresh_prices">Обновить цены</string>
     <string name="ot3_usage_limits">Лимиты</string>
     <string name="ot3_usage_resets_at">Сброс %1$s</string>
+    <string name="ot3_diff_previous_file">Предыдущий файл</string>
+    <string name="ot3_diff_next_file">Следующий файл</string>
 </resources>
