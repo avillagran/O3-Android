@@ -5,9 +5,25 @@ import dev.avillagran.ot3android.core.domain.Environment
 import dev.avillagran.ot3android.testing.ScreenshotTest
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
+import java.util.TimeZone
 
 class UsageScreenshotTest : ScreenshotTest() {
+    private lateinit var previousTimeZone: TimeZone
+
+    @Before fun useGoldenTimeZone() {
+        previousTimeZone = TimeZone.getDefault()
+        // Reset/check times are intentionally device-local. Fix only the screenshot
+        // environment so UTC CI and Santiago development render the same fixture.
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Santiago"))
+    }
+
+    @After fun restoreTimeZone() {
+        TimeZone.setDefault(previousTimeZone)
+    }
+
     @Test fun nativeProviderAndHubWindows() {
         val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
         val nativeState = JSONObject(context.assets.open("usage/limits.view.json").bufferedReader().use { it.readText() })

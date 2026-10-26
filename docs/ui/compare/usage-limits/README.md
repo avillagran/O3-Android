@@ -54,3 +54,11 @@ was revoked in cleanup; no provider refresh, config change or provider run occur
 The report contains only counts and event types, no account identifiers or credentials.
 This establishes real-server stream/reducer compatibility. It does not establish
 Android socket behavior, productive bridge discovery or physical Limits acceptance.
+
+## Reproducible screenshot timezone
+
+CI run40389243280 exposed a screenshot-only difference: the runner rendered reset
+and check timestamps in UTC, while the checked-in images use America/Santiago.
+UsageScreenshotTest now fixes and restores its default timezone; production still
+formats dates in the device timezone. All three Usage screenshot tests (six theme
+images) pass with the process launched as `TZ=UTC`, without replacing goldens.
