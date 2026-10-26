@@ -191,4 +191,25 @@
     <string name="ot3_diff_wrap">التفاف الأسطر</string>
     <string name="ot3_diff_no_wrap">دون التفاف الأسطر</string>
     <string name="ot3_copy_image">نسخ الصورة</string>
+    <string name="ot3_pr_title">طلبات السحب</string>
+    <string name="ot3_pr_refresh">تحديث</string>
+    <string name="ot3_pr_all_projects">كل المشاريع</string>
+    <string name="ot3_pr_search">البحث في طلبات السحب…</string>
+    <string name="ot3_pr_all">الكل</string>
+    <string name="ot3_pr_authored">أنشأتها</string>
+    <string name="ot3_pr_reviewing">للمراجعة</string>
+    <string name="ot3_pr_draft">مسودة</string>
+    <string name="ot3_pr_empty">لا توجد طلبات سحب</string>
+    <string name="ot3_pr_more">تحميل المزيد</string>
+    <string name="ot3_pr_overview">نظرة عامة</string>
+    <string name="ot3_pr_checks">الفحوصات</string>
+    <string name="ot3_pr_conversation">المحادثة</string>
+    <string name="ot3_pr_retry">إعادة المحاولة</string>
+    <string name="ot3_pr_approved">موافق عليه</string>
+    <string name="ot3_pr_changes_requested">تغييرات مطلوبة</string>
+    <string name="ot3_pr_review_required">مراجعة مطلوبة</string>
+    <string name="ot3_pr_pending">قيد الانتظار</string>
+    <string name="ot3_pr_action_required">إجراء مطلوب</string>
+    <string name="ot3_pr_skipped">تم التخطي</string>
+    <string name="ot3_pr_cancelled">ملغى</string>
 </resources>

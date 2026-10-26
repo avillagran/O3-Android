@@ -190,4 +190,25 @@
     <string name="ot3_diff_wrap">Zeilenumbruch</string>
     <string name="ot3_diff_no_wrap">Kein Zeilenumbruch</string>
     <string name="ot3_copy_image">Bild kopieren</string>
+    <string name="ot3_pr_title">Pull Requests</string>
+    <string name="ot3_pr_refresh">Aktualisieren</string>
+    <string name="ot3_pr_all_projects">Alle Projekte</string>
+    <string name="ot3_pr_search">Pull Requests suchen…</string>
+    <string name="ot3_pr_all">Alle</string>
+    <string name="ot3_pr_authored">Von mir erstellt</string>
+    <string name="ot3_pr_reviewing">Zu prüfen</string>
+    <string name="ot3_pr_draft">Entwurf</string>
+    <string name="ot3_pr_empty">Keine Pull Requests</string>
+    <string name="ot3_pr_more">Mehr laden</string>
+    <string name="ot3_pr_overview">Übersicht</string>
+    <string name="ot3_pr_checks">Prüfungen</string>
+    <string name="ot3_pr_conversation">Unterhaltung</string>
+    <string name="ot3_pr_retry">Erneut versuchen</string>
+    <string name="ot3_pr_approved">Genehmigt</string>
+    <string name="ot3_pr_changes_requested">Änderungen angefordert</string>
+    <string name="ot3_pr_review_required">Prüfung erforderlich</string>
+    <string name="ot3_pr_pending">Ausstehend</string>
+    <string name="ot3_pr_action_required">Aktion erforderlich</string>
+    <string name="ot3_pr_skipped">Übersprungen</string>
+    <string name="ot3_pr_cancelled">Abgebrochen</string>
 </resources>

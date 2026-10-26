@@ -190,4 +190,25 @@
     <string name="ot3_diff_wrap">Переносить строки</string>
     <string name="ot3_diff_no_wrap">Без переноса строк</string>
     <string name="ot3_copy_image">Копировать изображение</string>
+    <string name="ot3_pr_title">Пул-реквесты</string>
+    <string name="ot3_pr_refresh">Обновить</string>
+    <string name="ot3_pr_all_projects">Все проекты</string>
+    <string name="ot3_pr_search">Поиск пул-реквестов…</string>
+    <string name="ot3_pr_all">Все</string>
+    <string name="ot3_pr_authored">Мои</string>
+    <string name="ot3_pr_reviewing">На проверке</string>
+    <string name="ot3_pr_draft">Черновик</string>
+    <string name="ot3_pr_empty">Нет пул-реквестов</string>
+    <string name="ot3_pr_more">Загрузить ещё</string>
+    <string name="ot3_pr_overview">Обзор</string>
+    <string name="ot3_pr_checks">Проверки</string>
+    <string name="ot3_pr_conversation">Обсуждение</string>
+    <string name="ot3_pr_retry">Повторить</string>
+    <string name="ot3_pr_approved">Одобрено</string>
+    <string name="ot3_pr_changes_requested">Запрошены изменения</string>
+    <string name="ot3_pr_review_required">Требуется проверка</string>
+    <string name="ot3_pr_pending">Ожидает</string>
+    <string name="ot3_pr_action_required">Требуется действие</string>
+    <string name="ot3_pr_skipped">Пропущено</string>
+    <string name="ot3_pr_cancelled">Отменено</string>
 </resources>

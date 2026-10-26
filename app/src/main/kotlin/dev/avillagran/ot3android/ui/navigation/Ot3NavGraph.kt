@@ -44,6 +44,12 @@ interface Ot3Screens {
     fun Usage(initialTab: String, environmentId: String?) { NotYetScreen("Usage") }
 
     @Composable
+    fun PullRequests() { NotYetScreen("PullRequests") }
+
+    @Composable
+    fun PullRequest(route: PullRequest) { NotYetScreen("PullRequest") }
+
+    @Composable
     fun Environments()
 
     @Composable
@@ -95,8 +101,8 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         sheet<SnoozeUntilSheet> { entry -> screens.SnoozeUntil(entry, entry.toRoute()) }
     }
     navigation<PullRequestsGraph>(startDestination = PullRequests) {
-        composable<PullRequests> { NotYetScreen("PullRequests") }
-        composable<PullRequest> { NotYetScreen("PullRequest") }
+        composable<PullRequests> { screens.PullRequests() }
+        composable<PullRequest> { screens.PullRequest(it.toRoute()) }
         composable<PullRequestFile> { NotYetScreen("PullRequestFile") }
     }
     navigation<SettingsGraph>(startDestination = Settings) {

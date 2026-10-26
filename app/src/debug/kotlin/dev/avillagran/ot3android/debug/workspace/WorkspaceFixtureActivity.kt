@@ -54,6 +54,9 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                         HomeScreen(state, isTop, { intent ->
                             when (intent) {
                                 is HomeIntent.OpenRow -> navigator.openThread(intent.row.environmentId, intent.row.threadId)
+                                is HomeIntent.OpenPullRequest -> intent.row.pullRequestBadge?.optJSONObject("current")?.let { pr ->
+                                    navigator.push(PullRequest(intent.row.environmentId, pr.getString("projectId"), pr.getString("repository"), pr.getInt("number"), pr.getString("host")))
+                                }
                                 is HomeIntent.SetQuery -> vm.setQuery(intent.text)
                                 HomeIntent.ClearSearch -> vm.clearSearch()
                                 is HomeIntent.ToggleShelf -> vm.toggleShelf(intent.shelf)
@@ -80,6 +83,28 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                         dev.avillagran.ot3android.ui.usage.UsageScreen(state,
                             model::selectEnvironment, model::selectPeriod, model::refresh,
                             onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices, onTab = model::selectTab)
+                    }
+                    @Composable override fun PullRequests() {
+                        val model: dev.avillagran.ot3android.ui.pullrequests.PullRequestsViewModel = viewModel {
+                            dev.avillagran.ot3android.ui.pullrequests.PullRequestsViewModel(fixture.repository.environments,
+                                fixture.connections::connectionFlow, projects = { id -> kotlinx.coroutines.flow.flow {
+                                    fixture.connections.supervisor(id)?.shell?.collect { emit(it?.projects.orEmpty()) }
+                                } }, saved = createSavedStateHandle())
+                        }
+                        val state by model.state.collectAsStateWithLifecycle()
+                        dev.avillagran.ot3android.ui.pullrequests.PullRequestsScreen(state, model::selectEnvironment,
+                            model::selectProject, model::selectState, model::selectInvolvement, model::setQuery,
+                            model::refresh, model::loadMore, { id, pr -> navigator.push(PullRequest(id, pr.getString("projectId"), pr.getString("repository"), pr.getInt("number"), pr.getString("host"))) })
+                    }
+                    @Composable override fun PullRequest(route: PullRequest) {
+                        val model: dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel = viewModel {
+                            dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel(route.environmentId,
+                                JSONObject().put("projectId", route.projectId).put("repository", route.repository).put("number", route.number).put("host", route.host),
+                                fixture.connections::connectionFlow, createSavedStateHandle())
+                        }
+                        val state by model.state.collectAsStateWithLifecycle()
+                        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state,
+                            model::selectTab, model::refresh, { navigator.back() })
                     }
                     @Composable override fun Thread(route: Thread) {
                         val vm: ThreadViewModel = viewModel {
@@ -124,6 +149,12 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         onImage = { _, _, _ -> application.assets.open("reader/preview.png").use { it.readBytes() } }
         onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
         onShell { fixtureShell() }
+        listOf("list", "detail", "checks", "activity").forEach { action -> onCall("pullRequests.$action") { args ->
+            val data = JSONObject(application.assets.open("pullrequests/$action.json").bufferedReader().use { it.readText() })
+            if (action == "list" && args.has("cursors")) {
+                data.put("truncated", false).put("entries", JSONArray().put(data.getJSONArray("entries").getJSONObject(0).put("number", 36).put("title", "Restore reading position")))
+            } else data
+        } }
         onCall("server.refreshProviders") { JSONObject() }
         onServerConfigStream { kotlinx.coroutines.flow.flow {
             val events = if (request == "quota-empty") JSONArray("""[{"version":1,"type":"snapshot","config":{"providers":[]}}]""") else JSONArray(application.assets.open("usage/limits.events.json").bufferedReader().use { it.readText() })

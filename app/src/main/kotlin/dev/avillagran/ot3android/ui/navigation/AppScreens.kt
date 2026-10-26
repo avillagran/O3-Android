@@ -65,6 +65,12 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             is HomeIntent.SetQuery -> viewModel.setQuery(intent.text)
             HomeIntent.ClearSearch -> viewModel.clearSearch()
             is HomeIntent.OpenRow -> navigator.openThread(intent.row.environmentId, intent.row.threadId)
+            is HomeIntent.OpenPullRequest -> intent.row.pullRequestBadge?.optJSONObject("current")?.let { pr ->
+                val projectId = pr.optString("projectId").takeIf { it.isNotBlank() } ?: intent.row.projectId
+                if (projectId != null && pr.optString("repository").isNotBlank() && pr.optInt("number") > 0) {
+                    navigator.push(PullRequest(intent.row.environmentId, projectId, pr.getString("repository"), pr.getInt("number"), pr.optString("host").takeIf { it.isNotBlank() }))
+                }
+            }
             is HomeIntent.RowActions -> navigator.openSheet(ThreadActionsSheet(intent.row.environmentId, intent.row.threadId))
             is HomeIntent.ProjectActions -> intent.row.projectId?.let { navigator.openSheet(ProjectActionsSheet(intent.row.environmentId, it)) }
             is HomeIntent.OpenMessage -> navigator.openThread(intent.match.environmentId, intent.match.threadId)
@@ -144,6 +150,37 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             state, model::selectEnvironment, model::selectPeriod, model::refresh,
             onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices, onTab = model::selectTab,
         )
+    }
+
+    @Composable
+    override fun PullRequests() {
+        val graph = LocalContext.current.appGraph
+        val model = viewModel {
+            dev.avillagran.ot3android.ui.pullrequests.PullRequestsViewModel(
+                graph.environmentRepository.environments, graph.connectionManager::connectionFlow,
+                projects = { id -> kotlinx.coroutines.flow.flow {
+                    val supervisor = graph.connectionManager.supervisor(id)
+                    if (supervisor == null) emit(emptyList())
+                    else supervisor.shell.collect { emit(it?.projects.orEmpty()) }
+                } }, saved = createSavedStateHandle(),
+            )
+        }
+        val state by model.state.collectAsStateWithLifecycle()
+        dev.avillagran.ot3android.ui.pullrequests.PullRequestsScreen(state, model::selectEnvironment, model::selectProject,
+            model::selectState, model::selectInvolvement, model::setQuery, model::refresh, model::loadMore,
+            onOpen = { id, entry -> navigator.push(PullRequest(id, entry.getString("projectId"), entry.getString("repository"), entry.getInt("number"), entry.getString("host"))) })
+    }
+
+    @Composable
+    override fun PullRequest(route: PullRequest) {
+        val graph = LocalContext.current.appGraph
+        val model = viewModel {
+            dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel(route.environmentId,
+                org.json.JSONObject().put("projectId", route.projectId).put("repository", route.repository).put("number", route.number).put("host", route.host),
+                graph.connectionManager::connectionFlow, createSavedStateHandle())
+        }
+        val state by model.state.collectAsStateWithLifecycle()
+        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state, model::selectTab, model::refresh, { navigator.back() })
     }
 
     @Composable

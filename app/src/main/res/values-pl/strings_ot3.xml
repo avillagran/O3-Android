@@ -190,4 +190,25 @@
     <string name="ot3_diff_wrap">Zawijaj wiersze</string>
     <string name="ot3_diff_no_wrap">Bez zawijania wierszy</string>
     <string name="ot3_copy_image">Kopiuj obraz</string>
+    <string name="ot3_pr_title">Pull requesty</string>
+    <string name="ot3_pr_refresh">Odśwież</string>
+    <string name="ot3_pr_all_projects">Wszystkie projekty</string>
+    <string name="ot3_pr_search">Szukaj pull requestów…</string>
+    <string name="ot3_pr_all">Wszystkie</string>
+    <string name="ot3_pr_authored">Utworzone przeze mnie</string>
+    <string name="ot3_pr_reviewing">Do przeglądu</string>
+    <string name="ot3_pr_draft">Szkic</string>
+    <string name="ot3_pr_empty">Brak pull requestów</string>
+    <string name="ot3_pr_more">Wczytaj więcej</string>
+    <string name="ot3_pr_overview">Przegląd</string>
+    <string name="ot3_pr_checks">Kontrole</string>
+    <string name="ot3_pr_conversation">Rozmowa</string>
+    <string name="ot3_pr_retry">Ponów</string>
+    <string name="ot3_pr_approved">Zatwierdzone</string>
+    <string name="ot3_pr_changes_requested">Wymagane zmiany</string>
+    <string name="ot3_pr_review_required">Wymagany przegląd</string>
+    <string name="ot3_pr_pending">Oczekujące</string>
+    <string name="ot3_pr_action_required">Wymagane działanie</string>
+    <string name="ot3_pr_skipped">Pominięte</string>
+    <string name="ot3_pr_cancelled">Anulowano</string>
 </resources>

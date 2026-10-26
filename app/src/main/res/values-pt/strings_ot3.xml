@@ -190,4 +190,25 @@
     <string name="ot3_diff_wrap">Quebrar linhas</string>
     <string name="ot3_diff_no_wrap">Sem quebra de linha</string>
     <string name="ot3_copy_image">Copiar imagem</string>
+    <string name="ot3_pr_title">Pull requests</string>
+    <string name="ot3_pr_refresh">Atualizar</string>
+    <string name="ot3_pr_all_projects">Todos os projetos</string>
+    <string name="ot3_pr_search">Buscar pull requests…</string>
+    <string name="ot3_pr_all">Todos</string>
+    <string name="ot3_pr_authored">Criados por mim</string>
+    <string name="ot3_pr_reviewing">Para revisar</string>
+    <string name="ot3_pr_draft">Rascunho</string>
+    <string name="ot3_pr_empty">Nenhum pull request</string>
+    <string name="ot3_pr_more">Carregar mais</string>
+    <string name="ot3_pr_overview">Visão geral</string>
+    <string name="ot3_pr_checks">Verificações</string>
+    <string name="ot3_pr_conversation">Conversa</string>
+    <string name="ot3_pr_retry">Tentar novamente</string>
+    <string name="ot3_pr_approved">Aprovado</string>
+    <string name="ot3_pr_changes_requested">Alterações solicitadas</string>
+    <string name="ot3_pr_review_required">Revisão necessária</string>
+    <string name="ot3_pr_pending">Pendente</string>
+    <string name="ot3_pr_action_required">Ação necessária</string>
+    <string name="ot3_pr_skipped">Ignorado</string>
+    <string name="ot3_pr_cancelled">Cancelada</string>
 </resources>

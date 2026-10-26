@@ -190,4 +190,25 @@
     <string name="ot3_diff_wrap">折り返す</string>
     <string name="ot3_diff_no_wrap">折り返さない</string>
     <string name="ot3_copy_image">画像をコピー</string>
+    <string name="ot3_pr_title">プルリクエスト</string>
+    <string name="ot3_pr_refresh">更新</string>
+    <string name="ot3_pr_all_projects">すべてのプロジェクト</string>
+    <string name="ot3_pr_search">プルリクエストを検索…</string>
+    <string name="ot3_pr_all">すべて</string>
+    <string name="ot3_pr_authored">自分が作成</string>
+    <string name="ot3_pr_reviewing">レビュー待ち</string>
+    <string name="ot3_pr_draft">下書き</string>
+    <string name="ot3_pr_empty">プルリクエストはありません</string>
+    <string name="ot3_pr_more">さらに読み込む</string>
+    <string name="ot3_pr_overview">概要</string>
+    <string name="ot3_pr_checks">チェック</string>
+    <string name="ot3_pr_conversation">会話</string>
+    <string name="ot3_pr_retry">再試行</string>
+    <string name="ot3_pr_approved">承認済み</string>
+    <string name="ot3_pr_changes_requested">変更をリクエスト</string>
+    <string name="ot3_pr_review_required">レビューが必要</string>
+    <string name="ot3_pr_pending">保留中</string>
+    <string name="ot3_pr_action_required">操作が必要</string>
+    <string name="ot3_pr_skipped">スキップ</string>
+    <string name="ot3_pr_cancelled">キャンセル済み</string>
 </resources>
