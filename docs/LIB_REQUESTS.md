@@ -1110,3 +1110,27 @@ flag. Request `timeline` row `commentary` or `showMessageActions`, derived in Ru
 T3's terminal-assistant semantics. Android can then hide intermediate copy/time/actions
 and use the 8 dp commentary gap without repeating that scan. Streaming action hiding and
 message layout are presentation-only and already implemented independently.
+
+## 2026-10-26 — U30: Android Markdown image binary contract (v0.3.5)
+
+Reader attachment previews now consume `T3Client.image(id, name, mimeType)` unchanged.
+The pinned v0.3.5 sources expose `Connection::media_image(thread, path)` in `src/lib.rs`,
+but `src/ffi.rs:t3_client_image` only accepts attachment metadata (no `op`),
+`assetBytes`, and `projectFavicon`. The Android `T3Client.kt` has no `mediaImage` or
+Markdown descriptor resolver. `timeline.view` supplies `markdownImages` with opaque
+`markdown-…` ids and `source`; these ids are not attachment ids.
+
+Requested: a typed binary Android operation accepting the native Markdown descriptor
+and thread scope, with source classification/resolution, relative workspace handling,
+same-origin signed grant checks, MIME/magic validation and the image 10 MiB limit in
+Rust. Reuse `media_image` internally where applicable; explicitly reject unsupported
+remote sources. Do not require Android to derive resource tags or interpret paths/URLs.
+Until released, Android retains Markdown image alt text and does not request its URLs
+or pass descriptor ids to `image`. This is a binding/domain gap, not a failed live grant.
+
+Cancellation limitation: v0.3.5's synchronous binary JNI call has no per-read cancellation
+handle. UI cancellation discards the result and connection-generation guards prevent
+stale publication; an in-flight read may occupy its native thread until its native
+30-second GET/RPC deadlines. Request a cancellable binary read handle if immediate
+network abortion is required. Android does not disconnect a shared transport to cancel
+one thumbnail.

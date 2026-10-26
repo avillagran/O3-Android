@@ -47,6 +47,9 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     val threadKey = LocalSelectedThreadKey.current
     // The modal belongs to the reader, not a lazy row which may leave composition
     // when rotation changes the viewport. Scope saved state to the selected thread.
+    val imageGeneration = LocalReaderImages.current.generation
+    var openedImage by rememberSaveable(threadKey, imageGeneration) { mutableStateOf<String?>(null) }
+    openedImage?.let { descriptor -> ReaderImageDialog(JSONObject(descriptor)) { openedImage = null } }
     var openedDiff by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
     openedDiff?.let { summary -> ThreadDiffDialog(JSONObject(summary), onReadDiff) { openedDiff = null } }
     val rows = view?.optJSONArray("timeline").objects().ifEmpty {
@@ -56,20 +59,22 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     val list = rememberSaveable(saver = readingAnchorSaver(rows)) { LazyListState() }
     val scope = rememberCoroutineScope()
     val away by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 80 } }
-    Box(Modifier.fillMaxSize()) {
-        LazyColumn(state = list, reverseLayout = true, contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
-            items(rows, key = { it.getString("id") }) { row ->
-                // rev invalidates content, never the item's saveable expansion or reading anchor.
-                TimelineRow(row, onInspect) { openedDiff = it.toString() }
+    CompositionLocalProvider(LocalOpenReaderImage provides { openedImage = it.toString() }) {
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(state = list, reverseLayout = true, contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
+                items(rows, key = { it.getString("id") }) { row ->
+                    // rev invalidates content, never the item's saveable expansion or reading anchor.
+                    TimelineRow(row, onInspect) { openedDiff = it.toString() }
+                }
+                if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
+                    Text("Earlier history is available on desktop", style = MaterialTheme.typography.labelSmall)
+                }
             }
-            if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
-                Text("Earlier history is available on desktop", style = MaterialTheme.typography.labelSmall)
+            if (away) TextButton(onClick = { scope.launch { list.animateScrollToItem(0) } },
+                modifier = Modifier.align(Alignment.BottomEnd).background(Ot3Theme.colors.surface).testTag("thread_jump_latest")) {
+                Text("Jump to latest ↓")
             }
-        }
-        if (away) TextButton(onClick = { scope.launch { list.animateScrollToItem(0) } },
-            modifier = Modifier.align(Alignment.BottomEnd).background(Ot3Theme.colors.surface).testTag("thread_jump_latest")) {
-            Text("Jump to latest ↓")
         }
     }
 }
@@ -113,7 +118,7 @@ private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSON
                     "assistant" -> {
                         if (row.optJSONArray("blocks").objects().isNotEmpty()) MarkdownBlocks(row.optJSONArray("blocks"))
                         else SelectionContainer { Text(row.optString("text")) }
-                        row.optJSONArray("attachments").objects().forEach { Text("Attachment · ${it.optString("name", "Preview unavailable")}", color = colors.dim) }
+                        MessageAttachments(row)
                     }
                     "activity" -> ActivityBlock(row.getJSONObject("activity"), id, onInspect)
                     "changes" -> ChangesBlock(row.getJSONObject("changes"), id, onOpenDiff)

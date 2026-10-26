@@ -56,6 +56,9 @@ class NativeT3Transport(
     override suspend fun domain(fn: String, args: JSONObject): Any? = native { client.domain(fn, args) }
 
     // T3Client has no shell wrapper; this is T3's endpoint, read through the lib's GET.
+    override suspend fun image(id: String, name: String, mimeType: String): ByteArray =
+        native { client.image(id, name, mimeType) }
+
     override suspend fun shell(): JSONObject = request(SHELL_PATH) as JSONObject
 
     /** A GET on the connected environment, as `T3Client.request`; tests only, the UI uses [shell]. */

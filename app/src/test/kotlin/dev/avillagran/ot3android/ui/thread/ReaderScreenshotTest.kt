@@ -17,6 +17,21 @@ class ReaderScreenshotTest : ScreenshotTest() {
         java.util.TimeZone.setDefault(originalZone)
         java.util.Locale.setDefault(originalLocale)
     }
+    @Test fun attachmentPreviewTokyo() = attachmentPreview("tokyo-night")
+    @Test fun attachmentPreviewLatte() = attachmentPreview("catppuccin-latte")
+
+    private fun attachmentPreview(theme: String) {
+        val bytes = ApplicationProvider.getApplicationContext<android.content.Context>().assets.open("reader/preview.png").use { it.readBytes() }
+        val row = JSONObject("""{"id":"image-prompt","role":"user","text":"Revisa la captura del lector","attachments":[{"id":"reader-shot","type":"image","name":"Vista previa del lector.png","mimeType":"image/png"}]}""")
+        snapshot("image-preview", themes = listOf(theme), beforeCapture = {
+            composeRule.waitUntil(5_000) { composeRule.onAllNodesWithContentDescription("Vista previa del lector.png").fetchSemanticsNodes().isNotEmpty() }
+        }) {
+            androidx.compose.runtime.CompositionLocalProvider(LocalReaderImages provides ReaderImages("fixture") { bytes }) {
+                TimelineReader(JSONObject().put("timeline", org.json.JSONArray().put(row)), emptyList())
+            }
+        }
+    }
+
     @Test fun unifiedDiff() {
         val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
         snapshot("diff") { DiffLines(view) }
