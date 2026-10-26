@@ -2260,3 +2260,14 @@ normal expiring notifications. This duplicate notice is an explicit open UX diff
 Runtime device acceptance is still open: lifecycle/process/revocation/Doze checks,
 API36.1 actual promoted flag/chip, lockscreen/shade, settings and alert groups.
 Native output fixtures and lease/native baseline tests do not replace those gates.
+
+## 2026-10-26 — verified live follow presentation correction
+
+Supersedes the separate live-card/service-notice policy: while live, the native activity
+card is also the foreground-service notification; idle tracking uses a quiet service
+notice so finished cards can expire normally. API36.1 real NODE evidence confirms actual
+promotion, background continuity and removal after revoked reauthentication. The OT3
+monochrome mark supplies chip branding and short critical text supplies the state:
+a longer brand prefix hid that text in the observed system UI. Full lock-screen content
+remains the default; lock-screen capture and remaining lifecycle cases are not accepted
+yet. See docs/ui/compare/ui-n/runtime/live-node-verification.json.

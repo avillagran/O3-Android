@@ -49,21 +49,28 @@ class ThreadFollowService : Service() {
         scope.launch {
             graph.environmentRepository.environments.collectLatest { saved ->
                 if (saved.isEmpty()) { stopSelf(); return@collectLatest }
-                val leases = saved.mapNotNull { graph.connectionManager.acquireFollowLease(it.id) }
+                val leases = saved.mapNotNull { env -> graph.connectionManager.acquireFollowLease(env.id)?.let { env.id to it } }.toMap()
+                val denied = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
                 try {
                     graph.connectionManager.supervisors.collectLatest { supervisors ->
                         val flows = saved.map { env ->
                             val supervisor = supervisors[env.id]
                             if (supervisor == null) flowOf(JSONObject().put("id", env.id).put("name", env.label).put("state", "offline"))
                             else combine(supervisor.state, supervisor.shell) { state, shell ->
+                                if (state == ConnectionState.Unauthorized ||
+                                    state is ConnectionState.Unreachable && state.error == dev.avillagran.ot3android.core.connection.ConnectionSupervisor.MISSING_TOKEN) {
+                                    denied.add(env.id)
+                                    leases[env.id]?.close()
+                                    if (denied.size == saved.size) stopSelf()
+                                }
                                 JSONObject().put("id", env.id).put("name", env.label)
                                     .put("state", if (state is ConnectionState.Connected) "ready" else "offline")
-                                    .apply { shell?.let { put("shell", SidebarView.shellJson(it)) } }
+                                    .apply { if (env.id !in denied) shell?.let { put("shell", SidebarView.shellJson(it)) } }
                             }
                         }
                         combine(flows) { JSONArray(it.toList()) }.collect { snapshots.value = it }
                     }
-                } finally { leases.forEach { it.close() } }
+                } finally { leases.values.forEach { it.close() } }
             }
         }
         scope.launch {
@@ -74,50 +81,57 @@ class ThreadFollowService : Service() {
             var deadlineJob: Job? = null
             // Input changes coalesce, but never cancel a native transition between baseline and posting.
             for ((envs, screen) in wakeups) {
-                        if (!allowed(this@ThreadFollowService)) { stopSelf(); break }
-                        val now = System.currentTimeMillis()
-                        val route = screen?.let { JSONObject().put("environmentId", it.environmentId).put("threadId", it.threadId) }
-                        val result = awareness.evaluate(envs, now, onScreen = route, locale = Locale.getDefault().toLanguageTag())
-                        currentCoroutineContext().ensureActive()
-                        val card = NotificationContract.card(result.optJSONObject("card"))
-                        activeCard = card?.active == true
-                        if (card?.active == true) idleSince = SystemClock.elapsedRealtime()
-                        // The service notice remains separate while idle so Done/Failed are normal, expiring cards.
-                        card?.let { AwarenessCardBuilder.build(this@ThreadFollowService, it, now) }?.let {
-                            manager.notify(Ot3NotificationIds.ACTIVITY_ID, it)
-                        } ?: manager.cancel(Ot3NotificationIds.ACTIVITY_ID)
-                        val alerts = result.optJSONArray("alerts")
-                        for (i in 0 until (alerts?.length() ?: 0)) {
-                            val alert = NotificationContract.alert(alerts!!.optJSONObject(i)) ?: continue
-                            AwarenessAlertBuilder.build(this@ThreadFollowService, alert, now)?.let {
-                                manager.notify(Ot3NotificationIds.alertTag(alert), Ot3NotificationIds.ALERT_ID, it)
-                            }
-                        }
-                        val summaries = result.optJSONArray("summaries")
-                        for (i in 0 until (summaries?.length() ?: 0)) {
-                            val summary = summaries!!.getJSONObject(i)
-                            val group = AlertGroup.fromWire(summary.optString("group")) ?: continue
-                            val r = summary.getJSONObject("route")
-                            val lines = summary.optJSONArray("lines")
-                            manager.notify(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID,
-                                AwarenessAlertBuilder.summary(this@ThreadFollowService, group, summary.optString("title"),
-                                    (0 until (lines?.length() ?: 0)).map { lines!!.getString(it) },
-                                    ThreadRef(r.getString("environmentId"), r.getString("threadId")), summary.optString("body")))
-                        }
-                        // Retire only Android group summaries whose posted children have all expired/dismissed.
-                        for (group in AlertGroup.entries) {
-                            if (manager.activeNotifications.none { posted ->
-                                posted.tag?.startsWith("ot3-alert:") == true && posted.notification.group == Ot3NotificationIds.group(group)
-                            }) manager.cancel(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID)
-                        }
-                        val idleRemaining = IDLE_MS - (SystemClock.elapsedRealtime() - idleSince)
-                        if (idleRemaining <= 0) { stopSelf(); break }
-                        val deadline = result.optLong("nextDeadline", now + 30_000)
-                        deadlineJob?.cancel()
-                        deadlineJob = launch {
-                            delay(minOf(30_000L, idleRemaining, (deadline - now).coerceAtLeast(1_000L)))
-                            snapshots.value?.let { wakeups.send(it to graph.followVisibility.onScreen.value) }
-                        }
+                if (!allowed(this@ThreadFollowService)) { stopSelf(); break }
+                val now = System.currentTimeMillis()
+                val route = screen?.let { JSONObject().put("environmentId", it.environmentId).put("threadId", it.threadId) }
+                val result = awareness.evaluate(envs, now, onScreen = route, locale = Locale.getDefault().toLanguageTag())
+                currentCoroutineContext().ensureActive()
+                val card = NotificationContract.card(result.optJSONObject("card"))
+                activeCard = card?.active == true
+                if (card?.active == true) idleSince = SystemClock.elapsedRealtime()
+                val notification = card?.let { AwarenessCardBuilder.build(this@ThreadFollowService, it, now) }
+                if (card?.active == true && notification != null) {
+                    // The live card itself is the service notice: no duplicate quiet card.
+                    startForeground(Ot3NotificationIds.ACTIVITY_ID, notification)
+                    manager.cancel(SERVICE_ID)
+                } else {
+                    // Detach the live id before posting a normal, expiring Done/Failed card.
+                    startForeground(SERVICE_ID, followingNotice())
+                    if (notification != null) manager.notify(Ot3NotificationIds.ACTIVITY_ID, notification)
+                    else manager.cancel(Ot3NotificationIds.ACTIVITY_ID)
+                }
+                val alerts = result.optJSONArray("alerts")
+                for (i in 0 until (alerts?.length() ?: 0)) {
+                    val alert = NotificationContract.alert(alerts!!.optJSONObject(i)) ?: continue
+                    AwarenessAlertBuilder.build(this@ThreadFollowService, alert, now)?.let {
+                        manager.notify(Ot3NotificationIds.alertTag(alert), Ot3NotificationIds.ALERT_ID, it)
+                    }
+                }
+                val summaries = result.optJSONArray("summaries")
+                for (i in 0 until (summaries?.length() ?: 0)) {
+                    val summary = summaries!!.getJSONObject(i)
+                    val group = AlertGroup.fromWire(summary.optString("group")) ?: continue
+                    val r = summary.getJSONObject("route")
+                    val lines = summary.optJSONArray("lines")
+                    manager.notify(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID,
+                        AwarenessAlertBuilder.summary(this@ThreadFollowService, group, summary.optString("title"),
+                            (0 until (lines?.length() ?: 0)).map { lines!!.getString(it) },
+                            ThreadRef(r.getString("environmentId"), r.getString("threadId")), summary.optString("body")))
+                }
+                // Retire only Android group summaries whose posted children have all expired/dismissed.
+                for (group in AlertGroup.entries) {
+                    if (manager.activeNotifications.none { posted ->
+                        posted.tag?.startsWith("ot3-alert:") == true && posted.notification.group == Ot3NotificationIds.group(group)
+                    }) manager.cancel(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID)
+                }
+                val idleRemaining = IDLE_MS - (SystemClock.elapsedRealtime() - idleSince)
+                if (idleRemaining <= 0) { stopSelf(); break }
+                val deadline = result.optLong("nextDeadline", now + 30_000)
+                deadlineJob?.cancel()
+                deadlineJob = launch {
+                    delay(minOf(30_000L, idleRemaining, (deadline - now).coerceAtLeast(1_000L)))
+                    snapshots.value?.let { wakeups.send(it to graph.followVisibility.onScreen.value) }
+                }
             }
         }
     }

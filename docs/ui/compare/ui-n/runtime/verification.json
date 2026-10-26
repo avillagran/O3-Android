@@ -32,5 +32,6 @@
     "follow active shell lifecycle",
     "revocation and Doze",
     "productive NODE/VQ discovery"
-  ]
+  ],
+  "stage": "Initial settings-only checkpoint; live-node-verification.json is the later service/promotion evidence"
 }

@@ -113,3 +113,5 @@ SOFTWARE.
   [omarchy-i18n](https://github.com/avillagran/omarchy-i18n)). All non-English values are
   machine-authored drafts, not human-approved translations (`ot3:translations/COVERAGE.md:27`);
   the app inherits that status and says so in About.
+
+The notification OT3 mark adds an O outline to the preserved MIT T3 mark path; see app/src/main/res/drawable/ic_stat_ot3.xml and the existing T3 MIT notice.

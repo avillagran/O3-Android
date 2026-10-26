@@ -130,3 +130,44 @@ The initial AVD had android-0 metadata from command-line-tools12 and a SurfaceFl
 crash loop. Recreating only that new test AVD with tools22 produced android-36.1 metadata
 and stable system processes through repeated app operations. See EMULATOR.md for the
 local A/B evidence and the script guard; no phone or other AVD was changed.
+
+## 2026-10-26 — real NODE follow evidence
+
+Actual API 36.1 system promotion is now verified, rather than inferred from a builder.
+The temporary read-only NODE session produced a promoted foreground-service card
+(flags 262218), an **OT3 Working** status chip and a single live card in the shade.
+Opening its Open action reached the real thread. Backgrounding retained the same shell
+supervisor and promotion (flags 262250). Revoking the temporary credential followed by
+explicit reauthentication stopped following and removed the service/card. This does not
+prove immediate revocation detection on an already established stream.
+
+- [Chip](runtime/live-node-ot3-chip.png), [shade](runtime/live-node-ot3-shade.png),
+  [opened reader](runtime/live-node-notification-open-thread.png),
+  [66-second video](runtime/live-node-ot3-final.mp4),
+  [sanitized verification](runtime/live-node-verification.json).
+- The live activity card itself is the foreground-service notification. A quiet tracking
+  notice is used only without a live card, allowing Done/Failed to expire normally.
+- Prefixing short critical text with the full brand hid the state on this system. The
+  final monochrome OT3 mark carries the brand; critical text remains the short state.
+  Files named experiment are deliberately retained as failed/superseded experiments.
+- JVM: app 186/186; core 276 passed, 5 opt-in skips. Lint, screenshot verification and
+  instrumentation compilation pass. API36.1 app suite: 31 passed, one live opt-in skipped;
+  the separate real-NODE opt-in passed. An earlier full run failed registering UiAutomation;
+  closing the device-control session before the repeated full run resolved that run.
+- The lab HTTP helper initially exceeded a 128 MiB unit limit while invoking the T3 CLI;
+  the successful bounded run used 512 MiB. This was a host harness failure.
+- Temporary credential revoked, private credential file removed, reverse ports removed,
+  QA environment deleted, service absent, harness inactive and emulator stopped. No Xiaomi
+  operation, message submission or productive environment change.
+
+Still missing: actual lock-screen capture, grouped transition alerts, Doze, process death,
+multiple environments, natural expiry/idle timeout and automatic revocation detection.
+The QA environment was explicitly seeded: **this is not automatic bridge NODE/VQ discovery**.
+UI-N and desktop parity remain open.
+
+Reproduction: use scripts/follow-live-harness.py with a private state directory outside
+the repository, under a bounded user unit (MemoryMax=512M, RuntimeMaxSec=12min). It issues
+only orchestration:read authority and exposes configuration on loopback. Reverse its port
+only to emulator-5580, grant notifications visibly, and run FollowLiveDeviceTest with
+followLabPort. Capture while its /continue gate waits, return Home, call /release, then
+/finish. Never print /config or the private session file. The helper revokes on shutdown.

@@ -980,3 +980,14 @@ their names and states.
 - Service lifecycle/Doze, revoked-authority handling, system promotion/lockscreen and
   API36.1 emulator evidence still require verification. No promotion is claimed from flags
   requested on a builder.
+
+## 2026-10-26 — verified live follow presentation correction
+
+Supersedes the separate live-card/service-notice policy: while live, the native activity
+card is also the foreground-service notification; idle tracking uses a quiet service
+notice so finished cards can expire normally. API36.1 real NODE evidence confirms actual
+promotion, background continuity and removal after revoked reauthentication. The OT3
+monochrome mark supplies chip branding and short critical text supplies the state:
+a longer brand prefix hid that text in the observed system UI. Full lock-screen content
+remains the default; lock-screen capture and remaining lifecycle cases are not accepted
+yet. See docs/ui/compare/ui-n/runtime/live-node-verification.json.

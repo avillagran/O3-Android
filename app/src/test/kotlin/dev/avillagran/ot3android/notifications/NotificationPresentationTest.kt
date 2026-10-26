@@ -124,7 +124,7 @@ class NotificationPresentationTest {
         assertEquals("2 live", AwarenessCardBuilder.chip(context, two.chip!!))
         for (kind in ChipKind.entries) {
             val text = AwarenessCardBuilder.chip(context, Chip(kind, 12))
-            assertTrue("$kind: '$text'", text.length <= AwarenessCardBuilder.CHIP_FULL_TEXT)
+            assertTrue("$kind: '$text'", text.length <= 7)
         }
     }
 

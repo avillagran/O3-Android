@@ -94,9 +94,6 @@ object NotificationRoutes {
 
 /** The ongoing card. Returns null when [AwarenessCard.expiresAt] has passed: cancel instead. */
 object AwarenessCardBuilder {
-    /** The longest English chip (`Approve`, `9+ live`); the guide shows fewer than 7 characters whole and cuts or drops longer ones. */
-    const val CHIP_FULL_TEXT = 7
-
     fun build(
         context: Context,
         card: AwarenessCard,
