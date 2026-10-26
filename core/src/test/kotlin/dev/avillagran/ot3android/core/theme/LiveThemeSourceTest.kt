@@ -28,6 +28,7 @@ class LiveThemeSourceTest {
     /** One host: its Omarchy state, behind a fake transport. */
     private class Host(var themeName: String? = "tokyo-night", var omarchy: Boolean = true) {
         var failure: T3Exception? = null
+        var customColors: String? = null
         val transport = FakeT3Transport().apply {
             kotlinx.coroutines.runBlocking { connect(ConnectRoute.Bearer("http://t3.test", "token-12345678")) }
             onCall("filesystem.getMetadata") {
@@ -40,7 +41,7 @@ class LiveThemeSourceTest {
                 val path = args.getString("relativePath")
                 val contents = when {
                     !omarchy -> null
-                    path.endsWith("colors.toml") -> "background = \"${background(themeName)}\""
+                    path.endsWith("colors.toml") -> customColors ?: "background = \"${background(themeName)}\""
                     else -> themeName
                 }
                 JSONObject().put("relativePath", path).put("contents", contents.orEmpty()).put("truncated", false)
@@ -158,7 +159,7 @@ class LiveThemeSourceTest {
     }
 
     @Test
-    fun theNameIsPolledOnlyWhileVisibleAndAChangeReadsTheTheme() = runTest {
+    fun themeFilesArePolledOnlyWhileVisibleAndAChangeReadsTheTheme() = runTest {
         val host = Host()
         val source = source()
         connection("a").value = Connection(host.transport, epoch = 1)
@@ -175,14 +176,14 @@ class LiveThemeSourceTest {
 
         advanceTimeBy(LiveThemeSource.POLL_INTERVAL_MS + 1)
         assertEquals(2, host.reads("theme.name"))
-        assertEquals(1, host.reads("colors.toml")) // same name: no full read
+        assertEquals(2, host.reads("colors.toml")) // same name can contain edited colors
 
         host.themeName = "catppuccin-latte"
         advanceTimeBy(LiveThemeSource.POLL_INTERVAL_MS)
         val live = source.selection.value as ThemeSelection.Live
         assertEquals("catppuccin-latte", live.themeName)
         assertTrue(live.isLight)
-        assertEquals(2, host.reads("colors.toml"))
+        assertEquals(3, host.reads("colors.toml"))
 
         source.setVisible(false)
         runCurrent()
@@ -193,7 +194,7 @@ class LiveThemeSourceTest {
         // Back in the foreground: a full read at once.
         source.setVisible(true)
         runCurrent()
-        assertEquals(3, host.reads("colors.toml"))
+        assertEquals(4, host.reads("colors.toml"))
     }
 
     @Test
@@ -277,6 +278,20 @@ class LiveThemeSourceTest {
 
         assertEquals(ThemeSelection.Fallback(FallbackReason.FollowingOff), source.selection.value)
         assertEquals(0, host.transport.calls.size)
+    }
+
+    @Test fun sameNameEditsAreReadAndCachedWhileVisible() = runTest {
+        val host = Host()
+        val source = source()
+        connection("a").value = Connection(host.transport, epoch = 1)
+        source.setVisible(true)
+        runCurrent()
+        host.customColors = "background = \"#112233\""
+        advanceTimeBy(LiveThemeSource.POLL_INTERVAL_MS + 1)
+        val live = source.selection.value as ThemeSelection.Live
+        assertEquals("tokyo-night", live.themeName)
+        assertEquals(host.customColors, live.colors)
+        assertEquals(host.customColors, cache.themes.getValue("a").colors)
     }
 
     private fun waiting(id: String, label: String) = ThemeSelection.Fallback(FallbackReason.Waiting(id, label))

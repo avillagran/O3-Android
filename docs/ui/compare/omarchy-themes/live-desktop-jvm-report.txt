@@ -1,0 +1,5 @@
+read: Live
+theme: name=retro-82 display=Retro 82 appearance=dark
+roles: dim=#8e8776 surface=#102134 failed=#f85525
+tokens keys: [appearance, base, document, id, layers, luminance, mcpTheme, mode, name, projectFills, projectPalette, roles, sky, statusColors]
+location: cwd is HOME=true

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_title">Apariencia</string>
+    <string name="appearance_follow_environment">Seguir el tema Omarchy del entorno</string>
+    <string name="appearance_live_theme">%1$s · %2$s</string>
+    <string name="appearance_live_theme_cached">%1$s · %2$s (guardado)</string>
+    <string name="appearance_not_omarchy">%1$s no tiene Omarchy disponible</string>
+    <string name="appearance_no_scope">%1$s no permite leer archivos (%2$s)</string>
+    <string name="appearance_read_error">No se pudo leer el tema de %1$s (%2$s)</string>
+    <string name="appearance_waiting">Conectando con %1$s…</string>
+    <string name="appearance_no_environment">No hay entornos conectados</string>
+    <string name="appearance_main_environment">Entorno principal</string>
+    <string name="appearance_main_environment_last_used">Último utilizado</string>
+    <string name="appearance_theme">Modo de color</string>
+    <string name="appearance_mode_follow_system">Seguir el sistema</string>
+    <string name="appearance_mode_dark">Oscuro</string>
+    <string name="appearance_mode_light">Claro</string>
+    <string name="appearance_dark_theme">Temas oscuros</string>
+    <string name="appearance_light_theme">Temas claros</string>
+    <string name="appearance_material_you">Material You</string>
+    <string name="appearance_manual_applies">Elige una paleta para aplicarla a este teléfono. Vuelve a activar el seguimiento para usar el tema de tu escritorio.</string>
+    <string name="appearance_refresh">Actualizar tema del escritorio</string>
+</resources>

@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** A manual theme choice: an Omarchy theme id with its name, or Material You (null name). */
-data class ManualThemeOption(val id: String, val name: String?)
+data class ManualThemeOption(val id: String, val name: String?, val tokens: dev.avillagran.ot3android.core.theme.ThemeTokens? = null)
 
 data class AppearanceUiState(
     val settings: ThemeSettings,
@@ -34,7 +34,7 @@ data class AppearanceUiState(
  */
 class AppearanceSettingsViewModel(
     private val preferences: ThemePreferences,
-    source: LiveThemeSource,
+    private val source: LiveThemeSource,
     repository: EnvironmentRepository,
     loadThemes: suspend () -> List<dev.avillagran.ot3android.core.theme.ThemeTokens> = { emptyList() },
 ) : ViewModel() {
@@ -47,8 +47,8 @@ class AppearanceSettingsViewModel(
                 settings = settings,
                 selection = selection,
                 environments = environments,
-                darkThemes = options(DEFAULT_DARK, settings.manual.darkThemeId, themes.filter { !it.isLight }.map { ManualThemeOption(it.id, it.name) }),
-                lightThemes = options(DEFAULT_LIGHT, settings.manual.lightThemeId, themes.filter { it.isLight }.map { ManualThemeOption(it.id, it.name) }),
+                darkThemes = options(DEFAULT_DARK, settings.manual.darkThemeId, themes.filter { !it.isLight }.map { ManualThemeOption(it.id, it.name, it) }),
+                lightThemes = options(DEFAULT_LIGHT, settings.manual.lightThemeId, themes.filter { it.isLight }.map { ManualThemeOption(it.id, it.name, it) }),
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
@@ -56,19 +56,28 @@ class AppearanceSettingsViewModel(
 
     fun setMainEnvironment(id: String?) = edit { preferences.setMainEnvironmentId(id) }
 
-    fun setMode(mode: AppearanceMode) = edit { preferences.setMode(mode) }
+    fun setMode(mode: AppearanceMode) = edit { preferences.setMode(mode); preferences.setFollowEnvironment(false) }
 
-    fun setDarkTheme(id: String) = edit { preferences.setDarkTheme(id) }
+    fun setDarkTheme(id: String) = edit {
+        preferences.setDarkTheme(id)
+        preferences.setMode(AppearanceMode.DARK)
+        preferences.setFollowEnvironment(false)
+    }
 
-    fun setLightTheme(id: String) = edit { preferences.setLightTheme(id) }
+    fun setLightTheme(id: String) = edit {
+        preferences.setLightTheme(id)
+        preferences.setMode(AppearanceMode.LIGHT)
+        preferences.setFollowEnvironment(false)
+    }
+
+    fun refresh() = source.refresh()
 
     private fun edit(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
     }
 
     private companion object {
-        // The bundled catalog of the 22 Omarchy themes comes with UI-1; until then the lists
-        // hold the defaults, the stored choice and Material You.
+        // Keep defaults available during catalog loading, plus a stored custom id and Material You.
         val DEFAULT_DARK = ManualThemeOption(AppearanceSettings.DEFAULT_THEMES.dark, "Tokyo Night")
         val DEFAULT_LIGHT = ManualThemeOption(AppearanceSettings.DEFAULT_THEMES.light, "Catppuccin Latte")
         val MATERIAL_YOU = ManualThemeOption(AppearanceSettings.MATERIAL_YOU, null)

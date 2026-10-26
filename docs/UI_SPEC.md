@@ -2275,3 +2275,7 @@ yet. See docs/ui/compare/ui-n/runtime/live-node-verification.json.
 ## 2026-10-26 — notification controls
 
 Settings now persists approval/input/plan/completion/failure preferences and sends them to awareness.view. Rust owns alert suppression and baseline consumption. Full lock-screen detail remains default; State/Hidden update already posted notifications and summaries, preserving absolute expiry and routes. System promotion availability refreshes on resume. See docs/ui/compare/ui-n/controls/README.md for tests and boundaries.
+
+## 2026-10-26 — Omarchy palette selection and refresh
+
+Selecting a bundled Omarchy palette in Appearance now immediately chooses its dark/light mode and disables desktop follow; turning follow back on explicitly restores the environment theme. Previews consume the existing native theme.tokens colors. A refresh button is available, and foreground polling reads colors.toml as well as theme.name so same-name custom edits are detected. Background polling remains disabled; desktop files are read-only. Spanish labels are included. Evidence and live-verification boundaries: docs/ui/compare/omarchy-themes/README.md.

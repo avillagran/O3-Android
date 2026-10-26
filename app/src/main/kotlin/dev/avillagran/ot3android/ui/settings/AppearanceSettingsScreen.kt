@@ -1,6 +1,14 @@
 package dev.avillagran.ot3android.ui.settings
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -44,9 +52,9 @@ object AppearanceSettingsTags {
 }
 
 /**
- * Settings → Appearance, minimal (UI-1 restyles it): the follow switch with the detected theme
+ * Settings → Appearance: the follow switch with the detected theme
  * and environment or why it is unavailable, the main environment when there are several, then
- * the manual choice.
+ * the native-token palette gallery.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +92,11 @@ fun AppearanceSettingsScreen(
                     .toggleable(settings.followEnvironment, role = Role.Switch, onValueChange = viewModel::setFollowEnvironment)
                     .testTag(AppearanceSettingsTags.FOLLOW),
             )
+            if (settings.followEnvironment) {
+                TextButton(onClick = viewModel::refresh, modifier = Modifier.padding(horizontal = 8.dp).testTag("appearance_refresh")) {
+                    Text(stringResource(R.string.appearance_refresh))
+                }
+            }
             if (settings.followEnvironment && current.environments.size > 1) {
                 Header(R.string.appearance_main_environment)
                 Choice(
@@ -113,17 +126,10 @@ fun AppearanceSettingsScreen(
                 Choice(stringResource(label), settings.manual.mode == mode, AppearanceSettingsTags.mode(mode)) { viewModel.setMode(mode) }
             }
             Header(R.string.appearance_dark_theme)
-            current.darkThemes.forEach { option ->
-                Choice(option.name ?: stringResource(R.string.appearance_material_you), settings.manual.darkThemeId == option.id, AppearanceSettingsTags.dark(option.id)) {
-                    viewModel.setDarkTheme(option.id)
-                }
-            }
+            ThemeGrid(current.darkThemes, settings.manual.darkThemeId.takeUnless { settings.followEnvironment || settings.manual.mode == AppearanceMode.LIGHT }, AppearanceSettingsTags::dark, viewModel::setDarkTheme)
             Header(R.string.appearance_light_theme)
-            current.lightThemes.forEach { option ->
-                Choice(option.name ?: stringResource(R.string.appearance_material_you), settings.manual.lightThemeId == option.id, AppearanceSettingsTags.light(option.id)) {
-                    viewModel.setLightTheme(option.id)
-                }
-            }
+            ThemeGrid(current.lightThemes, settings.manual.lightThemeId.takeUnless { settings.followEnvironment || settings.manual.mode == AppearanceMode.DARK }, AppearanceSettingsTags::light, viewModel::setLightTheme)
+
         }
     }
 }
@@ -164,4 +170,42 @@ private fun Choice(label: String, selected: Boolean, tag: String, onSelect: () -
         leadingContent = { RadioButton(selected = selected, onClick = null) },
         modifier = Modifier.selectable(selected, role = Role.RadioButton, onClick = onSelect).testTag(tag),
     )
+}
+
+/** Native theme.tokens colors, shown before selection; no palette or contrast calculations here. */
+@Composable
+private fun ThemeGrid(options: List<ManualThemeOption>, selected: String?, tag: (String) -> String, select: (String) -> Unit) {
+    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        options.chunked(2).forEach { pair ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                pair.forEach { option ->
+                    val name = option.name ?: stringResource(R.string.appearance_material_you)
+                    val tokens = option.tokens
+                    val background = tokens?.base?.get("background")?.let { Color(0xff000000L or it.toLong()) }
+                        ?: MaterialTheme.colorScheme.surface
+                    val foreground = tokens?.base?.get("foreground")?.let { Color(0xff000000L or it.toLong()) }
+                        ?: MaterialTheme.colorScheme.onSurface
+                    Surface(modifier = Modifier.weight(1f).testTag(tag(option.id))
+                        .selectable(option.id == selected, role = Role.RadioButton, onClick = { select(option.id) }),
+                        color = background, contentColor = foreground, shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(if (option.id == selected) 2.dp else 1.dp,
+                            if (option.id == selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text("Aa", style = MaterialTheme.typography.titleLarge)
+                                Spacer(Modifier.weight(1f))
+                                listOf("accent", "red", "green", "blue").forEach { key ->
+                                    tokens?.base?.get(key)?.let { rgb ->
+                                        Box(Modifier.size(12.dp).background(Color(0xff000000L or rgb.toLong()), RoundedCornerShape(4.dp)))
+                                    }
+                                }
+                            }
+                            Text(name, style = MaterialTheme.typography.labelLarge, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
 }
