@@ -807,3 +807,39 @@ default) or Material You is the fallback when the host is not Omarchy, the file 
 read, or following is off. All colour values come from `theme.tokens`, live and bundled;
 `docs/ui/tokens.md` is regenerated from it. Spec: UI_SPEC 3.1.3. If the typed file API
 cannot reach the file (path outside a project, scope), the gap goes to `LIB_REQUESTS.md`.
+
+## 2026-10-25 — Motion like ot3, token availability charts, OmaBridge as a route
+
+Three requirements from Andrés, specified in UI_SPEC without reopening section 1 or the
+tranche order:
+
+- **Animated like ot3** (UI_SPEC 3.4, tokens.md 5). ot3's motion was inventoried by
+  surface (88 animation uses on 61 QML lines plus one shared ticker). `T3Motion.qml` is
+  only the show/hide style and pace used by `T3Reveal`; every other duration is a literal,
+  kept in `Ot3Durations` with exact Penner easings in `Ot3Easing` (no Material defaults, no
+  springs in place of OutBack). Corrections to the first tokens table: rows arrive in
+  416 ms and leave in 312 ms; a section change is a row flight with InOutQuart. Reduced
+  motion keeps ot3's Animations preferences and adds Android's Remove animations (all
+  off) and battery saver (Light, Saver). Acceptance: every tranche adds ≤ 10 s
+  recordings from the reference emulator next to its stills in
+  `docs/ui/compare/<tranche>/`; section 5 gained a Motion column.
+- **Token availability charts** (UI_SPEC 4.10). Compact quota strip in Home's list
+  header (UI-1) and the Usage | Limits page in Settings (UI-6), ot3's look (segment per
+  account, remaining %, pace marker in `failed`, reset text). Live limits come from the
+  existing stream `server.subscribeServerConfig {usageLimitSources: true}` folded by
+  `quotaSources.apply`; cost and tokens from `usageSummary.*` and
+  `server.getUsageSummary`. ot3's pooling and pace are JavaScript ported from T3, so they
+  go to the lib as `quotaSources.present` (U26) instead of Kotlin; until then one bar per
+  window.
+- **OmaBridge** (UI_SPEC 4.2.1, 4.2.2, 4.9.1). Environments get ordered routes (public
+  address, local network, Tailscale, OmaBridge) with a route-in-use icon in the Home
+  brand row and the thread top bar (UI-1) and route editing (UI-6); the token goes to a
+  route only after its descriptor names the saved environment. Kinds and fallback order
+  are the lib's (U27); interim is ot3's behaviour (preferred route only, user-chosen
+  kind). OmaBridge has no remote HTTP API and no Android client, so the v1 OmaBridge route
+  is a gateway address (`https://host:port/` + `t3 pair`); the OmaBridge page and direct
+  peer routes are blocked on the new [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md)
+  (OB1 Android client, OB2 remote actions, OB3 change feed, OB4 gateway hint). Reading
+  OmaBridge's state through T3's file API was rejected: it holds the device's private key.
+
+Lib requests U26 and U27 are in LIB_REQUESTS.md, "2026-10-25: usage limits and routes".

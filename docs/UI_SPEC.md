@@ -18,6 +18,7 @@ Auxiliary tables:
 - [ui/omarchy-themes.md](ui/omarchy-themes.md): importing Omarchy themes into the APK.
 - [ui/strings.md](ui/strings.md): string sourcing and the mobile-only strings.
 - [ui/screen-map.md](ui/screen-map.md): every ot3 audit row mapped to an Android screen and PR.
+- [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md): what the phone needs from OmaBridge (4.2.2, 4.9.1).
 - [ui/reference/](ui/reference/README.md): 13 ot3 captures used as the visual target.
 
 ## 0. Sources and citations
@@ -1623,22 +1624,150 @@ shown (rule 6), and OmaBridge reaches the phone only as a gateway route (4.2.2).
 
 ### 4.10 Subscription usage
 
-- **Quota strip** (optional under the thread and Home headers): "Provider usage", one
-  group per provider with account count, per window a segmented bar with an
-  expected-remaining marker (failed colour when under budget), remaining % and reset
-  time, "Accounts" expander (`ot3:ui/qml/QuotaStrip.qml:21-119`).
-- **Usage page** (Settings → Usage, T3 Mobile's place, `t3m:src/features/settings/SettingsRouteScreen.tsx:218`):
-  T3 Mobile's Usage | Limits tabs (`t3m:src/features/usage/UsageRouteScreen.tsx:61-77`)
-  holding ot3's content: period Day / Week / Month / Quarter, KPIs Cost, Tokens,
-  Sessions, Cache savings, per-day bars switchable Cost / Tokens, per-model list,
-  "Refresh prices" (`ot3:ui/qml/T3UsagePage.qml:31-76`); Limits = the quota strip,
-  full size. Pull to refresh.
-- Rules: automatic refresh at most every 5 minutes per environment; cached readings are
-  labelled possibly outdated after a disconnect (`ot3:docs/SUBSCRIPTIONS.md:28-33`).
-- Data: `server.getUsageSummary` and `server.refreshUsageRates` (typed API),
-  `usage_summary::request` and `aggregate` with the device's IANA time zone
-  (`lib:src/usage_summary.rs:23,40`), `quota_sources::limits`, `providers`, `sources`
-  (`lib:src/quota_sources.rs:23,75,86`), U14.
+Revised 2026-10-25 (Andrés): token availability is shown as ot3 shows it, a compact
+strip in Home (UI-1) and the full page in Settings → Usage (UI-6).
+
+#### 4.10.1 Data
+
+- **Live limits, a stream:** `server.subscribeServerConfig` with `usageLimitSources:
+  true` (`lib:bindings/android/describe.json:5710,6037`; Kotlin `T3Api.kt:378-379`), one
+  per connected environment, scope `orchestration:read`. The 5 h / weekly / monthly
+  windows arrive in three places: `snapshot.config.providers[].usageLimits`,
+  `providerStatuses.payload.providers[].usageLimits`, and, only with `usageLimitSources`,
+  hub accounts in `usageLimitSourcesUpdated.payload.sources[].accounts[].usageLimits`
+  (stream items at `lib:bindings/android/describe.json:6045`). `server.getConfig` alone
+  omits the hubs (`ot3:docs/SUBSCRIPTIONS.md:12-35`). This is what ot3 does
+  (`ot3:src/quota_sources.rs:21-42`) and what T3 Mobile does
+  (`t3m:src/state/server.ts:13-17`).
+- **Folding the stream:** each item goes to `quotaSources.apply {state?, event}` →
+  `{state{providers, usageLimitSources, connected}, changed}`
+  (`lib:bindings/android/describe.json:1267`; `lib:src/quota_sources.rs:118-135`); the
+  public projections are `quotaSources.providers` → `[{auth{email, status}, availability,
+  driver, enabled, installed, instanceId, usageLimits}]`, `quotaSources.sources` →
+  `[{id, label, error, accounts[{id, driver, plan, usageLimits, …}]}]` (credentials
+  dropped, errors replaced by "Could not read usage source.") and `quotaSources.limits
+  {usageLimits}` → `{checkedAt, windows[{id, kind, label, resetsAt, usedPercent,
+  windowDurationMins}]}` or `null` (`lib:bindings/android/describe.json:1226,1238,1250`;
+  key shapes from `lib:tests/domain_usage.rs:40-61` and `lib:tests/quota_sources.rs:10,34`).
+  `kind` is `session`, `weekly`, `monthly` or `other`.
+- **Refresh:** `server.refreshProviders {}` (`lib:bindings/android/describe.json:3750`)
+  at most every 5 minutes per environment, failures included, plus Refresh and pull to
+  refresh (ot3 `ot3:src/quotas.rs:189-215`; rule `ot3:docs/SUBSCRIPTIONS.md:28-33`); the
+  fresh probe comes back as `providerStatuses`. The countdowns re-render once a minute
+  while visible (`ot3:ui/qml/T3Backend.qml:248`).
+- **Presentation is not in the lib.** Pooling accounts of one provider across
+  environments, the segment per account, remaining percent, pace and the
+  expected-remaining marker, the earliest reset text and the notices are ot3's port of
+  T3's `packages/shared/src/usageLimits.ts` (`ot3:ui/js/UsageLimits.js:5-43`;
+  `ot3:ui/js/NativeUsageLimits.js:153-567`; provenance
+  `ot3:ui/js/NativeUsageLimits.sources.json:2`), and T3 Mobile uses the same helpers
+  (`t3m:src/features/usage/UsageLimitsPooled.tsx:302-309`). Kotlin must not port them:
+  request **U26** `quotaSources.present` (section 6). Until U26 the strip shows one
+  bar per window from `quotaSources.limits` of each provider, without pooling, pace or
+  marker, the reset as the lib's `resetsAt` formatted by the platform, and no notices
+  beyond the connection state (rule 6).
+- **Usage page:** `usageSummary.request {period, today, timeZone}` → `{sinceDay,
+  untilDay, payload}` (`lib:bindings/android/describe.json:1192`), the payload sent with
+  `server.getUsageSummary` (`:3693`), then `usageSummary.aggregate {summary, sinceDay,
+  untilDay}` (`:1214`) → `{cacheSavings, cost, days[{day, cost, tokens}], kinds{input,
+  cached, cacheWrite, output, reasoning}, models[{provider, model, cost, tokens,
+  records}], pricing, providers[{provider, cost, tokens}], readAt, sessions, sinceDay,
+  sources[{provider, status, message, refreshing}], tokens, unpricedRecords, untilDay}`
+  (`lib:tests/domain_usage.rs:16-35`). "Refresh prices" calls `server.refreshUsageRates`
+  (`:3705`) first, as ot3 does (`ot3:src/usage_summary.rs:21-38`). `timeZone` is the
+  device's IANA zone (`ZoneId.systemDefault()`); `today` the local date.
+- Data of the page: cost and tokens only. `getUsageSummary` carries no limits; the
+  Limits tab reads the stream above.
+
+#### 4.10.2 Quota strip (Home and thread)
+
+ot3's `QuotaStrip` (`ot3:ui/qml/QuotaStrip.qml:8-126`) as hosted by the panel, without
+its header (`showHeader: false`, `collapsed: false`; `ot3:ui/qml/T3Panel.qml:1520-1537`):
+
+- **Where:** in Home, the first item of the `LazyColumn` (T3 Mobile's list-header slot,
+  `t3m:src/features/home/HomeScreen.tsx:773-787,856`), so it scrolls away with the list;
+  in the thread, under the top bar (4.3.1), as in ot3. Shown with Show provider usage
+  (overflow, `ot3:ui/qml/T3Panel.qml:1153-1158`; Settings → Appearance,
+  `ot3:ui/qml/T3Preferences.qml:249`), remembered like ot3's `usageExpanded`
+  (`ot3:ui/qml/T3Panel.qml:216-217`); off by default. It appears and hides through
+  `Ot3Reveal` (3.4); the bars do not animate, as in ot3. Hidden when no provider has a
+  window and there is no notice (`ot3:ui/qml/QuotaStrip.qml:16-19`).
+- **Provider group** (`:49-60`): card fill fg @ 0.025, 1 dp border fg @ 0.09, radius 4;
+  the provider name in bold caption with " · {n}" when it pools several accounts
+  (`:63`); labels from ot3's driver map (Codex, Claude, OpenCode Go, Cursor, …;
+  `ot3:ui/js/UsageLimits.js:38-41`).
+- **Window row** (`:66-100`), on a phone one line in this order: window label (the
+  server's, e.g. "5 hours", "Weekly", 64 dp, `dim`), the bar (fills), the **remaining**
+  percent "62%" (36 dp, end-aligned) and the reset "resets in 2h 5m" (≤ 96 dp, `dim`,
+  ellipsis). ot3's columns are `Style.space(92)` / `(72)` / `(34)` / `(112)` (1 unit =
+  1 dp, 3.3) beside a 60-unit chevron column, too wide for a phone, so the phone moves the
+  provider name to its own line above the rows and keeps the rest. Windows ordered
+  session, weekly, monthly, other (`ot3:ui/js/NativeUsageLimits.js:340-345`).
+- **Bar** (`ot3:ui/qml/QuotaStrip.qml:74-97`): 6 dp high, one segment per account with a
+  gap of min(2 dp, width / (4n)); track fg @ 0.12 (fg @ 0.035 for an account without a
+  reading); fill radius 2, width = remaining %; fill `accent`, or `failed` when the
+  account is under its pace (remaining < expected); an expected-remaining tick 2 dp wide,
+  4 dp taller than the bar, in `foreground`, where (1 − elapsed share) × 100 puts it
+  (`ot3:ui/js/UsageLimits.js:43`; rule `ot3:docs/SUBSCRIPTIONS.md:106-112`). No amber
+  thresholds: T3 Mobile's 10 % / 30 % colours (`t3m:src/features/usage/UsageLimitsSection.tsx:62-74`)
+  lose to ot3's pace rule (rule 2).
+- **Accounts** (`ot3:ui/qml/QuotaStrip.qml:103-120`): a chevron per group (48 dp target)
+  expands one line per account, "label · plan", the hosts in `dim`, and "{window}:
+  {pct}% · {reset}" per window.
+- **Notices** (`:17,25,30-36`): when providers report problems, a `failed` "!" icon whose
+  tooltip lists them: "{environment}: Access denied", "Disconnected; readings may be
+  outdated", "Could not refresh limits", plus external usage links "{label} · {url}"
+  (`ot3:ui/js/UsageLimits.js:34-36`), and Refresh.
+- **Compact form in Home:** at most two windows per provider (session and weekly, the
+  pooled `shortWindow` and `weekly` of `ot3:ui/js/UsageLimits.js:32`), the rest behind
+  the group's chevron; tapping a group opens Settings → Usage → Limits. The thread strip
+  shows every window, as ot3's.
+- Height cap: ot3 scrolls the strip past 200 dp (`ot3:ui/qml/QuotaStrip.qml:37-46`); in
+  Home it is part of the list, in the thread it keeps the 200 dp cap.
+
+#### 4.10.3 Usage page (Settings → Usage)
+
+T3 Mobile's place and tabs (`t3m:src/features/settings/SettingsRouteScreen.tsx:218`;
+`t3m:src/features/usage/UsageRouteScreen.tsx:61-65,87-96,260-263`), opening on
+**Limits**, with ot3's content in each:
+
+- **Limits:** the quota strip of 4.10.2 at full size, every window and the Accounts
+  open; header row "Provider usage" with "!" and Refresh as in ot3's own header
+  (`ot3:ui/qml/QuotaStrip.qml:21-28`). Empty: "No provider on the selected environments
+  reports subscription limits." (mobile-only, from
+  `t3m:src/features/usage/UsageLimitsPooled.tsx:323-327`).
+- **Usage:** ot3's usage page (`ot3:ui/qml/T3UsagePage.qml:8-78`, opened by "Open usage" /
+  Ctrl+U, `ot3:ui/qml/T3Panel.qml:67,317`):
+  - Period **Day / Week / Month / Quarter** (default Week; `:11,29-34`), a segmented row.
+  - Four KPI tiles, 2 × 2 on phones: **Cost**, **Tokens** (k / M / B), **Sessions**,
+    **Cache savings** (`:37-44`; tiles 62 dp, radius 8, fill fg @ 0.04, value at body + 4
+    SemiBold).
+  - "Cost per day" / "Tokens per day" with a Cost / Tokens toggle (`:45-49`); bars 150 dp
+    high, one per day scaled to the peak day, 2 dp minimum for a non-zero day, radius
+    min(3 dp, w/2), `accent`; day numbers only up to 14 days; tap a bar for its tooltip
+    "{day} · ${cost} · {count} tokens" (`:51-63`).
+  - Models: rows 28 → 48 dp (touch) with provider icon, middle-elided model name, a
+    relative bar 6 dp in accent @ 0.6, and the value (`:64-74`; at most 12 models,
+    `lib:src/usage_summary.rs:76-79`).
+  - "Refresh prices" when `unpricedRecords > 0` or prices are not fresh, with
+    "{count} records have no price." / "Model prices are unavailable." (`:75-76`).
+  - States: spinner while loading (`:36`); the error in `failed` (`:35`); "Connect an
+    environment to see usage." (mobile-only, `t3m:src/features/usage/UsageRouteScreen.tsx:305-314`).
+- Environment scope: the Settings scope select (4.9); with several environments the page
+  shows the selected one, as ot3 asks one environment at a time
+  (`ot3:ui/qml/T3Backend.qml:641`).
+- Pull to refresh on both tabs (T3 Mobile); tab switch fades 160 ms.
+
+#### 4.10.4 Strings
+
+All of ot3's page and strip labels are in the catalog ("Provider usage", "Show provider
+usage", "Hide provider usage", "Toggle usage", "Accounts", "Usage", "Day", "Week",
+"Month", "Quarter", "Cost", "Tokens", "Sessions", "Cache savings", "Cost per day",
+"Tokens per day", "Refresh prices", "Limits"). ot3's JS-side texts are not ("Access
+denied", "Disconnected; readings may be outdated", "Could not refresh limits", "resets in
+{time}", "Resets momentarily"; `ot3:ui/js/UsageLimits.js:35`;
+`ot3:ui/js/NativeUsageLimits.js:561-567`): they come from U26's English output through
+`i18n.t`, and until then from the mobile-only list ([ui/strings.md](ui/strings.md)).
 
 ### 4.11 Command palette and search
 
@@ -1701,16 +1830,21 @@ Seven PRs, each mergeable alone, each ending with captures compared side by side
   taken from the lib's outputs; Compose UI tests (instrumented) for interactions, run
   when the emulator is back.
 - Strings only through the generator; no hard-coded text.
+- **Motion acceptance:** each tranche's motion part (the Motion column) is shown by
+  screen recordings next to its stills in `docs/ui/compare/<tranche>/`, recorded on the
+  reference emulator as 3.4.5 says (≤ 10 s each, WebM or GIF). The emulator works again
+  since 2026-10-25 (`docs/DECISIONS.md`, "The emulator is the reference device").
 
-| PR | Scope | Visual acceptance | Tests | Lib needed |
-|---|---|---|---|---|
-| **UI-1 Visual system and Home** | theme generator and JSON (22 themes), `Ot3Theme`, Fira Code, Lucide vectors, kit (3.9), sky header (AGSL + Canvas), strings generator, typed routes and the three tabs, merged Home with header, search, filter sheet, card and slim rows, shelves, swipe and long-press sheets (Copy and Filter only until builders), Environments under Settings restyled, Component catalog | Home vs `ot3-sidebar-and-thread.png` (left column) and `ot3-timeline-shelves-composer.png` (shelves, slim rows); sky in a dark and a light theme | generator goldens (tokens.md §1); status, time and shelf mapping; sky uniforms; navigation (row → thread, back order) | none blocking; U2 and U21 for full status, order and chips |
-| **UI-2 Thread timeline** | top bar, find, user and assistant messages, Markdown renderer, copy, fork, quote, activity blocks and inspector, Thinking rows, changed-files card, dividers, error cards, subagent cards and child threads, plan card, working pill, jump to latest, Load earlier, states (4.3) | thread vs `ot3-sidebar-and-thread.png` (right) and `ot3-timeline-shelves-composer.png` (Markdown) | row mapping per role; Markdown blocks; scroll policy with streaming | U0, U3, U4, U10 (blocking for activity, changes, dividers); U18 for history |
-| **UI-3 Composer** | frame, collapsed / card / expanded, completions, model picker, options, permission, Plan / Build, send / queue / steer / stop and Send options, queue strip and sheet, attachments with upload, drafts status, notices (4.4) | composer vs `ot3-sidebar-and-thread.png` (bottom) and `ot3-model-picker.png` | send state machine; queue mapping; IME insets | U5, U7, U8, request item 4 |
-| **UI-4 Approvals, questions and plans** | approval and question cards, secret card, ready-plan banner and follow-ups, tasks strip, Edit from here (4.5, 4.3.7) | cards vs ot3 card tokens; plan banner vs `ot3-plan-card.png` | decision gating; multi-question flow; replay rules after `rpc_outcome_unknown` | U6, U15, U24, request item 4 |
-| **UI-5 Changes, diff, Git and pull requests** | diff screen and file list, Git & changes sheet (status, Review; actions after U22), PR tab, PR detail and files, PR badge on rows, new thread flow and branch picker, Add project (4.6–4.8) | diff vs `ot3-changes-review.png` and `ot3-diff-split.png`; Git sheet vs `ot3-git-controls.png`; PR list vs `ot3-pull-requests.png` | hunk rendering; source switching; PR filters and actions | U9, U19, U20, U22 |
-| **UI-6 Settings, palette, usage, archive** | Settings root and pages, theme picker with previews, Add environment with QR and pairing link, Providers and favourites, Usage and quota strip, Archived threads, command palette, Licenses (4.2, 4.9–4.12) | Settings vs `ot3-preferences-*.png`; archive vs `ot3-archive.png` | theme switching; scope; palette ranking; usage aggregation via the lib | U7, U14, U17, U23 |
-| **UI-7 Tablets and foldables** | navigation rail, list / detail / inspector panes with T3 Mobile's breakpoints, hinge alignment, empty detail, inspector content, tablet minimap, hardware keyboard shortcuts and the shortcut helper (2.4, 4.3.8) | split layout at 1280 × 800 dp and 840 × 1200 dp against the phone goldens | breakpoint function at each threshold; back across panes; key handling | U12 |
+| PR | Scope | Motion (3.4.3; recordings 3.4.5) | Visual acceptance | Tests | Lib needed |
+|---|---|---|---|---|---|
+| **UI-1 Visual system and Home** | theme generator and JSON (22 themes), `Ot3Theme`, Fira Code, Lucide vectors, kit (3.9), sky header (AGSL + Canvas), strings generator, typed routes and the three tabs, merged Home with header, search, filter sheet, card and slim rows, shelves, swipe and long-press sheets (Copy and Filter only until builders), Environments under Settings restyled, route-in-use indicator (4.2.1, Home and thread top bar), compact quota strip in Home from the live `server.subscribeServerConfig` stream (4.10.2), Component catalog with a Motion page | `Ot3Motion`, `Ot3Easing`, `Ot3Durations`, `Ot3Ticker`, `Ot3Reveal` (all five styles, spring below API 33); rows arrive / depart / close gaps / fly between shelves; status icon pop, tint and spin; draft pen; shelves through `Ot3Reveal`; sky energy, drift, comets while working, frame pacing and Auto downgrade; connection-dot pulse; swipe spring; FAB; kit control timings; quota strip reveal; predictive back. Recordings: Home rows and shelves, sky idle → working → idle, swipe, Remove animations on | Home vs `ot3-sidebar-and-thread.png` (left column) and `ot3-timeline-shelves-composer.png` (shelves, slim rows); sky in a dark and a light theme | generator goldens (tokens.md §1); status, time and shelf mapping; sky uniforms; navigation (row → thread, back order) | none blocking; U2 and U21 for full status, order and chips; U14 (closed) and U26 for the strip's pooling and marker, U27 for route kinds (interim: user-chosen kind, preferred route only) |
+| **UI-2 Thread timeline** | top bar, find, user and assistant messages, Markdown renderer, copy, fork, quote, activity blocks and inspector, Thinking rows, changed-files card, dividers, error cards, subagent cards and child threads, plan card, working pill, jump to latest, Load earlier, states (4.3) | spinner and shimmer on activity rows and the working pill, minimap-free phone timeline, `Ot3Reveal` for the find bar; messages appear without animation, as ot3. Recordings: a streaming run with the working pill | thread vs `ot3-sidebar-and-thread.png` (right) and `ot3-timeline-shelves-composer.png` (Markdown) | row mapping per role; Markdown blocks; scroll policy with streaming | U0, U3, U4, U10 (blocking for activity, changes, dividers); U18 for history |
+| **UI-3 Composer** | frame, collapsed / card / expanded, completions, model picker, options, permission, Plan / Build, send / queue / steer / stop and Send options, queue strip and sheet, attachments with upload, drafts status, notices (4.4) | composer focus and send colour, draft saved / saving, queue strip through `Ot3Reveal`, sheet physics. Recordings: send, queue, draft status | composer vs `ot3-sidebar-and-thread.png` (bottom) and `ot3-model-picker.png` | send state machine; queue mapping; IME insets | U5, U7, U8, request item 4 |
+| **UI-4 Approvals, questions and plans** | approval and question cards, secret card, ready-plan banner and follow-ups, tasks strip, Edit from here (4.5, 4.3.7) | tasks strip and ready-plan banner through `Ot3Reveal`; question auto-advance after 200 ms; cards not animated, as ot3. Recordings: approval → answered, multi-question | cards vs ot3 card tokens; plan banner vs `ot3-plan-card.png` | decision gating; multi-question flow; replay rules after `rpc_outcome_unknown` | U6, U15, U24, request item 4 |
+| **UI-5 Changes, diff, Git and pull requests** | diff screen and file list, Git & changes sheet (status, Review; actions after U22), PR tab, PR detail and files, PR badge on rows, new thread flow and branch picker, Add project (4.6–4.8) | sheet physics, diff file switching without animation (ot3 has none). Recordings: Git sheet, PR detail tabs | diff vs `ot3-changes-review.png` and `ot3-diff-split.png`; Git sheet vs `ot3-git-controls.png`; PR list vs `ot3-pull-requests.png` | hunk rendering; source switching; PR filters and actions | U9, U19, U20, U22 |
+| **UI-6 Settings, palette, usage, archive** | Settings root and pages, theme picker with previews, Add environment with QR and pairing link, Providers and favourites, Usage page with Usage and Limits tabs and the full quota strip (4.10.3), route editing (4.2.1), Appearance → Animations (3.4.4), Archived threads, command palette, Licenses (4.2, 4.9–4.12) | Settings → Appearance → Animations wired to `Ot3Motion`; usage tabs 160 ms fade; quota strip and Limits without bar animation; route editor. Recordings: each Show and hide style at normal pace, usage tabs | Settings vs `ot3-preferences-*.png`; archive vs `ot3-archive.png` | theme switching; scope; palette ranking; usage aggregation via the lib | U7, U14, U17, U23; U26 for pooled limits, U27 for route kinds and fallback |
+| **UI-7 Tablets and foldables** | navigation rail, list / detail / inspector panes with T3 Mobile's breakpoints, hinge alignment, empty detail, inspector content, tablet minimap, hardware keyboard shortcuts and the shortcut helper (2.4, 4.3.8) | panes 260 ms InOutCubic, detail replacement not animated, tablet minimap marker 150 ms. Recordings: list → detail → inspector, fold posture | split layout at 1280 × 800 dp and 840 × 1200 dp against the phone goldens | breakpoint function at each threshold; back across panes; key handling | U12 |
+| **UI-OB OmaBridge page** (blocked) | Settings → Connections → OmaBridge (4.9.1): the phone's identity and pairing by OmaBridge QR, managed hosts (publish, approvals, paired devices, revoke), gateways with check and "Add as a route", the approvals dot; direct OmaBridge peer routes and ot3's per-environment plans (4.2.2) | ot3's cards and buttons, no extra motion; pending-approval dot appears without animation. Recordings: pair → approved | page vs ot3's `T3OmaBridgeManage` (a capture is added to `ui/reference/` when the work starts) | snapshot mapping; action gating by `REMOTE_ACTIONS`; route plan with a peer route | **blocked** on [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB1–OB3; U27 |
 
 UI-1 also records the decisions of section 1 in `docs/DECISIONS.md` (the architecture
 line on themes already changes with this spec).
@@ -1726,6 +1860,10 @@ line on themes already changes with this spec).
 > `projection.apply` and `timeline.view`). The function names per row, their status and
 > the tests that exercise them are in [LIB_REQUESTS.md](LIB_REQUESTS.md), "2026-10-25:
 > v0.3.4". Still open there: the shell reducer half of U2 (v0.3.3 finding 1, `shell.apply`).
+>
+> U26 and U27 were added after v0.3.4 (motion, usage and OmaBridge requirements,
+> 2026-10-25) and are open: [LIB_REQUESTS.md](LIB_REQUESTS.md), "2026-10-25: usage limits
+> and routes".
 
 As of v0.3.2 no presentation module is reachable from Kotlin: the C ABI's operations are
 the transport ones plus `call` / `describe` (`lib:src/ffi.rs:30-37`), and `call` only
@@ -1764,10 +1902,14 @@ ot3's own crate, not in the lib, and would move into the lib first.
 | U23 | **new** `nativeSettings.snapshot` / `patch`, `scopedSettings.effective` / `projectPatch` | `lib:src/native_settings.rs:107,152`, `lib:src/scoped_settings.rs:38,56` | Settings pages (4.9) | read-only |
 | U24 | **new** `checkpointRevert.canPreview` / `reference` / `command` / `observation` / `recoveryMessage` | `lib:src/checkpoint_revert.rs:7,39,159,208,248` | Edit from here (4.5.4) | not offered |
 | U25 | **new** `toolInspector.scope` / `request` / `parse` | `lib:src/tool_inspector.rs:61,89,236` | Inspector (4.3.3) | not offered |
+| U26 | **new, 2026-10-25** `quotaSources.present`: ot3's pooled limits (accounts per provider across environments, segments, remaining %, pace, expected-remaining marker, earliest reset text, notices, external links) | **ot3 only** (JS port of T3's `usageLimits.ts`): `ot3:ui/js/UsageLimits.js:5-43`, `ot3:ui/js/NativeUsageLimits.js:153-567` | Quota strip, Limits tab (4.10) | one bar per window from `quotaSources.limits`, no pooling, pace or marker |
+| U27 | **new, 2026-10-25** routes: `connectionCatalog.routeKind` (address → public / LAN / Tailscale, with a link hint) and `connectionCatalog.routePlan` (ordered attempts and fallback); `pairingTarget` returning the route hint | grouping and ordering only, Rust-only: `lib:src/connection_catalog.rs:73-212`; classification **ot3 only**: `ot3:src/connection_network.rs:48-54` | Route indicator and editing (4.2.1, 4.2.2) | user-chosen kind, preferred route only |
 
 Order of need: nothing blocks UI-1 (U2 and U21 complete it); U0, U3, U4 and U10 gate
 UI-2; U5, U7 and U8 gate UI-3; U6, U15 and U24 gate UI-4; U9, U19, U20 and U22 gate UI-5;
-U14, U17 and U23 gate UI-6; U12 gates UI-7. U11 gates nothing because the generator
+U14, U17 and U23 gate UI-6; U12 gates UI-7. Added 2026-10-25: U26 and U27 complete
+UI-1's strip and indicator and UI-6's Limits tab and route editing without blocking them;
+the OmaBridge page waits on OmaBridge itself ([OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md)), not on the lib. U11 gates nothing because the generator
 covers it, but it keeps ot3 and Android from drifting. When this spec is accepted, the **new** rows move into
 `LIB_REQUESTS.md` as a dated section.
 
@@ -1807,6 +1949,11 @@ covers it, but it keeps ot3 and Android from drifting. When this spec is accepte
 8. Approvals and questions sit above the composer as ot3 cards; questions stay paged; the composer is hidden while a question waits.
 9. Seven PRs: visual system and Home, timeline, composer, approvals, changes/diff/PRs, settings/palette/usage, tablets; each with JVM screenshot goldens compared to ot3 captures.
 10. The lib needs 26 exposures (U0–U25), 18 of them new, led by the timeline view, the multi-environment sidebar view, activity, changed files and Markdown blocks.
+11. Motion is ot3's: 88 animation uses on 61 QML lines plus one shared ticker, inventoried by surface; `T3Motion` is only the show/hide style and pace, every other duration is a literal kept in `Ot3Durations` with exact Penner easings; ot3's Animations preferences plus Android's Remove animations and battery saver; each tranche proves its motion with ≤ 10 s emulator recordings.
+12. Token availability: a compact quota strip in Home (UI-1) and the Usage | Limits page (UI-6), live from `server.subscribeServerConfig` folded by `quotaSources.apply`, cost and tokens from `usageSummary.*`; ot3's pooling and pace marker need `quotaSources.present` (U26).
+13. Each environment has ordered routes (public, local network, Tailscale, OmaBridge) with a route-in-use icon in Home and the thread (UI-1) and route editing (UI-6); kinds and fallback come from the lib (U27).
+14. A phone reaches OmaBridge today only through a gateway address; the OmaBridge page and direct peer routes wait for an Android OmaBridge client and remote management ([OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB1–OB4).
+
 
 ## UI1i acceptance addendum — vertical correction (2026-10-25)
 
