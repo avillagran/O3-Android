@@ -23,29 +23,38 @@ data class PairUiState(
     val pairing: PairingState = PairingState.Idle,
     /** The server [link] points at, read offline by the lib; null while it is not a readable link. */
     val linkOrigin: String? = null,
+    val bridge: String? = null,
 ) {
-    val busy: Boolean get() = pairing is PairingState.Inspecting || pairing is PairingState.Pairing
+    val busy: Boolean get() = bridge == "connecting" || pairing is PairingState.Inspecting || pairing is PairingState.Pairing
 
     override fun toString() = "PairUiState(link=<redacted>, pairing=$pairing)"
 }
 
 /** Paste or receive a pairing link, read the server, then pair on the user's confirmation. */
 @OptIn(ExperimentalCoroutinesApi::class)
-class PairViewModel(private val service: PairingService) : ViewModel() {
+class PairViewModel(
+    private val service: PairingService,
+    private val pairBridge: (suspend (org.json.JSONObject) -> Boolean)? = null,
+    private val bridgeAvailable: () -> Boolean = { false },
+) : ViewModel() {
+    val bridgeSupported: Boolean get() = bridgeAvailable()
+    private val bridge = MutableStateFlow<String?>(null)
 
     private val link = MutableStateFlow("")
 
     /** Each link with its origin, read by the lib off the main thread. */
-    private val origins = link.mapLatest { value -> value to value.takeIf { it.isNotEmpty() }?.let { service.origin(it) } }
+    private val origins = link.mapLatest { value -> value to value.takeIf { it.isNotEmpty() && !BridgeInvitation.isLink(it) }?.let { service.origin(it) } }
 
-    val state: StateFlow<PairUiState> = combine(link, service.state, origins) { link, pairing, (read, origin) ->
+    val state: StateFlow<PairUiState> = combine(link, service.state, origins, bridge) { link, pairing, source, bridge ->
+        val (read, origin) = source
         // An origin read for an older link is not shown with a newer one.
-        PairUiState(link, pairing, origin.takeIf { read == link })
+        PairUiState(link, pairing, origin.takeIf { read == link }, bridge)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, PairUiState())
 
     fun setLink(value: String) {
         if (state.value.busy) return
         link.value = value.trim()
+        bridge.value = null
         if (service.state.value !is PairingState.Idle) viewModelScope.launch { service.reset() }
     }
 
@@ -62,6 +71,19 @@ class PairViewModel(private val service: PairingService) : ViewModel() {
     fun inspect() {
         if (state.value.busy || link.value.isEmpty()) return
         val current = link.value
+        if (BridgeInvitation.isLink(current)) {
+            if (!bridgeAvailable() || pairBridge == null) { bridge.value = "sdk_unavailable"; return }
+            bridge.value = "connecting"
+            viewModelScope.launch {
+                try {
+                    val approved = pairBridge.invoke(BridgeInvitation.decode(current))
+                    bridge.value = if (approved) "approved" else "pending"
+                    if (approved) link.value = ""
+                } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                catch (_: Exception) { bridge.value = "failed" }
+            }
+            return
+        }
         viewModelScope.launch { forgetDeadLink(service.inspect(current)) }
     }
 
