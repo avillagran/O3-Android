@@ -189,4 +189,25 @@
     <string name="ot3_diff_next_file">Další soubor</string>
     <string name="ot3_diff_wrap">Zalamovat řádky</string>
     <string name="ot3_diff_no_wrap">Nezalamovat řádky</string>
+    <string name="ot3_pr_title">Pull requesty</string>
+    <string name="ot3_pr_refresh">Obnovit</string>
+    <string name="ot3_pr_all_projects">Všechny projekty</string>
+    <string name="ot3_pr_search">Hledat pull requesty…</string>
+    <string name="ot3_pr_all">Vše</string>
+    <string name="ot3_pr_authored">Vytvořené mnou</string>
+    <string name="ot3_pr_reviewing">Ke kontrole</string>
+    <string name="ot3_pr_draft">Koncept</string>
+    <string name="ot3_pr_empty">Žádné pull requesty</string>
+    <string name="ot3_pr_more">Načíst další</string>
+    <string name="ot3_pr_overview">Přehled</string>
+    <string name="ot3_pr_checks">Kontroly</string>
+    <string name="ot3_pr_conversation">Konverzace</string>
+    <string name="ot3_pr_retry">Zkusit znovu</string>
+    <string name="ot3_pr_approved">Schváleno</string>
+    <string name="ot3_pr_changes_requested">Požadovány změny</string>
+    <string name="ot3_pr_review_required">Vyžadována kontrola</string>
+    <string name="ot3_pr_pending">Čeká</string>
+    <string name="ot3_pr_action_required">Vyžadována akce</string>
+    <string name="ot3_pr_skipped">Přeskočeno</string>
+    <string name="ot3_pr_cancelled">Zrušeno</string>
 </resources>

@@ -189,4 +189,25 @@
     <string name="ot3_diff_next_file">下一个文件</string>
     <string name="ot3_diff_wrap">自动换行</string>
     <string name="ot3_diff_no_wrap">不换行</string>
+    <string name="ot3_pr_title">拉取请求</string>
+    <string name="ot3_pr_refresh">刷新</string>
+    <string name="ot3_pr_all_projects">所有项目</string>
+    <string name="ot3_pr_search">搜索拉取请求…</string>
+    <string name="ot3_pr_all">全部</string>
+    <string name="ot3_pr_authored">我创建的</string>
+    <string name="ot3_pr_reviewing">待审查</string>
+    <string name="ot3_pr_draft">草稿</string>
+    <string name="ot3_pr_empty">没有拉取请求</string>
+    <string name="ot3_pr_more">加载更多</string>
+    <string name="ot3_pr_overview">概览</string>
+    <string name="ot3_pr_checks">检查</string>
+    <string name="ot3_pr_conversation">对话</string>
+    <string name="ot3_pr_retry">重试</string>
+    <string name="ot3_pr_approved">已批准</string>
+    <string name="ot3_pr_changes_requested">已请求更改</string>
+    <string name="ot3_pr_review_required">需要审查</string>
+    <string name="ot3_pr_pending">待处理</string>
+    <string name="ot3_pr_action_required">需要操作</string>
+    <string name="ot3_pr_skipped">已跳过</string>
+    <string name="ot3_pr_cancelled">已取消</string>
 </resources>

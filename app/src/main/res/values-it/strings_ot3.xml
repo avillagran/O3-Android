@@ -189,4 +189,25 @@
     <string name="ot3_diff_next_file">File successivo</string>
     <string name="ot3_diff_wrap">A capo</string>
     <string name="ot3_diff_no_wrap">Non andare a capo</string>
+    <string name="ot3_pr_title">Pull request</string>
+    <string name="ot3_pr_refresh">Aggiorna</string>
+    <string name="ot3_pr_all_projects">Tutti i progetti</string>
+    <string name="ot3_pr_search">Cerca pull request…</string>
+    <string name="ot3_pr_all">Tutti</string>
+    <string name="ot3_pr_authored">Creati da me</string>
+    <string name="ot3_pr_reviewing">Da revisionare</string>
+    <string name="ot3_pr_draft">Bozza</string>
+    <string name="ot3_pr_empty">Nessuna pull request</string>
+    <string name="ot3_pr_more">Carica altro</string>
+    <string name="ot3_pr_overview">Panoramica</string>
+    <string name="ot3_pr_checks">Controlli</string>
+    <string name="ot3_pr_conversation">Conversazione</string>
+    <string name="ot3_pr_retry">Riprova</string>
+    <string name="ot3_pr_approved">Approvato</string>
+    <string name="ot3_pr_changes_requested">Modifiche richieste</string>
+    <string name="ot3_pr_review_required">Revisione richiesta</string>
+    <string name="ot3_pr_pending">In attesa</string>
+    <string name="ot3_pr_action_required">Azione richiesta</string>
+    <string name="ot3_pr_skipped">Saltato</string>
+    <string name="ot3_pr_cancelled">Annullata</string>
 </resources>

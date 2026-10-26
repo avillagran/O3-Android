@@ -189,4 +189,25 @@
     <string name="ot3_diff_next_file">Наступний файл</string>
     <string name="ot3_diff_wrap">Переносити рядки</string>
     <string name="ot3_diff_no_wrap">Без перенесення рядків</string>
+    <string name="ot3_pr_title">Пул-реквести</string>
+    <string name="ot3_pr_refresh">Оновити</string>
+    <string name="ot3_pr_all_projects">Усі проєкти</string>
+    <string name="ot3_pr_search">Пошук пул-реквестів…</string>
+    <string name="ot3_pr_all">Усі</string>
+    <string name="ot3_pr_authored">Мої</string>
+    <string name="ot3_pr_reviewing">На перевірці</string>
+    <string name="ot3_pr_draft">Чернетка</string>
+    <string name="ot3_pr_empty">Немає пул-реквестів</string>
+    <string name="ot3_pr_more">Завантажити ще</string>
+    <string name="ot3_pr_overview">Огляд</string>
+    <string name="ot3_pr_checks">Перевірки</string>
+    <string name="ot3_pr_conversation">Обговорення</string>
+    <string name="ot3_pr_retry">Повторити</string>
+    <string name="ot3_pr_approved">Схвалено</string>
+    <string name="ot3_pr_changes_requested">Запитано зміни</string>
+    <string name="ot3_pr_review_required">Потрібна перевірка</string>
+    <string name="ot3_pr_pending">Очікує</string>
+    <string name="ot3_pr_action_required">Потрібна дія</string>
+    <string name="ot3_pr_skipped">Пропущено</string>
+    <string name="ot3_pr_cancelled">Скасовано</string>
 </resources>
