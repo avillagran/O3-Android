@@ -124,7 +124,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         onShell { fixtureShell() }
         onCall("server.refreshProviders") { JSONObject() }
         onServerConfigStream { kotlinx.coroutines.flow.flow {
-            val events = JSONArray(application.assets.open("usage/limits.events.json").bufferedReader().use { it.readText() })
+            val events = if (request == "quota-empty") JSONArray("""[{"version":1,"type":"snapshot","config":{"providers":[]}}]""") else JSONArray(application.assets.open("usage/limits.events.json").bufferedReader().use { it.readText() })
             emit(dev.avillagran.t3.T3Batch(events, false, null))
             kotlinx.coroutines.awaitCancellation()
         } }

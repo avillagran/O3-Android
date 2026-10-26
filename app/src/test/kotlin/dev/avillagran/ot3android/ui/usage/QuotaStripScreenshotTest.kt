@@ -42,7 +42,7 @@ class QuotaStripScreenshotTest : ScreenshotTest() {
         var enabled by androidx.compose.runtime.mutableStateOf(false)
         var opens = 0
         val observations = listOf("NODE" to QuotaState(limits(), busy = false))
-        snapshot("reduced-motion-hidden") { QuotaStrip(observations, enabled, true, { opens++ }) }
+        snapshot("reduced-motion-hidden") { androidx.compose.foundation.layout.Column { QuotaStrip(observations, enabled, true, { opens++ }) } }
         composeRule.onNodeWithTag("quota_reveal").assertHeightIsEqualTo(0.dp)
         val start = composeRule.mainClock.currentTime
         composeRule.runOnIdle { enabled = true }

@@ -80,7 +80,7 @@ fun QuotaStrip(states: List<Pair<String, QuotaState>>, enabled: Boolean, compact
                 Text("$host · " + stringResource(when { state.offline -> R.string.ot3_usage_offline; state.failed -> R.string.ot3_usage_unavailable; else -> R.string.mobile_connecting_environment }), style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim)
             }
             groups.forEach { (host, title, limits) ->
-                Surface(Modifier.fillMaxWidth().clickable(onClick = onOpenLimits).heightIn(min = 48.dp),
+                Surface(onClick = onOpenLimits, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("quota_group_${host}_$title"),
                     color = Ot3Theme.colors.foreground.copy(alpha = .025f), contentColor = Ot3Theme.colors.foreground,
                     shape = RoundedCornerShape(4.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Ot3Theme.colors.foreground.copy(alpha = .09f))) {
                     Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {

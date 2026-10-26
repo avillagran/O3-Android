@@ -41,7 +41,7 @@ interface Ot3Screens {
     fun Notifications() { NotYetScreen("Notifications") }
 
     @Composable
-    fun Usage(initialTab: String = "usage", environmentId: String? = null) { NotYetScreen("Usage") }
+    fun Usage(initialTab: String, environmentId: String?) { NotYetScreen("Usage") }
 
     @Composable
     fun Environments()
@@ -107,7 +107,7 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<AddEnvironment> { entry -> screens.AddEnvironment(entry.toRoute()) }
         composable<PairEnvironment> { screens.PairEnvironment() }
         composable<ScanPairingCode> { screens.ScanPairingCode() }
-        composable<Usage> { screens.Usage() }
+        composable<Usage> { screens.Usage("usage", null) }
         composable<QuotaLimits> { val route = it.toRoute<QuotaLimits>(); screens.Usage("limits", route.environmentId) }
         composable<Archive> { NotYetScreen("Archive") }
         composable<Licenses> { NotYetScreen("Licenses") }
