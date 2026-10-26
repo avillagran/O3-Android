@@ -1028,3 +1028,11 @@ the selected native path (including oldPath fallback after rename) and wrap mode
 across dialog recreation; neither control fetches again. Unwrapped width comes
 from Fira Code font metrics, as ot3's T3DiffReview does, and the patch scrolls as
 one surface. Rust remains responsible for scope, patch parsing and line limits.
+
+
+### 2026-10-26 — Diff modal lifetime across viewport changes
+
+Keep the open diff at reader scope, keyed by the selected thread, rather than inside
+a virtualized Changes row. Device rotation can dispose that row while the modal is
+open. A real-workspace regression now checks both orientations and a single stream;
+standalone dialog restoration was insufficient to catch this failure.

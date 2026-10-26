@@ -28,7 +28,7 @@ passed on API 36.1: open from Changes, native lines, whitespace refetch, close b
 same file summary, and no dispatch. JVM dialog test covers failed read/retry/filter/close;
 native tests reject wrong thread/range. Tokyo Night emulator capture and 16.7 s encoded
 video (`diff-read.mp4`) show filtering and return to the reader. Dark/light golden captures
-are in `ReaderScreenshotTest/diff.*.png`; light full-modal emulator capture is still pending.
+are in `ReaderScreenshotTest/diff.*.png`; light full-modal emulator capture is included in the navigation increment below.
 Native input/output fixture: `timeline/diff.input.json` and
 `diff.view.json`; ReaderContractTest checks it against the actual JNI.
 
@@ -45,8 +45,7 @@ switching itself has no animation, as in desktop.
 This increment does not implement the wide-screen tree or split rendering. Existing
 wrapped rows, native order, binary/missing states and read cancellation stay in place.
 New dark/light `ReaderScreenshotTest/diff-navigation.*.png` images exercise the file
-browser with a native projection fixture. Device evidence for this increment is
-pending; the emulator is reserved by the compact provider-usage task.
+browser with a native projection fixture. Final device evidence is linked below.
 
 Validation for file navigation: app JVM 210/210, screenshot verification, lint and
 assembleDebug pass. The focused dialog test checks boundaries, direct selection,
@@ -57,8 +56,7 @@ The existing `RichReaderDeviceTest` now walks from Home into the real chat, open
 Changes, navigates two native-parsed file patches via arrows and picker, preserves
 the second selection through whitespace refetch, and returns to the timeline. Its
 final assertion still requires exactly two diff reads and no command dispatch.
-The test APK compiles; execution of this expanded device scenario is pending CI
-and the reserved local emulator. Compilation alone is not device acceptance.
+The expanded scenario passed on API 36.1 with real JNI and synthetic transport.
 
 ## Wrap control
 
@@ -71,5 +69,31 @@ state and unchanged read count. Full-modal Tokyo Night/Latte goldens are
 `ReaderScreenshotTest/diff-controls.*.png`; these are Robolectric, not phone captures.
 
 Final local verification after wrap: app 212/212, lint, debug/test APK builds and
-all screenshot goldens pass. Existing wrapped goldens are unchanged. The expanded
-instrumented reader includes the wrap toggle, but has not run locally yet.
+all screenshot goldens pass. Existing wrapped goldens are unchanged. The two expanded
+instrumented reader tests passed on API 36.1, including actual horizontal overflow
+and swipe displacement.
+
+
+## Rotation and device acceptance — 2026-10-26
+
+Manual rotation exposed a real bug: the dialog lived inside a virtualized Changes
+row and disappeared when that row left composition. The reader now owns the dialog,
+with saved state scoped to the selected thread. The regression opens it from Home
+and chat, chooses the second file, disables wrap, rotates portrait → landscape →
+portrait, then closes back to the timeline. It also verifies one thread stream.
+Standalone dialog restoration tests alone did not cover this failure.
+
+Final verification: 212 app JVM tests, lint/build/goldens passed; both real-workspace
+instrumented tests passed on API 36.1. The device fixture has a deliberately long
+native-parsed line so no-wrap demonstrates actual scrolling. File navigation makes
+no extra reads; whitespace refresh does; no command dispatch occurs.
+
+- [Tokyo Night portrait](navigation-device/tokyo-night.png)
+- [Catppuccin Latte portrait, same content](navigation-device/catppuccin-latte.png)
+- [Tokyo Night landscape](navigation-device/tokyo-night-landscape.png)
+- [44.47-second video](navigation-device/navigation.mp4): next file, wrap off,
+  horizontal scrolling and rotations; the recording letterboxes orientation changes.
+
+These are emulator captures with synthetic transport and real Kotlin surfaces/JNI,
+not production-server or Xiaomi acceptance. Wide tree, split view, hunk/context
+controls and syntax highlighting remain pending.

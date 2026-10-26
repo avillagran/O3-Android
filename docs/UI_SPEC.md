@@ -2334,6 +2334,7 @@ refetch; file navigation does not query the server. Shared OT3 touch feedback is
 without invented file-switch animation. Wide-screen tree, split layout, context expansion and hunk folding remain pending.
 Wrap/no-wrap is now a saveable dialog control: measured font widths and one horizontal
 patch scroll surface, with no refetch. Full-modal dark/light Robolectric goldens and
-overflow/scroll/state tests cover this control; device evidence is still pending. Fixture goldens and
-focused lifecycle tests are documented in `docs/ui/compare/reader-diff/README.md`;
-new device acceptance remains pending separately from earlier diff read evidence.
+overflow/scroll/state tests cover this control. API 36.1 device tests and same-content
+Tokyo/Latte captures now cover the real chat route. The reader owns the dialog
+outside virtualized rows so rotation cannot dismiss it when Changes leaves the viewport.
+Evidence and remaining desktop differences: `docs/ui/compare/reader-diff/README.md`.

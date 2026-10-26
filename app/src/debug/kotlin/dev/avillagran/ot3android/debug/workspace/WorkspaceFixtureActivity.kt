@@ -138,7 +138,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         onCall("orchestration.getTurnDiff") { args ->
             JSONObject().put("threadId", args.getString("threadId"))
                 .put("fromTurnCount", args.getInt("fromTurnCount")).put("toTurnCount", args.getInt("toTurnCount"))
-                .put("diff", "diff --git a/ui/TimelineReader.kt b/ui/TimelineReader.kt\n--- a/ui/TimelineReader.kt\n+++ b/ui/TimelineReader.kt\n@@ -1 +1 @@\n-Text(markdown)\n+MarkdownBlocks(nativeBlocks)\ndiff --git a/ui/ThreadWorkspace.kt b/ui/ThreadWorkspace.kt\n--- a/ui/ThreadWorkspace.kt\n+++ b/ui/ThreadWorkspace.kt\n@@ -1 +1 @@\n-resetSelectedFile()\n+rememberSelectedFile()\n")
+                .put("diff", "diff --git a/ui/TimelineReader.kt b/ui/TimelineReader.kt\n--- a/ui/TimelineReader.kt\n+++ b/ui/TimelineReader.kt\n@@ -1 +1 @@\n-Text(markdown)\n+MarkdownBlocks(nativeBlocks)\ndiff --git a/ui/ThreadWorkspace.kt b/ui/ThreadWorkspace.kt\n--- a/ui/ThreadWorkspace.kt\n+++ b/ui/ThreadWorkspace.kt\n@@ -1 +1 @@\n-resetSelectedFile()\n+rememberSelectedFile(environmentId, threadId, selectedPath, preserveDraft = true, preserveReadingPosition = true)\n")
         }
         onCall("orchestration.getTurnItem") { args ->
             JSONObject().put("item", fixtureItems().objects().firstOrNull { it.optString("id") == args.optString("itemId") })
