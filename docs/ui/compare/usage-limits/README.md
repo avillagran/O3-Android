@@ -43,3 +43,14 @@ or physical acceptance. The physical install is documented separately after succ
 - Final APK SHA256: efe6a66f64c50c2d511abbdc19a4b923752eefa79ffcabe42be0b0368d420d3a.
   Bridge SDK remains production f7d93a9 and T3 remains0.3.5; the experimental
   delegated-catalog candidate is not included.
+
+## Live NODE subscription
+
+Read-only host C ABI probe against the existing local NODE T3 received `snapshot`
+and `usageLimitSourcesUpdated`. The same pinned0.3.5 `quotaSources.apply` produced
+10 public providers and4 readable windows; this server returned0 hub sources.
+See `live-node-sanitized.json`. A temporary two-minute orchestration:read session
+was revoked in cleanup; no provider refresh, config change or provider run occurred.
+The report contains only counts and event types, no account identifiers or credentials.
+This establishes real-server stream/reducer compatibility. It does not establish
+Android socket behavior, productive bridge discovery or physical Limits acceptance.
