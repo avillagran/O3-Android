@@ -477,3 +477,62 @@ default) or Material You is the fallback when the host is not Omarchy, the file 
 read, or following is off. All colour values come from `theme.tokens`, live and bundled;
 `docs/ui/tokens.md` is regenerated from it. Spec: UI_SPEC 3.1.3. If the typed file API
 cannot reach the file (path outside a project, scope), the gap goes to `LIB_REQUESTS.md`.
+
+## 2026-10-25: Live Omarchy theme, implementation (UI-1g)
+
+Implements the entry above (UI_SPEC 3.1.3) as data in `core`, for the UI-1 theme to wear.
+
+- **Public API** (`core/theme`): `LiveThemeSource.selection: StateFlow<ThemeSelection>`,
+  where `ThemeSelection` is `Live(environmentId, environmentLabel, themeName,
+  displayName, colors, tokens: JSONObject, fromCache)` or `Fallback(reason)`, `reason`
+  one of `Loading`, `FollowingOff`, `NoEnvironment`, `Waiting(environment)` and
+  `Unavailable(environment, NotOmarchy | NoScope(requiredScope) | Error(code))`.
+  `tokens` is the lib's `theme.tokens` result (same schema as the bundled themes once UI-1's
+  importer uses `theme.tokens`), so `Ot3Colors` is built from either the same way.
+  `showOnScreen(environmentId): AutoCloseable` (sidebar and thread screens claim their
+  environment; the latest open claim wins, so a navigation transition never leaves none),
+  `setVisible` (process ON_START / ON_STOP), `refresh()`.
+- **HOME comes from `filesystem.browse`, not `filesystem.getMetadata`.** Checked live on
+  T3 0.1.3 (PROTOCOL_NOTES.md, "Live Omarchy theme"): `getMetadata(["~"])` answers
+  `{kind}` only, no path. `browse("~/.local/state/omarchy/current/theme")` answers the
+  expanded `parentPath`, so HOME is that minus `/.local/state/omarchy/current`.
+  `getMetadata` still runs first, as the cheap "is this Omarchy" check (a null entry; `browse`
+  fails with `rpc_rejected` when the directory is missing). Both run once per environment
+  and process; then `projects.readFile(cwd = HOME, ".local/state/omarchy/current/theme.name"
+  and ".../theme/colors.toml", allowMissing = true)`. **`readFile` accepts HOME, a directory
+  that is no project, as `cwd`** (live); `cwd = "~"` is `rpc_rejected`. Gap and the call
+  wanted instead: LIB_REQUESTS.md, "2026-10-25: live Omarchy theme".
+- **Poll:** one `readFile` of `theme.name` every 3 min while the app is visible and the
+  followed environment connected; a different name triggers the full read. Full reads also
+  on every new supervisor `Connection` (connect and reconnect), on return to the
+  foreground, on an environment switch and on `refresh()`. Nothing runs in the background.
+  Following an environment starts its supervisor (`ConnectionManager.supervisor(id).start()`),
+  so the merged Home's main environment connects for its theme.
+- **Which environment:** the latest on-screen claim; else `ThemeSettings.mainEnvironmentId`;
+  else `SelectionPreferences.lastEnvironmentId` (now written when a sidebar or thread opens);
+  else the most recently connected one.
+- **Failures:** an `Error(code)` keeps the theme shown (from a read or the cache): a dropped
+  connection must not flip the colours; polls retry it. `NotOmarchy` and `NoScope` drop the
+  environment's cache and fall back to the manual choice; polls do not probe such a host
+  again until the next connect or foreground. `NoScope` is decided by the code
+  `write_not_authorized`, with `filesystem:read` as the scope: the lib's `requiredScope`
+  names the wrong scope (LIB_REQUESTS.md).
+- **Cache:** `FileThemeCache`, one JSON file per environment under `files/live-theme/`
+  (name = SHA-256 of the local id; theme name, display name, `colors.toml`, tokens; never a
+  path or credential). Shown at once with `fromCache = true` until the environment is read.
+  `Fallback(Loading)` covers the first milliseconds, so a UI can keep its splash instead of
+  painting the manual theme first.
+- **Preferences:** `core/data/prefs/AppearancePreferences.kt` and its test are copied
+  byte for byte from `feat/ui-1` (b666c97), so the merge adds the same file on both sides.
+  `ThemePreferences` adds `followEnvironment` (default on) and `mainEnvironmentId` in their
+  own DataStore (`live_theme`) and exposes them with the manual choice
+  (`AppearancePreferences`: mode, dark and light theme ids, `material-you`) as one
+  `ThemeSettings` flow. On merge, `AppGraph` keeps one `AppearancePreferences` and passes it
+  to `ThemePreferences`.
+- **Settings → Appearance** (`ui/settings/AppearanceSettingsScreen.kt`, reached from the
+  environments list until UI-1's Settings tab): the follow switch with "Theme · environment"
+  or the reason, the main environment when more than one is saved, then Theme / Dark theme /
+  Light theme. Until the bundled catalog (UI-1) the theme lists hold the default, the stored
+  choice and Material You. Strings in `values/strings_appearance.xml` (docs/ui/strings.md,
+  "Appearance"). `main`'s `Ot3Theme(dynamicColor = true)` is not changed: painting the
+  selection is the UI-1 theme's job.

@@ -834,3 +834,37 @@ importer to them (DECISIONS.md, 2026-10-25), the later tranches use the rest.
 | v0.3.3 1: no shell reducer in `domain` | Open | No `shell.*` among the 108 entries. |
 | v0.3.3 2: no `message.dispatch` or `run.interrupt` builder | Open | `composer.*` unchanged; `planWorkflow.attachSourceRef` decorates a ready command. |
 | v0.3.3 3: the projection crosses JNI twice per update | Open | `projection.apply` / `timeline.view` signatures unchanged; no handle. |
+
+## 2026-10-25: live Omarchy theme
+
+UI_SPEC 3.1.3 reads the host's `~/.local/state/omarchy/current/theme/colors.toml` and
+`theme.name` through T3. It works with v0.3.4 (DECISIONS.md, "Live Omarchy theme,
+implementation"), with one workaround and one wrong field. Evidence: PROTOCOL_NOTES.md,
+"Live Omarchy theme".
+
+### 1. No typed way to get HOME or to read a `~` path
+
+- **Expected (UI_SPEC):** HOME from `filesystem.getMetadata`, which expands `~`.
+- **Live:** `call("filesystem.getMetadata", {paths: ["~"]})` → `{entries: [{kind:
+  "directory"}]}`: no path. `call("projects.readFile", {cwd: "~", relativePath:
+  ".local/state/omarchy/current/theme/colors.toml", allowMissing: true})` →
+  `rpc_rejected`. `projects.readFile` with an absolute HOME as `cwd` works.
+- **Workaround in the app:** HOME = `filesystem.browse({partialPath:
+  "~/.local/state/omarchy/current/theme"}).parentPath` minus
+  `/.local/state/omarchy/current`: two extra calls per environment (getMetadata for
+  existence, since `browse` fails on a missing directory), and string surgery on a path.
+- **Wanted (any one):** `filesystem.readFile({path, allowMissing?})` that expands `~`
+  like `getMetadata` (`{contents, byteLength, truncated, exists}`, scope
+  `filesystem:read`); or `getMetadata` entries with the resolved `path`; or a typed
+  `server.omarchyTheme()` → `{name, colors} | null` that reads both files in one call.
+
+### 2. `requiredScope` names the token's scope, not the missing one
+
+- **Live:** with a token holding only `orchestration:read`,
+  `call("filesystem.getMetadata", {paths: ["~"]})` and `call("projects.readFile", …)`
+  throw `T3Exception(code = "write_not_authorized", reason = "The authenticated token is
+  missing required scope: filesystem:read.", requiredScope = "orchestration:read")`.
+- **Wanted:** `requiredScope = "filesystem:read"` (the scope the server says is missing);
+  and, for reads, a code that does not say "write" (e.g. `not_authorized`), or a note in
+  ANDROID.md that `write_not_authorized` covers reads too. The app falls back to the
+  function's `describe` scope.
