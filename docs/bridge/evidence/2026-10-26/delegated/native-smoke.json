@@ -1,0 +1,19 @@
+{
+  "bridgeSource": "bdf01d4999e9cb65b6f49d21a8a21fcf2fe1639f",
+  "t3Version": "0.1.3-nightly.20261026.3726",
+  "backend": "two isolated real T3 instances",
+  "twoBridgeRealT3": true,
+  "writeDenied": true,
+  "crossHostDenied": true,
+  "expiryDenied": true,
+  "delegationWithdrawalDeniesNewSessions": true,
+  "existingSessionRemainsUntilExpiry": true,
+  "issuedCount": 1,
+  "androidJni": "2 runs failed: bridge_catalog_expired at refresh in both native catalog and real T3 tests",
+  "production": "not tested",
+  "physical": "not tested",
+  "clockDiagnostic": {
+    "hostMinusDeviceAtLogReceiptMs": 764,
+    "includesLogTransportLatency": true
+  }
+}

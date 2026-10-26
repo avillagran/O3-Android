@@ -18,7 +18,7 @@ import org.junit.Test
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** One path: Android controller/JNI -> QUIC -> scoped CLI issuer -> REAL T3 shells over TLS. */
+/** Android/JNI -> desktop bridge -> separate QUIC issuer -> REAL isolated T3 shells over TLS. */
 class BridgeT3EndToEndTest {
     @Test fun twoRealIsolatedServersEnforceReadScopeExpiryAndRevocation() = runBlocking {
         val port = InstrumentationRegistry.getArguments().getString("realT3LabPort")
@@ -36,6 +36,10 @@ class BridgeT3EndToEndTest {
             finally { connection.disconnect() }
         }
         val configuration = lab("/invitation")
+        val issuerBridge = configuration.getString("issuerBridgeId")
+        val delegatedEnvironment = configuration.getString("delegatedEnvironmentId")
+        assertNotEquals("Delegated issuer must be a separate bridge identity",
+            configuration.getJSONObject("invitation").getJSONObject("address").getString("id"), issuerBridge)
         val database = Room.inMemoryDatabaseBuilder(context, Ot3Database::class.java).build()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val secrets = mutableMapOf<String, String>()
@@ -101,10 +105,23 @@ class BridgeT3EndToEndTest {
                 assertTrue((0 until threads.length()).any { threads.getJSONObject(it).getString("id") == expected.getString("threadId") })
                 val session = request(row.baseUrl, token, path = "/api/auth/session").getJSONObject("body")
                 assertEquals("[\"orchestration:read\"]", session.getJSONArray("scopes").toString())
+                if (row.environmentId == delegatedEnvironment) {
+                    assertTrue("T3 subject must preserve the Android client, not the desktop caller",
+                        session.getString("subject").endsWith(":$client"))
+                    assertTrue("Delegated sessions must expire within two minutes",
+                        origin.authorizationExpiresAt <= System.currentTimeMillis() + 120_000)
+                }
                 denied(row.baseUrl, token, "POST", "/api/auth/pairing-token")
                 assertTrue("Real orchestration server enforces read scope", lab("/verify-write/$index", JSONObject().put("token", token)).getBoolean("writeDenied"))
-                Triple(row.baseUrl, token, origin.authorizationExpiresAt!!)
+                Triple(row.baseUrl, token, origin.authorizationExpiresAt)
             }
+            assertTrue("The discovered catalog must contain the remotely issued environment",
+                environments.any { it.environmentId == delegatedEnvironment })
+            val delegation = lab("/delegation-status")
+            assertEquals(issuerBridge, delegation.getString("issuerBridgeId"))
+            assertEquals(delegatedEnvironment, delegation.getString("delegatedEnvironmentId"))
+            assertTrue("At least one issuance must traverse the delegated handler",
+                delegation.getLong("issuedCount") >= 1)
             denied(sessions[0].first, sessions[1].second)
             denied(sessions[1].first, sessions[0].second)
             // Natural expiry is enforced by T3 itself, independently of Android's gate.

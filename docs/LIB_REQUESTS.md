@@ -1110,3 +1110,21 @@ flag. Request `timeline` row `commentary` or `showMessageActions`, derived in Ru
 T3's terminal-assistant semantics. Android can then hide intermediate copy/time/actions
 and use the 8 dp commentary gap without repeating that scan. Streaming action hiding and
 message layout are presentation-only and already implemented independently.
+
+### Bridge catalog clock skew (2026-10-26)
+
+`bridge_catalog::reconcile` rejects `issuedAt > now` with
+`bridge_catalog_expired`, with no tolerance. Two Android API36.1 runs against
+the committed OmaBridge `bdf01d4` reject both the existing catalog fixture and
+the real two-bridge lab at refresh. A streamed instrumentation clock marker
+arrived at host time 764 ms after its device timestamp (includes log transport
+latency); clocks are close but not identical. Native host→host smoke passes.
+
+Request a bounded, explicit common clock-skew policy for future `issuedAt`,
+with distinct diagnostics for future issue time versus expired catalog. Keep
+identity/revision/max TTL validation and the actual `expiresAt` deadline; do
+not extend authorization or rewrite device time in Kotlin. Cover subsecond
+and bounded future timestamps, excessive skew, expired and malformed windows,
+and replay/revision behavior. Audit enrollment receipt validation for the same
+clock boundary. Android integration is pending this diagnosis/common policy;
+no Kotlin timestamp adjustment or weakened acceptance has been added.

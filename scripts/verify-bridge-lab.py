@@ -64,15 +64,16 @@ try:
         ports.append(port)
     command = [str(ROOT/'gradlew'), ':core:testDebugUnitTest', ':core:lintDebug', ':core:connectedDebugAndroidTest',
                '-Pot3a.requireBridgeSdk=true', '-Pot3a.bridgeLab=true',
+               '-Pandroid.injected.device.serial=emulator-5580',
                f'-Pandroid.testInstrumentationRunnerArguments.catalogLabPort={ports[0]}',
                f'-Pandroid.testInstrumentationRunnerArguments.realT3LabPort={ports[1]}', '--console=plain']
     subprocess.run(command, cwd=ROOT, env=env, check=True)
     if args.full_ui:
-        subprocess.run([str(ROOT/'gradlew'), ':app:connectedDebugAndroidTest', '-Pot3a.requireBridgeSdk=true', '-Pot3a.bridgeLab=true', '-Pandroid.testInstrumentationRunnerArguments.listener=dev.avillagran.ot3android.testing.FailureDiagnosticsListener', '-Pandroid.testInstrumentationRunnerArguments.additionalTestOutputDir=/sdcard/Android/media/dev.avillagran.ot3android/bridge-output', '--console=plain'], cwd=ROOT, env=env, check=True)
+        subprocess.run([str(ROOT/'gradlew'), ':app:connectedDebugAndroidTest', '-Pot3a.requireBridgeSdk=true', '-Pot3a.bridgeLab=true', '-Pandroid.injected.device.serial=emulator-5580', '-Pandroid.testInstrumentationRunnerArguments.listener=dev.avillagran.ot3android.testing.FailureDiagnosticsListener', '-Pandroid.testInstrumentationRunnerArguments.additionalTestOutputDir=/sdcard/Android/media/dev.avillagran.ot3android/bridge-output', '--console=plain'], cwd=ROOT, env=env, check=True)
     suites = [ET.parse(file).getroot() for file in (ROOT/'core/build/outputs/androidTest-results/connected/debug').glob('TEST-*.xml')]
     real = [case for suite in suites for case in suite.findall('testcase') if case.attrib.get('classname', '').endswith('BridgeT3EndToEndTest')]
     assert len(real) == 1 and not any(real[0].find(key) is not None for key in ('skipped','failure','error')), 'Unified real T3 test must run and pass, never skip'
-    print('Unified Android/JNI/QUIC/real T3 verification passed; no production or physical-device claim.')
+    print('Unified Android/JNI/two-bridge QUIC/real T3 verification passed; no production or physical-device claim.')
 finally:
     for port in ports:
         try: urllib.request.urlopen(f'http://127.0.0.1:{port}/stop', timeout=15).read()
