@@ -1,10 +1,14 @@
 package dev.avillagran.ot3android.ui.usage
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Easing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -12,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -29,6 +34,7 @@ import java.util.Currency
 @Composable
 fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit, onRefreshPrices: () -> Unit = {}, onTab: (String) -> Unit = {}) {
     val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val contentOpacity = rememberUsageTabOpacity(state.tab)
     var metric by rememberSaveable { mutableStateOf("cost") }
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.ot3_usage_title)) }, navigationIcon = {
@@ -51,48 +57,78 @@ fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (S
                 }
                 if (!landscape && state.tab == "usage") UsagePeriods(state.period, onPeriod)
             }
-            when {
-                state.busy -> item { Text(stringResource(R.string.ot3_usage_loading)) }
-                state.offline -> item { Text(stringResource(R.string.ot3_usage_offline)) }
-                state.failed -> item { Text(stringResource(R.string.ot3_usage_unavailable), color = Ot3Theme.colors.failed) }
-            }
-            if (state.tab == "limits") usageLimits(state.limits)
-            state.summary?.takeIf { state.tab == "usage" }?.let { summary ->
-                item { UsageTotals(summary, landscape) }
-                item {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(if (metric == "cost") R.string.ot3_usage_cost_day else R.string.ot3_usage_tokens_day), modifier = Modifier.weight(1f))
-                        listOf("cost" to R.string.ot3_usage_cost, "tokens" to R.string.ot3_usage_tokens).forEach { (id, label) ->
-                            FilterChip(selected = metric == id, onClick = { metric = id }, label = { Text(stringResource(label)) }, modifier = Modifier.testTag("usage_metric_$id"))
-                        }
-                    }
-                    UsageDays(summary, metric)
+            with(fadingUsageItems(contentOpacity)) {
+                when {
+                    state.busy -> item { Text(stringResource(R.string.ot3_usage_loading)) }
+                    state.offline -> item { Text(stringResource(R.string.ot3_usage_offline)) }
+                    state.failed -> item { Text(stringResource(R.string.ot3_usage_unavailable), color = Ot3Theme.colors.failed) }
                 }
-                item { Text(stringResource(R.string.ot3_usage_models), style = MaterialTheme.typography.titleMedium) }
-                val models = summary.optJSONArray("models").objects()
-                val modelPeak = models.maxOfOrNull { it.optDouble(metric, 0.0) } ?: 0.0
-                models.forEachIndexed { index, model ->
-                    item("model_$index") {
-                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text(model.optString("model"), style = MaterialTheme.typography.bodyMedium)
-                                Text(model.optString("provider"), color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall)
-                                val fraction = if (modelPeak > 0) (model.optDouble(metric, 0.0) / modelPeak).toFloat() else 0f
-                                Box(Modifier.fillMaxWidth(fraction).height(6.dp).background(Ot3Theme.colors.accent.copy(alpha = .6f), RoundedCornerShape(3.dp)))
+                if (state.tab == "limits") usageLimits(state.limits)
+                state.summary?.takeIf { state.tab == "usage" }?.let { summary ->
+                    item { UsageTotals(summary, landscape) }
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(stringResource(if (metric == "cost") R.string.ot3_usage_cost_day else R.string.ot3_usage_tokens_day), modifier = Modifier.weight(1f))
+                            listOf("cost" to R.string.ot3_usage_cost, "tokens" to R.string.ot3_usage_tokens).forEach { (id, label) ->
+                                FilterChip(selected = metric == id, onClick = { metric = id }, label = { Text(stringResource(label)) }, modifier = Modifier.testTag("usage_metric_$id"))
                             }
-                            Text(usageNumber(model.optDouble(metric), metric == "cost"))
+                        }
+                        UsageDays(summary, metric)
+                    }
+                    item { Text(stringResource(R.string.ot3_usage_models), style = MaterialTheme.typography.titleMedium) }
+                    val models = summary.optJSONArray("models").objects()
+                    val modelPeak = models.maxOfOrNull { it.optDouble(metric, 0.0) } ?: 0.0
+                    models.forEachIndexed { index, model ->
+                        item("model_$index") {
+                            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(model.optString("model"), style = MaterialTheme.typography.bodyMedium)
+                                    Text(model.optString("provider"), color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall)
+                                    val fraction = if (modelPeak > 0) (model.optDouble(metric, 0.0) / modelPeak).toFloat() else 0f
+                                    Box(Modifier.fillMaxWidth(fraction).height(6.dp).background(Ot3Theme.colors.accent.copy(alpha = .6f), RoundedCornerShape(3.dp)))
+                                }
+                                Text(usageNumber(model.optDouble(metric), metric == "cost"))
+                            }
                         }
                     }
-                }
-                if (summary.optLong("unpricedRecords") > 0 || summary.optString("pricing") != "fresh") item {
-                    TextButton(onClick = onRefreshPrices, enabled = !state.busy && !state.offline, modifier = Modifier.testTag("usage_refresh_prices")) {
-                        Text(stringResource(R.string.ot3_usage_refresh_prices))
+                    if (summary.optLong("unpricedRecords") > 0 || summary.optString("pricing") != "fresh") item {
+                        TextButton(onClick = onRefreshPrices, enabled = !state.busy && !state.offline, modifier = Modifier.testTag("usage_refresh_prices")) {
+                            Text(stringResource(R.string.ot3_usage_refresh_prices))
+                        }
+                    }
+                    if (summary.optLong("unpricedRecords") > 0) item { Text(stringResource(R.string.ot3_usage_unpriced, summary.optLong("unpricedRecords").toString())) }
+                    if (summary.optString("pricing") == "unavailable") item { Text(stringResource(R.string.ot3_usage_prices_unavailable), color = Ot3Theme.colors.dim) }
+                    summary.optJSONArray("sources").objects().forEachIndexed { index, source ->
+                        item("source_$index") { Text(listOf(source.optString("provider"), source.optString("status"), source.optString("message")).filter { it.isNotBlank() && it != "null" }.joinToString(" · "), style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim) }
                     }
                 }
-                if (summary.optLong("unpricedRecords") > 0) item { Text(stringResource(R.string.ot3_usage_unpriced, summary.optLong("unpricedRecords").toString())) }
-                if (summary.optString("pricing") == "unavailable") item { Text(stringResource(R.string.ot3_usage_prices_unavailable), color = Ot3Theme.colors.dim) }
-                summary.optJSONArray("sources").objects().forEachIndexed { index, source ->
-                    item("source_$index") { Text(listOf(source.optString("provider"), source.optString("status"), source.optString("message")).filter { it.isNotBlank() && it != "null" }.joinToString(" · "), style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim) }
+            }
+        }
+    }
+}
+
+/** One entering body, as T3 Mobile UsageRouteScreen:261-264; never an outgoing copy. */
+@Composable
+internal fun rememberUsageTabOpacity(tab: String): State<Float> {
+    val motion = Ot3Theme.motion
+    val opacity = remember { Animatable(1f) }
+    LaunchedEffect(tab, motion.animates) {
+        if (motion.animates) {
+            opacity.snapTo(0f)
+            opacity.animateTo(1f, motion.tween(160, Easing { t -> if (t < .5f) 2f * t * t else 1f - 2f * (1f - t) * (1f - t) }))
+        } else opacity.snapTo(1f)
+    }
+    return opacity.asState()
+}
+
+/** Preserve the one LazyColumn and its scroll state while fading every body row together. */
+private fun LazyListScope.fadingUsageItems(opacity: State<Float>): LazyListScope {
+    val target = this
+    return object : LazyListScope by target {
+        override fun item(key: Any?, contentType: Any?, content: @Composable LazyItemScope.() -> Unit) {
+            target.item(key, contentType) {
+                Column(Modifier.graphicsLayer { alpha = opacity.value }) {
+                    content(this@item)
                 }
             }
         }
