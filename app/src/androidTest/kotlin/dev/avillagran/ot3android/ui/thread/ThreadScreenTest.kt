@@ -26,6 +26,7 @@ import dev.avillagran.ot3android.core.thread.ThreadView
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -80,6 +81,13 @@ class ThreadScreenTest {
         composeRule.onNodeWithTag(ThreadScreenTags.streaming("m2"), useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithTag(ThreadScreenTags.message("m2"))
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Typing"))
+        composeRule.onNodeWithTag("thread_copy_message_m2").assertDoesNotExist()
+        val bubble = composeRule.onNodeWithTag("thread_bubble_m1").fetchSemanticsNode().boundsInRoot
+        val lane = composeRule.onNodeWithTag(ThreadScreenTags.message("m1")).fetchSemanticsNode().boundsInRoot
+        val copy = composeRule.onNodeWithTag("thread_copy_message_m1").fetchSemanticsNode().boundsInRoot
+        assertTrue(bubble.width <= lane.width * .8f + 1)
+        assertEquals(lane.right, bubble.right, 1f)
+        assertTrue(copy.top >= bubble.bottom)
         composeRule.onNodeWithTag(ThreadScreenTags.WORKING, useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithTag(ThreadScreenTags.INTERRUPT).assertIsEnabled()
         composeRule.onNodeWithTag(ThreadScreenTags.request("q1")).assertIsDisplayed()

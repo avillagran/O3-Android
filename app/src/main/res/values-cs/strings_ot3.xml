@@ -152,4 +152,9 @@
     <string name="ot3_permission_full_access_detail">Povolit příkazy a úpravy bez potvrzení.</string>
     <string name="ot3_copy_table_markdown">Kopírovat jako Markdown</string>
     <string name="ot3_copy_table_csv">Kopírovat jako CSV</string>
+    <string name="ot3_reader_you">Vy</string>
+    <string name="ot3_reader_copy">Kopírovat</string>
+    <string name="ot3_reader_automation">Odesláno automatizací</string>
+    <string name="ot3_reader_t3code">Odesláno z T3 Code</string>
+    <string name="ot3_reader_agent">Odesláno jiným agentem</string>
 </resources>

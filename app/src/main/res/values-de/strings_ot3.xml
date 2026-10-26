@@ -152,4 +152,9 @@
     <string name="ot3_permission_full_access_detail">Befehle und Änderungen ohne Rückfrage erlauben.</string>
     <string name="ot3_copy_table_markdown">Als Markdown kopieren</string>
     <string name="ot3_copy_table_csv">Als CSV kopieren</string>
+    <string name="ot3_reader_you">Du</string>
+    <string name="ot3_reader_copy">Kopieren</string>
+    <string name="ot3_reader_automation">Von einer Automatisierung gesendet</string>
+    <string name="ot3_reader_t3code">Von T3 Code gesendet</string>
+    <string name="ot3_reader_agent">Von einem anderen Agenten gesendet</string>
 </resources>

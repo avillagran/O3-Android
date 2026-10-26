@@ -152,4 +152,9 @@
     <string name="ot3_permission_full_access_detail">Разрешать команды и правки без подтверждений.</string>
     <string name="ot3_copy_table_markdown">Копировать как Markdown</string>
     <string name="ot3_copy_table_csv">Копировать как CSV</string>
+    <string name="ot3_reader_you">Вы</string>
+    <string name="ot3_reader_copy">Копировать</string>
+    <string name="ot3_reader_automation">Отправлено автоматизацией</string>
+    <string name="ot3_reader_t3code">Отправлено T3 Code</string>
+    <string name="ot3_reader_agent">Отправлено другим агентом</string>
 </resources>

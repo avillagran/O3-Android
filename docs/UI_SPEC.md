@@ -1048,6 +1048,7 @@ says which one it is using.
   from automations fold into a 36 dp line "Sent by automation" / "Sent by T3 Code" /
   "Sent by another agent" (`:1673-1723`). Attachments: 220 × 160 thumbnails, radius 8
   (`ot3:ui/qml/T3MessageImage.qml:18-42`), file chips (`ot3:ui/qml/T3Panel.qml:1837-1857`).
+- **Message lane increment (2026-10-26):** own prompts use content-sized bubbles with external date/copy; assistant headers are removed and actions hidden during streaming. See `docs/ui/compare/reader-message-layout/README.md` for evidence and remaining gaps.
 - **Assistant message:** no bubble, full lane width, selectable Markdown. Only the last
   reply of a run carries copy, fork and time; earlier replies ("commentary") have an
   8 dp gap and no actions; actions hide while streaming (`ot3:ui/qml/T3Panel.qml:1657-1665,1894`).

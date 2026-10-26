@@ -1086,3 +1086,27 @@ logic is introduced to bridge versions.
   reproduce that domain fallback: it shows no unadvertised choices until Rust exposes it.
 - This limits providers which omit the array; advertised-provider changes remain usable.
   It does not block composer/requests or awareness runtime work.
+
+### U18 integration follow-up — historical presentation merge (2026-10-26)
+
+Rechecked v0.3.5 and ot3 `T3Backend.qml:340-344,1733-1743`: `history.path` and
+`history.envelope` normalize a page, but there is no common merge of older and recent
+presentation rows. ot3 currently implements that rule in QML (new page replaces matching
+older ids; recent rows always win; page cursor advances independently of stream cursor).
+Android must not overwrite the live projection/control state with the historical envelope.
+In addition to authenticated `historyPage`, request
+`history.mergeView {older, recent, page?}` → `{older, timeline}` (or equivalent native
+stateful helper) with deterministic duplicate precedence and row order. Android owns
+request cancellation by connection generation, busy/error presentation and reading anchor;
+Rust owns row merge semantics. Cover overlapping pages, newer streamed revisions, stale
+page completion, cursor exhaustion and reconnect snapshots. No Kotlin merge added.
+
+### Reader action eligibility (2026-10-26)
+
+`T3Panel.qml:1657-1664` scans following rows until the next user prompt to identify
+commentary versus the terminal assistant response. `timeline.view` currently gives
+`streaming`, `forkRunId` and `canRewindMessage`, but no terminal-response/action visibility
+flag. Request `timeline` row `commentary` or `showMessageActions`, derived in Rust with
+T3's terminal-assistant semantics. Android can then hide intermediate copy/time/actions
+and use the 8 dp commentary gap without repeating that scan. Streaming action hiding and
+message layout are presentation-only and already implemented independently.

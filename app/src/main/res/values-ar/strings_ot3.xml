@@ -153,4 +153,9 @@
     <string name="ot3_permission_full_access_detail">السماح بالأوامر والتعديلات دون تأكيد.</string>
     <string name="ot3_copy_table_markdown">انسخ بصيغة Markdown</string>
     <string name="ot3_copy_table_csv">انسخ بصيغة CSV</string>
+    <string name="ot3_reader_you">أنت</string>
+    <string name="ot3_reader_copy">نسخ</string>
+    <string name="ot3_reader_automation">أرسلته أتمتة</string>
+    <string name="ot3_reader_t3code">أرسله T3 Code</string>
+    <string name="ot3_reader_agent">أرسله وكيل آخر</string>
 </resources>
