@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Wysłane przez automatyzację</string>
     <string name="ot3_reader_t3code">Wysłane przez T3 Code</string>
     <string name="ot3_reader_agent">Wysłane przez innego agenta</string>
+    <string name="ot3_open_diff">Pokaż różnice</string>
+    <string name="ot3_diff">Różnice</string>
+    <string name="ot3_loading_diff">Wczytywanie różnic…</string>
+    <string name="ot3_diff_show_whitespace">Pokaż zmiany białych znaków</string>
+    <string name="ot3_diff_missing">Poprawka dla tego pliku jest niedostępna.</string>
+    <string name="ot3_diff_binary">Plik binarny — tylko metadane</string>
+    <string name="ot3_diff_empty">Brak zmian</string>
 </resources>

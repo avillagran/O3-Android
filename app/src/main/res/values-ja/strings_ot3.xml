@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">自動化から送信</string>
     <string name="ot3_reader_t3code">T3 Code から送信</string>
     <string name="ot3_reader_agent">別のエージェントから送信</string>
+    <string name="ot3_open_diff">差分を表示</string>
+    <string name="ot3_diff">差分</string>
+    <string name="ot3_loading_diff">差分を読み込み中…</string>
+    <string name="ot3_diff_show_whitespace">空白文字の変更を表示</string>
+    <string name="ot3_diff_missing">このファイルのパッチは利用できません。</string>
+    <string name="ot3_diff_binary">バイナリファイル — メタデータのみ</string>
+    <string name="ot3_diff_empty">変更なし</string>
 </resources>

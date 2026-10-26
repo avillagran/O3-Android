@@ -113,6 +113,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onBack = onBack,
         modifier = modifier,
         onInspect = viewModel::inspect,
+        onReadDiff = viewModel::readDiff,
         onQueueCommand = viewModel::queueCommand,
         onEditQueued = viewModel::editQueued,
         onCancelQueueEdit = viewModel::cancelQueueEdit,
@@ -141,6 +142,7 @@ fun ThreadContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onInspect: suspend (org.json.JSONObject) -> org.json.JSONObject? = { null },
+    onReadDiff: suspend (org.json.JSONObject, Boolean) -> org.json.JSONObject? = { _, _ -> null },
     onQueueCommand: (org.json.JSONObject) -> Unit = {},
     onEditQueued: (org.json.JSONObject) -> Unit = {},
     onCancelQueueEdit: () -> Unit = {},
@@ -276,7 +278,7 @@ fun ThreadContent(
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY),
                     )
-                    else -> TimelineReader(state.view.timeline, state.view.messages, onInspect)
+                    else -> TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff)
                 }
             }
         }

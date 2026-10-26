@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Bir otomasyon gönderdi</string>
     <string name="ot3_reader_t3code">T3 Code gönderdi</string>
     <string name="ot3_reader_agent">Başka bir ajan gönderdi</string>
+    <string name="ot3_open_diff">Farkları göster</string>
+    <string name="ot3_diff">Farklar</string>
+    <string name="ot3_loading_diff">Farklar yükleniyor…</string>
+    <string name="ot3_diff_show_whitespace">Boşluk değişikliklerini göster</string>
+    <string name="ot3_diff_missing">Bu dosyanın yaması kullanılamıyor.</string>
+    <string name="ot3_diff_binary">İkili dosya — yalnızca üst veriler</string>
+    <string name="ot3_diff_empty">Değişiklik yok</string>
 </resources>

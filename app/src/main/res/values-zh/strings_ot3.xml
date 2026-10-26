@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">由自动化发送</string>
     <string name="ot3_reader_t3code">由 T3 Code 发送</string>
     <string name="ot3_reader_agent">由另一个智能体发送</string>
+    <string name="ot3_open_diff">查看差异</string>
+    <string name="ot3_diff">差异</string>
+    <string name="ot3_loading_diff">正在加载差异…</string>
+    <string name="ot3_diff_show_whitespace">显示空白字符更改</string>
+    <string name="ot3_diff_missing">此文件的补丁不可用。</string>
+    <string name="ot3_diff_binary">二进制文件 — 仅元数据</string>
+    <string name="ot3_diff_empty">无更改</string>
 </resources>

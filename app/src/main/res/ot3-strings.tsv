@@ -187,3 +187,10 @@ ot3_reader_copy	Copy
 ot3_reader_automation	Sent by automation
 ot3_reader_t3code	Sent by T3 Code
 ot3_reader_agent	Sent by another agent
+ot3_open_diff	Open diff
+ot3_diff	Diff
+ot3_loading_diff	Loading diff…
+ot3_diff_show_whitespace	Show whitespace changes
+ot3_diff_missing	Patch unavailable for this file.
+ot3_diff_binary	Binary file — metadata only
+ot3_diff_empty	No changes

@@ -2281,3 +2281,7 @@ Settings now persists approval/input/plan/completion/failure preferences and sen
 ## 2026-10-26 — Omarchy palette selection and refresh
 
 Selecting a bundled Omarchy palette in Appearance now immediately chooses its dark/light mode and disables desktop follow; turning follow back on explicitly restores the environment theme. Previews consume the existing native theme.tokens colors. A refresh button is available, and foreground polling reads colors.toml as well as theme.name so same-name custom edits are detected. Background polling remains disabled; desktop files are read-only. Spanish labels are included. Evidence and live-verification boundaries: docs/ui/compare/omarchy-themes/README.md.
+
+### Reader diff increment — 2026-10-26
+
+Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. Split/file tree/hunk folding/preview remain pending.

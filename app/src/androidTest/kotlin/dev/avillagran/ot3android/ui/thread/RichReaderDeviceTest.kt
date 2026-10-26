@@ -59,7 +59,18 @@ class RichReaderDeviceTest {
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
             rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
             rule.onNodeWithText("ui/TimelineReader.kt", substring = true).assertExists()
+            rule.onNodeWithTag("thread_diff_changes/cp-reader").performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithText("+MarkdownBlocks(nativeBlocks)").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithText("-Text(markdown)").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_whitespace").performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithText("+MarkdownBlocks(nativeBlocks)").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("thread_diff_close").performClick()
+            rule.onNodeWithText("ui/TimelineReader.kt", substring = true).assertExists()
             scenario.onActivity { activity ->
+                val diffs = activity.fixture.transport.calls.filter { it.fn == "orchestration.getTurnDiff" }
+                assertEquals(2, diffs.size)
+                assertTrue(diffs.first().args.getBoolean("ignoreWhitespace"))
+                assertFalse(diffs.last().args.getBoolean("ignoreWhitespace"))
                 val reads = activity.fixture.transport.calls.filter { it.fn == "orchestration.getTurnItem" }
                 assertEquals(2, reads.size)
                 assertTrue("Reading tools must never dispatch a message", activity.fixture.transport.calls.none { it.fn == "orchestration.dispatchCommand" })
