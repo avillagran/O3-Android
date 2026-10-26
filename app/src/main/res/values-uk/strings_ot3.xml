@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">Наступний файл</string>
     <string name="ot3_diff_wrap">Переносити рядки</string>
     <string name="ot3_diff_no_wrap">Без перенесення рядків</string>
+    <string name="ot3_copy_image">Копіювати зображення</string>
     <string name="ot3_pr_title">Пул-реквести</string>
     <string name="ot3_pr_refresh">Оновити</string>
     <string name="ot3_pr_all_projects">Усі проєкти</string>

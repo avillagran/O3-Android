@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">Nächste Datei</string>
     <string name="ot3_diff_wrap">Zeilenumbruch</string>
     <string name="ot3_diff_no_wrap">Kein Zeilenumbruch</string>
+    <string name="ot3_copy_image">Bild kopieren</string>
     <string name="ot3_pr_title">Pull Requests</string>
     <string name="ot3_pr_refresh">Aktualisieren</string>
     <string name="ot3_pr_all_projects">Alle Projekte</string>

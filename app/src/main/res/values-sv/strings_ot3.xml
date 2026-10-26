@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">Nästa fil</string>
     <string name="ot3_diff_wrap">Radbrytning</string>
     <string name="ot3_diff_no_wrap">Ingen radbrytning</string>
+    <string name="ot3_copy_image">Kopiera bild</string>
     <string name="ot3_pr_title">Pull requests</string>
     <string name="ot3_pr_refresh">Uppdatera</string>
     <string name="ot3_pr_all_projects">Alla projekt</string>

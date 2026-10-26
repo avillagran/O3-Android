@@ -1076,3 +1076,22 @@ platform decoding with bounded dimensions. Keep the image dialog at reader scope
 so virtualization cannot dismiss it during rotation. Native calls have no per-read
 cancel handle; UI cancellation discards late results while Rust retains its deadline.
 Markdown media-file references are not attachment IDs and await U30 JNI exposure.
+
+### 2026-10-26 — Explicit Android image clipboard offers
+
+Use the same native binary attachment read as previews, under the shared two-job
+semaphore, when the user presses Copy image. Offer the original bytes and validated
+MIME through a read-only Content URI, never the sampled preview bitmap. Android
+receivers resolve a ContentProvider URI; desktop's wl-copy PNG normalization is not
+needed for this platform contract. No Kotlin asset URL, HTTP client or protocol parser.
+
+Expose only `cacheDir/clipboard-images/` through a non-exported, grant-enabled
+FileProvider, using UUID filenames and a fixed MIME/extension mapping. Keep at most
+eight 10 MiB files; remove files aged at least 24 hours on startup/next copy,
+revoking URI grants before deletion. This is opportunistic cleanup, with no expiry
+timer; Android may also reclaim cache. Existing explicit clipboard offers remain
+usable across disconnect until cleanup/reclamation; no durable gallery is implied.
+Unpublished files are deleted on failure/cancellation. Recheck the live connection
+immediately before publishing and cancel UI work on lifecycle/generation changes.
+Use the existing kit CopyButton's busy/check/error feedback and 1.8-second reset;
+show its 48 dp touch action on thumbnails and viewer rather than requiring hover.

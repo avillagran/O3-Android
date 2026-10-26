@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">Следующий файл</string>
     <string name="ot3_diff_wrap">Переносить строки</string>
     <string name="ot3_diff_no_wrap">Без переноса строк</string>
+    <string name="ot3_copy_image">Копировать изображение</string>
     <string name="ot3_pr_title">Пул-реквесты</string>
     <string name="ot3_pr_refresh">Обновить</string>
     <string name="ot3_pr_all_projects">Все проекты</string>

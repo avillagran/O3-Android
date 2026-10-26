@@ -190,6 +190,7 @@
     <string name="ot3_diff_next_file">الملف التالي</string>
     <string name="ot3_diff_wrap">التفاف الأسطر</string>
     <string name="ot3_diff_no_wrap">دون التفاف الأسطر</string>
+    <string name="ot3_copy_image">نسخ الصورة</string>
     <string name="ot3_pr_title">طلبات السحب</string>
     <string name="ot3_pr_refresh">تحديث</string>
     <string name="ot3_pr_all_projects">كل المشاريع</string>

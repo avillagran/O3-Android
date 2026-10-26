@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">Další soubor</string>
     <string name="ot3_diff_wrap">Zalamovat řádky</string>
     <string name="ot3_diff_no_wrap">Nezalamovat řádky</string>
+    <string name="ot3_copy_image">Kopírovat obrázek</string>
     <string name="ot3_pr_title">Pull requesty</string>
     <string name="ot3_pr_refresh">Obnovit</string>
     <string name="ot3_pr_all_projects">Všechny projekty</string>

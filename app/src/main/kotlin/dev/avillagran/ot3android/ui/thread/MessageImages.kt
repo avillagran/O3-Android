@@ -3,6 +3,12 @@ package dev.avillagran.ot3android.ui.thread
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
+import dev.avillagran.ot3android.ui.kit.CopyButton
+import dev.avillagran.ot3android.ui.kit.CopyState
+import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -14,6 +20,9 @@ import dev.avillagran.ot3android.R
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -25,7 +34,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.json.JSONObject
 
-internal data class ReaderImages(val generation: Any?, val read: suspend (JSONObject) -> ByteArray?)
+internal data class ReaderImages(val generation: Any?, val isCurrent: () -> Boolean = { true }, val read: suspend (JSONObject) -> ByteArray?)
 private val imageReads = Semaphore(2)
 internal val LocalReaderImages = compositionLocalOf { ReaderImages(null) { null } }
 
@@ -65,8 +74,14 @@ private fun AttachmentImage(attachment: JSONObject) {
     val lifecycle by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
     if (!lifecycle.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return
     key(attachment.toString(), source.generation) {
-        ImageRead(attachment, attachment.toString(), source, 640,
-            Modifier.size(220.dp, 160.dp).clickable(onClickLabel = attachment.optString("name")) { open(attachment) })
+        Box(Modifier.size(220.dp, 160.dp)) {
+            ImageRead(attachment, attachment.toString(), source, 640,
+                Modifier.size(220.dp, 160.dp).clickable(onClickLabel = attachment.optString("name")) { open(attachment) })
+            Box(Modifier.align(Alignment.TopEnd)) {
+                ImageCopyButton(attachment, source, "thumbnail", Modifier
+                    .background(Ot3Theme.colors.surface.copy(alpha = 0.95f), RoundedCornerShape(6.dp)))
+            }
+        }
     }
 }
 
@@ -80,7 +95,8 @@ internal fun ReaderImageDialog(attachment: JSONObject, close: () -> Unit) {
             Surface(Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)) {
                     Row {
-                        Text(attachment.optString("name"), Modifier.weight(1f))
+                        Text(attachment.optString("name"), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        ImageCopyButton(attachment, source, "viewer")
                         TextButton(onClick = close, modifier = Modifier.testTag("thread_image_close")) {
                             Text(stringResource(R.string.ot3_dialog_close))
                         }
@@ -115,4 +131,34 @@ private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderIm
             else TextButton(onClick = { retry++ }) { Text(stringResource(R.string.ot3_dialog_retry)) }
         }
     }
+}
+
+/** Always visible on touch surfaces; a lifecycle/generation change disposes and cancels this action. */
+@Composable
+private fun ImageCopyButton(attachment: JSONObject, source: ReaderImages, location: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val latest by rememberUpdatedState(source)
+    var state by remember { mutableStateOf(CopyState.IDLE) }
+    val label = stringResource(R.string.ot3_copy_image)
+    LaunchedEffect(state) {
+        if (state.resets) { delay(CopyState.RESET_MS); state = CopyState.IDLE }
+    }
+    CopyButton(state = state, enabled = source.generation != null, label = label,
+        modifier = modifier.testTag("thread_image_copy_$location"),
+        onClick = {
+            state = CopyState.BUSY
+            scope.launch {
+                try {
+                    imageReads.withPermit {
+                        val bytes = requireNotNull(source.read(attachment))
+                        ImageClipboard.copy(context, bytes, attachment.getString("mimeType"), label) {
+                            latest.generation == source.generation && source.isCurrent()
+                        }
+                    }
+                    state = CopyState.COPIED
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { state = CopyState.ERROR }
+            }
+        })
 }

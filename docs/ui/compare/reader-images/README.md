@@ -19,8 +19,8 @@ VM, Rust timeline projection, Compose timeline and platform decoder. It is not a
 NODE/VQ asset grant, physical Xiaomi acceptance, or remote image compatibility test.
 Goldens in `ReaderScreenshotTest/image-preview.*.png` cover Tokyo Night and Latte.
 
-Remaining reference differences: Markdown images (U30 binding gap), image clipboard,
-zoom/pan, file/video previews and full live signed-grant/revocation acceptance. The
+Image clipboard was subsequently delivered in [reader-image-copy](../reader-image-copy/README.md).
+Remaining reference differences: Markdown images (U30 binding gap), zoom/pan, file/video previews and full live signed-grant/revocation acceptance. The
 viewer is aspect-fit enlargement with Close; no claim of zoom or original-resolution
 rendering. Animated image formats show their platform-decoded first frame.
 

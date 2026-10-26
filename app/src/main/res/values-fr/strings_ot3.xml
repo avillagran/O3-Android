@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">Fichier suivant</string>
     <string name="ot3_diff_wrap">Retour à la ligne</string>
     <string name="ot3_diff_no_wrap">Sans retour à la ligne</string>
+    <string name="ot3_copy_image">Copier l’image</string>
     <string name="ot3_pr_title">Pull requests</string>
     <string name="ot3_pr_refresh">Actualiser</string>
     <string name="ot3_pr_all_projects">Tous les projets</string>

@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">次のファイル</string>
     <string name="ot3_diff_wrap">折り返す</string>
     <string name="ot3_diff_no_wrap">折り返さない</string>
+    <string name="ot3_copy_image">画像をコピー</string>
     <string name="ot3_pr_title">プルリクエスト</string>
     <string name="ot3_pr_refresh">更新</string>
     <string name="ot3_pr_all_projects">すべてのプロジェクト</string>
