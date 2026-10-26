@@ -9,6 +9,14 @@ import org.junit.Test
 
 /** JNI stays in the normal JVM classloader; UI tests read its verified output. */
 class ReaderContractTest {
+    @Test fun committedTableMatchesPinnedRust() = runBlocking {
+        assumeHostJni()
+        val markdown = checkNotNull(javaClass.getResource("/timeline/table.md")).readText()
+        val expected = org.json.JSONArray(checkNotNull(javaClass.getResource("/timeline/table.blocks.json")).readText())
+        val actual = DomainEngine.shared.domain("markdown.blocks", JSONObject().put("markdown", markdown))
+        assertEquals(canonical(expected), canonical(actual))
+    }
+
     @Test fun committedReaderViewsMatchPinnedRust() = runBlocking {
         assumeHostJni()
         for (name in listOf("reader", "golden")) {

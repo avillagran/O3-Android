@@ -25,6 +25,20 @@ class RichReaderDeviceTest {
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("thread_code_3").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_copy_table_csv_5"))
+            rule.onNodeWithTag("thread_copy_table_csv_5").performClick()
+            scenario.onActivity {
+                val clipboard = it.getSystemService(ClipboardManager::class.java)
+                val copied = clipboard.primaryClip!!.getItemAt(0).text.toString()
+                assertTrue(copied.startsWith("Host,Branch,State,Runs"))
+                assertTrue(copied.contains("\"Ready, awaiting review\""))
+            }
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_table_5"))
+            val table = rule.onNodeWithTag("thread_table_5")
+            assertTrue(table.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].maxValue() > 0)
+            table.performTouchInput { swipeLeft() }
+            rule.waitForIdle()
+            assertTrue(table.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0)
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_copy_code_3"))
             rule.onNodeWithTag("thread_copy_code_3").performClick()
             scenario.onActivity {

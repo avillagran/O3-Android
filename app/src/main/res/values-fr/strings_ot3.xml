@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Les fournisseurs compatibles approuvent les actions courantes ; les autres demandent.</string>
     <string name="ot3_permission_full_access">Accès complet</string>
     <string name="ot3_permission_full_access_detail">Autoriser les commandes et modifications sans confirmation.</string>
+    <string name="ot3_copy_table_markdown">Copier en Markdown</string>
+    <string name="ot3_copy_table_csv">Copier en CSV</string>
 </resources>

@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">支持的提供商批准常规操作，其他提供商仍会询问。</string>
     <string name="ot3_permission_full_access">完全访问</string>
     <string name="ot3_permission_full_access_detail">允许执行命令和编辑，无需确认。</string>
+    <string name="ot3_copy_table_markdown">复制为 Markdown</string>
+    <string name="ot3_copy_table_csv">复制为 CSV</string>
 </resources>

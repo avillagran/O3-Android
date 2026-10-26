@@ -148,6 +148,12 @@ println(thread.title)
 ```
 
 The checks completed; review the activity and changed files above.
+
+| Host | Branch | State | Runs |
+| :--- | :---: | :--- | ---: |
+| NODE | `feat/reader` | **Working** | 12 |
+| VQ | main | Ready, awaiting review | 3 |
+| Omarchy | [source](https://example.com) | A longer cell wraps without hiding the next row | 108 |
 """ else "Mensaje $i: posición de lectura conservada al girar y contraer el panel.")
             .put("createdAt", "2026-10-25T10:${i.toString().padStart(2, '0')}:00Z").put("attachments", JSONArray())) }
         return JSONObject().put("snapshotSequence", 1).put("projection", JSONObject()

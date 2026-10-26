@@ -149,4 +149,6 @@
     <string name="ot3_permission_auto_detail">Supported providers approve routine actions; others still ask.</string>
     <string name="ot3_permission_full_access">Full access</string>
     <string name="ot3_permission_full_access_detail">Allow commands and edits without prompts.</string>
+    <string name="ot3_copy_table_markdown">Copy as Markdown</string>
+    <string name="ot3_copy_table_csv">Copy as CSV</string>
 </resources>

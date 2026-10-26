@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Understøttede udbydere godkender rutinehandlinger; andre spørger.</string>
     <string name="ot3_permission_full_access">Fuld adgang</string>
     <string name="ot3_permission_full_access_detail">Tillad kommandoer og ændringer uden bekræftelse.</string>
+    <string name="ot3_copy_table_markdown">Kopiér som Markdown</string>
+    <string name="ot3_copy_table_csv">Kopiér som CSV</string>
 </resources>

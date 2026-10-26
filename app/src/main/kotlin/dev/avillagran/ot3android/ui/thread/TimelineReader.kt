@@ -206,7 +206,7 @@ internal fun MarkdownBlocks(blocks: JSONArray?) {
                 }
                 "quote" -> Row { Text("│ ", color = Ot3Theme.colors.dim); Box(Modifier.weight(1f)) { MarkdownBlocks(block.optJSONArray("blocks")) } }
                 "rule" -> HorizontalDivider()
-                "table" -> SelectionContainer { Text(block.optString("markdown"), fontFamily = FiraCode, softWrap = false, modifier = Modifier.horizontalScroll(rememberScrollState())) }
+                "table" -> MarkdownTable(block, index)
                 "image" -> Text("Image · ${block.optString("alt")}", color = Ot3Theme.colors.dim)
                 "math" -> SelectionContainer { Text(block.optString("tex"), fontFamily = FiraCode) }
                 else -> SelectionContainer {
@@ -221,7 +221,7 @@ internal fun MarkdownBlocks(blocks: JSONArray?) {
     }
 }
 
-private fun inlineSpans(spans: JSONArray?): AnnotatedString = buildAnnotatedString {
+internal fun inlineSpans(spans: JSONArray?): AnnotatedString = buildAnnotatedString {
     spans.objects().forEach { span ->
         val style = SpanStyle(fontWeight = if (span.optBoolean("strong")) FontWeight.Bold else null,
             fontStyle = if (span.optBoolean("emphasis")) FontStyle.Italic else null,

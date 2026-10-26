@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">対応プロバイダーは通常の操作を承認し、その他は確認します。</string>
     <string name="ot3_permission_full_access">フルアクセス</string>
     <string name="ot3_permission_full_access_detail">確認なしでコマンドと編集を許可します。</string>
+    <string name="ot3_copy_table_markdown">Markdown としてコピー</string>
+    <string name="ot3_copy_table_csv">CSV としてコピー</string>
 </resources>

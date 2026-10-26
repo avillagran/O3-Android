@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Сумісні провайдери схвалюють звичайні дії; інші запитують.</string>
     <string name="ot3_permission_full_access">Повний доступ</string>
     <string name="ot3_permission_full_access_detail">Дозволити команди та зміни без підтверджень.</string>
+    <string name="ot3_copy_table_markdown">Копіювати як Markdown</string>
+    <string name="ot3_copy_table_csv">Копіювати як CSV</string>
 </resources>

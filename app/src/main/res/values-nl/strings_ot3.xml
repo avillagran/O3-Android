@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Ondersteunde providers keuren routineacties goed; andere vragen toestemming.</string>
     <string name="ot3_permission_full_access">Volledige toegang</string>
     <string name="ot3_permission_full_access_detail">Sta opdrachten en wijzigingen zonder bevestiging toe.</string>
+    <string name="ot3_copy_table_markdown">Kopiëren als Markdown</string>
+    <string name="ot3_copy_table_csv">Kopiëren als CSV</string>
 </resources>
