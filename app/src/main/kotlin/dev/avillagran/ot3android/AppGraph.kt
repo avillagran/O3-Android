@@ -80,9 +80,11 @@ class AppGraph(
         ConnectionManager(environmentRepository, shellCursors, transportFactory, appScope)
     }
 
-    val appearancePreferences: AppearancePreferences by lazy { AppearancePreferences(appContext) }
-
-    val themePreferences: ThemePreferences by lazy { ThemePreferences(appContext, appearancePreferences) }
+    /**
+     * The live-theme settings over the manual choice. `AppearancePreferences(context)` shares
+     * the process-wide `appearance` DataStore, so building it here costs no second store.
+     */
+    val themePreferences: ThemePreferences by lazy { ThemePreferences(appContext, AppearancePreferences(appContext)) }
 
     /**
      * The environment's live Omarchy theme (UI_SPEC 3.1.3), started on first use. Following an

@@ -527,8 +527,10 @@ Implements the entry above (UI_SPEC 3.1.3) as data in `core`, for the UI-1 theme
   `ThemePreferences` adds `followEnvironment` (default on) and `mainEnvironmentId` in their
   own DataStore (`live_theme`) and exposes them with the manual choice
   (`AppearancePreferences`: mode, dark and light theme ids, `material-you`) as one
-  `ThemeSettings` flow. On merge, `AppGraph` keeps one `AppearancePreferences` and passes it
-  to `ThemePreferences`.
+  `ThemeSettings` flow. `AppGraph` builds `ThemePreferences(context,
+  AppearancePreferences(context))` without a graph property of its own, so merging with UI-1's
+  `AppGraph.appearancePreferences` declares nothing twice; both instances use the one
+  `appearance` DataStore the context delegate holds per process.
 - **Settings → Appearance** (`ui/settings/AppearanceSettingsScreen.kt`, reached from the
   environments list until UI-1's Settings tab): the follow switch with "Theme · environment"
   or the reason, the main environment when more than one is saved, then Theme / Dark theme /
