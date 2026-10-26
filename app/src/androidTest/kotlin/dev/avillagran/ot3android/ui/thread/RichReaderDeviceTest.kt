@@ -31,7 +31,10 @@ class RichReaderDeviceTest {
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
             rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
-            rule.onNodeWithTag("thread_diff_changes/cp-reader").performClick()
+            // Expansion changes the lazy row's height; scroll the actual action into
+            // view before tapping, rather than a clipped semantics-only descendant.
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_diff_changes/cp-reader"))
+            rule.onNodeWithTag("thread_diff_changes/cp-reader").assertIsDisplayed().performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_diff_next").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("thread_diff_next").performClick()
             rule.onNodeWithTag("thread_diff_wrap").performClick()
@@ -93,7 +96,8 @@ class RichReaderDeviceTest {
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
             rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
             rule.onNodeWithText("ui/TimelineReader.kt", substring = true).assertExists()
-            rule.onNodeWithTag("thread_diff_changes/cp-reader").performClick()
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_diff_changes/cp-reader"))
+            rule.onNodeWithTag("thread_diff_changes/cp-reader").assertIsDisplayed().performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithText("+MarkdownBlocks(nativeBlocks)").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("-Text(markdown)").assertIsDisplayed()
             rule.onNodeWithTag("thread_diff_previous").assertIsNotEnabled()

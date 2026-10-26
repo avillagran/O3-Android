@@ -146,6 +146,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
     val quotas by lazy { dev.avillagran.ot3android.ui.usage.SharedQuotaSource(viewModelScope, connections::connectionFlow, refreshGate::refresh) }
     private var pricesFresh = request != "prices"
     val transport = FakeT3Transport().apply {
+        onImage = { _, _, _ -> application.assets.open("reader/preview.png").use { it.readBytes() } }
         onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
         onShell { fixtureShell() }
         listOf("list", "detail", "checks", "activity").forEach { action -> onCall("pullRequests.$action") { args ->
@@ -235,7 +236,7 @@ The checks completed; review the activity and changed files above.
 | VQ | main | Ready, awaiting review | 3 |
 | Omarchy | [source](https://example.com) | A longer cell wraps without hiding the next row | 108 |
 """ else "Mensaje $i: posición de lectura conservada al girar y contraer el panel.")
-            .put("createdAt", "2026-10-25T10:${i.toString().padStart(2, '0')}:00Z").put("attachments", JSONArray())) }
+            .put("createdAt", "2026-10-25T10:${i.toString().padStart(2, '0')}:00Z").put("attachments", if (rich && i == 58) JSONArray("""[{"id":"reader-shot","type":"image","name":"Vista previa del lector.png","mimeType":"image/png"}]""") else JSONArray())) }
         return JSONObject().put("snapshotSequence", 1).put("projection", JSONObject()
             .put("thread", JSONObject().put("id", "chat").put("title", "Navegación y metadatos")
                 .put("runtimeMode", "approval-required").put("modelSelection", JSONObject().put("instanceId", "fixture-provider").put("model", "fixture-model")))

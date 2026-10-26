@@ -51,6 +51,10 @@ interface T3Transport : DomainCalls, Closeable {
      */
     suspend fun call(fn: String, args: JSONObject = JSONObject(), timeoutMs: Int? = null): Any?
 
+    /** Validated, bounded attachment image bytes through Rust's signed asset grant. */
+    suspend fun image(id: String, name: String, mimeType: String): ByteArray =
+        throw UnsupportedOperationException("image")
+
     /**
      * The environment's shell (projects and thread rows) as one HTTP snapshot, with the
      * orchestration protocol header the lib adds. [shellStream] keeps it current.

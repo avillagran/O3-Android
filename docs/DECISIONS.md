@@ -1066,3 +1066,13 @@ Environment/project changes are atomic; reconnect cancels the previous generatio
 and clears its data/cursors. Server pages are appended verbatim until U31 supplies
 common merge/order semantics. Comments and review-thread bodies use the existing
 Markdown reader. PR patches and all mutations remain absent, visibly/documentedly.
+
+
+### 2026-10-26 — Native attachment image access and bounded rendering
+
+Read native attachment descriptors through T3Client.image rather than constructing
+asset URLs in Android. Kotlin owns only lifecycle, connection-generation guards and
+platform decoding with bounded dimensions. Keep the image dialog at reader scope
+so virtualization cannot dismiss it during rotation. Native calls have no per-read
+cancel handle; UI cancellation discards late results while Rust retains its deadline.
+Markdown media-file references are not attachment IDs and await U30 JNI exposure.

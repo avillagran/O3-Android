@@ -2374,3 +2374,15 @@ overflow/scroll/state tests cover this control. API 36.1 device tests and same-c
 Tokyo/Latte captures now cover the real chat route. The reader owns the dialog
 outside virtualized rows so rotation cannot dismiss it when Changes leaves the viewport.
 Evidence and remaining desktop differences: `docs/ui/compare/reader-diff/README.md`.
+
+
+### Attachment image reader increment — 2026-10-26
+
+Real user/assistant attachment rows now render bounded 220×160 previews and an
+aspect-fit full-screen viewer through Rust's binary image grant contract. Selection
+lives outside lazy rows, scoped to thread and connection, and survives rotation.
+Decode bounds are read first off the UI thread; preview/viewer edge caps are 640/2048 px
+and at most two image jobs run concurrently. Close/Retry use the shared catalog.
+Evidence: `ui/compare/reader-images/README.md` (Tokyo/Latte emulator, synthetic data;
+separate host-JNI signed-grant integration). Markdown media-file images require U30;
+zoom/pan, clipboard, video/file previews and production-grant acceptance remain open.

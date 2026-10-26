@@ -47,6 +47,7 @@ internal fun UserMessage(row: JSONObject) {
                     Text(row.optString("text"), modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium)
                 }
             }
+            MessageAttachments(row)
             if (!row.optBoolean("streaming")) {
                 Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     MessageDate(row.optLong("createdAt"))
