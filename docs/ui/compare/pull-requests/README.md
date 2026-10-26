@@ -10,7 +10,8 @@ Implemented: PR tab list, saved environment/project/state/involvement/search,
 row navigation with enterprise host, Overview Markdown, Checks, Conversation
 comments and review threads. Home badge opens the native-selected current reference.
 Overview shows native branch/stat fields and changed-file count. Filters and tab
-survive recreation; navigation entries retain first-page lazy-list scroll state. Connection
+survive recreation; loaded server pages, cursor and the visible row/pixel offset survive
+opening a detail and Back within this navigation entry. Connection
 generation changes cancel the previous read and clear its data/cursors. Selected
 project metadata can disappear without broadening the request to all projects;
 a deleted selected environment requires explicit replacement.
@@ -46,13 +47,30 @@ Goldens: `app/src/test/snapshots/PullRequestsScreenshotTest/`, Tokyo Night and L
 (list, Overview, Checks, Conversation, offline). Representative list/Overview/Conversation goldens were visually inspected; all ten
 passed image verification.
 
-Leaving the list clears its inactive read state so a cached enabled Load more cannot
-lose its action during re-subscription. The query debounce runs eagerly on edits,
-with the saved query available immediately on first/resumed collection. Back reloads
-the first page; pages loaded later are not retained, so their reading position is
-not preserved until paging again. Full paginated restoration remains pending.
+One in-memory cache belongs to the list's navigation-entry ViewModel and retains
+only its current request scope and exact connection owner (transport identity + epoch).
+On return, retained rows stay private until current scope/environment/connection are
+validated. No old payload is published during that check; the UI avoids composing an
+empty LazyColumn which would clamp the retained LazyListState. Same-owner Back and
+activity recreation reuse all loaded pages and the cursor without another list read.
 
-Final validation (2026-10-26):
+Connection loss/replacement, environment/project/filter/query changes and explicit
+Refresh invalidate pages/cursor and reset position. A missing or removed environment
+never falls back to another environment, including the initially defaulted selection.
+While hidden, the list owns no connection/project-flow subscription or transport lease;
+connection changes are checked on return before showing anything retained. A small
+eager flow debounces local search edits only; it opens no network stream. Editing the
+query cancels the old read immediately and clears its rows while the new request waits
+300 ms. Scope metadata changes alone do not re-read valid cached pages.
+
+More actions carry a session token through a conflated channel, covering publication
+before receiver registration. No-subscriber/canceled-session actions are ignored and
+cannot page a different scope or connection. Page append remains verbatim: this change
+does not add domain sort/dedup/precedence. Payloads and LazyListState never enter
+SavedStateHandle or a process bundle. Process death refetches from page one and resets
+the reading position; only small selected scope/filters/query remain restorable.
+
+Initial reader validation (2026-10-26):
 
 - Full app JVM: 235 tests, no failures or skips. Core JVM: 295 tests, no failures,
   five existing skips (290 executed). Actual JNI typed WebSocket fixture verifies
@@ -73,8 +91,39 @@ Final validation (2026-10-26):
 
 The first device attempt revealed a real Back→Load-more race: stateIn retained
 old enabled controls while a resubscribed query debounce delayed the paging collector.
-Read state now expires when inactive; saved query is immediately available and only
-edits debounce. A focused reentry regression covers this. Early loading-frame PNGs
+The return-state follow-up keeps observable state private while inactive but retains
+one validated-owner cache. A buffered session action and focused reentry regression
+cover this race; saved query is immediately available and only edits debounce. Early loading-frame PNGs
 were replaced after requiring busy absent/row displayed and waiting for presentation.
 Robolectric tests consume exported native views rather than loading JNI into multiple
 classloaders; the normal-JVM contract test verifies those views against the pinned AAR.
+
+## Return-state follow-up (2026-10-26)
+
+Matches ot3 `T3PullRequests.qml:41-48,74-95`: opening a selected PR hides the narrow
+list without replacing its entries or ListView content position. Android keeps that
+presentation state at navigation-entry lifetime, while validating connection ownership.
+
+- Full app JVM: 243/243 passed. Eight focused VM tests cover page-two reuse, no
+  subscribers/transport collection while hidden, publication-before-receiver More,
+  private validation delay, changed epoch, replaced transport at the same epoch,
+  offline→reconnect while hidden, offscreen refresh/filter/query invalidation and no
+  deleted-environment fallback. Native page order/cursors remain unchanged.
+- Ten original PR Tokyo/Latte goldens verify unchanged; lintDebug, debug APK and
+  instrumented APK assemble passed. No shared-library or protocol changes.
+- Dedicated actual navigation test passed API36.1: two pages loaded, first visible
+  item index14 (PR200) and 35px offset, open detail then Back, activity recreation,
+  landscape and portrait (actual viewport dimensions checked). Every return keeps
+  index14/35px and exactly two list reads. Continuing uses the retained page-three
+  opaque cursor and makes the third read, without re-reading pages one/two.
+- The initial synthetic setup asked for a row too near the list end to align at the
+  top; Android correctly clamped that initial scroll. The final fixture anchors page
+  two's first row with enough following rows; this changed test setup, not UI code.
+
+Final API36.1 combined device suite: **4/4 passed** in 14.091 s (the original three
+reader tests plus return-state test). Opt-in evidence run: 1/1 passed in 8.397 s.
+`return-state/` contains three inspected loaded screenshots (before detail, detail,
+after Back) and a 10 s video. Before/after show the same page-two row and offset.
+The 600 ms pre-capture pause is opt-in only; normal CI does not sleep. This is a
+synthetic three-page provider with actual JNI/navigation/Compose, not a live provider
+or physical-phone acceptance. Emulator stopped after evidence; Xiaomi untouched.

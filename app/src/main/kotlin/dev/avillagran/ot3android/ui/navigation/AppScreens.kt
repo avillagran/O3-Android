@@ -168,7 +168,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val state by model.state.collectAsStateWithLifecycle()
         dev.avillagran.ot3android.ui.pullrequests.PullRequestsScreen(state, model::selectEnvironment, model::selectProject,
             model::selectState, model::selectInvolvement, model::setQuery, model::refresh, model::loadMore,
-            onOpen = { id, entry -> navigator.push(PullRequest(id, entry.getString("projectId"), entry.getString("repository"), entry.getInt("number"), entry.getString("host"))) })
+            onOpen = { id, entry -> navigator.push(PullRequest(id, entry.getString("projectId"), entry.getString("repository"), entry.getInt("number"), entry.getString("host"))) }, listState = model.listState)
     }
 
     @Composable

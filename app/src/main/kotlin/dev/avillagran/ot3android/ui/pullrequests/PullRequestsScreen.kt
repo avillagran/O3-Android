@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -29,12 +31,15 @@ import org.json.JSONObject
 fun PullRequestsScreen(state: PullRequestsState, onEnvironment: (String) -> Unit, onProject: (String?) -> Unit,
     onState: (String) -> Unit, onInvolvement: (String) -> Unit, onQuery: (String) -> Unit,
     onRefresh: () -> Unit, onMore: () -> Unit, onOpen: (String, JSONObject) -> Unit,
+    listState: LazyListState = rememberLazyListState(),
 ) {
     var query by rememberSaveable(state.environmentId) { mutableStateOf(state.query) }
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.ot3_pr_title)) }, actions = {
         TextButton(onClick = onRefresh, enabled = !state.busy && state.environmentId != null, modifier = Modifier.testTag("pr_refresh")) { Text(stringResource(R.string.ot3_pr_refresh)) }
     }) }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("pr_list"), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+        if (state.awaitingConnection) Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(Modifier.testTag("pr_validating"))
+        } else LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("pr_list"), state = listState, verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PrSelect(state.environments.firstOrNull { it.id == state.environmentId }?.label ?: stringResource(if (state.scopeUnavailable) R.string.pr_environment_unavailable else R.string.pr_environment), state.environments.map { it.id to it.label }, "pr_environment", onEnvironment)
