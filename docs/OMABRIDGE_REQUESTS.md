@@ -128,3 +128,29 @@ How ot3 performs each operation (all through `omabridge manage` on the host,
   `gateway-set` would return `{"gateway":{"url","dns","link":"…?route=omabridge&gateway=laptop"}}`.
   lib-t3-rust's `connectionCatalog.pairingTarget` returns it as `routeHint` (LIB_REQUESTS
   U27).
+
+## OB5 — Authorized desktop catalog distribution (2026-10-26, functional priority)
+
+Andrés requires Android paired with the bridge to discover/maintain authorized desktop
+hosts, including NODE, without manual pairing per host. This supersedes treating a
+single preferred gateway URL as sufficient v1 acceptance. See
+[checked diagnosis and implementation](bridge/CATALOG_SYNC.md).
+
+Proposed authenticated operation `catalog.read {knownRevision?}` (then change signal /
+bounded polling) returns the client-bound, expiring manifest in lib-t3-rust's
+`BRIDGE_CATALOG.md`. Authorization comes from the peer/session's explicit environment
+grant, NOT an environment list supplied in the request. A fresh unauthorized client
+cannot enumerate labels/routes. Revocation must invalidate enrollment/capabilities,
+not merely remove a UI row. Publishing uses the native sanitized ot3 catalog and
+verified gateway routes, not exported Electron secrets or desktop localhost forwards.
+
+Required complementary `catalog.enroll {environmentId, requestedScopes}` mints or
+brokers a bounded client-specific authorization using existing T3 pairing/delegation,
+never returning a desktop private token. The bridge must enforce allowed environment,
+scopes and lifetime, including every HTTP/WebSocket/asset stream. Define binding to
+client key and bridge identity before exposing a listener. Existing T3 server authority
+must consent; a bridge transport grant is not an implicit grant to every desktop host.
+
+Implementation started in the shared lib, Android cache adapter and isolated native QUIC catalog transport. Desktop publication adapter, Android native binding,
+enrollment and lifecycle integration remain to be implemented/tested in isolation;
+no productive deployment or listener is authorized by this request.

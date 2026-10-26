@@ -2009,3 +2009,20 @@ implemented/pending comparison against OT3 7b5b1de is in
 [UI2a evidence](ui/compare/ui-2a/README.md). UI3 model/options/queue/attachments/steer,
 interactive approvals/questions, rich document previews, source controls and history
 transport/session integration remain pending. No new Kotlin protocol/projection layer.
+
+Source correction for UI2a: user message corners are 16 dp, as
+`ot3:ui/qml/T3Panel.qml:1704`; code containers retain 6 dp corners. This supersedes
+the earlier UI1i addendum's 6 dp message-corner statement. The workspace sidebar
+action shares the 56 dp chat toolbar; it does not add another 48 dp header row.
+
+### 2026-10-26 functional acceptance: bridge-distributed environments
+
+Pairing Android with a desktop bridge must discover and synchronize the client's
+authorized desktop environments (acceptance case VQ + NODE), including stable identity,
+portable routes, add/change/withdrawal, reconnection and private offline cache. Preserve
+independent local entries, selection/drafts/reading and per-host thread ownership.
+Discovery is distinct from permission; do not copy desktop private tokens or assume
+localhost/SSH forwards are reachable by a phone. A route indicator/settings page does
+not close this requirement. [CATALOG_SYNC](bridge/CATALOG_SYNC.md) tracks proven source,
+implementation and the remaining authenticated publisher/enrollment/Android integration.
+Physical VQ-only evidence is not proof of the phone's actual UUID, route or filter.
