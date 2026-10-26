@@ -117,3 +117,10 @@ controlled test checks intermediate opacity, completion, tab restart, and turnin
 motion off during an entrance. Screen interaction checks metric and period
 retention and no refresh on a round trip. This increment has JVM evidence only;
 no new emulator recording or physical/live acceptance is claimed.
+
+Device evidence attempt: `device_list` found `ot3a361` stopped; `device_open`
+failed before ADB came online. The project launcher was then awaited with that
+same API36.1 AVD and software rendering. It exited during compatibility checks:
+`FATAL | Your device does not have enough disk space to run avd: ot3a361`.
+The host had 2.0 GiB free; no guest boot, instrumentation or video occurred.
+Emulator evidence remains pending host disk headroom.
