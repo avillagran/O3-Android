@@ -1077,6 +1077,21 @@ so virtualization cannot dismiss it during rotation. Native calls have no per-re
 cancel handle; UI cancellation discards late results while Rust retains its deadline.
 Markdown media-file references are not attachment IDs and await U30 JNI exposure.
 
+### 2026-10-26 — Pull request return state and ownership
+
+Keep one private page cache and actual LazyListState in the list navigation-entry
+ViewModel. Back/recreation may reuse pages/cursor/visible pixel offset only after the
+current exact scope and Connection transport identity/epoch validate. While hidden,
+observable payloads expire and no connection/project collection or lease remains.
+Do not compose an empty list during validation: it would clamp the retained anchor.
+
+A different/offline connection, scope/filter/query change or explicit Refresh clears
+the cache and resets position. The first effective environment is pinned, avoiding
+a deleted default silently switching accounts. Process death refetches; large payloads
+and list position are not saved into process bundles. Keep page data verbatim until
+U31 supplies common merge/order. A session-tagged buffered More action covers the
+publication/receiver-registration gap without replaying canceled/offscreen actions.
+
 ### 2026-10-26 — Explicit Android image clipboard offers
 
 Use the same native binary attachment read as previews, under the shared two-job

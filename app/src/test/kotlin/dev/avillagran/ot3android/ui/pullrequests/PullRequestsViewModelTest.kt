@@ -34,7 +34,7 @@ class PullRequestsViewModelTest {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
         advanceTimeBy(301); runCurrent()
         assertTrue(model.state.value.busy)
-        model.setQuery("fix"); advanceTimeBy(299); runCurrent(); assertFalse(cancelled)
+        model.setQuery("fix"); advanceTimeBy(299); runCurrent(); assertTrue(cancelled); assertTrue(model.state.value.entries.isEmpty())
         advanceTimeBy(2); runCurrent(); assertTrue(cancelled)
         assertEquals("fix", saved.get<String>("query"))
         assertEquals(1, model.state.value.entries.single().getInt("number"))
@@ -87,24 +87,106 @@ class PullRequestsViewModelTest {
         assertNull(model.state.value.projectId)
         assertNull(reads.last())
     }
-    @Test fun resubscribeStartsImmediatelyAndCannotExposeInactiveLoadMore() = runTest(dispatcher) {
+    @Test fun pageTwoSurvivesInactiveReturnWithoutReadAndOffscreenMoreIsIgnored() = runTest(dispatcher) {
         val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
         val pages = mutableListOf<Boolean>()
-        val model = PullRequestsViewModel(environments, { connection }, read = { _, _, _, _, _, cursor ->
+        var collectors = 0
+        val model = PullRequestsViewModel(environments, { connection.onStart { collectors++ }.onCompletion { collectors-- } }, read = { _, _, _, _, _, cursor ->
             pages += (cursor != null)
             JSONObject().put("entries", JSONArray().put(entry(if (cursor == null) 42 else 36)))
-                .put("truncated", cursor == null).put("nextCursors", JSONObject().put("p", "opaque"))
+                .put("truncated", true).put("nextCursors", JSONObject().put("p", if (cursor == null) "page2" else "page3"))
         })
         var collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
-        runCurrent(); assertEquals(listOf(false), pages)
+        runCurrent(); model.loadMore(); runCurrent()
+        assertEquals(listOf(false, true), pages)
         collector.cancel(); runCurrent()
+        assertEquals(0, collectors)
+        assertTrue(model.state.value.awaitingConnection)
         assertNull(model.state.value.result)
+        model.loadMore(); runCurrent() // No active consumer: cannot queue a stale page action.
         collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
-        runCurrent() // No 300 ms initial/resume debounce window with stale enabled controls.
-        assertEquals(listOf(false, false), pages)
-        model.loadMore(); runCurrent()
-        assertEquals(listOf(false, false, true), pages)
+        runCurrent()
+        assertEquals(1, collectors)
+        assertEquals(listOf(false, true), pages)
         assertEquals(listOf(42, 36), model.state.value.entries.map { it.getInt("number") })
+        assertEquals("page3", model.state.value.result!!.getJSONObject("nextCursors").getString("p"))
+        collector.cancel()
+    }
+    @Test fun moreBetweenPublicationAndCollectorRegistrationIsBufferedOnce() = runTest(dispatcher) {
+        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        var reads = 0
+        val model = PullRequestsViewModel(environments, { connection }, read = { _, _, _, _, _, cursor ->
+            reads++
+            JSONObject().put("entries", JSONArray().put(entry(if (cursor == null) 42 else 36)))
+                .put("truncated", cursor == null).put("nextCursors", JSONObject().put("p", "page2"))
+        })
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect { state ->
+            if (!state.busy && state.entries.size == 1 && state.result?.optBoolean("truncated") == true) model.loadMore()
+        } }
+        runCurrent()
+        assertEquals(2, reads)
+        assertEquals(listOf(42, 36), model.state.value.entries.map { it.getInt("number") })
+    }
+    @Test fun retainedRowsArePrivateUntilConnectionValidatedAndReconnectInvalidates() = runTest(dispatcher) {
+        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        var hold = false
+        val release = CompletableDeferred<Unit>()
+        var reads = 0
+        val model = PullRequestsViewModel(environments, { flow {
+            if (hold) release.await()
+            emitAll(connection)
+        } }, read = { current, _, _, _, _, _ ->
+            reads++; JSONObject().put("entries", JSONArray().put(entry(current.epoch)))
+        })
+        var collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertEquals(1, reads)
+        model.listState.requestScrollToItem(14, 35)
+        assertEquals(14, model.listState.firstVisibleItemIndex)
+        collector.cancel(); runCurrent()
+        hold = true
+        connection.value = Connection(FakeT3Transport(), 2)
+        collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent()
+        assertTrue(model.state.value.awaitingConnection); assertTrue(model.state.value.entries.isEmpty())
+        release.complete(Unit); runCurrent()
+        assertEquals(0, model.listState.firstVisibleItemIndex)
+        assertEquals(0, model.listState.firstVisibleItemScrollOffset)
+        assertEquals(2, reads); assertEquals(2, model.state.value.entries.single().getInt("number"))
+        collector.cancel(); runCurrent()
+        connection.value = Connection(FakeT3Transport(), 2) // Same epoch, replaced transport.
+        collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertEquals(3, reads)
+        collector.cancel(); runCurrent(); connection.value = null
+        collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertTrue(model.state.value.offline); assertTrue(model.state.value.entries.isEmpty())
+        assertEquals(3, reads)
+        collector.cancel(); runCurrent()
+        connection.value = Connection(FakeT3Transport(), 3) // Reconnect while unobserved.
+        collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertEquals(4, reads); assertEquals(3, model.state.value.entries.single().getInt("number"))
+        collector.cancel()
+    }
+    @Test fun refreshAndFilterChangesOffscreenDiscardCacheAndDefaultEnvironmentCannotFallback() = runTest(dispatcher) {
+        val current = Connection(FakeT3Transport(), 1)
+        val requests = mutableListOf<String>()
+        val model = PullRequestsViewModel(environments, { flowOf(current) }, read = { _, state, _, query, _, _ ->
+            requests += "$state:$query"; JSONObject().put("entries", JSONArray().put(entry(requests.size)))
+        })
+        var collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertEquals(listOf("open:"), requests)
+        collector.cancel(); runCurrent()
+        model.refresh()
+        collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertEquals(2, requests.size)
+        collector.cancel(); runCurrent()
+        model.selectState("merged"); model.setQuery("updated"); advanceTimeBy(301); runCurrent()
+        collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertEquals("merged:updated", requests.last())
+        collector.cancel(); runCurrent()
+        environments.value = environments.value.filter { it.id != "a" }
+        collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
+        runCurrent(); assertTrue(model.state.value.scopeUnavailable); assertEquals("a", model.state.value.environmentId)
+        assertTrue(model.state.value.entries.isEmpty()); assertEquals(3, requests.size)
         collector.cancel()
     }
     @Test fun detailTabsCancelAndNewEpochDropsPreviousOverview() = runTest(dispatcher) {

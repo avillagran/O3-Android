@@ -91,10 +91,11 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                                     fixture.connections.supervisor(id)?.shell?.collect { emit(it?.projects.orEmpty()) }
                                 } }, saved = createSavedStateHandle())
                         }
+                        fixture.prListState = model.listState
                         val state by model.state.collectAsStateWithLifecycle()
                         dev.avillagran.ot3android.ui.pullrequests.PullRequestsScreen(state, model::selectEnvironment,
                             model::selectProject, model::selectState, model::selectInvolvement, model::setQuery,
-                            model::refresh, model::loadMore, { id, pr -> navigator.push(PullRequest(id, pr.getString("projectId"), pr.getString("repository"), pr.getInt("number"), pr.getString("host"))) })
+                            model::refresh, model::loadMore, { id, pr -> navigator.push(PullRequest(id, pr.getString("projectId"), pr.getString("repository"), pr.getInt("number"), pr.getString("host"))) }, listState = model.listState)
                     }
                     @Composable override fun PullRequest(route: PullRequest) {
                         val model: dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel = viewModel {
@@ -152,6 +153,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         }
         projection.put("runs", runs)
     }
+    var prListState: androidx.compose.foundation.lazy.LazyListState? = null
     private val database = Room.inMemoryDatabaseBuilder(application, Ot3Database::class.java).build()
     private val cursors = object : ShellCursorStore {
         override suspend fun cursor(environmentId: String): Long? = null
@@ -176,7 +178,23 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         onShell { fixtureShell() }
         listOf("list", "detail", "checks", "activity").forEach { action -> onCall("pullRequests.$action") { args ->
             val data = JSONObject(application.assets.open("pullrequests/$action.json").bufferedReader().use { it.readText() })
-            if (action == "list" && args.has("cursors")) {
+            if (action == "detail" && request == "pr-retain") data.put("number", args.getInt("number")).put("title", "Pull request ${args.getInt("number")}")
+            if (action == "list" && request == "pr-retain") {
+                val page = when (args.optJSONObject("cursors")?.optString("project")) {
+                    "fixture-page-2" -> 2
+                    "fixture-page-3" -> 3
+                    else -> 1
+                }
+                val template = data.getJSONArray("entries").getJSONObject(0)
+                val entries = JSONArray()
+                repeat(12) { index ->
+                    val number = page * 100 + index
+                    entries.put(JSONObject(template.toString()).put("number", number).put("title", "Pull request $number")
+                        .put("url", "https://github.com/example/ot3/pull/$number"))
+                }
+                data.put("entries", entries).put("truncated", page < 3)
+                    .put("nextCursors", JSONObject().put("project", "fixture-page-${page + 1}"))
+            } else if (action == "list" && args.has("cursors")) {
                 data.put("truncated", false).put("entries", JSONArray().put(data.getJSONArray("entries").getJSONObject(0).put("number", 36).put("title", "Restore reading position")))
             } else data
         } }

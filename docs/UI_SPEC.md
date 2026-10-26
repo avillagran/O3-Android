@@ -1576,7 +1576,12 @@ the row badge, both in U19.
 Overview, Checks and Conversation use the typed reads above, with native Markdown.
 Home's badge opens the native-selected current PR. Enterprise host is preserved in
 the route. Loading/error/retry/offline and connection-generation cancellation are
-implemented. Back reloads page one; later-page reading position is not retained. Explicit missing project/environment metadata never broadens scope.
+implemented. Loaded pages, cursor and visible row/pixel offset survive detail→Back,
+activity recreation and rotation within the list navigation entry, after validating
+current connection ownership. Scope/filter/query/Refresh or a different/offline
+connection clears retained data and resets position. No background list collection;
+process death refetches page one. Explicit missing project/environment metadata
+never broadens scope.
 
 Pages currently keep the server's returned order and repeated entries. Newest-first
 cross-page merge is pending shared Rust U31, rather than a Kotlin copy of QML's rule.
