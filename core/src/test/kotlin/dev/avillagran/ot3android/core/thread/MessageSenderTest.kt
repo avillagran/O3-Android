@@ -16,6 +16,48 @@ import org.junit.Test
 
 class MessageSenderTest {
 
+    private fun approvalProjection(live: Boolean = true, options: String = """[{"decision":"accept","label":"Approve"}]""") = JSONObject("""{
+      "thread":{"id":"t1"},
+      "runtimeRequests":[{"id":"request","kind":"command","status":"pending","responseCapability":{"type":"${if (live) "live" else "not_resumable"}"}}],
+      "turnItems":[{"type":"approval_request","requestId":"request","prompt":"Read the requested file","options":$options}]
+    }""")
+
+    @Test
+    fun approvalUnknownOutcomeUsesNativeDecisionAndTheSameDurableRetry() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        var responses = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (responses++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 12)
+        }
+        val result = sender.approve(connected(), "env-1", "t1", "request", "accept", approvalProjection())
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), result)
+        val args = fake.calls.single().args
+        assertEquals("runtime-request.respond", args.getString("type"))
+        assertEquals("request", args.getString("requestId"))
+        assertEquals("accept", args.getString("decision"))
+        assertEquals(SendResult.Accepted("ot3a-1", 12), sender.retry(fake, "ot3a-1"))
+        assertEquals(fake.calls[0].args.toString(), fake.calls[1].args.toString())
+        assertEquals(1, counter)
+    }
+
+    @Test
+    fun nativeApprovalRejectsGoneUnavailableAndUnofferedChoicesBeforeAnyDispatch() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        val transport = connected()
+        val gone = sender.approve(transport, "env-1", "t1", "gone", "accept", approvalProjection())
+        val notLive = sender.approve(transport, "env-1", "t1", "request", "accept", approvalProjection(live = false))
+        val empty = sender.approve(transport, "env-1", "t1", "request", "accept", approvalProjection(options = "[]"))
+        assertEquals(SendResult.Failed("approval_no_longer_pending"), gone)
+        assertEquals(SendResult.Failed("approval_not_resumable"), notLive)
+        assertEquals(SendResult.Failed("invalid_approval_decision"), empty)
+        assertTrue(fake.calls.isEmpty())
+        assertTrue(dao.rows.value.isEmpty())
+        assertEquals(0, counter)
+    }
+
     @Test
     fun queueEditUsesRustAndUnknownOutcomeRetainsTheExactAttachmentCommand() = runTest {
         assumeHostJni()

@@ -1369,6 +1369,11 @@ banner (`app/src/main/kotlin/dev/avillagran/ot3android/ui/thread/ThreadScreen.kt
 - Data: `approvals::pending` (rows with kind, capability, options; `lib:src/approvals.rs:11`)
   and `approvals::command` (`:61`) via `Command::approve`; U6 and request item 4.
 
+Implementation progress (2026-10-26): the real approval card now uses native rows and
+`approvals.command` on the current projection, with durable retry ids, non-resumable
+provider gating and explicit visible decisions. Questions/plans/secrets and device
+acceptance remain open. See `docs/ui/compare/ui-4/README.md`.
+
 #### 4.5.2 Question card
 
 - ot3 card: collapse chevron, header (default "Question"), "i/N", "Dismiss question

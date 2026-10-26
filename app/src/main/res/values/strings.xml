@@ -142,4 +142,14 @@
     <string name="composer_legacy_models">Legacy models</string>
     <string name="composer_add_favorite">Add to favorites</string>
     <string name="composer_remove_favorite">Remove from favorites</string>
+    <string name="approval_command">Command approval</string>
+    <string name="approval_file_read">File read approval</string>
+    <string name="approval_file_change">File change approval</string>
+    <string name="approval_permission">App permission approval</string>
+    <string name="approval_app_access">App access approval</string>
+    <string name="approval_required">Approval required</string>
+    <string name="approval_not_resumable">Provider process is gone — interrupt or restart the run to respond.</string>
+    <string name="approval_more">More approval options</string>
+    <string name="approval_sending">Sending…</string>
+    <string name="approval_answered">Answered</string>
 </resources>

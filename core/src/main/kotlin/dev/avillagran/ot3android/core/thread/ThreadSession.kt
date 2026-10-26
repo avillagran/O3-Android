@@ -120,7 +120,10 @@ class ThreadSession(
     val view: StateFlow<ThreadView> = _view.asStateFlow()
 
     /** The held projection, its stream sequence and its bounded-history fields. */
-    private var projection: JSONObject? = null
+    @Volatile private var projection: JSONObject? = null
+
+    /** Defensive snapshot for native mutation validation; stream-owned objects stay private. */
+    fun projectionSnapshot(): JSONObject? = projection?.let { JSONObject(it.toString()) }
     private var sequence: Long? = null
     private var history = ThreadTimelines.History.NONE
 

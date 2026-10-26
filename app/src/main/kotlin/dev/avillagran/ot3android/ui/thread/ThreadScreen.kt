@@ -120,6 +120,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onSelectModel = viewModel::selectModel,
         onSelectModelOption = viewModel::selectModelOption,
         onFavoriteModel = viewModel::favoriteModel,
+        onApprovalDecision = viewModel::respondApproval,
     )
 }
 
@@ -145,6 +146,7 @@ fun ThreadContent(
     onSelectModel: (org.json.JSONObject) -> Unit = {},
     onSelectModelOption: (String, Any) -> Unit = { _, _ -> },
     onFavoriteModel: (org.json.JSONObject, Boolean) -> Unit = { _, _ -> },
+    onApprovalDecision: (String, String) -> Unit = { _, _ -> },
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -229,6 +231,9 @@ fun ThreadContent(
                         }
                     }
                 }
+                ApprovalCard(state.view.timeline?.optJSONArray("approvals"),
+                    state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
+                    state.respondingRequest, state.answeredRequests, onApprovalDecision)
                 Composer(
                 draft = state.draft,
                 canSend = state.canSend,
@@ -246,7 +251,8 @@ fun ThreadContent(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
             StreamState(state.view.connectionState, state.view.stale, onRetryStream)
-            state.view.pendingRequests.forEach { PendingRequestBanner(it) }
+            state.view.pendingRequests.filter { it.kind == "user_input" || state.view.timeline?.has("approvals") != true }
+                .forEach { PendingRequestBanner(it) }
             state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {

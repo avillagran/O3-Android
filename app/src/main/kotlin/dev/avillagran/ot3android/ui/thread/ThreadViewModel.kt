@@ -54,17 +54,19 @@ data class ThreadUiState(
     val queueEdit: String? = null,
     val modelCatalog: String? = null,
     val modelsLoading: Boolean = false,
+    val respondingRequest: String? = null,
+    val answeredRequests: Set<String> = emptySet(),
 ) {
     val connected: Boolean get() = connection is ConnectionState.Connected
 
     val draft: String get() = queueEdit?.let { org.json.JSONObject(it).optString("text") } ?: composer.draft
 
-    val sending: Boolean get() = composer.sending || queueBusy
+    val sending: Boolean get() = composer.sending || queueBusy || respondingRequest != null
 
     /** Commands whose outcome is unknown, each with Resend and Discard. */
     val unconfirmed: List<PendingCommand> get() = composer.unconfirmed
 
-    val canSend: Boolean get() = connected && !queueBusy && if (queueEdit != null) unconfirmed.isEmpty() else composer.canSend
+    val canSend: Boolean get() = connected && !sending && if (queueEdit != null) unconfirmed.isEmpty() else composer.canSend
 
     val canInterrupt: Boolean get() = view.working && view.activeRunId != null && connected && !interrupting
 }
@@ -78,6 +80,8 @@ private data class Local(
     val modelCatalog: String? = null,
     val modelsLoading: Boolean = false,
     val selectedModel: String? = null,
+    val respondingRequest: String? = null,
+    val answeredRequests: Set<String> = emptySet(),
 )
 
 /**
@@ -141,6 +145,8 @@ class ThreadViewModel(
             queueEdit = local.queueEdit,
             modelCatalog = local.modelCatalog,
             modelsLoading = local.modelsLoading,
+            respondingRequest = local.respondingRequest,
+            answeredRequests = local.answeredRequests,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId)))
 
@@ -262,9 +268,26 @@ class ThreadViewModel(
         if (!local.value.queueBusy) local.update { it.copy(queueEdit = null) }
     }
 
+    fun respondApproval(requestId: String, decision: String) {
+        val current = state.value
+        if (!current.connected || current.view.stale || current.sending || current.unconfirmed.isNotEmpty() ||
+            local.value.respondingRequest != null || requestId in local.value.answeredRequests) return
+        local.update { it.copy(respondingRequest = requestId, notice = null) }
+        appScope.launch {
+            try {
+                val projection = session.projectionSnapshot() ?: return@launch
+                val result = sender.approve(transport(), environmentId, threadId, requestId, decision, projection)
+                if (result is SendResult.Accepted) local.update {
+                    it.copy(answeredRequests = it.answeredRequests + requestId)
+                }
+                onResult(result)
+            } finally { local.update { it.copy(respondingRequest = null) } }
+        }
+    }
+
     /** Queue capability and row data are already projected by Rust's timeline.view. */
     fun queueCommand(arguments: org.json.JSONObject) {
-        if (!state.value.connected || local.value.queueBusy || state.value.unconfirmed.isNotEmpty()) return
+        if (!state.value.connected || local.value.queueBusy || local.value.respondingRequest != null || state.value.unconfirmed.isNotEmpty()) return
         local.update { it.copy(queueBusy = true, notice = null) }
         appScope.launch {
             try {
@@ -281,7 +304,7 @@ class ThreadViewModel(
 
     fun send() {
         val current = state.value
-        if (!current.connected || local.value.queueBusy) return
+        if (!current.connected || local.value.queueBusy || local.value.respondingRequest != null) return
         if (current.queueEdit != null) {
             queueCommand(org.json.JSONObject(current.queueEdit).put("action", "edit"))
             return
