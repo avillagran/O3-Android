@@ -152,4 +152,9 @@
     <string name="ot3_permission_full_access_detail">확인 없이 명령과 편집을 허용합니다.</string>
     <string name="ot3_copy_table_markdown">Markdown으로 복사</string>
     <string name="ot3_copy_table_csv">CSV로 복사</string>
+    <string name="ot3_reader_you">나</string>
+    <string name="ot3_reader_copy">복사</string>
+    <string name="ot3_reader_automation">자동화가 보냄</string>
+    <string name="ot3_reader_t3code">T3 Code가 보냄</string>
+    <string name="ot3_reader_agent">다른 에이전트가 보냄</string>
 </resources>

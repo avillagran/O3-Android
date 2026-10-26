@@ -152,4 +152,9 @@
     <string name="ot3_permission_full_access_detail">Salli komennot ja muutokset ilman vahvistusta.</string>
     <string name="ot3_copy_table_markdown">Kopioi Markdownina</string>
     <string name="ot3_copy_table_csv">Kopioi CSV:nä</string>
+    <string name="ot3_reader_you">Sinä</string>
+    <string name="ot3_reader_copy">Kopioi</string>
+    <string name="ot3_reader_automation">Automaation lähettämä</string>
+    <string name="ot3_reader_t3code">T3 Coden lähettämä</string>
+    <string name="ot3_reader_agent">Toisen agentin lähettämä</string>
 </resources>

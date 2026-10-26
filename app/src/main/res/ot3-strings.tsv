@@ -182,3 +182,8 @@ ot3_permission_full_access_detail	Allow commands and edits without prompts.
 
 ot3_copy_table_markdown	Copy as Markdown
 ot3_copy_table_csv	Copy as CSV
+ot3_reader_you	You
+ot3_reader_copy	Copy
+ot3_reader_automation	Sent by automation
+ot3_reader_t3code	Sent by T3 Code
+ot3_reader_agent	Sent by another agent

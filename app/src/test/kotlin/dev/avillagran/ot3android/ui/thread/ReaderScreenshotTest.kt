@@ -17,6 +17,25 @@ class ReaderScreenshotTest : ScreenshotTest() {
         java.util.TimeZone.setDefault(originalZone)
         java.util.Locale.setDefault(originalLocale)
     }
+    @Test fun compactPromptAndOutsideActions() {
+        val short = JSONObject().put("id", "short").put("role", "user").put("text", "Yes").put("createdAt", 1000)
+        val long = JSONObject().put("id", "long").put("role", "user").put("text", "Keep the message readable while the longer prompt wraps inside the same right-aligned lane.").put("createdAt", 1000)
+        snapshot("prompts") {
+            androidx.compose.foundation.layout.Column {
+                UserMessage(short)
+                UserMessage(long)
+            }
+        }
+        val bubble = composeRule.onNodeWithTag("thread_bubble_short").fetchSemanticsNode().boundsInRoot
+        val lane = composeRule.onNodeWithTag(ThreadScreenTags.message("short")).fetchSemanticsNode().boundsInRoot
+        val actions = composeRule.onNodeWithTag("thread_copy_message_short").fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("Short prompts must not reserve 80% width", bubble.width < lane.width / 2)
+        org.junit.Assert.assertEquals(lane.right, bubble.right, 1f)
+        org.junit.Assert.assertTrue("Copy belongs outside the bubble", actions.top >= bubble.bottom)
+        val longBubble = composeRule.onNodeWithTag("thread_bubble_long").fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue(longBubble.width <= lane.width * .8f + 1)
+    }
+
     @Test fun tableReader() {
         val blocks = org.json.JSONArray(checkNotNull(javaClass.getResource("/timeline/table.blocks.json")).readText())
         snapshot("table") {

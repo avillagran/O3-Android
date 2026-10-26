@@ -89,19 +89,21 @@ private fun readingAnchorSaver(rows: List<JSONObject>): Saver<LazyListState, *> 
 private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?) {
     val role = row.optString("role")
     val id = row.getString("id")
-    val user = role == "user"
+    if (role == "user") {
+        UserMessage(row)
+        return
+    }
     val colors = Ot3Theme.colors
     val typing = stringResource(R.string.thread_message_typing)
-    Row(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id)).semantics { if (row.optBoolean("streaming")) stateDescription = typing }, horizontalArrangement = if (user) Arrangement.End else Arrangement.Start) {
-        Surface(color = if (user) colors.surface else colors.background, shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.widthIn(max = 760.dp).then(if (user) Modifier.fillMaxWidth(.85f) else Modifier.fillMaxWidth())) {
-            Column(Modifier.padding(if (user) 12.dp else 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id)).semantics { if (row.optBoolean("streaming")) stateDescription = typing }, horizontalArrangement = Arrangement.Start) {
+        Surface(color = colors.background, shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.widthIn(max = 760.dp).fillMaxWidth()) {
+            Column(Modifier.padding(horizontal = 4.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 val time = row.optLong("createdAt")
-                Text(listOf(if (user) row.optString("attribution").takeUnless { it.isBlank() || it == "null" } ?: "You" else if (role == "assistant") "T3" else role,
+                if (role != "assistant") Text(listOf(role,
                     if (time > 0) DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(time)) else "").filter(String::isNotBlank).joinToString(" · "),
                     style = MaterialTheme.typography.labelSmall, color = colors.dim)
                 when (role) {
-                    "user" -> SelectionContainer { Text(row.optString("text"), style = MaterialTheme.typography.bodyMedium) }
                     "assistant" -> {
                         if (row.optJSONArray("blocks").objects().isNotEmpty()) MarkdownBlocks(row.optJSONArray("blocks"))
                         else SelectionContainer { Text(row.optString("text")) }
@@ -117,7 +119,12 @@ private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSON
                     else -> Text("Unsupported timeline row: $role", color = colors.dim, modifier = Modifier.testTag("thread_unknown_$id"))
                 }
                 if (row.optBoolean("streaming")) Ot3Spinner(Modifier.testTag(ThreadScreenTags.streaming(id)), size = 12.dp)
-                if (role == "user" || role == "assistant") CopyText(row.optString("text"), "message_$id")
+                if (role == "assistant" && !row.optBoolean("streaming")) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CopyText(row.optString("text"), "message_$id")
+                        MessageDate(row.optLong("createdAt"))
+                    }
+                }
             }
         }
     }
@@ -188,7 +195,7 @@ internal fun MarkdownBlocks(blocks: JSONArray?) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         blocks.objects().forEachIndexed { index, block ->
             when (block.optString("type")) {
-                "code" -> Surface(color = Ot3Theme.colors.surface, shape = RoundedCornerShape(6.dp)) {
+                "code" -> Surface(color = Ot3Theme.colors.surface, contentColor = Ot3Theme.colors.foreground, shape = RoundedCornerShape(6.dp)) {
                     Column(Modifier.fillMaxWidth().padding(8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(block.optString("language"), style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
@@ -238,9 +245,9 @@ internal fun inlineSpans(spans: JSONArray?): AnnotatedString = buildAnnotatedStr
 
 @Suppress("DEPRECATION")
 @Composable
-private fun CopyText(text: String, id: String) {
+internal fun CopyText(text: String, id: String) {
     val clipboard = LocalClipboardManager.current
     TextButton(onClick = { clipboard.setText(AnnotatedString(text)) }, enabled = text.isNotEmpty(), modifier = Modifier.testTag("thread_copy_$id")) {
-        Text("Copy", style = MaterialTheme.typography.labelSmall)
+        Text(stringResource(R.string.ot3_reader_copy), style = MaterialTheme.typography.labelSmall)
     }
 }

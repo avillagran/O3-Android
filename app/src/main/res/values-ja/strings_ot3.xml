@@ -152,4 +152,9 @@
     <string name="ot3_permission_full_access_detail">確認なしでコマンドと編集を許可します。</string>
     <string name="ot3_copy_table_markdown">Markdown としてコピー</string>
     <string name="ot3_copy_table_csv">CSV としてコピー</string>
+    <string name="ot3_reader_you">あなた</string>
+    <string name="ot3_reader_copy">コピー</string>
+    <string name="ot3_reader_automation">自動化から送信</string>
+    <string name="ot3_reader_t3code">T3 Code から送信</string>
+    <string name="ot3_reader_agent">別のエージェントから送信</string>
 </resources>
