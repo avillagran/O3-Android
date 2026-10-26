@@ -69,7 +69,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
-import dev.avillagran.ot3android.ui.navigation.LocalThreadSidebarControl
 import dev.avillagran.ot3android.core.thread.PendingCommand
 import dev.avillagran.ot3android.core.thread.RuntimeRequest
 import dev.avillagran.ot3android.core.thread.ThreadConnection
@@ -113,6 +112,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onDismissNotice = viewModel::dismissNotice,
         onBack = onBack,
         modifier = modifier,
+        onInspect = viewModel::inspect,
     )
 }
 
@@ -130,6 +130,7 @@ fun ThreadContent(
     onDismissNotice: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onInspect: suspend (org.json.JSONObject) -> org.json.JSONObject? = { null },
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -181,7 +182,7 @@ fun ThreadContent(
                     }
                 },
                 actions = {
-                    LocalThreadSidebarControl.current?.invoke()
+
                     if (state.view.working) {
                         IconButton(
                             onClick = onInterrupt,
@@ -190,6 +191,9 @@ fun ThreadContent(
                         ) {
                             Icon(painterResource(R.drawable.ic_stop), stringResource(R.string.thread_interrupt))
                         }
+                    }
+                    if (dev.avillagran.ot3android.ui.navigation.LocalWorkspaceSidebarAction.current) {
+                        Spacer(Modifier.width(48.dp))
                     }
                 },
             )
@@ -214,71 +218,16 @@ fun ThreadContent(
                     !state.view.loaded -> Ot3Spinner(
                         Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp,
                     )
-                    state.view.messages.isEmpty() -> Text(
+                    (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(
                         stringResource(R.string.thread_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY),
                     )
-                    else -> Timeline(state.view.messages)
+                    else -> TimelineReader(state.view.timeline, state.view.messages, onInspect)
                 }
             }
         }
     }
-}
-
-@Composable
-private fun Timeline(messages: List<ThreadMessage>) {
-    // Reverse layout keeps the newest message at the bottom and the list anchored there.
-    val newestFirst = remember(messages) { messages.asReversed() }
-    LazyColumn(
-        reverseLayout = true,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-        modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE),
-    ) {
-        items(newestFirst, key = { it.id }) { message -> MessageBubble(message) }
-    }
-}
-
-@Composable
-private fun MessageBubble(message: ThreadMessage) {
-    val user = message.role == "user"
-    val colors = Ot3Theme.colors
-    val typing = stringResource(R.string.thread_message_typing)
-    Row(
-        horizontalArrangement = if (user) Arrangement.End else Arrangement.Start,
-        modifier = Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(message.id))
-            .semantics { if (message.streaming) stateDescription = typing },
-    ) {
-        Surface(
-            color = if (user) colors.surface else colors.background,
-            contentColor = colors.foreground,
-            shape = RoundedCornerShape(6.dp),
-            modifier = Modifier.widthIn(max = 560.dp),
-        ) {
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                SelectionContainer {
-                    Text(message.text, style = MaterialTheme.typography.bodyMedium)
-                }
-                // Decoration only: the bubble's state description says it is still being written.
-                if (message.streaming) {
-                    StreamingCursor(Modifier.clearAndSetSemantics { testTag = ThreadScreenTags.streaming(message.id) })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StreamingCursor(modifier: Modifier = Modifier) {
-    if (!Ot3Theme.motion.animates) {
-        Text("▍", style = MaterialTheme.typography.bodyMedium, modifier = modifier)
-        return
-    }
-    val clock by rememberKitClock(true)
-    val phase = clock % 1f
-    val alpha = 1f - 0.8f * (if (phase < 0.5f) phase * 2f else (1f - phase) * 2f)
-    Text("▍", style = MaterialTheme.typography.bodyLarge, modifier = modifier.alpha(alpha))
 }
 
 @Composable

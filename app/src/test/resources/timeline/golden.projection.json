@@ -1,0 +1,6 @@
+{
+          "thread":{"id":"chat"},"messages":[
+            {"id":"question","role":"user","createdAt":1,"text":"Keep the native reader close to OT3."},
+            {"id":"answer","role":"assistant","createdAt":2,"text":"# Native reader\n\n**Rust** supplies *every block*. [Reference](https://example.org)\n\n- Select prose\n- Copy code\n\n```kotlin\nval thread = session.view.value\nprintln(thread.title)\n```\n\nReading position stays anchored."}
+          ]
+        }

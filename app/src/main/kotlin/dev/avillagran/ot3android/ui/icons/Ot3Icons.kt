@@ -54,6 +54,8 @@ object Ot3Icons {
     @DrawableRes val MessageCircleQuestion: Int = R.drawable.ic_message_circle_question
     @DrawableRes val MessageSquare: Int = R.drawable.ic_message_square
     @DrawableRes val Monitor: Int = R.drawable.ic_monitor
+    @DrawableRes val PanelLeft: Int = R.drawable.ic_panel_left
+    @DrawableRes val PanelLeftClose: Int = R.drawable.ic_panel_left_close
     @DrawableRes val Paperclip: Int = R.drawable.ic_paperclip
     @DrawableRes val PenLine: Int = R.drawable.ic_pen_line
     @DrawableRes val Pin: Int = R.drawable.ic_pin
@@ -108,6 +110,8 @@ object Ot3Icons {
         "message-circle-question" to MessageCircleQuestion,
         "message-square" to MessageSquare,
         "monitor" to Monitor,
+        "panel-left" to PanelLeft,
+        "panel-left-close" to PanelLeftClose,
         "paperclip" to Paperclip,
         "pen-line" to PenLine,
         "pin" to Pin,
