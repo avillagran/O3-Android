@@ -182,4 +182,5 @@
     <string name="ot3_usage_unavailable">Kullanılamıyor</string>
     <string name="ot3_usage_unpriced">%1$s kaydın fiyatı yok.</string>
     <string name="ot3_usage_prices_unavailable">Model fiyatları kullanılamıyor.</string>
+    <string name="ot3_usage_refresh_prices">Fiyatları yenile</string>
 </resources>

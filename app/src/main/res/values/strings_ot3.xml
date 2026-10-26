@@ -181,4 +181,5 @@
     <string name="ot3_usage_unavailable">Unavailable</string>
     <string name="ot3_usage_unpriced">%1$s records have no price.</string>
     <string name="ot3_usage_prices_unavailable">Model prices are unavailable.</string>
+    <string name="ot3_usage_refresh_prices">Refresh prices</string>
 </resources>

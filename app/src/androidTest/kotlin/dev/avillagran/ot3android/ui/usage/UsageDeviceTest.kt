@@ -16,6 +16,29 @@ import org.junit.Test
 /** Real navigation/VM/connection and JNI, synthetic diagnostics server. */
 class UsageDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
+    @Test fun refreshPricesReadsUpdatedSummaryWithoutDispatch() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
+            .putExtra("request", "prices")).use { scenario ->
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("nav_tab_Settings").performClick()
+            rule.onNodeWithTag("settings_Usage").performClick()
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("usage_page").performScrollToNode(hasTestTag("usage_refresh_prices"))
+            rule.onNodeWithTag("usage_refresh_prices").performClick()
+            rule.waitUntil(15_000) {
+                rule.onAllNodesWithTag("usage_refresh_prices").fetchSemanticsNodes().isEmpty() &&
+                    rule.onAllNodesWithText("gpt-6.1-sol").fetchSemanticsNodes().isNotEmpty()
+            }
+            scenario.onActivity {
+                val calls = it.fixture.transport.calls.map { call -> call.fn }
+                assertEquals(1, calls.count { name -> name == "server.refreshUsageRates" })
+                assertEquals(2, calls.count { name -> name == "server.getUsageSummary" })
+                assertFalse(calls.contains("orchestration.dispatchCommand"))
+            }
+        }
+    }
+
     @Test fun settingsPeriodRotationRefreshAndBack() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->

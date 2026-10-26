@@ -74,7 +74,7 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                         val state by model.state.collectAsStateWithLifecycle()
                         dev.avillagran.ot3android.ui.usage.UsageScreen(state,
                             model::selectEnvironment, model::selectPeriod, model::refresh,
-                            onBack = { navigator.back() })
+                            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices)
                     }
                     @Composable override fun Thread(route: Thread) {
                         val vm: ThreadViewModel = viewModel {
@@ -109,12 +109,15 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         override val shelves = MutableStateFlow(ShelfState())
         override suspend fun update(transform: (ShelfState) -> ShelfState) { shelves.value = transform(shelves.value) }
     }
+    private var pricesFresh = request != "prices"
     val transport = FakeT3Transport().apply {
         onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
         onShell { fixtureShell() }
+        onCall("server.refreshUsageRates") { pricesFresh = true; JSONObject().put("status", "fresh") }
         onCall("server.getUsageSummary") { args ->
             val input = JSONObject(application.assets.open("usage/summary.input.json").bufferedReader().use { it.readText() })
             val summary = input.getJSONObject("summary")
+            summary.put("pricing", JSONObject().put("status", if (pricesFresh) "fresh" else "unavailable"))
             // The fake server respects the requested window; aggregation remains native.
             val buckets = summary.getJSONArray("buckets").objects().filter {
                 it.getString("day") >= args.getString("sinceDay") && it.getString("day") <= args.getString("untilDay")

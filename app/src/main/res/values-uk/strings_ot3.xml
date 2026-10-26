@@ -182,4 +182,5 @@
     <string name="ot3_usage_unavailable">Недоступно</string>
     <string name="ot3_usage_unpriced">%1$s записів не мають ціни.</string>
     <string name="ot3_usage_prices_unavailable">Ціни моделей недоступні.</string>
+    <string name="ot3_usage_refresh_prices">Оновити ціни</string>
 </resources>

@@ -182,4 +182,5 @@
     <string name="ot3_usage_unavailable">Niet beschikbaar</string>
     <string name="ot3_usage_unpriced">%1$s records hebben geen prijs.</string>
     <string name="ot3_usage_prices_unavailable">Modelprijzen zijn niet beschikbaar.</string>
+    <string name="ot3_usage_refresh_prices">Prijzen vernieuwen</string>
 </resources>

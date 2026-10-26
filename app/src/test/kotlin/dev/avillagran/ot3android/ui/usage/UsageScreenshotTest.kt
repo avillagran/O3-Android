@@ -8,6 +8,18 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class UsageScreenshotTest : ScreenshotTest() {
+    @Test fun unavailablePricesExposeExplicitAction() {
+        val summary = JSONObject(checkNotNull(javaClass.getResource("/usage/summary.view.json")).readText())
+            .put("pricing", "unavailable").put("unpricedRecords", 3)
+        var requests = 0
+        val state = UsageState(listOf(Environment("node", "NODE", "http://node.test", createdAt = 0)), "node", summary = summary)
+        snapshot("unpriced") { UsageScreen(state, {}, {}, {}, {}, onRefreshPrices = { requests++ }) }
+        composeRule.onNodeWithTag("usage_page").performScrollToNode(hasTestTag("usage_refresh_prices"))
+        composeRule.onNodeWithTag("usage_refresh_prices").performClick()
+        assertEquals(1, requests)
+        composeRule.onNodeWithText("3 records have no price.").assertExists()
+    }
+
     @Test fun summaryAndControls() {
         val summary = JSONObject(checkNotNull(javaClass.getResource("/usage/summary.view.json")).readText())
         var period = ""
