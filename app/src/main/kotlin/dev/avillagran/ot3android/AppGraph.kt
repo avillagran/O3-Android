@@ -75,11 +75,29 @@ class AppGraph(
     }
 
     val environmentRepository: EnvironmentRepository by lazy {
-        EnvironmentRepository(database.environmentDao(), { credentialStore() }, shellCursors)
+        EnvironmentRepository(database.environmentDao(), { credentialStore() }, shellCursors, managed = database.bridgeManagedDao())
     }
 
     val connectionManager: ConnectionManager by lazy {
         ConnectionManager(environmentRepository, shellCursors, transportFactory, appScope)
+    }
+
+    /** Candidate native bridge flow; opened explicitly with an invitation, not by a host label. */
+    val bridgeCatalog: dev.avillagran.ot3android.core.bridge.BridgeCatalogController by lazy {
+        dev.avillagran.ot3android.core.bridge.BridgeCatalogController(
+            database, connectionManager, appScope, { credentialStore() },
+            mutations = environmentRepository.mutations,
+        )
+    }
+
+    suspend fun pairBridge(invitation: org.json.JSONObject): Boolean {
+        bridgeCatalog.open(java.io.File(appContext.noBackupFilesDir, "omabridge").absolutePath)
+        val approved = bridgeCatalog.pair(invitation)
+        if (approved) {
+            bridgeCatalog.selectBridge(invitation.getJSONObject("address").getString("id"))
+            bridgeCatalog.refresh()
+        }
+        return approved
     }
 
     val serverProbe: ServerProbe by lazy { ServerProbe(transportFactory) }
@@ -115,6 +133,15 @@ class AppGraph(
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
         appScope.launch { themeCatalog() }
+        appScope.launch(Dispatchers.IO) {
+            val state = java.io.File(appContext.noBackupFilesDir, "omabridge")
+            if (java.io.File(state, "mobile-selected-bridge.json").exists() &&
+                dev.avillagran.ot3android.core.bridge.NativeBridge.isAvailable()) {
+                try { bridgeCatalog.open(state.absolutePath) }
+                catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                catch (_: Exception) { /* Keep saved environments; show offline on next explicit retry. */ }
+            }
+        }
     }
 
     private companion object {

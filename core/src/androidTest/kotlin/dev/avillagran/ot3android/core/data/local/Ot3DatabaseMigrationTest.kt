@@ -64,6 +64,23 @@ class Ot3DatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun migration2To3KeepsLocalStateAndAddsManagedProvenance() {
+        helper.createDatabase(TEST_DB, 2).use { db ->
+            db.execSQL("INSERT INTO environments VALUES ('local', 'Local', 'https://local.invalid/', 'uuid', 1, 2, 3)")
+            db.execSQL("INSERT INTO drafts VALUES ('local/thread', 'unfinished', 4)")
+        }
+        helper.runMigrationsAndValidate(TEST_DB, 3, true, Ot3Database.MIGRATION_2_3).use { db ->
+            db.query("SELECT label FROM environments WHERE id = 'local'").use { cursor ->
+                assertTrue(cursor.moveToFirst()); assertEquals("Local", cursor.getString(0))
+            }
+            db.query("SELECT text FROM drafts WHERE threadKey = 'local/thread'").use { cursor ->
+                assertTrue(cursor.moveToFirst()); assertEquals("unfinished", cursor.getString(0))
+            }
+            db.execSQL("INSERT INTO bridge_managed VALUES ('managed', 'bridge:owner:client', 'discovered', NULL)")
+        }
+    }
+
     private companion object {
         const val TEST_DB = "migration-test.db"
     }
