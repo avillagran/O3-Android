@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-26T04:29:48.465Z",
+  "events": [
+    {
+      "kind": "tap",
+      "tMs": 888,
+      "x": 279,
+      "y": 126,
+      "referenceWidth": 2357,
+      "referenceHeight": 1080
+    },
+    {
+      "kind": "scroll",
+      "tMs": 4432,
+      "x": 1200,
+      "y": 270,
+      "x2": 1200,
+      "y2": 810,
+      "referenceWidth": 2400,
+      "referenceHeight": 1080,
+      "durationMs": 300,
+      "contentDirection": "up",
+      "amount": 0.5,
+      "pixels": 540
+    },
+    {
+      "kind": "scroll",
+      "tMs": 14609,
+      "x": 1200,
+      "y": 864,
+      "x2": 1200,
+      "y2": 216,
+      "referenceWidth": 2400,
+      "referenceHeight": 1080,
+      "durationMs": 300,
+      "contentDirection": "down",
+      "amount": 0.6,
+      "pixels": 648
+    },
+    {
+      "kind": "swipe",
+      "tMs": 33916,
+      "x": 1300,
+      "y": 380,
+      "x2": 1300,
+      "y2": 720,
+      "referenceWidth": 2357,
+      "referenceHeight": 990,
+      "durationMs": 100
+    },
+    {
+      "kind": "tap",
+      "tMs": 42150,
+      "x": 453,
+      "y": 622,
+      "referenceWidth": 2400,
+      "referenceHeight": 990
+    },
+    {
+      "kind": "tap",
+      "tMs": 44315,
+      "x": 2239,
+      "y": 775,
+      "referenceWidth": 2400,
+      "referenceHeight": 990
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+[
+  {
+    "file": "landscape-final.mp4",
+    "bytes": 7112333,
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 2400,
+        "height": 1080
+      },
+      {},
+      {}
+    ],
+    "format": {
+      "duration": "35.923156"
+    }
+  },
+  {
+    "file": "landscape-reading.mp4",
+    "bytes": 2280631,
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 2400,
+        "height": 1080
+      },
+      {},
+      {}
+    ],
+    "format": {
+      "duration": "44.610200"
+    }
+  },
+  {
+    "file": "portrait-final.mp4",
+    "bytes": 7137671,
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 1080,
+        "height": 2400
+      },
+      {},
+      {}
+    ],
+    "format": {
+      "duration": "36.409267"
+    }
+  },
+  {
+    "file": "portrait-ime-final.mp4",
+    "bytes": 2290501,
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 1080,
+        "height": 2400
+      },
+      {},
+      {}
+    ],
+    "format": {
+      "duration": "7.964633"
+    }
+  }
+]

@@ -24,10 +24,24 @@ class ThreadWorkspaceDeviceTest {
         rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextInput("Borrador de rotación")
-        rule.activityRule.scenario.onActivity { it.currentFocus?.clearFocus() }
+        // Exercise the real drawer control: it dismisses the real IME/Compose focus,
+        // while the persisted draft and reader stay mounted before rotation.
+        rule.onNodeWithTag("thread_sidebar_toggle").performClick()
+        rule.onNodeWithTag("thread_sidebar_toggle").performClick()
+        rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
         rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToIndex(30)
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         val fixture = rule.activity.fixture
+        kotlinx.coroutines.runBlocking {
+            fixture.transport.emitThread("chat", dev.avillagran.ot3android.core.transport.ThreadUpdates.event(
+                org.json.JSONObject().put("kind", "event").put("event", org.json.JSONObject()
+                    .put("type", "message.updated").put("payload", org.json.JSONObject()
+                        .put("id", "m59").put("role", "assistant").put("text", "Streaming update while reading older history")
+                        .put("streaming", true))), cursor = 2))
+        }
+        rule.waitForIdle()
+        rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
+        rule.onNodeWithTag("thread_jump_latest").assertIsDisplayed()
         val streamCount = { fixture.transport.streamOpens.count { it.threadId == "chat" } }
         rule.runOnIdle {
             assertEquals(1, streamCount())
@@ -49,6 +63,9 @@ class ThreadWorkspaceDeviceTest {
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
         rule.onNodeWithTag("thread_sidebar_toggle").performClick()
         rule.onNodeWithTag(HomeTags.row("node/chat")).performClick() // Reselecting is a no-op.
+        // Await the exact same reading item after the native orientation/reveal reflow.
+        // Do not scroll to it: that would hide a lost reading anchor.
+        rule.waitUntil(10_000) { rule.onNodeWithTag(ThreadScreenTags.message("m29")).isDisplayed() }
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         rule.runOnIdle {
             assertEquals(1, streamCount())
@@ -61,6 +78,7 @@ class ThreadWorkspaceDeviceTest {
             }
         }
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
+        rule.waitUntil(10_000) { rule.onNodeWithTag(ThreadScreenTags.message("m29")).isDisplayed() }
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         rule.runOnIdle {
             assertEquals(1, streamCount())
@@ -68,7 +86,7 @@ class ThreadWorkspaceDeviceTest {
         }
         rule.activityRule.scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
         rule.waitUntil(10_000) { rule.activity.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT }
-        rule.onNodeWithTag("thread_sidebar_toggle").assertDoesNotExist()
+        rule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed()
         rule.onNodeWithContentDescription("Back").performClick()
         rule.onNodeWithTag(NavTags.BAR).assertIsDisplayed()
     }
