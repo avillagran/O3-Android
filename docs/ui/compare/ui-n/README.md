@@ -17,7 +17,7 @@ for UI-N yet; none was produced from fixtures.
 | Ongoing card: ongoing + promotion request only while active, never colourised, title fallback, chip, stable timer, Approve/Answer/Open open the thread, absolute timeout | same | `activeCardIs…`, `cardShowsElapsedTime…`, `approvalOffersApprove…`, `finishedCardDrops…` |
 | Chip words from the lib's kind and count, `9+` cap, ≤ 7 characters in English | same | `chipWordsTheLibsKind…` |
 | Alerts grouped `ot3-attention` / `ot3-finished`, tag = lib id, silent summary, expired alerts not built | same | `alertsAreGrouped…`, `expiredDoneAlertIsNotBuilt` |
-| Lock screen: Status only (default), Hidden, Full | same | `lockscreenStateHidesTitles…` |
+| Lock screen: Full (default), Status only, Hidden | same | `lockscreenStateHidesTitles…` |
 | Live Update support, promotion check and settings action per API level | `LiveUpdates.kt` | `liveUpdateSupportAndSettingsFollowTheApiLevel` |
 | Proposed lib objects (`card`, `alerts`), malformed input dropped | `NotificationContract.kt` | `malformedLibObjectsAreDroppedNotGuessed` |
 | Status icon from the bundled T3 mark, white alpha mask | `app/src/main/res/drawable/ic_stat_ot3.xml` | `NotificationIconTest` |

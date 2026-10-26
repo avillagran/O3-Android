@@ -55,10 +55,10 @@ enum class LockscreenDetail {
     /** The system's "contents hidden" placeholder; no public version. */
     Hidden,
 
-    /** Default: "ot3 · Working", never a thread or project title. */
+    /** Optional status-only public card: "OT3 · Working", without thread or project titles. */
     State,
 
-    /** Everything, as on the unlocked shade. */
+    /** Default: the requested full card, as on the unlocked shade; system privacy settings still apply. */
     Full,
 }
 
@@ -101,7 +101,7 @@ object AwarenessCardBuilder {
         context: Context,
         card: AwarenessCard,
         now: Long,
-        lockscreen: LockscreenDetail = LockscreenDetail.State,
+        lockscreen: LockscreenDetail = LockscreenDetail.Full,
         onDismiss: PendingIntent? = null,
     ): Notification? {
         val remaining = card.expiresAt - now
@@ -169,7 +169,7 @@ object AwarenessAlertBuilder {
         context: Context,
         alert: AwarenessAlert,
         now: Long,
-        lockscreen: LockscreenDetail = LockscreenDetail.State,
+        lockscreen: LockscreenDetail = LockscreenDetail.Full,
     ): Notification? {
         val timeout = alert.expiresAt?.let { it - now }
         if (timeout != null && timeout <= 0) return null

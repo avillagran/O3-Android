@@ -870,7 +870,8 @@ their names and states.
   `ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS` is not).
 - **Approve never approves from a notification.** Every action opens the thread deep link;
   confirmation and the `approvals.command` / outbox path are UI-4's visible card.
-- **Lock screen** defaults to status only ("ot3 · Working"), with Hidden and Full options.
+- **Lock screen** defaults to Full, matching Andrés’s requested thread/project/host card;
+  Status only ("OT3 · Working") and Hidden remain optional, subject to system privacy settings.
 - **Status icon** is the bundled T3 mark path, recentred and white (`ic_stat_ot3`); no
   generated or raster image. Adaptation of T3 Mobile's MIT module is attributed in
   `docs/LICENSES.md` and `app/.../notifications/NOTICE.md`.

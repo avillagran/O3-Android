@@ -1985,10 +1985,13 @@ process's `ON_STOP`. UI-N changes that to leases, without a second stream:
 
 #### 4.14.7 Lock screen and privacy
 
-Settings → Notifications → **Lock screen**: *Status only* (default: public version "ot3 ·
-Working", no thread or project titles), *Hidden* (system "contents hidden"), *Full*. The
-user's system setting for sensitive content still wins. Promoted cards appear on the lock
-screen on API 36.1 devices (CDD 3.8.3.1/H-0-1), so the default must not leak titles.
+Settings → Notifications → **Lock screen**: *Full* is the default requested by Andrés:
+the same thread title, project · host, state and elapsed time as the unlocked card.
+*Status only* supplies a public version “OT3 · Working” without thread or project titles;
+*Hidden* uses the system “contents hidden” placeholder. System notification privacy
+settings still apply. The Android application label is **OT3**; the short critical text
+contains only the state/count to fit the platform's chip budget. A complete rendered
+“OT3 · N live” chip is an acceptance target, not a result proved by the builder.
 
 #### 4.14.8 What this tranche does not do
 

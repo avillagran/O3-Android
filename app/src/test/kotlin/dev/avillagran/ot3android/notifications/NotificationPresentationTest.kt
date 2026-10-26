@@ -144,10 +144,12 @@ class NotificationPresentationTest {
         assertEquals(Notification.VISIBILITY_PRIVATE, state.visibility)
         val public = state.publicVersion
         assertNotNull(public)
-        assertEquals("ot3", public.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        assertEquals("OT3", public.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         assertEquals("Working", public.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         assertNull(AwarenessCardBuilder.build(context, parsed, now, LockscreenDetail.Hidden)!!.publicVersion)
         assertEquals(Notification.VISIBILITY_PUBLIC, AwarenessCardBuilder.build(context, parsed, now, LockscreenDetail.Full)!!.visibility)
+        assertEquals(Notification.VISIBILITY_PUBLIC, AwarenessCardBuilder.build(context, parsed, now)!!.visibility)
+        assertEquals(Notification.VISIBILITY_PUBLIC, AwarenessAlertBuilder.build(context, NotificationContract.alert(alert())!!, now)!!.visibility)
     }
 
     @Test

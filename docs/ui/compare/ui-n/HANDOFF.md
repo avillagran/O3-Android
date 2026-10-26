@@ -38,3 +38,13 @@
   (módulo Android, `packages/shared/src/agentAwareness.ts`, relay `agentActivity/*`,
   `docs/operations/android-notifications.md`); URLs Android oficiales en `README.md`.
 - Root: actualizar Dev Vault con este resumen (no se escribió el vault).
+
+## Root acceptance corrections (2026-10-26)
+
+- Full lock-screen card is the default explicitly requested by Andrés; status-only and
+  hidden remain options. System privacy settings still apply.
+- Application label is OT3. Short critical text stays within the platform budget; the
+  combined rendered brand/state chip still needs API 36.1 evidence.
+- No upstream submission is authorized without asking Andrés first.
+- Root verification after corrections: 44 presentation cases (API 24/26/33/36) and
+  app lint passed; no device was started.
