@@ -15,7 +15,51 @@ import org.junit.Test
 
 /** Real navigation/VM/connection and JNI, synthetic diagnostics server. */
 class UsageDeviceTest {
+    private val recordMotionEvidence: Boolean
+        get() = androidx.test.platform.app.InstrumentationRegistry.getArguments().getString("motionEvidence") == "true"
     @get:Rule val rule = createEmptyComposeRule()
+    @Test fun repeatedTabEntrancesKeepOneSubscription() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
+            .putExtra("dark", true)).use { scenario ->
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("nav_tab_Settings").performClick()
+            rule.onNodeWithTag("settings_Usage").performClick()
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("usage_metric_tokens").performClick()
+            repeat(3) {
+                if (recordMotionEvidence) Thread.sleep(1_000) // Opt-in evidence only.
+                rule.mainClock.autoAdvance = !recordMotionEvidence
+                rule.onNodeWithTag("usage_tab_limits").performClick()
+                recordEntranceFrames()
+                rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
+                scenario.onActivity { assertEquals(1, it.fixture.transport.serverConfigCollectors().value) }
+                if (recordMotionEvidence) Thread.sleep(1_000)
+                rule.mainClock.autoAdvance = !recordMotionEvidence
+                rule.onNodeWithTag("usage_tab_usage").performClick()
+                recordEntranceFrames()
+                rule.onNodeWithText("Tokens per day").assertIsDisplayed()
+                scenario.onActivity { assertEquals(0, it.fixture.transport.serverConfigCollectors().value) }
+            }
+            if (recordMotionEvidence) Thread.sleep(1_000)
+            scenario.onActivity {
+                assertEquals(1, it.fixture.transport.calls.count { call -> call.fn == "server.refreshProviders" })
+                assertTrue(it.fixture.transport.calls.none { call -> call.fn == "server.refreshUsageRates" })
+            }
+        }
+    }
+
+    private fun recordEntranceFrames() {
+        if (!recordMotionEvidence) return
+        // Compose tests otherwise fast-forward animations before screenrecord sees them.
+        repeat(14) {
+            rule.mainClock.advanceTimeByFrame()
+            rule.waitForIdle()
+            Thread.sleep(16)
+        }
+        rule.mainClock.autoAdvance = true
+    }
+
     @Test fun limitsStreamRotationTabsAndBackReleaseSubscription() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->

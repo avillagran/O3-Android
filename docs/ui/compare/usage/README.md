@@ -94,3 +94,54 @@ Cold-boot correction: instrumented tests were started while the asynchronous
 emulator-start command was still running. After awaiting that exact handle,
 the same APK/tests passed without reinstalling. Future reproductions must await
 `scripts/emulator.sh start` completion before invoking Gradle.
+
+## Tab entrance — 2026-10-26
+
+Verified the actual reference at `/tmp/t3code`, commit
+`680152e27b2a961686389ca69a1557cbb2c55f08`:
+`apps/mobile/src/features/usage/UsageRouteScreen.tsx:261-264` keys the body by tab
+and uses `FadeIn.duration(160).reduceMotion(ReduceMotion.System)`. There is no
+outgoing fade or cross-fade. The desktop reference
+`ui/qml/T3UsagePage.qml:8-78` has a single usage popup and no tab transition.
+
+Android now fades the incoming body over 160 ms using one shared presentation
+opacity. Tab/environment controls stay stable; a single LazyColumn retains its
+scroll state. No outgoing composition, extra summary read, or extra quota
+subscription is created by the animation. Animations Off (including the system
+reduced-motion policy) snaps to full opacity, including a preference change during
+an entrance. Metric, period and environment selection remain outside the effect.
+
+Validation: focused JVM motion/screen/view-model tests and lint passed; all six
+existing UsageScreenshotTest Tokyo Night/Latte goldens pass unchanged. The clock
+controlled test checks intermediate opacity, completion, tab restart, and turning
+motion off during an entrance. Screen interaction checks metric and period
+retention and no refresh on a round trip. The following device follow-up adds emulator evidence; physical/live acceptance
+is not claimed.
+
+Device evidence attempt: `device_list` found `ot3a361` stopped; `device_open`
+failed before ADB came online. The project launcher was then awaited with that
+same API36.1 AVD and software rendering. It exited during compatibility checks:
+`FATAL | Your device does not have enough disk space to run avd: ot3a361`.
+The host had 2.0 GiB free; no guest boot, instrumentation or video occurred.
+The disk blocker was resolved by reclaiming regenerable build cache. The device
+panel launcher subsequently failed with SIGSEGV using GPU auto; the awaited
+project launcher with software rendering booted API36.1 on `emulator-5580`.
+
+
+API36.1 follow-up: `repeatedTabEntrancesKeepOneSubscription` passed both normally
+and with opt-in `motionEvidence=true`. Three tab round trips retain the Tokens
+metric, have one configuration collector on Limits and zero on Usage, trigger one
+provider probe in total and no price refresh. Debug/instrumentation builds and lint
+pass. No normal CI sleeps were added: recording pauses and clock stepping are
+exclusive to the opt-in instrumentation argument.
+
+[Video](motion-device/tab-entrance.mp4) (10.88 s, Tokyo Night) shows the same native
+body at intermediate opacity and settled opacity; [entering](motion-device/limits-entering.png)
+and [settled](motion-device/limits-settled.png) frames show the stable header and
+controls. Inspected the full contact sheet and transition frames. Compose test
+clocks otherwise fast-forward animations before screenrecord draws them, so this
+video explicitly advances 16 ms clock frames with wall-clock pauses. It proves
+rendered intermediate/settled states and layout, **not** real-time 160 ms timing
+or manually assessed feel; duration/reduced motion are covered by the JVM clock
+test. Data are synthetic over the real connection/VM/JNI path. The guest was
+stopped after recording; no Xiaomi operation occurred.
