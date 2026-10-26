@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Odesláno automatizací</string>
     <string name="ot3_reader_t3code">Odesláno z T3 Code</string>
     <string name="ot3_reader_agent">Odesláno jiným agentem</string>
+    <string name="ot3_open_diff">Zobrazit rozdíly</string>
+    <string name="ot3_diff">Rozdíly</string>
+    <string name="ot3_loading_diff">Načítání rozdílů…</string>
+    <string name="ot3_diff_show_whitespace">Zobrazit změny bílých znaků</string>
+    <string name="ot3_diff_missing">Patch pro tento soubor není dostupný.</string>
+    <string name="ot3_diff_binary">Binární soubor — pouze metadata</string>
+    <string name="ot3_diff_empty">Žádné změny</string>
 </resources>

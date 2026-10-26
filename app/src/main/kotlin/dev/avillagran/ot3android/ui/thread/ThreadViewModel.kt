@@ -372,6 +372,13 @@ class ThreadViewModel(
         return domain.domain("toolInspector.parse", org.json.JSONObject(args.toString()).put("response", response)) as org.json.JSONObject
     }
 
+    suspend fun readDiff(summary: org.json.JSONObject, ignoreWhitespace: Boolean): org.json.JSONObject? {
+        val owner = supervisor.value ?: return null
+        val current = owner.connection.value ?: return null
+        val result = dev.avillagran.ot3android.core.thread.ThreadDiff.read(current.transport, environmentId, threadId, summary, ignoreWhitespace)
+        return result.takeIf { supervisor.value === owner && owner.connection.value === current }
+    }
+
     fun retryStream() {
         session.retry()
         supervisor.value?.retry()

@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Enviado por uma automação</string>
     <string name="ot3_reader_t3code">Enviado pelo T3 Code</string>
     <string name="ot3_reader_agent">Enviado por outro agente</string>
+    <string name="ot3_open_diff">Ver diferenças</string>
+    <string name="ot3_diff">Diferenças</string>
+    <string name="ot3_loading_diff">Carregando diferenças…</string>
+    <string name="ot3_diff_show_whitespace">Mostrar alterações de espaços em branco</string>
+    <string name="ot3_diff_missing">O patch não está disponível para este arquivo.</string>
+    <string name="ot3_diff_binary">Arquivo binário — apenas metadados</string>
+    <string name="ot3_diff_empty">Sem alterações</string>
 </resources>

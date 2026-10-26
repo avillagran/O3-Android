@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Skickat av en automatisering</string>
     <string name="ot3_reader_t3code">Skickat av T3 Code</string>
     <string name="ot3_reader_agent">Skickat av en annan agent</string>
+    <string name="ot3_open_diff">Visa skillnader</string>
+    <string name="ot3_diff">Skillnader</string>
+    <string name="ot3_loading_diff">Läser in skillnader…</string>
+    <string name="ot3_diff_show_whitespace">Visa ändringar i blanksteg</string>
+    <string name="ot3_diff_missing">Patchen för den här filen är inte tillgänglig.</string>
+    <string name="ot3_diff_binary">Binärfil — endast metadata</string>
+    <string name="ot3_diff_empty">Inga ändringar</string>
 </resources>

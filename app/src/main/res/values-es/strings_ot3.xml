@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Enviado por una automatización</string>
     <string name="ot3_reader_t3code">Enviado por T3 Code</string>
     <string name="ot3_reader_agent">Enviado por otro agente</string>
+    <string name="ot3_open_diff">Ver diferencias</string>
+    <string name="ot3_diff">Diferencias</string>
+    <string name="ot3_loading_diff">Cargando diferencias…</string>
+    <string name="ot3_diff_show_whitespace">Mostrar cambios de espacios en blanco</string>
+    <string name="ot3_diff_missing">El parche no está disponible para este archivo.</string>
+    <string name="ot3_diff_binary">Binario: solo metadatos</string>
+    <string name="ot3_diff_empty">Sin cambios</string>
 </resources>

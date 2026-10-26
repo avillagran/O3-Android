@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Sendt av en automatisering</string>
     <string name="ot3_reader_t3code">Sendt av T3 Code</string>
     <string name="ot3_reader_agent">Sendt av en annen agent</string>
+    <string name="ot3_open_diff">Vis forskjeller</string>
+    <string name="ot3_diff">Forskjeller</string>
+    <string name="ot3_loading_diff">Laster forskjeller…</string>
+    <string name="ot3_diff_show_whitespace">Vis endringer i blanktegn</string>
+    <string name="ot3_diff_missing">Patchen for denne filen er ikke tilgjengelig.</string>
+    <string name="ot3_diff_binary">Binærfil — bare metadata</string>
+    <string name="ot3_diff_empty">Ingen endringer</string>
 </resources>

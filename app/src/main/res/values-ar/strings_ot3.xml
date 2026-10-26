@@ -158,4 +158,11 @@
     <string name="ot3_reader_automation">أرسلته أتمتة</string>
     <string name="ot3_reader_t3code">أرسله T3 Code</string>
     <string name="ot3_reader_agent">أرسله وكيل آخر</string>
+    <string name="ot3_open_diff">عرض الفروق</string>
+    <string name="ot3_diff">الفروقات</string>
+    <string name="ot3_loading_diff">جارٍ تحميل الفروق…</string>
+    <string name="ot3_diff_show_whitespace">إظهار تغييرات المسافات البيضاء</string>
+    <string name="ot3_diff_missing">رقعة هذا الملف غير متاحة.</string>
+    <string name="ot3_diff_binary">ملف ثنائي — البيانات الوصفية فقط</string>
+    <string name="ot3_diff_empty">لا تغييرات</string>
 </resources>

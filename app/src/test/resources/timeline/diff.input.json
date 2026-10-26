@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "files": [
+      {
+        "path": "missing.kt",
+        "kind": "modified",
+        "additions": 4,
+        "deletions": 0
+      }
+    ]
+  },
+  "result": {
+    "threadId": "thread",
+    "fromTurnCount": 2,
+    "toTurnCount": 3,
+    "diff": "diff --git a/reader.kt b/reader.kt\n--- a/reader.kt\n+++ b/reader.kt\n@@ -1,2 +1,2 @@\n-oldPlainText()\n+renderNativeBlocks()\n keepReadingAnchor()\ndiff --git a/icon.png b/icon.png\nBinary files a/icon.png and b/icon.png differ\n"
+  }
+}

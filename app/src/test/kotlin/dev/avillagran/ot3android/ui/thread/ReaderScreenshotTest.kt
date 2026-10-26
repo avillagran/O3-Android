@@ -17,6 +17,14 @@ class ReaderScreenshotTest : ScreenshotTest() {
         java.util.TimeZone.setDefault(originalZone)
         java.util.Locale.setDefault(originalLocale)
     }
+    @Test fun unifiedDiff() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        snapshot("diff") { DiffLines(view) }
+        composeRule.onNodeWithText("+renderNativeBlocks()").assertIsDisplayed()
+        composeRule.onNodeWithText("Binary file — metadata only").assertIsDisplayed()
+        composeRule.onNodeWithText("Patch unavailable for this file.").assertIsDisplayed()
+    }
+
     @Test fun compactPromptAndOutsideActions() {
         val short = JSONObject().put("id", "short").put("role", "user").put("text", "Yes").put("createdAt", 1000)
         val long = JSONObject().put("id", "long").put("role", "user").put("text", "Keep the message readable while the longer prompt wraps inside the same right-aligned lane.").put("createdAt", 1000)

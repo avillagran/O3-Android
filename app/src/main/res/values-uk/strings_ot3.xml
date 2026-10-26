@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Надіслано автоматизацією</string>
     <string name="ot3_reader_t3code">Надіслано T3 Code</string>
     <string name="ot3_reader_agent">Надіслано іншим агентом</string>
+    <string name="ot3_open_diff">Показати зміни</string>
+    <string name="ot3_diff">Відмінності</string>
+    <string name="ot3_loading_diff">Завантаження змін…</string>
+    <string name="ot3_diff_show_whitespace">Показати зміни пробілів</string>
+    <string name="ot3_diff_missing">Патч для цього файлу недоступний.</string>
+    <string name="ot3_diff_binary">Двійковий файл — лише метадані</string>
+    <string name="ot3_diff_empty">Немає змін</string>
 </resources>

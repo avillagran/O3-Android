@@ -101,6 +101,11 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         onBoundedThread("chat") { bounded() }
         onDomain("timeline.view") { DomainEngine.shared.domain("timeline.view", it) }
         onDomain("projection.apply") { DomainEngine.shared.domain("projection.apply", it) }
+        onCall("orchestration.getTurnDiff") { args ->
+            JSONObject().put("threadId", args.getString("threadId"))
+                .put("fromTurnCount", args.getInt("fromTurnCount")).put("toTurnCount", args.getInt("toTurnCount"))
+                .put("diff", "diff --git a/ui/TimelineReader.kt b/ui/TimelineReader.kt\n--- a/ui/TimelineReader.kt\n+++ b/ui/TimelineReader.kt\n@@ -1 +1 @@\n-Text(markdown)\n+MarkdownBlocks(nativeBlocks)\n")
+        }
         onCall("orchestration.getTurnItem") { args ->
             JSONObject().put("item", fixtureItems().objects().firstOrNull { it.optString("id") == args.optString("itemId") })
         }

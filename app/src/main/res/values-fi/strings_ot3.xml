@@ -157,4 +157,11 @@
     <string name="ot3_reader_automation">Automaation lähettämä</string>
     <string name="ot3_reader_t3code">T3 Coden lähettämä</string>
     <string name="ot3_reader_agent">Toisen agentin lähettämä</string>
+    <string name="ot3_open_diff">Näytä erot</string>
+    <string name="ot3_diff">Erot</string>
+    <string name="ot3_loading_diff">Ladataan eroja…</string>
+    <string name="ot3_diff_show_whitespace">Näytä tyhjemerkkien muutokset</string>
+    <string name="ot3_diff_missing">Tämän tiedoston korjaus ei ole saatavilla.</string>
+    <string name="ot3_diff_binary">Binaaritiedosto — vain metatiedot</string>
+    <string name="ot3_diff_empty">Ei muutoksia</string>
 </resources>
