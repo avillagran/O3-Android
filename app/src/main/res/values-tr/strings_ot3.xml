@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Bu dosyanın yaması kullanılamıyor.</string>
     <string name="ot3_diff_binary">İkili dosya — yalnızca üst veriler</string>
     <string name="ot3_diff_empty">Değişiklik yok</string>
+    <string name="ot3_usage_title">Kullanım</string>
+    <string name="ot3_usage_day">Gün</string>
+    <string name="ot3_usage_week">Hafta</string>
+    <string name="ot3_usage_month">Ay</string>
+    <string name="ot3_usage_quarter">Çeyrek</string>
+    <string name="ot3_usage_cost">Maliyet</string>
+    <string name="ot3_usage_tokens">Tokenlar</string>
+    <string name="ot3_usage_sessions">Oturumlar</string>
+    <string name="ot3_usage_cache">Önbellek tasarrufu</string>
+    <string name="ot3_usage_cost_day">Günlük maliyet</string>
+    <string name="ot3_usage_tokens_day">Günlük belirteç</string>
+    <string name="ot3_usage_models">Modeller</string>
+    <string name="ot3_usage_refresh">Yenile</string>
+    <string name="ot3_usage_offline">Çevrimdışı</string>
+    <string name="ot3_usage_loading">Yükleniyor…</string>
+    <string name="ot3_usage_unavailable">Kullanılamıyor</string>
+    <string name="ot3_usage_unpriced">%1$s kaydın fiyatı yok.</string>
+    <string name="ot3_usage_prices_unavailable">Model fiyatları kullanılamıyor.</string>
 </resources>

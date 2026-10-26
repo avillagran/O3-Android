@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">このファイルのパッチは利用できません。</string>
     <string name="ot3_diff_binary">バイナリファイル — メタデータのみ</string>
     <string name="ot3_diff_empty">変更なし</string>
+    <string name="ot3_usage_title">使用状況</string>
+    <string name="ot3_usage_day">日</string>
+    <string name="ot3_usage_week">週</string>
+    <string name="ot3_usage_month">月</string>
+    <string name="ot3_usage_quarter">四半期</string>
+    <string name="ot3_usage_cost">コスト</string>
+    <string name="ot3_usage_tokens">トークン</string>
+    <string name="ot3_usage_sessions">セッション</string>
+    <string name="ot3_usage_cache">キャッシュによる節約</string>
+    <string name="ot3_usage_cost_day">1 日あたりのコスト</string>
+    <string name="ot3_usage_tokens_day">1 日あたりのトークン</string>
+    <string name="ot3_usage_models">モデル</string>
+    <string name="ot3_usage_refresh">更新</string>
+    <string name="ot3_usage_offline">オフライン</string>
+    <string name="ot3_usage_loading">読み込み中…</string>
+    <string name="ot3_usage_unavailable">利用不可</string>
+    <string name="ot3_usage_unpriced">%1$s 件のレコードに価格がありません。</string>
+    <string name="ot3_usage_prices_unavailable">モデルの価格を取得できません。</string>
 </resources>

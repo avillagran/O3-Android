@@ -194,3 +194,21 @@ ot3_diff_show_whitespace	Show whitespace changes
 ot3_diff_missing	Patch unavailable for this file.
 ot3_diff_binary	Binary file — metadata only
 ot3_diff_empty	No changes
+ot3_usage_title	Usage
+ot3_usage_day	Day
+ot3_usage_week	Week
+ot3_usage_month	Month
+ot3_usage_quarter	Quarter
+ot3_usage_cost	Cost
+ot3_usage_tokens	Tokens
+ot3_usage_sessions	Sessions
+ot3_usage_cache	Cache savings
+ot3_usage_cost_day	Cost per day
+ot3_usage_tokens_day	Tokens per day
+ot3_usage_models	Models
+ot3_usage_refresh	Refresh
+ot3_usage_offline	Offline
+ot3_usage_loading	Loading…
+ot3_usage_unavailable	Unavailable
+ot3_usage_unpriced	{count} records have no price.
+ot3_usage_prices_unavailable	Model prices are unavailable.

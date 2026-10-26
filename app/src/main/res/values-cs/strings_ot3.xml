@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Patch pro tento soubor není dostupný.</string>
     <string name="ot3_diff_binary">Binární soubor — pouze metadata</string>
     <string name="ot3_diff_empty">Žádné změny</string>
+    <string name="ot3_usage_title">Využití</string>
+    <string name="ot3_usage_day">Den</string>
+    <string name="ot3_usage_week">Týden</string>
+    <string name="ot3_usage_month">Měsíc</string>
+    <string name="ot3_usage_quarter">Čtvrtletí</string>
+    <string name="ot3_usage_cost">Cena</string>
+    <string name="ot3_usage_tokens">Tokeny</string>
+    <string name="ot3_usage_sessions">Relace</string>
+    <string name="ot3_usage_cache">Úspora z mezipaměti</string>
+    <string name="ot3_usage_cost_day">Cena za den</string>
+    <string name="ot3_usage_tokens_day">Tokeny za den</string>
+    <string name="ot3_usage_models">Modely</string>
+    <string name="ot3_usage_refresh">Obnovit</string>
+    <string name="ot3_usage_offline">Offline</string>
+    <string name="ot3_usage_loading">Načítání…</string>
+    <string name="ot3_usage_unavailable">Nedostupné</string>
+    <string name="ot3_usage_unpriced">%1$s záznamů nemá cenu.</string>
+    <string name="ot3_usage_prices_unavailable">Ceny modelů nejsou k dispozici.</string>
 </resources>

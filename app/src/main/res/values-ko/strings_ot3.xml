@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">이 파일의 패치를 사용할 수 없습니다.</string>
     <string name="ot3_diff_binary">바이너리 파일 — 메타데이터만 표시</string>
     <string name="ot3_diff_empty">변경 사항 없음</string>
+    <string name="ot3_usage_title">사용량</string>
+    <string name="ot3_usage_day">일</string>
+    <string name="ot3_usage_week">주</string>
+    <string name="ot3_usage_month">월</string>
+    <string name="ot3_usage_quarter">분기</string>
+    <string name="ot3_usage_cost">비용</string>
+    <string name="ot3_usage_tokens">토큰</string>
+    <string name="ot3_usage_sessions">세션</string>
+    <string name="ot3_usage_cache">캐시 절감액</string>
+    <string name="ot3_usage_cost_day">일별 비용</string>
+    <string name="ot3_usage_tokens_day">일별 토큰</string>
+    <string name="ot3_usage_models">모델</string>
+    <string name="ot3_usage_refresh">새로 고침</string>
+    <string name="ot3_usage_offline">오프라인</string>
+    <string name="ot3_usage_loading">불러오는 중…</string>
+    <string name="ot3_usage_unavailable">사용 불가</string>
+    <string name="ot3_usage_unpriced">%1$s개 기록에 가격이 없습니다.</string>
+    <string name="ot3_usage_prices_unavailable">모델 가격을 사용할 수 없습니다.</string>
 </resources>

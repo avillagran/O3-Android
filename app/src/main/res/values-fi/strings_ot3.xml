@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Tämän tiedoston korjaus ei ole saatavilla.</string>
     <string name="ot3_diff_binary">Binaaritiedosto — vain metatiedot</string>
     <string name="ot3_diff_empty">Ei muutoksia</string>
+    <string name="ot3_usage_title">Käyttö</string>
+    <string name="ot3_usage_day">Päivä</string>
+    <string name="ot3_usage_week">Viikko</string>
+    <string name="ot3_usage_month">Kuukausi</string>
+    <string name="ot3_usage_quarter">Neljännes</string>
+    <string name="ot3_usage_cost">Kustannus</string>
+    <string name="ot3_usage_tokens">Tokenit</string>
+    <string name="ot3_usage_sessions">Istunnot</string>
+    <string name="ot3_usage_cache">Välimuistisäästö</string>
+    <string name="ot3_usage_cost_day">Hinta päivässä</string>
+    <string name="ot3_usage_tokens_day">Tokenit päivässä</string>
+    <string name="ot3_usage_models">Mallit</string>
+    <string name="ot3_usage_refresh">Päivitä</string>
+    <string name="ot3_usage_offline">Ei yhteyttä</string>
+    <string name="ot3_usage_loading">Ladataan…</string>
+    <string name="ot3_usage_unavailable">Ei saatavilla</string>
+    <string name="ot3_usage_unpriced">%1$s tietueella ei ole hintaa.</string>
+    <string name="ot3_usage_prices_unavailable">Mallien hinnat eivät ole saatavilla.</string>
 </resources>

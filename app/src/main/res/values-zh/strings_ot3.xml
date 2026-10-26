@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">此文件的补丁不可用。</string>
     <string name="ot3_diff_binary">二进制文件 — 仅元数据</string>
     <string name="ot3_diff_empty">无更改</string>
+    <string name="ot3_usage_title">用量</string>
+    <string name="ot3_usage_day">日</string>
+    <string name="ot3_usage_week">周</string>
+    <string name="ot3_usage_month">月</string>
+    <string name="ot3_usage_quarter">季度</string>
+    <string name="ot3_usage_cost">费用</string>
+    <string name="ot3_usage_tokens">词元</string>
+    <string name="ot3_usage_sessions">会话</string>
+    <string name="ot3_usage_cache">缓存节省</string>
+    <string name="ot3_usage_cost_day">每日费用</string>
+    <string name="ot3_usage_tokens_day">每日 token</string>
+    <string name="ot3_usage_models">模型</string>
+    <string name="ot3_usage_refresh">刷新</string>
+    <string name="ot3_usage_offline">离线</string>
+    <string name="ot3_usage_loading">加载中…</string>
+    <string name="ot3_usage_unavailable">不可用</string>
+    <string name="ot3_usage_unpriced">%1$s 条记录没有价格。</string>
+    <string name="ot3_usage_prices_unavailable">模型价格不可用。</string>
 </resources>

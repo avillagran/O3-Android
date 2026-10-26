@@ -9,6 +9,13 @@ import org.junit.Test
 
 /** JNI stays in the normal JVM classloader; UI tests read its verified output. */
 class ReaderContractTest {
+    @Test fun usageFixtureMatchesPinnedRust() = runBlocking {
+        assumeHostJni()
+        val input = JSONObject(checkNotNull(javaClass.getResource("/usage/summary.input.json")).readText())
+        val expected = JSONObject(checkNotNull(javaClass.getResource("/usage/summary.view.json")).readText())
+        assertEquals(canonical(expected), canonical(DomainEngine.shared.domain("usageSummary.aggregate", input)))
+    }
+
     @Test fun diffFixtureMatchesPinnedRust() = runBlocking {
         assumeHostJni()
         val input = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.input.json")).readText())
@@ -38,6 +45,7 @@ class ReaderContractTest {
 private fun canonical(value: Any?): String = when (value) {
     is JSONObject -> value.keys().asSequence().sorted().joinToString(prefix = "{", postfix = "}") { JSONObject.quote(it) + ":" + canonical(value.get(it)) }
     is org.json.JSONArray -> (0 until value.length()).joinToString(prefix = "[", postfix = "]") { canonical(value.get(it)) }
+    is Number -> value.toString().toBigDecimal().stripTrailingZeros().toPlainString()
     is String -> JSONObject.quote(value)
     else -> value.toString()
 }

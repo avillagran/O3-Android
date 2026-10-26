@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Voor dit bestand is geen patch beschikbaar.</string>
     <string name="ot3_diff_binary">Binair bestand — alleen metagegevens</string>
     <string name="ot3_diff_empty">Geen wijzigingen</string>
+    <string name="ot3_usage_title">Gebruik</string>
+    <string name="ot3_usage_day">Dag</string>
+    <string name="ot3_usage_week">Week</string>
+    <string name="ot3_usage_month">Maand</string>
+    <string name="ot3_usage_quarter">Kwartaal</string>
+    <string name="ot3_usage_cost">Kosten</string>
+    <string name="ot3_usage_tokens">Tokens</string>
+    <string name="ot3_usage_sessions">Sessies</string>
+    <string name="ot3_usage_cache">Cachebesparing</string>
+    <string name="ot3_usage_cost_day">Kosten per dag</string>
+    <string name="ot3_usage_tokens_day">Tokens per dag</string>
+    <string name="ot3_usage_models">Modellen</string>
+    <string name="ot3_usage_refresh">Vernieuwen</string>
+    <string name="ot3_usage_offline">Offline</string>
+    <string name="ot3_usage_loading">Laden…</string>
+    <string name="ot3_usage_unavailable">Niet beschikbaar</string>
+    <string name="ot3_usage_unpriced">%1$s records hebben geen prijs.</string>
+    <string name="ot3_usage_prices_unavailable">Modelprijzen zijn niet beschikbaar.</string>
 </resources>

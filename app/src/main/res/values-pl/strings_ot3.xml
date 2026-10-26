@@ -164,4 +164,22 @@
     <string name="ot3_diff_missing">Poprawka dla tego pliku jest niedostępna.</string>
     <string name="ot3_diff_binary">Plik binarny — tylko metadane</string>
     <string name="ot3_diff_empty">Brak zmian</string>
+    <string name="ot3_usage_title">Wykorzystanie</string>
+    <string name="ot3_usage_day">Dzień</string>
+    <string name="ot3_usage_week">Tydzień</string>
+    <string name="ot3_usage_month">Miesiąc</string>
+    <string name="ot3_usage_quarter">Kwartał</string>
+    <string name="ot3_usage_cost">Koszt</string>
+    <string name="ot3_usage_tokens">Tokeny</string>
+    <string name="ot3_usage_sessions">Sesje</string>
+    <string name="ot3_usage_cache">Oszczędność z pamięci podręcznej</string>
+    <string name="ot3_usage_cost_day">Koszt dziennie</string>
+    <string name="ot3_usage_tokens_day">Tokeny dziennie</string>
+    <string name="ot3_usage_models">Modele</string>
+    <string name="ot3_usage_refresh">Odśwież</string>
+    <string name="ot3_usage_offline">Offline</string>
+    <string name="ot3_usage_loading">Ładowanie…</string>
+    <string name="ot3_usage_unavailable">Niedostępny</string>
+    <string name="ot3_usage_unpriced">%1$s rekordów nie ma ceny.</string>
+    <string name="ot3_usage_prices_unavailable">Ceny modeli są niedostępne.</string>
 </resources>
