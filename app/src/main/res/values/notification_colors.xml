@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification accents: ot3's status roles (docs/ui/tokens.md §1, T3Palette.qml:10-13) in
+     the default light theme, catppuccin-latte. A notification cannot follow the host's live
+     Omarchy theme, so the shade uses the bundled defaults. Never colorised (Live Updates). -->
+<resources>
+    <color name="ot3_notif_working">#FF1E66F5</color>
+    <color name="ot3_notif_done">#FF40A02B</color>
+    <color name="ot3_notif_waiting">#FFDF8E1D</color>
+    <color name="ot3_notif_failed">#FFD20F39</color>
+</resources>

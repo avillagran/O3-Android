@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">打开</string>
     <string name="ot3_pr_merged">已合并</string>
     <string name="ot3_pr_closed">已关闭</string>
+    <string name="ot3_notif_approve">批准</string>
+    <string name="ot3_notif_open">打开</string>
+    <string name="ot3_notif_approval_required">需要批准</string>
+    <string name="ot3_notif_question">问题</string>
 </resources>

@@ -164,3 +164,7 @@ ot3_kit_copy_failed	Copy failed
 ot3_pr_open	Open
 ot3_pr_merged	Merged
 ot3_pr_closed	Closed
+ot3_notif_approve	Approve
+ot3_notif_open	Open
+ot3_notif_approval_required	Approval required
+ot3_notif_question	Question

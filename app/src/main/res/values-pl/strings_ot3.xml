@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Otwarte</string>
     <string name="ot3_pr_merged">Scalone</string>
     <string name="ot3_pr_closed">Zamknięte</string>
+    <string name="ot3_notif_approve">Zatwierdź</string>
+    <string name="ot3_notif_open">Otwarte</string>
+    <string name="ot3_notif_approval_required">Wymagane zatwierdzenie</string>
+    <string name="ot3_notif_question">Pytanie</string>
 </resources>

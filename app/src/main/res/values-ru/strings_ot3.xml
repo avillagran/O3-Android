@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Открытые</string>
     <string name="ot3_pr_merged">Слитые</string>
     <string name="ot3_pr_closed">Закрытые</string>
+    <string name="ot3_notif_approve">Разрешить</string>
+    <string name="ot3_notif_open">Открытые</string>
+    <string name="ot3_notif_approval_required">Требуется подтверждение</string>
+    <string name="ot3_notif_question">Вопрос</string>
 </resources>

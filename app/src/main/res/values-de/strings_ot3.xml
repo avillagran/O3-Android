@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Offen</string>
     <string name="ot3_pr_merged">Zusammengeführt</string>
     <string name="ot3_pr_closed">Geschlossen</string>
+    <string name="ot3_notif_approve">Genehmigen</string>
+    <string name="ot3_notif_open">Offen</string>
+    <string name="ot3_notif_approval_required">Genehmigung erforderlich</string>
+    <string name="ot3_notif_question">Frage</string>
 </resources>

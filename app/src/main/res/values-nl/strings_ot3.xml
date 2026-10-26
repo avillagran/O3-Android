@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Open</string>
     <string name="ot3_pr_merged">Samengevoegd</string>
     <string name="ot3_pr_closed">Gesloten</string>
+    <string name="ot3_notif_approve">Goedkeuren</string>
+    <string name="ot3_notif_open">Open</string>
+    <string name="ot3_notif_approval_required">Goedkeuring vereist</string>
+    <string name="ot3_notif_question">Vraag</string>
 </resources>
