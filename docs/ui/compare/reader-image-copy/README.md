@@ -80,3 +80,15 @@ Still open: Markdown media-file bindings (U30 / lib-t3-rust issue 15), zoom/pan,
 video/file previews, live signed-grant/revocation acceptance and physical/receiver
 compatibility. Native image reads still have no per-read cancel handle; UI cancellation
 drops results and prevents publication while Rust retains its deadline.
+
+## Android 14 integration regression (2026-10-26)
+
+CI and a local API34 run both failed the existing diff rotation test before rotation,
+waiting for file controls. Diagnostics showed the dialog open, one getTurnDiff call
+and a stuck Loading state; adding timing-sensitive logging could make it pass. The
+JNI continuation was observed on a worker thread. The dialog now explicitly publishes
+its completed result on Dispatchers.Main.immediate, preserving cancellation and
+leaving native parsing unchanged. No timeout increase or automatic retry was added.
+The unchanged two RichReader and two image-copy device tests pass together on API34
+after this change (4/4). The precise original snapshot scheduling race remains an
+inference from those observations; CI verifies the final branch independently.
