@@ -29,3 +29,28 @@ those historical artifacts.
 | Local notifications | API24/26/33/36 builder tests | Pin 0.3.5, service/settings/leases, promoted chip and lockscreen proof on API36.1 |
 
 The reader and the full application are **not** declared desktop parity.
+
+## Combined emulator captures (2026-10-26)
+
+| Theme | Home | Reader |
+|---|---|---|
+| Tokyo Night | [Home](integrated/tokyo-night-home.png) | [Reader](integrated/tokyo-night-reader.png) |
+| Catppuccin Latte | [Home](integrated/latte-home.png) | [Reader](integrated/latte-reader.png) |
+
+Portrait: [drawer](integrated/tokyo-night-sidebar.png), [real keyboard](integrated/tokyo-night-keyboard.png),
+[drawer/keyboard/draft video, 70.85 s](integrated/portrait-sidebar-keyboard.mp4).
+Landscape: [open](integrated/latte-landscape-sidebar.png), [collapsed](integrated/latte-landscape-collapsed.png),
+[real keyboard](integrated/latte-landscape-keyboard.png), [collapse/reopen video, 14.41 s](integrated/landscape-sidebar.mp4).
+The landscape captures explicitly launch the debug Activity with landscape=true. Actual
+rotation, reading-anchor preservation, draft preservation and one stream are asserted by
+ThreadWorkspaceDeviceTest; they are not inferred from separate static launches.
+
+[Verification](integrated/verification.json): app instrumented 29/29; core 8 passed and
+2 explicit lab opt-ins omitted. JVM/core, lint, goldens and required-production-SDK build passed.
+The native SDK is packaged, but the omitted labs mean this run adds no new bridge-network proof.
+
+Compare the [desktop sidebar/thread](../../reference/ot3-sidebar-and-thread.png) and
+[desktop Markdown/composer](../../reference/ot3-timeline-shelves-composer.png). These pinned
+ot3 captures establish source structure; they use different data/themes, so they cannot
+prove exact same-content pixel parity. Fresh desktop same-content/theme comparison remains open.
+The Android Tokyo Night/Latte captures use the same rich fixture and reader position.
