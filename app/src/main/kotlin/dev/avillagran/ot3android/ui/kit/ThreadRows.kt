@@ -9,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -168,8 +169,9 @@ fun ThreadSlimRow(
                 )
                 row.pullRequest?.let { PrBadge(it, onClick = onPullRequestClick) }
             }
-            Text(
-                listOfNotNull(row.environmentName, row.branch).joinToString(" · "),
+            val metadata = listOfNotNull(row.environmentName, row.branch).joinToString(" · ")
+            if (metadata.isNotEmpty()) Text(
+                metadata,
                 style = Ot3Theme.typography.material.bodySmall,
                 color = Ot3Theme.colors.dim,
                 maxLines = 1,
@@ -210,6 +212,7 @@ private fun RowFrame(
     val name = rowAccessibilityName(row)
     Box(
         modifier
+            .then(if (slim) Modifier.height(IntrinsicSize.Min) else Modifier)
             .fillMaxWidth()
             .combinedClickable(
                 interactionSource = interaction,
