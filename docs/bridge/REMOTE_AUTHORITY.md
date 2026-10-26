@@ -9,8 +9,8 @@ OmaBridge is 0.2.1 and does not expose `catalog-publish`. No grants, services, c
 entries, sessions, tokens or desktop source were changed by this inspection.
 
 The Android application contains the native catalog client. Its installed build
-f90f7c1 reads VQ usage successfully on the Xiaomi; this is an independently configured
-connection, not evidence of automatic NODE discovery. No phone identity/token store
+f90f7c1 reads VQ usage successfully on the Xiaomi; this is the existing VQ
+connection, not evidence of automatic NODE discovery or its catalog provenance. No phone identity/token store
 was exported. The desktop has concurrent source modifications and is not a deployment
 checkout for this task.
 
