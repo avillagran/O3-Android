@@ -52,3 +52,10 @@ Validation for file navigation: app JVM 210/210, screenshot verification, lint a
 assembleDebug pass. The focused dialog test checks boundaries, direct selection,
 binary/missing file rendering, zero extra reads when switching, whitespace refetch
 and recreation. Tokyo Night and Latte goldens were visually inspected.
+
+The existing `RichReaderDeviceTest` now walks from Home into the real chat, opens
+Changes, navigates two native-parsed file patches via arrows and picker, preserves
+the second selection through whitespace refetch, and returns to the timeline. Its
+final assertion still requires exactly two diff reads and no command dispatch.
+The test APK compiles; execution of this expanded device scenario is pending CI
+and the reserved local emulator. Compilation alone is not device acceptance.

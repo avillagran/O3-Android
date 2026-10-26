@@ -62,8 +62,19 @@ class RichReaderDeviceTest {
             rule.onNodeWithTag("thread_diff_changes/cp-reader").performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithText("+MarkdownBlocks(nativeBlocks)").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("-Text(markdown)").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_previous").assertIsNotEnabled()
+            rule.onNodeWithTag("thread_diff_next").performClick()
+            rule.onNodeWithText("+rememberSelectedFile()").assertIsDisplayed()
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertDoesNotExist()
+            rule.onNodeWithTag("thread_diff_next").assertIsNotEnabled()
+            rule.onNodeWithTag("thread_diff_previous").performClick()
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_file_picker").performClick()
+            rule.onNodeWithTag("thread_diff_file_1").performClick()
+            rule.onNodeWithText("+rememberSelectedFile()").assertIsDisplayed()
             rule.onNodeWithTag("thread_diff_whitespace").performClick()
-            rule.waitUntil(10_000) { rule.onAllNodesWithText("+MarkdownBlocks(nativeBlocks)").fetchSemanticsNodes().isNotEmpty() }
+            rule.waitUntil(10_000) { rule.onAllNodesWithText("+rememberSelectedFile()").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("thread_diff_file_picker").assertTextContains("ui/ThreadWorkspace.kt")
             rule.onNodeWithTag("thread_diff_close").performClick()
             rule.onNodeWithText("ui/TimelineReader.kt", substring = true).assertExists()
             scenario.onActivity { activity ->
