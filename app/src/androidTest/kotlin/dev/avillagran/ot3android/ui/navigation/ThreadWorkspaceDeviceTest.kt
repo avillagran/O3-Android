@@ -68,7 +68,7 @@ class ThreadWorkspaceDeviceTest {
         }
         rule.activityRule.scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
         rule.waitUntil(10_000) { rule.activity.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT }
-        rule.onNodeWithTag("thread_sidebar_toggle").assertDoesNotExist()
+        rule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed()
         rule.onNodeWithContentDescription("Back").performClick()
         rule.onNodeWithTag(NavTags.BAR).assertIsDisplayed()
     }

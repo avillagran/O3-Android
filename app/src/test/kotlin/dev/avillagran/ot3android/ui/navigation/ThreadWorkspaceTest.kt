@@ -40,7 +40,6 @@ class ThreadWorkspaceTest {
                 dev.avillagran.ot3android.ui.theme.Ot3Theme {
                 ThreadWorkspace(sidebar = { Text("Host node · feat/example", Modifier.testTag("sidebar_content")) }) {
                     androidx.compose.foundation.layout.Column {
-                    LocalThreadSidebarControl.current?.invoke()
                     DisposableEffect(Unit) { starts++; onDispose { stops++ } }
                     var draft by rememberSaveable { mutableStateOf("") }
                     OutlinedTextField(draft, { draft = it }, Modifier.testTag("draft"))
@@ -53,7 +52,9 @@ class ThreadWorkspaceTest {
         rule.onNodeWithTag("thread_sidebar_toggle").performClick()
         rule.onNodeWithTag("sidebar_content").assertDoesNotExist()
         rule.runOnIdle { landscape = false }
-        rule.onNodeWithTag("thread_sidebar_toggle").assertDoesNotExist()
+        rule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed().performClick()
+        rule.onNodeWithTag("sidebar_content").assertIsDisplayed()
+        rule.onNodeWithTag("thread_sidebar_toggle").performClick()
         rule.runOnIdle { landscape = true }
         rule.onNodeWithTag("sidebar_content").assertDoesNotExist()
         rule.onNodeWithTag("draft").assertTextContains("Borrador persistente")
