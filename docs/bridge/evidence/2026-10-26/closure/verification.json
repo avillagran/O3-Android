@@ -196,7 +196,9 @@
     "behavior": "opt-in cap on new bootstrap cookie/bearer/DPoP sessions; defaults unchanged; actual expiry, revocation and read-only HTTP denial tested",
     "workflowsChanged": false,
     "checkChanged": "not runnable without Git merge base in source archive; focused checks run directly",
-    "mergeRequiredForCompanions": false
+    "mergeRequiredForCompanions": false,
+    "submissionStatus": "closed_by_root_pending_explicit_owner_approval",
+    "automaticSubmissionPolicy": "superseded: prepare proposal and ask Andres before opening or reopening"
   },
   "androidCompanion": {
     "url": "https://github.com/avillagran/ot3-android/pull/26",

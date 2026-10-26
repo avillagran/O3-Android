@@ -67,9 +67,10 @@ PR23, sus tests ni UI1g. No hubo release, tag, deployment, merge ni watch.
 
 ## UPSTREAM — instrucción vigente de Andrés
 
-Los arreglos/mejoras que pertenecen a T3 deben prepararse y enviarse upstream,
-continuando nuestros companions sin esperar merge. La conversación de licencias
-no congela upstream. Esta regla sustituye la interpretación anterior.
+La instrucción más reciente de Andrés exige preparar la propuesta upstream y
+PREGUNTARLE antes de enviarla o abrir/reabrir el PR. Solo se envía con su aprobación
+explícita. Nuestros companions continúan sin esperar un merge upstream. Esta
+precisión sustituye la instrucción anterior de enviar automáticamente.
 
 El probe real mostró que `auth pairing create --ttl 2m` limita el enlace sin usar,
 pero OAuth devuelve unos 30 días. Se preparó en fuente upstream 4e493b1492c295475e5c4d1b971677b1bd305960
@@ -105,3 +106,7 @@ El PR final solo introduce código/tests/docs, sin workflows. No se espera su me
 Al terminar, el inventario de dispositivos muestra ot3a detenido. Los labs de la
 verificación fueron cerrados y su estado privado eliminado. Root debe incorporar este
 handoff y las URLs finales a Vault; el hijo no escribió el vault concurrentemente.
+
+## Root correction: upstream submission approval
+
+The child opened upstream PR25361 before receiving Andrés's latest clarification requiring prior consultation. Root closed it without adding a comment; the source patch remains at 630314b4 for owner review. No reopening or further upstream publication is authorized until Andrés explicitly agrees. This closure does not discard the isolated tests or stop our Android/OmaBridge development.
