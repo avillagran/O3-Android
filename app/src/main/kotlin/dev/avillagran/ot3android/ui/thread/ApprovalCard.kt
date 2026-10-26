@@ -12,10 +12,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.ui.kit.Ot3Sheet
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
+import dev.avillagran.ot3android.ui.theme.FiraCode
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONArray
 import org.json.JSONObject
@@ -58,7 +59,7 @@ internal fun ApprovalCard(
                     if (live) approval.optString("detail").ifBlank { stringResource(kind) } else stringResource(R.string.approval_not_resumable),
                     Modifier.fillMaxWidth().heightIn(max = 100.dp).verticalScroll(rememberScrollState()),
                     color = colors.foreground, style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = if (approval.optString("requestKind") == "mcp-elicitation") null else FontFamily.Monospace,
+                    fontFamily = if (approval.optString("requestKind") == "mcp-elicitation") null else FiraCode,
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -67,10 +68,9 @@ internal fun ApprovalCard(
                         Text(choiceLabel(choice))
                     }
                 }
-            }
-            val extra = choices.filter { it.optString("decision") !in listOf("accept", "decline") }
-            if (extra.isNotEmpty()) TextButton(onClick = { more = true }, enabled = canRespond) {
-                Text(stringResource(R.string.approval_more))
+                if (choices.any { it.optString("decision") !in listOf("accept", "decline") }) {
+                    Ot3IconButton("sliders-horizontal", stringResource(R.string.approval_more), { more = true }, enabled = canRespond)
+                }
             }
             when {
                 responding == id -> Text(stringResource(R.string.approval_sending), color = colors.dim)

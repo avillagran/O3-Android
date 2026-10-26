@@ -31,10 +31,35 @@ Accepted responses show Answered while the stream removes the pending request.
 
 ## Remaining differences
 
-- Paged questions with multi-select/custom inputs, 200 ms auto-advance and native command.
+- Question hardware-number shortcuts, persistent form restoration beyond SavedState, and request lifecycle/error presentation acceptance on device.
 - Secret-card native request flow, ready-plan follow-up banner, tasks and Edit from here.
 - Approval retry/confirmation UI enrichment and device proof through notification deep links.
 - Same-theme screenshots and short interaction video on emulator, plus live test-thread
   approval/question verification without operating unrelated user threads.
 
 UI-4 remains open; this increment is not a parity claim.
+
+## Questions increment (2026-10-26)
+
+The first native `timeline.view.questions` entry now renders above the composer, which
+is hidden while a question is pending. One page shows at a time, with native option
+values, multi-select, custom/initial text, a collapse control, previous/next and the
+source 200 ms single-choice advance. All pages submit together through questions.command.
+Dismissibility is independent from resumability, as provided by Rust; unavailable
+providers cannot answer, but an explicitly dismissible request can still be dismissed.
+Question prose uses markdown.blocks and the reader renderer. Page/answers survive
+rotation with SavedState. No native pending-request or command rules are reconstructed
+from stream events in the UI.
+
+The native questions.command validates command/answer shape; the server remains
+authoritative for request freshness and permissions. Unlike approvals.command, it
+does not take the projection. The UI sends only explicit native form choices, and
+outbox retries reuse the exact mutation id and bytes. Device/live proof remains pending.
+
+Tests cover single-page auto-advance followed by multi-select and one combined answer,
+explicit dismissal with no invented answers, unavailable-provider gating with separate
+dismissibility, native payload shapes and identical unknown-result retries.
+
+Form UI tests inject renderer-neutral Markdown blocks to avoid native library loading
+across Robolectric sandbox classloaders. Production still uses Rust markdown.blocks;
+its native contract is exercised by core tests. This is not a combined device proof.

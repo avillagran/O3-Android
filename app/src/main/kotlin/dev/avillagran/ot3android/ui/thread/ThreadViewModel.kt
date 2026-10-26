@@ -285,6 +285,20 @@ class ThreadViewModel(
         }
     }
 
+    fun respondQuestion(requestId: String, action: String, answers: org.json.JSONObject) {
+        val current = state.value
+        if (!current.connected || current.view.stale || current.sending || current.unconfirmed.isNotEmpty() ||
+            local.value.respondingRequest != null || requestId in local.value.answeredRequests) return
+        local.update { it.copy(respondingRequest = requestId, notice = null) }
+        appScope.launch {
+            try {
+                val result = sender.answer(transport(), environmentId, threadId, requestId, action, answers)
+                if (result is SendResult.Accepted) local.update { it.copy(answeredRequests = it.answeredRequests + requestId) }
+                onResult(result)
+            } finally { local.update { it.copy(respondingRequest = null) } }
+        }
+    }
+
     /** Queue capability and row data are already projected by Rust's timeline.view. */
     fun queueCommand(arguments: org.json.JSONObject) {
         if (!state.value.connected || local.value.queueBusy || local.value.respondingRequest != null || state.value.unconfirmed.isNotEmpty()) return

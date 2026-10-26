@@ -62,6 +62,15 @@ class MessageSender(
         JSONObject().put("thread", threadId).put("runtimeRequestId", requestId)
             .put("decision", decision).put("projection", projection), domain)
 
+    /** Answers are explicit form selections; Rust owns the response/dismiss command shape. */
+    suspend fun answer(
+        transport: T3Transport?, environmentId: String, threadId: String,
+        requestId: String, action: String, answers: JSONObject,
+        domain: DomainCalls = DomainEngine.shared,
+    ): SendResult = nativeMutation(transport, environmentId, threadId, "questions.command",
+        JSONObject().put("thread", threadId).put("runtimeRequestId", requestId)
+            .put("action", action).put("answers", answers), domain)
+
     private suspend fun nativeMutation(
         transport: T3Transport?, environmentId: String, threadId: String,
         fn: String, arguments: JSONObject, domain: DomainCalls,

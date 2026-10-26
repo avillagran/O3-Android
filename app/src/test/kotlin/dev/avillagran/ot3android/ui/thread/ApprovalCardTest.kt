@@ -24,7 +24,7 @@ class ApprovalCardTest {
         rule.setContent { Ot3Theme { ApprovalCard(rows(), true, null, emptySet()) { id, decision -> responses += id to decision } } }
         rule.onNodeWithText("cat README.md").assertIsDisplayed()
         rule.runOnIdle { assertEquals(emptyList<Pair<String, String>>(), responses) }
-        rule.onNodeWithText("More approval options").performClick()
+        rule.onNodeWithContentDescription("More approval options").performClick()
         rule.onNodeWithText("⚠ Allow this session").performClick()
         rule.runOnIdle { assertEquals(listOf("r" to "acceptForSession"), responses) }
     }

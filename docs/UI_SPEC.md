@@ -1392,6 +1392,11 @@ acceptance remain open. See `docs/ui/compare/ui-4/README.md`.
 - Data: `questions::pending` (`lib:src/questions.rs:5`, U6) and `questions::command`
   (`:37`) via `Command::answer`.
 
+Question implementation progress (2026-10-26): the real question card now pages native
+requests, renders Markdown via Rust, supports selection/custom inputs and 200 ms advance,
+submits all answers through questions.command, and hides the composer while pending.
+Keyboard shortcuts and device/live acceptance remain pending; UI-4 stays open.
+
 #### 4.5.3 Secret request
 
 Label, reason, password field "Paste the secret", "Save" / "Decline", footer "Stored

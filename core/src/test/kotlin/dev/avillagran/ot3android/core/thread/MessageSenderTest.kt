@@ -16,6 +16,27 @@ import org.junit.Test
 
 class MessageSenderTest {
 
+    @Test
+    fun questionResponsesAndDismissalsUseRustCommandsAndStableUnknownRetry() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        var count = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (count++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 19)
+        }
+        val answers = JSONObject("""{"first":"a","second":["b","c"]}""")
+        val result = sender.answer(connected(), "env-1", "t1", "input", "respond", answers)
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), result)
+        assertEquals("runtime-request.respond", fake.calls[0].args.getString("type"))
+        assertEquals("b", fake.calls[0].args.getJSONObject("answers").getJSONArray("second").getString(0))
+        assertEquals(SendResult.Accepted("ot3a-1", 19), sender.retry(fake, "ot3a-1"))
+        assertEquals(fake.calls[0].args.toString(), fake.calls[1].args.toString())
+        sender.answer(fake, "env-1", "t1", "input", "dismiss", JSONObject())
+        assertEquals("thread.user-input.dismiss", fake.calls.last().args.getString("type"))
+        assertFalse(fake.calls.last().args.has("answers"))
+    }
+
     private fun approvalProjection(live: Boolean = true, options: String = """[{"decision":"accept","label":"Approve"}]""") = JSONObject("""{
       "thread":{"id":"t1"},
       "runtimeRequests":[{"id":"request","kind":"command","status":"pending","responseCapability":{"type":"${if (live) "live" else "not_resumable"}"}}],
