@@ -2343,3 +2343,16 @@ observations hide the strip; loading/offline/read failure shows connection state
 Appearance and reveal obey Ot3Motion, without bar animation. Inline account expansion,
 U26 presentation and the Usage/Limits 160 ms fade remain pending. Evidence and exact
 limits: `docs/ui/compare/quota-strip/README.md`.
+
+### Diff file navigation increment — 2026-10-26
+
+The real Changes modal now offers ot3's narrow previous/next and path selector,
+showing one native file at a time. Selection is saveable and survives whitespace
+refetch; file navigation does not query the server. Shared OT3 touch feedback is used,
+without invented file-switch animation. Wide-screen tree, split layout, context expansion and hunk folding remain pending.
+Wrap/no-wrap is now a saveable dialog control: measured font widths and one horizontal
+patch scroll surface, with no refetch. Full-modal dark/light Robolectric goldens and
+overflow/scroll/state tests cover this control. API 36.1 device tests and same-content
+Tokyo/Latte captures now cover the real chat route. The reader owns the dialog
+outside virtualized rows so rotation cannot dismiss it when Changes leaves the viewport.
+Evidence and remaining desktop differences: `docs/ui/compare/reader-diff/README.md`.

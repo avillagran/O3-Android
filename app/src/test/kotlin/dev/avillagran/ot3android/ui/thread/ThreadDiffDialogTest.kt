@@ -2,6 +2,8 @@ package dev.avillagran.ot3android.ui.thread
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.StateRestorationTester
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONObject
@@ -15,6 +17,58 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class ThreadDiffDialogTest {
     @get:Rule val rule = createComposeRule()
+
+    @Test fun noWrapScrollsTheWholePatchWithoutRefetchAndSurvivesRecreation() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        view.getJSONArray("files").getJSONObject(0).getJSONArray("rows").getJSONObject(0)
+            .put("text", "long selectable patch text ".repeat(12))
+        var reads = 0
+        val restoration = StateRestorationTester(rule)
+        restoration.setContent {
+            Ot3Theme { ThreadDiffDialog(JSONObject("""{"fromTurnCount":2,"toTurnCount":3}"""), { _, _ -> reads++; view }, {}) }
+        }
+        rule.onNodeWithTag("thread_diff_horizontal").assertDoesNotExist()
+        rule.onNodeWithTag("thread_diff_wrap").performClick()
+        val patch = rule.onNodeWithTag("thread_diff_horizontal")
+        assertTrue(patch.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].maxValue() > 0)
+        patch.performTouchInput { swipeLeft() }
+        rule.waitForIdle()
+        assertTrue(patch.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0)
+        rule.runOnIdle { assertEquals(1, reads) }
+        restoration.emulateSavedInstanceStateRestore()
+        rule.onNodeWithTag("thread_diff_wrap").assertTextContains("Wrap")
+        rule.onNodeWithTag("thread_diff_horizontal").assertExists()
+        rule.onNodeWithTag("thread_diff_wrap").performClick()
+        rule.onNodeWithTag("thread_diff_horizontal").assertDoesNotExist()
+        rule.runOnIdle { assertEquals(2, reads) }
+    }
+
+    @Test fun fileNavigationIsLocalAndSelectionSurvivesRefreshAndRecreation() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        var reads = 0
+        val restoration = StateRestorationTester(rule)
+        restoration.setContent {
+            Ot3Theme {
+                ThreadDiffDialog(JSONObject("""{"fromTurnCount":2,"toTurnCount":3}"""), { _, _ -> reads++; view }, {})
+            }
+        }
+        rule.onNodeWithTag("thread_diff_previous").assertIsNotEnabled()
+        rule.onNodeWithTag("thread_diff_next").performClick()
+        rule.onNodeWithText("Binary file — metadata only").assertIsDisplayed()
+        rule.onNodeWithText("+renderNativeBlocks()").assertDoesNotExist()
+        rule.onNodeWithTag("thread_diff_file_picker").performClick()
+        rule.onNodeWithTag("thread_diff_file_2").performClick()
+        rule.onNodeWithText("Patch unavailable for this file.").assertIsDisplayed()
+        rule.onNodeWithTag("thread_diff_next").assertIsNotEnabled()
+        rule.onNodeWithTag("thread_diff_previous").performClick()
+        rule.runOnIdle { assertEquals("Selection must not fetch again", 1, reads) }
+        rule.onNodeWithTag("thread_diff_whitespace").performClick()
+        rule.onNodeWithTag("thread_diff_file_picker").assertTextContains("icon.png")
+        rule.runOnIdle { assertEquals(2, reads) }
+        restoration.emulateSavedInstanceStateRestore()
+        rule.onNodeWithTag("thread_diff_file_picker").assertTextContains("icon.png")
+        rule.onNodeWithText("Binary file — metadata only").assertIsDisplayed()
+    }
 
     @Test fun failedReadCanRetryAndWhitespaceRefetches() {
         val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())

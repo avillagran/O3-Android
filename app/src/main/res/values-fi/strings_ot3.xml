@@ -185,4 +185,8 @@
     <string name="ot3_usage_refresh_prices">Päivitä hinnat</string>
     <string name="ot3_usage_limits">Rajat</string>
     <string name="ot3_usage_resets_at">Nollautuu %1$s</string>
+    <string name="ot3_diff_previous_file">Edellinen tiedosto</string>
+    <string name="ot3_diff_next_file">Seuraava tiedosto</string>
+    <string name="ot3_diff_wrap">Rivitä</string>
+    <string name="ot3_diff_no_wrap">Ei rivin vaihtoa</string>
 </resources>

@@ -185,4 +185,8 @@
     <string name="ot3_usage_refresh_prices">Preise aktualisieren</string>
     <string name="ot3_usage_limits">Limits</string>
     <string name="ot3_usage_resets_at">Zurückgesetzt %1$s</string>
+    <string name="ot3_diff_previous_file">Vorherige Datei</string>
+    <string name="ot3_diff_next_file">Nächste Datei</string>
+    <string name="ot3_diff_wrap">Zeilenumbruch</string>
+    <string name="ot3_diff_no_wrap">Kein Zeilenumbruch</string>
 </resources>

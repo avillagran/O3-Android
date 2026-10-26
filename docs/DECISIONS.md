@@ -1035,3 +1035,19 @@ Until U26, use native used percentages and platform absolute reset dates with st
 bars; do not implement desktop pooling, remaining/pace or notices in Kotlin. Details,
 validation and remaining differences: `ui/compare/quota-strip/README.md`. The Usage /
 Limits tab fade is deferred to a separate increment.
+
+### 2026-10-26 — Local diff reading controls
+
+File navigation and wrap are presentation state, not protocol operations. Preserve
+the selected native path (including oldPath fallback after rename) and wrap mode
+across dialog recreation; neither control fetches again. Unwrapped width comes
+from Fira Code font metrics, as ot3's T3DiffReview does, and the patch scrolls as
+one surface. Rust remains responsible for scope, patch parsing and line limits.
+
+
+### 2026-10-26 — Diff modal lifetime across viewport changes
+
+Keep the open diff at reader scope, keyed by the selected thread, rather than inside
+a virtualized Changes row. Device rotation can dispose that row while the modal is
+open. A real-workspace regression now checks both orientations and a single stream;
+standalone dialog restoration was insufficient to catch this failure.
