@@ -345,7 +345,8 @@ factory, the fake's scripting). Supersedes the entry above.
   the emulator on the development machine is unusable; instrumented UI tests stay for
   interactions.
 
-**Importer** (`tools/import-omarchy-themes`, docs/ui/omarchy-themes.md):
+**Importer** (`tools/import-omarchy-themes`, docs/ui/omarchy-themes.md; replaced in UI-1f
+by the lib's `theme.tokens`, see that entry):
 
 - **Python 3 standard library** (`tomllib` for `mode` and TOML validity, ot3's regex for
   colours). It runs offline wherever Omarchy is installed and needs no Gradle module, so
@@ -727,6 +728,42 @@ API 34 google_apis x86_64, 2 GB), `-gpu swiftshader_indirect`, cold boot, consol
   `MessageSender`'s `message.dispatch` / `run.interrupt` arguments and `Backoff.kt`.
   `core/pairing/PairingLink.kt`, merged from `feat/pairing`, has to switch to
   `connectionCatalog.pairingTarget` (available since v0.3.3) in its own change.
+
+## 2026-10-25: UI-1f: Home on `sidebar.view`, colours from `theme.tokens`, pairing links from the lib
+
+- **Home is `sidebar.view`.** `HomeStateBuilder.view` passes every saved environment
+  (shell, name, connection state while not connected) and Home's view state (search text,
+  status filter, project or group key, environment, grouping, the previous `returns`) to
+  the lib through `DomainEngine`, off Main; `build` maps the result. Rows, their order,
+  `detail`, `state`, `statusLabel`, `statusRole`, `time`, shelves, sub-thread nesting,
+  `counts`, `filterCounts`, `projectGroups` and `projectIdentities` are the lib's. Gone:
+  `SidebarModel` (deleted on main), `StatusMapping`, Kotlin's `RowTime`, the interim
+  first-letter chip, Kotlin search and filter matching, and the project list sorting.
+  What stays in Kotlin is view state: which shelves are open, T3 Mobile's settled paging
+  (counted in top-level rows), the server's message search (merged across environments),
+  the connection header, and ot3's card / slim choice per row. The view model rebuilds
+  the view on every tick (1 s while a row shows an elapsed time or a countdown, else
+  30 s), so times are never recomputed in Kotlin. Rows draw with the kit's card and slim
+  rows (`HomeRow.toThreadRowModel`); a long press on the chip opens the project's actions.
+- **Pairing links: `connectionCatalog.pairingTarget`.** `PairingLink.kt` is deleted;
+  `PairingTargets` calls the domain function and returns the redacted `PairingTarget`.
+  The 70-input table runs against it (`PairingTargetsTest`), with no difference.
+  Pairing's screens became typed Settings routes (`PairEnvironment`, `ScanPairingCode`).
+- **Colours: `theme.tokens`.** The importer is a JVM task over the host library
+  (`:core:importOmarchyThemes`, wrapped by `tools/import-omarchy-themes`), so it computes
+  no colour; the JSON (schema 2) is the lib's output per theme. The Python importer and
+  its tests are gone, and so is `Ot3Colors.derive`: Material You writes the wallpaper
+  scheme as a `colors.toml` and goes through `ThemeTokens.fromColorsToml`, which the live
+  Omarchy theme (UI_SPEC 3.1.3) will use too. Material You's colours arrive a few
+  milliseconds after start; the theme draws nothing until the first colours exist and
+  keeps the shown ones while new ones resolve. The values move to Qt's blend: 19 of the
+  50 tokyo-night / catppuccin-latte goldens in tokens.md change by one step on one
+  channel, every screenshot golden was re-recorded, `onAccent` is unchanged for all 22
+  themes. Not from the lib: the Material containers (accent and failed @ 0.14, blended by
+  `Ot3Blend`), requested in LIB_REQUESTS.md.
+- **JNI in JVM tests.** App unit tests get the host library on `java.library.path` as
+  core's do. Tests that call the lib are plain JUnit, not Robolectric: each Robolectric
+  sandbox has its own class loader and a JNI library loads in one class loader only.
 
 ## Pending decisions
 

@@ -12,9 +12,10 @@ radii and spacing 1 px = 1 dp** (ot3 px are logical pixels at base 12,
 ## 1. Colour roles
 
 ot3 draws almost everything as the foreground (`Color.popups.text`) or the accent at
-a given opacity over the background. The generator (see
-[omarchy-themes.md](omarchy-themes.md)) precomputes each role as an opaque colour, so
-Compose never blends at runtime and a role can feed a Material `ColorScheme`.
+a given opacity over the background. The lib's `theme.tokens` returns each role as the
+opaque colour ot3 draws (Qt Quick's 8-bit premultiplied blend), the importer (see
+[omarchy-themes.md](omarchy-themes.md)) stores its result as it is, so Compose never
+blends ot3's roles at runtime and a role can feed a Material `ColorScheme`.
 
 | Role | ot3 definition | Source | tokyo-night | catppuccin-latte |
 |---|---|---|---|---|
@@ -22,20 +23,21 @@ Compose never blends at runtime and a role can feed a Material `ColorScheme`.
 | `foreground` | `colors.toml` `foreground` (`popups.text`) | same | `#a9b1d6` | `#4c4f69` |
 | `accent` | `colors.toml` `accent` | `omarchy:shell/Commons/Color.qml:148-154` | `#7aa2f7` | `#1e66f5` |
 | `muted` | `colors.toml` `muted` | `omarchy:shell/Commons/Color.qml:148-154` | `#414868` | `#acb0be` |
-| `dim` (secondary text) | fg @ 0.57 | `ot3:ui/qml/T3Panel.qml:381` | `#6c708a` | `#9295a5` |
-| `divider` | fg @ 0.09 | `ot3:ui/qml/T3Panel.qml:382` | `#272836` | `#e0e2e8` |
-| `surface` (bubble, code block) | fg @ 0.045 | `ot3:ui/qml/T3Panel.qml:387` | `#20222e` | `#e8eaef` |
-| `card` | fg @ 0.035 | `ot3:ui/qml/T3Approvals.qml:18` | `#1f202c` | `#e9ebf0` |
-| `cardBorder` | fg @ 0.12 | `ot3:ui/qml/T3Approvals.qml:18` | `#2b2d3b` | `#dbdee4` |
-| `changesCard` | fg @ 0.025 | `ot3:ui/qml/T3Changes.qml:14` | `#1e1f2a` | `#ebedf2` |
-| `rowSelected` | fg @ 0.075 | `ot3:ui/qml/T3ThreadRow.qml:179` | `#252633` | `#e3e5ea` |
-| `rowPressed` (ot3 hover) | fg @ 0.045 | `ot3:ui/qml/T3ThreadRow.qml:179` | `#20222e` | `#e8eaef` |
-| `rowDraft` | accent @ 0.06 | `ot3:ui/qml/T3ThreadRow.qml:179` | `#202333` | `#e2e9f5` |
-| `field` | fg @ 0.04 | `ot3:ui/qml/T3TextField.qml:20-22` | `#20212d` | `#e8ebef` |
+| `dim` (secondary text) | fg @ 0.57 | `ot3:ui/qml/T3Panel.qml:381` | `#6b718a` | `#9295a6` |
+| `statusMuted` (a row status with nothing to say) | fg @ 0.6 | `ot3:ui/qml/T3Palette.qml:33` | `#6f758f` | `#8e8fa1` |
+| `divider` | fg @ 0.09 | `ot3:ui/qml/T3Panel.qml:382` | `#272936` | `#e0e2e8` |
+| `surface` (bubble, code block) | fg @ 0.045 | `ot3:ui/qml/T3Panel.qml:387` | `#21222e` | `#e8ebef` |
+| `card` | fg @ 0.035 | `ot3:ui/qml/T3Approvals.qml:18` | `#1f202c` | `#eaebf0` |
+| `cardBorder` | fg @ 0.12 | `ot3:ui/qml/T3Approvals.qml:18` | `#2b2d3b` | `#dbdde4` |
+| `changesCard` | fg @ 0.025 | `ot3:ui/qml/T3Changes.qml:14` | `#1d1e2a` | `#ebedf2` |
+| `rowSelected` | fg @ 0.075 | `ot3:ui/qml/T3ThreadRow.qml:179` | `#252633` | `#e3e5eb` |
+| `rowPressed` (ot3 hover) | fg @ 0.045 | `ot3:ui/qml/T3ThreadRow.qml:179` | `#21222e` | `#e8ebef` |
+| `rowDraft` | accent @ 0.06 | `ot3:ui/qml/T3ThreadRow.qml:179` | `#1f2333` | `#e3e9f6` |
+| `field` | fg @ 0.04 | `ot3:ui/qml/T3TextField.qml:20-22` | `#20212e` | `#e9ebef` |
 | `fieldBorder` | fg @ 0.14 (accent on focus) | `ot3:ui/qml/T3TextField.qml:20-22` | `#2e303f` | `#d8dae1` |
-| `switchOff` | fg @ 0.15 (on = accent) | `ot3:ui/qml/T3Switch.qml:14` | `#2f3240` | `#d7d9e0` |
-| `inlineCode` | fg @ 0.10 | `ot3:ui/qml/T3Panel.qml:725-726` | `#282a38` | `#dfe1e7` |
-| `composerBorder` | fg @ 0.09; focused accent @ 0.45 | `ot3:ui/qml/T3Composer.qml:265` | `#272836` / `#455884` | `#e0e2e8` / `#91b2f5` |
+| `switchOff` | fg @ 0.15 (on = accent) | `ot3:ui/qml/T3Switch.qml:14` | `#2f3240` | `#d6d9e0` |
+| `inlineCode` | fg @ 0.10 | `ot3:ui/qml/T3Panel.qml:725-726` | `#282a37` | `#dfe0e7` |
+| `composerBorder` | fg @ 0.09; focused accent @ 0.45 | `ot3:ui/qml/T3Composer.qml:265` | `#272936` / `#455884` | `#e0e2e8` / `#91b2f5` |
 | `working` | `blue`, else accent | `ot3:ui/qml/T3Palette.qml:10` | `#7aa2f7` | `#1e66f5` |
 | `done` | `green`, else accent | `ot3:ui/qml/T3Palette.qml:11` | `#9ece6a` | `#40a02b` |
 | `waiting` | `yellow`, else accent | `ot3:ui/qml/T3Palette.qml:12` | `#e0af68` | `#df8e1d` |
@@ -47,7 +49,7 @@ Derived uses (no extra role, same colours):
 
 | Use | Colour | Source |
 |---|---|---|
-| Status label colour per row state | working/goal → `working`; done → `done`; failed → `failed`; limited/woke/approval → `warning`; input → `input`; plan → `waiting`; else fg @ 0.6 | `ot3:ui/qml/T3Palette.qml:30-34` |
+| Status label colour per row state | working/goal → `working`; done → `done`; failed → `failed`; limited/woke/approval → `warning`; input → `input`; plan → `waiting`; else `statusMuted` (the lib's `statusRole` names the role; `theme.tokens` `statusColors` has the colour per detail) | `ot3:ui/qml/T3Palette.qml:30-34` |
 | Diff | addition `done`, deletion `failed`, hunk header `accent`, context `dim`; changed rows tinted 8 % | `ot3:ui/qml/T3DiffReview.qml:102-103` |
 | PR state | open `done`, merged `magenta`, closed `failed` | `ot3:ui/qml/T3PullRequestBadge.qml:20` |
 | Text selection | background `accent`, text `background` | `ot3:ui/qml/T3Panel.qml:1740` |
@@ -58,10 +60,11 @@ Derived uses (no extra role, same colours):
 | Project slot palette | `blue, green, magenta, cyan, orange, yellow, red, bright_blue, bright_magenta`, duplicates removed | `ot3:ui/qml/T3Palette.qml:17-22` |
 | Scrim | black @ 0.5 | `ot3:ui/qml/T3Panel.qml:386` (Qt palette `shadow`) |
 
-The two sample columns were computed from
-`omarchy:themes/tokyo-night/colors.toml` and `omarchy:themes/catppuccin-latte/colors.toml`
-with straight sRGB alpha compositing over the background. They are the golden values for
-the generator's unit test.
+The two sample columns are `theme.tokens` (lib-t3-rust v0.3.4) for
+`omarchy:themes/tokyo-night/colors.toml` and `omarchy:themes/catppuccin-latte/colors.toml`,
+as `app/src/main/assets/themes/omarchy-themes.json` holds them; `OmarchyThemeCatalogTest`
+checks them. Until UI-1f they were computed here with straight sRGB alpha compositing, which
+put 19 of these 50 values one step off on one channel (tokyo-night `dim` was `#6c708a`).
 
 ## 2. Material 3 `ColorScheme` mapping
 
@@ -72,13 +75,18 @@ tonal elevation (UI_SPEC 3.3).
 | M3 role | ot3 role |
 |---|---|
 | `primary` | `accent` |
-| `onPrimary` | `background` (ot3 `highlightedText`, `ot3:ui/qml/T3Panel.qml:386`); the generator falls back to `foreground` if contrast is under 4.5:1 |
+| `onPrimary` | `background` (ot3 `highlightedText`, `ot3:ui/qml/T3Panel.qml:386`): `theme.tokens` `onAccent` |
 | `primaryContainer` / `onPrimaryContainer` | accent @ 0.14 / `accent` |
 | `secondary` / `onSecondary` | `input` / `background` |
 | `secondaryContainer` / `onSecondaryContainer` | accent @ 0.14 / `foreground` (navigation bar indicator) |
 | `tertiary` / `onTertiary` | `waiting` / `background` |
 | `error` / `onError` | `failed` / `background` |
 | `errorContainer` / `onErrorContainer` | failed @ 0.14 / `failed` |
+
+The two containers (accent @ 0.14, failed @ 0.14) are the only colours ot3 does not draw:
+`theme.tokens` has no role for them, so `Ot3Colors` blends them from the lib's `accent`
+and `failed` with straight alpha (`Ot3Blend`) until the lib returns them
+(LIB_REQUESTS.md, "theme.tokens: Material containers").
 | `background` / `onBackground` | `background` / `foreground` |
 | `surface` / `onSurface` | `background` / `foreground` |
 | `surfaceVariant` / `onSurfaceVariant` | `surface` / `dim` |

@@ -2,17 +2,21 @@ package dev.avillagran.ot3android.ui.theme
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import dev.avillagran.ot3android.core.theme.ThemeTokens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
+/** A bundled Omarchy theme: the lib's `theme.tokens` for its `colors.toml`. */
+typealias OmarchyTheme = ThemeTokens
+
 /**
  * The Omarchy themes shipped in `assets/themes/omarchy-themes.json`, written by
- * `tools/import-omarchy-themes` (docs/ui/omarchy-themes.md). Every colour is an opaque
- * `#rrggbb`; nothing is blended at runtime.
+ * `tools/import-omarchy-themes` (docs/ui/omarchy-themes.md): each one the lib's
+ * `theme.tokens` result as it is. Every colour is an opaque `#rrggbb`.
  */
 @Immutable
-class OmarchyThemeCatalog(val omarchyVersion: String, val themes: List<OmarchyTheme>) {
+class OmarchyThemeCatalog(val omarchyVersion: String, val libVersion: String, val themes: List<OmarchyTheme>) {
     private val byId = themes.associateBy { it.id }
 
     operator fun get(id: String): OmarchyTheme? = byId[id]
@@ -21,7 +25,7 @@ class OmarchyThemeCatalog(val omarchyVersion: String, val themes: List<OmarchyTh
 
     companion object {
         const val ASSET_PATH = "themes/omarchy-themes.json"
-        private const val SCHEMA = 1
+        private const val SCHEMA = 2
 
         @Volatile
         private var cached: OmarchyThemeCatalog? = null
@@ -44,63 +48,15 @@ class OmarchyThemeCatalog(val omarchyVersion: String, val themes: List<OmarchyTh
             val schema = root.getInt("schema")
             require(schema == SCHEMA) { "omarchy-themes.json schema $schema, expected $SCHEMA" }
             val list = root.getJSONArray("themes")
-            val themes = (0 until list.length()).map { parseTheme(list.getJSONObject(it)) }
-            return OmarchyThemeCatalog(root.getJSONObject("source").getString("omarchyVersion"), themes)
-        }
-
-        private fun parseTheme(json: JSONObject): OmarchyTheme {
-            val base = json.getJSONObject("base")
-            val roles = json.getJSONObject("roles")
-            val sky = json.getJSONObject("sky")
-            val palette = json.getJSONArray("projectPalette")
-            val appearance = json.getString("appearance")
-            require(appearance == "dark" || appearance == "light") { "appearance $appearance" }
-            return OmarchyTheme(
-                id = json.getString("id"),
-                name = json.getString("name"),
-                isLight = appearance == "light",
-                base = base.keys().asSequence().associateWith { parseRgb(base.getString(it)) },
-                roles = roles.keys().asSequence().associateWith { parseRgb(roles.getString(it)) },
-                projectPalette = (0 until palette.length()).map { parseRgb(palette.getString(it)) },
-                sky = Ot3Sky(
-                    lightSky = sky.getBoolean("lightSky"),
-                    brightness = sky.getDouble("brightness").toFloat(),
-                    nebula = sky.getDouble("nebula").toFloat(),
-                    meteorRate = sky.getDouble("meteorRate").toFloat(),
-                    ink = sky.getDouble("ink").toFloat(),
-                ),
-            )
-        }
-
-        /** `#rrggbb` to `0xRRGGBB`. */
-        fun parseRgb(hex: String): Int {
-            require(hex.length == 7 && hex[0] == '#') { "not #rrggbb: $hex" }
-            return hex.substring(1).toInt(16)
+            val themes = (0 until list.length()).map { ThemeTokens.parse(list.getJSONObject(it)) }
+            require(themes.all { it.id.isNotEmpty() }) { "omarchy-themes.json has a theme without an id" }
+            val source = root.getJSONObject("source")
+            return OmarchyThemeCatalog(source.getString("omarchyVersion"), source.getString("lib"), themes)
         }
     }
 }
 
-/**
- * One theme as the importer wrote it. [base] keys are the JSON's (`background`,
- * `brightBlue`, ...), optional ones absent when the theme lacks them; [roles] holds every
- * role of docs/ui/tokens.md section 1. Colours are `0xRRGGBB`.
- */
-@Immutable
-data class OmarchyTheme(
-    val id: String,
-    val name: String,
-    val isLight: Boolean,
-    val base: Map<String, Int>,
-    val roles: Map<String, Int>,
-    val projectPalette: List<Int>,
-    val sky: Ot3Sky,
-) {
-    fun base(key: String): Int = base[key] ?: error("theme $id has no base.$key")
-
-    fun role(key: String): Int = roles[key] ?: error("theme $id has no roles.$key")
-}
-
-/** Per-appearance sky header constants (UI_SPEC 3.5). */
+/** Per-appearance sky header constants (UI_SPEC 3.5), from `theme.tokens` `sky`. */
 @Immutable
 data class Ot3Sky(
     val lightSky: Boolean,

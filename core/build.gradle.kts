@@ -63,6 +63,26 @@ tasks.withType<Test>().configureEach {
     inputs.property("requireHostJni", providers.environmentVariable("OT3A_REQUIRE_HOST_JNI").orElse(""))
 }
 
+// tools/import-omarchy-themes: the theme importer (OmarchyThemesImport) runs on the JVM with
+// the host libt3_jni.so, because every colour comes from the lib's theme.tokens. Never part
+// of the ordinary test run, never up to date.
+val importOmarchyThemes by tasks.registering(Test::class) {
+    group = "ot3"
+    description = "Regenerates app/src/main/assets/themes/omarchy-themes.json from Omarchy's colors.toml files with theme.tokens."
+    val unitTests = tasks.named<Test>("testDebugUnitTest")
+    dependsOn("compileDebugUnitTestKotlin")
+    testClassesDirs = files(unitTests.map { it.testClassesDirs })
+    classpath = files(unitTests.map { it.classpath })
+    filter { includeTestsMatching("dev.avillagran.ot3android.core.theme.OmarchyThemesImport") }
+    systemProperty("ot3a.omarchyThemes", providers.gradleProperty("ot3a.omarchyThemes").getOrElse("/usr/share/omarchy/themes"))
+    providers.gradleProperty("ot3a.omarchyVersion").orNull?.let { systemProperty("ot3a.omarchyVersion", it) }
+    systemProperty("ot3a.themesCheck", providers.gradleProperty("ot3a.themesCheck").getOrElse("false"))
+    systemProperty("ot3a.themesOutput", rootProject.file("app/src/main/assets/themes/omarchy-themes.json").absolutePath)
+    systemProperty("ot3a.requireHostJni", "true")
+    testLogging { showStandardStreams = true }
+    outputs.upToDateWhen { false }
+}
+
 dependencies {
     api(project(":t3-lib"))
     implementation(libs.androidx.core.ktx)

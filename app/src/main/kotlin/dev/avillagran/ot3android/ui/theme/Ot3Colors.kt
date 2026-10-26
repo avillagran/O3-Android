@@ -3,12 +3,12 @@ package dev.avillagran.ot3android.ui.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import kotlin.math.pow
 
 /**
- * ot3's colour roles (docs/ui/tokens.md section 1), every one opaque. Components read these
- * for anything ot3-specific (`Ot3Theme.colors.working`) and Material roles only inside
- * Material components.
+ * ot3's colour roles (docs/ui/tokens.md section 1), every one opaque and every one the lib's
+ * `theme.tokens` value except the two Material containers. Components read these for
+ * anything ot3-specific (`Ot3Theme.colors.working`) and Material roles only inside Material
+ * components.
  */
 @Immutable
 data class Ot3Colors(
@@ -21,6 +21,8 @@ data class Ot3Colors(
     val muted: Color,
     /** Secondary text, fg @ 0.57. */
     val dim: Color,
+    /** A row status with nothing to say, fg @ 0.6 (`statusMuted`). */
+    val statusMuted: Color,
     val divider: Color,
     /** Bubble and code block, fg @ 0.045. */
     val surface: Color,
@@ -37,11 +39,13 @@ data class Ot3Colors(
     /** Off track; on is [accent]. */
     val switchOff: Color,
     val inlineCode: Color,
-    /** Focused composer border, accent @ 0.45; unfocused is [divider]. */
+    /** Unfocused composer border, fg @ 0.09. */
+    val composerBorder: Color,
+    /** Focused composer border, accent @ 0.45. */
     val composerFocus: Color,
-    /** accent @ 0.14: M3 primary and secondary containers, navigation indicator. */
+    /** accent @ 0.14: M3 primary and secondary containers, navigation indicator. Not an ot3 role. */
     val accentContainer: Color,
-    /** failed @ 0.14: M3 error container. */
+    /** failed @ 0.14: M3 error container. Not an ot3 role. */
     val failedContainer: Color,
     val working: Color,
     val done: Color,
@@ -55,9 +59,6 @@ data class Ot3Colors(
     val projectPalette: List<Color>,
     val sky: Ot3Sky,
 ) {
-    /** Unfocused composer border, fg @ 0.09. */
-    val composerBorder: Color get() = divider
-
     /** Sheets and dialogs sit on black @ 0.5 (`ot3:ui/qml/T3Panel.qml:386`). */
     val scrim: Color get() = Scrim
 
@@ -65,18 +66,25 @@ data class Ot3Colors(
         const val MATERIAL_YOU_ID = "material-you"
         val Scrim = Color(0f, 0f, 0f, 0.5f)
 
-        /** The importer's values, unchanged. */
+        /**
+         * The lib's `theme.tokens` values, unchanged. [OmarchyTheme.roles] has no Material
+         * containers (ot3 has none): those two are accent and failed at 0.14 over the
+         * background, blended here by [Ot3Blend] until the lib returns them
+         * (docs/LIB_REQUESTS.md, "theme.tokens: Material containers").
+         */
         fun fromTheme(theme: OmarchyTheme): Ot3Colors {
             fun base(key: String) = rgb(theme.base(key))
             fun role(key: String) = rgb(theme.role(key))
+            val background = base("background")
             return Ot3Colors(
                 themeId = theme.id,
                 isLight = theme.isLight,
-                background = base("background"),
+                background = background,
                 foreground = base("foreground"),
                 accent = base("accent"),
                 muted = base("muted"),
                 dim = role("dim"),
+                statusMuted = role("statusMuted"),
                 divider = role("divider"),
                 surface = role("surface"),
                 card = role("card"),
@@ -89,9 +97,10 @@ data class Ot3Colors(
                 fieldBorder = role("fieldBorder"),
                 switchOff = role("switchOff"),
                 inlineCode = role("inlineCode"),
+                composerBorder = role("composerBorder"),
                 composerFocus = role("composerFocus"),
-                accentContainer = role("accentContainer"),
-                failedContainer = role("failedContainer"),
+                accentContainer = Ot3Blend.over(base("accent"), background, CONTAINER_ALPHA),
+                failedContainer = Ot3Blend.over(role("failed"), background, CONTAINER_ALPHA),
                 working = role("working"),
                 done = role("done"),
                 waiting = role("waiting"),
@@ -100,92 +109,27 @@ data class Ot3Colors(
                 input = role("input"),
                 onAccent = role("onAccent"),
                 projectPalette = theme.projectPalette.map(::rgb),
-                sky = theme.sky,
+                sky = Ot3Sky(
+                    lightSky = theme.sky.lightSky,
+                    brightness = theme.sky.headerBrightness,
+                    nebula = theme.sky.headerNebula,
+                    meteorRate = theme.sky.headerMeteorRate,
+                    ink = theme.sky.ink,
+                ),
             )
         }
 
-        /**
-         * The roles derived at runtime from a base palette, by the importer's formulas: used
-         * for Material You, whose colours are only known on the device. Status colours,
-         * project palette and sky come from [statusFrom], a theme of the same appearance, so
-         * "Failed" stays red.
-         */
-        fun derive(
-            themeId: String,
-            background: Color,
-            foreground: Color,
-            accent: Color,
-            muted: Color,
-            statusFrom: Ot3Colors,
-        ): Ot3Colors {
-            val light = isLightBackground(background)
-            fun fg(alpha: Int) = Ot3Blend.over(foreground, background, alpha)
-            fun ac(alpha: Int) = Ot3Blend.over(accent, background, alpha)
-            return Ot3Colors(
-                themeId = themeId,
-                isLight = light,
-                background = background,
-                foreground = foreground,
-                accent = accent,
-                muted = muted,
-                dim = fg(570),
-                divider = fg(90),
-                surface = fg(45),
-                card = fg(35),
-                cardBorder = fg(120),
-                changesCard = fg(25),
-                rowSelected = fg(75),
-                rowPressed = fg(45),
-                rowDraft = ac(60),
-                field = fg(40),
-                fieldBorder = fg(140),
-                switchOff = fg(150),
-                inlineCode = fg(100),
-                composerFocus = ac(450),
-                accentContainer = ac(140),
-                failedContainer = Ot3Blend.over(statusFrom.failed, background, 140),
-                working = statusFrom.working,
-                done = statusFrom.done,
-                waiting = statusFrom.waiting,
-                failed = statusFrom.failed,
-                warning = statusFrom.warning,
-                input = statusFrom.input,
-                onAccent = onAccent(accent, background, foreground),
-                projectPalette = statusFrom.projectPalette,
-                sky = statusFrom.sky.copy(lightSky = light),
-            )
-        }
-
-        /** ot3's sky rule: Rec.709 weights on the encoded channels, > 0.5 is light. */
-        fun isLightBackground(background: Color): Boolean =
-            0.2126f * background.red + 0.7152f * background.green + 0.0722f * background.blue > 0.5f
-
-        /** The background, unless it is under 4.5:1 on the accent and the foreground does better. */
-        fun onAccent(accent: Color, background: Color, foreground: Color): Color {
-            val onBackground = contrast(accent, background)
-            return if (onBackground < 4.5 && contrast(accent, foreground) > onBackground) foreground else background
-        }
-
-        /** WCAG 2 contrast ratio. */
-        fun contrast(a: Color, b: Color): Double {
-            val la = relativeLuminance(a)
-            val lb = relativeLuminance(b)
-            return (maxOf(la, lb) + 0.05) / (minOf(la, lb) + 0.05)
-        }
-
-        private fun relativeLuminance(color: Color): Double {
-            fun linear(channel: Float): Double {
-                val c = channel.toDouble()
-                return if (c <= 0.04045) c / 12.92 else ((c + 0.055) / 1.055).pow(2.4)
-            }
-            return 0.2126 * linear(color.red) + 0.7152 * linear(color.green) + 0.0722 * linear(color.blue)
-        }
+        /** The Material containers' alpha, in thousandths (0.14). */
+        private const val CONTAINER_ALPHA = 140
 
         internal fun rgb(value: Int): Color = Color(0xFF000000.toInt() or value)
     }
 }
 
-/** Opaque straight-alpha compositing, the importer's formula (round half to even on exact ties). */
+/**
+ * Opaque straight-alpha compositing (round half to even on exact ties). Only for the two
+ * Material containers the lib does not return; ot3's roles come blended from `theme.tokens`.
+ */
 object Ot3Blend {
     /** [top] at [alphaThousandths] / 1000 over [bottom]. */
     fun over(top: Color, bottom: Color, alphaThousandths: Int): Color {

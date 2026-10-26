@@ -15,11 +15,22 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import dev.avillagran.ot3android.core.data.prefs.AppearanceMode
 import dev.avillagran.ot3android.core.data.prefs.AppearanceSettings
+import dev.avillagran.ot3android.core.theme.ThemeTokens
+import dev.avillagran.ot3android.core.transport.DomainCalls
+import dev.avillagran.ot3android.core.transport.DomainEngine
+import dev.avillagran.t3.T3Exception
+import kotlinx.coroutines.CancellationException
 
 /**
  * ot3's look (UI_SPEC 3.1-3.4): [colors] as [LocalOt3Colors] and as the Material scheme of
@@ -81,14 +92,28 @@ fun Ot3AppTheme(
     }
     val themeId = if (dark) settings.darkThemeId else settings.lightThemeId
     val context = LocalContext.current
-    val colors = remember(catalog, themeId, dark, context) {
-        val fallback = catalog.defaultColors(dark)
-        when {
-            themeId == AppearanceSettings.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-                materialYouColors(if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context), fallback)
-            else -> catalog[themeId]?.takeIf { it.isLight != dark }?.let(Ot3Colors::fromTheme) ?: fallback
+    val materialYou = themeId == AppearanceSettings.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val bundled = remember(catalog, themeId, dark, materialYou) {
+        if (materialYou) null else catalog[themeId]?.takeIf { it.isLight != dark }?.let(Ot3Colors::fromTheme) ?: catalog.defaultColors(dark)
+    }
+    // Material You goes through theme.tokens off the main thread; until it answers, the colours
+    // already shown stay (nothing is drawn before the first ones, so no state is lost).
+    var wallpaper by remember { mutableStateOf<Pair<Boolean, Ot3Colors>?>(null) }
+    if (materialYou) {
+        LaunchedEffect(catalog, dark, context) {
+            val scheme = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            wallpaper = dark to try {
+                materialYouColors(scheme, catalog.defaultTheme(dark))
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: T3Exception) {
+                catalog.defaultColors(dark)
+            }
         }
     }
+    var shown by remember { mutableStateOf<Ot3Colors?>(null) }
+    val colors = bundled ?: wallpaper?.takeIf { it.first == dark }?.second ?: shown ?: return
+    SideEffect { shown = colors }
     val activity = LocalActivity.current as? ComponentActivity
     DisposableEffect(activity, colors.isLight) {
         val style = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT) { !colors.isLight }
@@ -99,25 +124,35 @@ fun Ot3AppTheme(
 }
 
 /**
- * Material You (UI_SPEC 3.1.3): the wallpaper scheme mapped back onto ot3's roles (accent =
- * primary, background = surface, foreground = onSurface, muted = outline), every other role
- * derived by the importer's formulas. Status colours, project palette and sky come from
- * [defaults], the default theme of the same appearance, so "Failed" stays red.
+ * Material You (UI_SPEC 3.1.3): the wallpaper scheme as a `colors.toml` (background =
+ * surface, foreground = onSurface, accent = primary, muted = outline) with the colours of
+ * [defaults], the default theme of the same appearance, for status, project slots and sky,
+ * so "Failed" stays red; the lib's `theme.tokens` makes every role from it.
  */
-fun materialYouColors(scheme: ColorScheme, defaults: Ot3Colors): Ot3Colors = Ot3Colors.derive(
-    themeId = Ot3Colors.MATERIAL_YOU_ID,
-    background = scheme.surface,
-    foreground = scheme.onSurface,
-    accent = scheme.primary,
-    muted = scheme.outline,
-    statusFrom = defaults,
+suspend fun materialYouColors(scheme: ColorScheme, defaults: OmarchyTheme, domain: DomainCalls = DomainEngine.shared): Ot3Colors {
+    fun hex(rgb: Int) = "#%06x".format(rgb and 0xFFFFFF)
+    val toml = buildString {
+        listOf("background" to scheme.surface, "foreground" to scheme.onSurface, "accent" to scheme.primary, "muted" to scheme.outline)
+            .forEach { (key, color) -> append("$key = \"${hex(color.toArgb())}\"\n") }
+        THEME_COLORS.forEach { (key, base) -> defaults.base[base]?.let { append("$key = \"${hex(it)}\"\n") } }
+    }
+    return Ot3Colors.fromTheme(ThemeTokens.fromColorsToml(toml, Ot3Colors.MATERIAL_YOU_ID, domain))
+}
+
+/** `colors.toml` keys of a theme's own colours and their `theme.tokens` `base` names. */
+private val THEME_COLORS = listOf(
+    "red" to "red", "orange" to "orange", "yellow" to "yellow", "green" to "green", "cyan" to "cyan", "blue" to "blue",
+    "magenta" to "magenta", "bright_blue" to "brightBlue", "bright_magenta" to "brightMagenta",
 )
 
 /** The default Omarchy theme of an appearance (AppearanceSettings.DEFAULT_THEMES). */
-fun OmarchyThemeCatalog.defaultColors(dark: Boolean): Ot3Colors {
+fun OmarchyThemeCatalog.defaultTheme(dark: Boolean): OmarchyTheme {
     val id = if (dark) AppearanceSettings.DEFAULT_THEMES.dark else AppearanceSettings.DEFAULT_THEMES.light
-    return Ot3Colors.fromTheme(this[id] ?: error("omarchy-themes.json has no default theme $id"))
+    return this[id] ?: error("omarchy-themes.json has no default theme $id")
 }
+
+/** [defaultTheme]'s colours. */
+fun OmarchyThemeCatalog.defaultColors(dark: Boolean): Ot3Colors = Ot3Colors.fromTheme(defaultTheme(dark))
 
 @Composable
 private fun defaultOt3Colors(dark: Boolean): Ot3Colors {

@@ -839,3 +839,29 @@ importer to them (DECISIONS.md, 2026-10-25), the later tranches use the rest.
 | v0.3.3 1: no shell reducer in `domain` | Open | No `shell.*` among the 108 entries. |
 | v0.3.3 2: no `message.dispatch` or `run.interrupt` builder | Open | `composer.*` unchanged; `planWorkflow.attachSourceRef` decorates a ready command. |
 | v0.3.3 3: the projection crosses JNI twice per update | Open | `projection.apply` / `timeline.view` signatures unchanged; no handle. |
+
+## 2026-10-25: UI-1f, after moving to `sidebar.view`, `theme.tokens` and `connectionCatalog.pairingTarget`
+
+What the app still derives in Kotlin after UI-1f, and what would remove it.
+
+### 1. `theme.tokens`: Material containers (nice to have)
+
+- Proposed: two more `roles` (and `layers`) in `theme.tokens`: `accentContainer` (accent
+  @ 0.14) and `failedContainer` (`failed` @ 0.14), with Qt's blend like every other role.
+- Why: Android maps them onto Material's `primaryContainer`, `secondaryContainer` (the
+  navigation bar indicator) and `errorContainer` (tokens.md section 2). ot3 has no such
+  role, so `theme.tokens` does not return them and `Ot3Colors` blends them with straight
+  alpha (`Ot3Blend`), the only colour the app computes. The chip fills
+  (`projectFills`) already have accent @ 0.14 for themes whose accent is a palette slot,
+  but not for hackerman and kanagawa, so they cannot stand in.
+- In Rust today: `theme::drawn` and `LAYERS` (`src/theme.rs:20-37`, `:139`).
+
+### 2. Thread menu rules and snooze presets (nice to have)
+
+- Proposed: the thread menu's items with their visibility and enablement for a row and a
+  capability set (`sidebar.threadAction` builds the command, not the menu), and ot3's
+  snooze presets for a `now` and a time zone.
+- Why: `core/home/ThreadActions.kt` keeps ot3's menu rules (`T3ThreadRow.qml:378-410`) and
+  preset times (`T3ThreadRow.qml:104-110`) in Kotlin. They are presentation rules ot3
+  writes in QML, not protocol, so they are listed here rather than moved silently.
+

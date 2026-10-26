@@ -62,9 +62,6 @@ jobs:
           scripts/fetch-or-build-lib.sh --release --host-jni
           cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
 
-      - name: Omarchy theme importer tests
-        run: python3 -I tools/tests/test_import_omarchy_themes.py
-
       # :app:verifyRoborazziDebug runs the app's JVM tests and compares every screenshot
       # with its golden in app/src/test/snapshots/.
       - name: Unit tests, screenshot tests, lint and debug build

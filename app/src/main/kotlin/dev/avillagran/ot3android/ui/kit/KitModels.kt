@@ -3,7 +3,6 @@ package dev.avillagran.ot3android.ui.kit
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import dev.avillagran.ot3android.ui.theme.Ot3Blend
 import dev.avillagran.ot3android.ui.theme.Ot3Colors
 import dev.avillagran.ot3android.ui.theme.Ot3Sizes
 
@@ -33,7 +32,7 @@ enum class StatusRole(val libName: String) {
     }
 }
 
-/** The colour of [role] in these colours; [StatusRole.MUTED] is fg @ 0.6 over the background. */
+/** The colour of [role] in these colours; [StatusRole.MUTED] is the lib's `statusMuted` (fg @ 0.6). */
 fun Ot3Colors.statusColor(role: StatusRole): Color = when (role) {
     StatusRole.WORKING -> working
     StatusRole.DONE -> done
@@ -41,7 +40,7 @@ fun Ot3Colors.statusColor(role: StatusRole): Color = when (role) {
     StatusRole.FAILED -> failed
     StatusRole.WARNING -> warning
     StatusRole.INPUT -> input
-    StatusRole.MUTED -> Ot3Blend.over(foreground, background, 600)
+    StatusRole.MUTED -> statusMuted
 }
 
 /**
