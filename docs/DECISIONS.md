@@ -920,3 +920,9 @@ Lib requests U26 and U27 are in LIB_REQUESTS.md, "2026-10-25: usage limits and r
 - Existing UI-1 navigation, Home/kit/motion and native colour/string generation are kept.
   This integrates UI-1g's reader/cache/settings with the production theme path, rather
   than treating its core tests as evidence that the screen already followed the host.
+
+- Managed route/credential changes replace the shared supervisor. Thread and live-theme
+  consumers follow that replacement without replacing the screen or its draft. Starts
+  are guarded by current supervisor identity and foreground state, so a forgotten
+  transport cannot be revived and a background consumer waits for foreground resume.
+  Regression tests cover shared consumers, replacement and deferred background starts.

@@ -132,8 +132,12 @@ class ThreadViewModel(
     init {
         viewModelScope.launch {
             val found = connections.supervisor(environmentId) ?: return@launch
-            found.start()
-            supervisor.value = found
+            connections.startIfCurrent(found)
+            // A managed route refresh replaces the supervisor without replacing this screen.
+            connections.supervisors.map { it[environmentId] }.distinctUntilChanged().collect {
+                connections.startIfCurrent(it)
+                supervisor.value = it
+            }
         }
         session.start()
     }

@@ -24,8 +24,8 @@ class Ot3Application : Application() {
         val connectivity = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         connectivity.registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) = graph.connectionManager.wakeAll()
-                override fun onLost(network: Network) = graph.connectionManager.wakeAll()
+                override fun onAvailable(network: Network) { graph.connectionManager.wakeAll(); graph.bridgeCatalog.reconnect() }
+                override fun onLost(network: Network) { graph.connectionManager.wakeAll(); graph.bridgeCatalog.reconnect() }
             },
         )
     }
@@ -39,6 +39,7 @@ class Ot3Application : Application() {
 private class ConnectionLifecycle(private val graph: AppGraph) : DefaultLifecycleObserver {
     override fun onStart(owner: LifecycleOwner) {
         graph.connectionManager.setForeground(true)
+        graph.bridgeCatalog.setForeground(true)
         graph.liveThemeSource.setVisible(true)
     }
 
@@ -46,6 +47,7 @@ private class ConnectionLifecycle(private val graph: AppGraph) : DefaultLifecycl
 
     override fun onStop(owner: LifecycleOwner) {
         graph.liveThemeSource.setVisible(false)
+        graph.bridgeCatalog.setForeground(false)
         graph.connectionManager.setForeground(false)
     }
 }

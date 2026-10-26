@@ -53,22 +53,32 @@ fun EnvironmentsScreen(
     onEdit: (environmentId: String) -> Unit,
     modifier: Modifier = Modifier,
     onAppearance: () -> Unit = {},
+    bridgeStatus: String? = null,
+    onRefreshBridge: (() -> Unit)? = null,
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(
         modifier = modifier.testTag(EnvironmentsScreenTags.ROOT),
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.environments_title)) },
-                actions = {
-                    TextButton(onClick = onAppearance, modifier = Modifier.testTag(EnvironmentsScreenTags.APPEARANCE)) {
-                        Text(stringResource(R.string.appearance_title))
-                    }
-                },
-            )
-        },
+        topBar = { TopAppBar(title = {
+            androidx.compose.foundation.layout.Column {
+                Text(stringResource(R.string.environments_title))
+                if (bridgeStatus != null && bridgeStatus != "not_loaded") Text(stringResource(when (bridgeStatus) {
+                    "offline" -> R.string.bridge_offline
+                    "revoked" -> R.string.bridge_revoked
+                    "expired" -> R.string.bridge_expired
+                    "available_requires_authority" -> R.string.bridge_needs_authority
+                    else -> R.string.bridge_available
+                }), style = MaterialTheme.typography.bodySmall)
+            }
+        }, actions = {
+            TextButton(onClick = onAppearance, modifier = Modifier.testTag(EnvironmentsScreenTags.APPEARANCE)) {
+                Text(stringResource(R.string.appearance_title))
+            }
+            if (onRefreshBridge != null && bridgeStatus != "not_loaded") TextButton(onClick = onRefreshBridge) {
+            Text(stringResource(R.string.bridge_refresh))
+        } }) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAdd, modifier = Modifier.testTag(EnvironmentsScreenTags.ADD)) {
                 Icon(painterResource(R.drawable.ic_add), stringResource(R.string.environments_add))
@@ -90,7 +100,17 @@ fun EnvironmentsScreen(
                     val id = item.environment.id
                     ListItem(
                         headlineContent = { Text(item.environment.label) },
-                        supportingContent = { Text(item.environment.baseUrl) },
+                        supportingContent = {
+                            androidx.compose.foundation.layout.Column {
+                                Text(item.environment.baseUrl)
+                                item.bridgeStatus?.let { status -> Text(stringResource(when (status) {
+                                    "revoked" -> R.string.bridge_revoked
+                                    "expired" -> R.string.bridge_expired
+                                    "authorized" -> R.string.bridge_authorized
+                                    else -> R.string.bridge_needs_authority
+                                })) }
+                            }
+                        },
                         trailingContent = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 ConnectionChip(item.state)

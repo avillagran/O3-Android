@@ -9,6 +9,7 @@ import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -25,6 +26,44 @@ import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectionManagerTest {
+
+    @Test
+    fun deferredConsumersResumeOnForegroundButCannotReviveForgottenSupervisors() = runTest {
+        val manager = manager()
+        manager.setForeground(false)
+        val current = manager.supervisor("id-1")!!
+        manager.startIfCurrent(current)
+        runCurrent()
+        assertFalse(current.isRunning)
+        assertEquals(0, factory.created.size)
+        manager.setForeground(true)
+        runCurrent()
+        assertTrue(current.state.value is ConnectionState.Connected)
+        manager.forget("id-1")
+        manager.startIfCurrent(current)
+        runCurrent()
+        assertFalse(current.isRunning)
+        assertEquals("forgotten transport is not reopened", 1, factory.created.size)
+    }
+
+    @Test
+    fun connectionConsumersFollowReplacementWithoutDuplicatingTheTransport() = runTest {
+        val manager = manager()
+        val seen = mutableListOf<Connection?>()
+        backgroundScope.launch { manager.connectionFlow("id-1").collect { seen += it } }
+        backgroundScope.launch { manager.connectionFlow("id-1").collect { } }
+        runCurrent()
+        val original = seen.last()!!
+        assertEquals(1, factory.created.size)
+        manager.forget("id-1")
+        runCurrent()
+        assertNull(seen.last())
+        manager.supervisor("id-1")
+        runCurrent()
+        assertNotSame(original.transport, seen.last()!!.transport)
+        assertTrue(factory.created.first().closed)
+        assertEquals("one new transport, shared by both consumers", 2, factory.created.size)
+    }
 
     private val cursors = MemoryCursorStore()
     private val dao = InMemoryEnvironmentDao()

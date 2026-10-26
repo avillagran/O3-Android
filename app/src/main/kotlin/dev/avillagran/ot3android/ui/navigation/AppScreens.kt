@@ -134,6 +134,9 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun Environments() {
+        val graph = LocalContext.current.appGraph
+        val bridgeStatus by graph.bridgeCatalog.status.collectAsStateWithLifecycle()
+        val scope = rememberCoroutineScope()
         EnvironmentsScreen(
             viewModel = appViewModel { graph -> EnvironmentsViewModel(graph.environmentRepository, graph.connectionManager) },
             // Rows expand in place with UI-6; until then a tap edits, as the edit action does.
@@ -141,6 +144,8 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             onAdd = { navigator.addEnvironment() },
             onEdit = { id -> navigator.addEnvironment(id) },
             onAppearance = { navigator.push(Appearance) },
+            bridgeStatus = bridgeStatus,
+            onRefreshBridge = { scope.launch { graph.bridgeCatalog.reconnect() } },
         )
     }
 
@@ -164,7 +169,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     override fun PairEnvironment() {
         val inbox = LocalContext.current.appGraph.pairingInbox
         PairScreen(
-            viewModel = appViewModel { graph -> PairViewModel(graph.pairingService()) },
+            viewModel = appViewModel { graph -> PairViewModel(graph.pairingService(), graph::pairBridge, dev.avillagran.ot3android.core.bridge.NativeBridge::isAvailable) },
             inbox = inbox.link,
             takeFromInbox = inbox::take,
             onScan = { navigator.push(ScanPairingCode) },
@@ -183,6 +188,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 inbox.offer(text, scanned = true)
             },
             onBack = { navigator.back() },
+            accept = { dev.avillagran.ot3android.ui.pair.BridgeInvitation.isLink(it) || dev.avillagran.ot3android.core.pairing.PairingService.isPairingLink(it) },
         )
     }
 
