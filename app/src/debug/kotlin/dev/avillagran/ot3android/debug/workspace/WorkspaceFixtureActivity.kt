@@ -34,6 +34,7 @@ class WorkspaceFixtureActivity : ComponentActivity() {
     lateinit var fixture: WorkspaceFixture
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (intent.getBooleanExtra("landscape", false)) requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val bars = androidx.activity.SystemBarStyle.auto(android.graphics.Color.TRANSPARENT,
             android.graphics.Color.TRANSPARENT) { intent.getBooleanExtra("dark", false) }
         enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
@@ -157,6 +158,6 @@ The checks completed; review the activity and changed files above.
 
 private fun JSONArray.objects(): List<JSONObject> = (0 until length()).mapNotNull(::optJSONObject)
 private fun fixtureItems() = JSONArray("""[
- {"id":"think-reader","threadId":"chat","runId":"run-reader","type":"reasoning","status":"completed","createdAt":"2026-10-25T10:58:10Z","updatedAt":"2026-10-25T10:58:15Z","text":"Compare the native reader with the reference, then verify draft and anchor preservation."},
- {"id":"test-reader","threadId":"chat","runId":"run-reader","type":"command_execution","status":"completed","createdAt":"2026-10-25T10:58:20Z","updatedAt":"2026-10-25T10:58:30Z","input":"./gradlew :app:testDebugUnitTest","output":"Reader checks passed. No network requests were sent.","exitCode":0}
+ {"id":"think-reader","threadId":"chat","runId":"run-reader","providerTurnId":null,"type":"reasoning","status":"completed","createdAt":"2026-10-25T10:58:10Z","updatedAt":"2026-10-25T10:58:15Z","text":"Compare the native reader with the reference, then verify draft and anchor preservation."},
+ {"id":"test-reader","threadId":"chat","runId":"run-reader","providerTurnId":null,"type":"command_execution","status":"completed","createdAt":"2026-10-25T10:58:20Z","updatedAt":"2026-10-25T10:58:30Z","input":"./gradlew :app:testDebugUnitTest","output":"Reader checks passed. No network requests were sent.","exitCode":0}
 ]""")

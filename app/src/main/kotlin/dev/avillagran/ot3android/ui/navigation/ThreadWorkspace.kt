@@ -1,5 +1,10 @@
 package dev.avillagran.ot3android.ui.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -36,15 +41,19 @@ fun ThreadWorkspace(sidebar: @Composable () -> Unit, chat: @Composable () -> Uni
         }
         Box(Modifier.weight(1f)) {
             Row(Modifier.fillMaxSize()) {
-                SidebarReveal(shown = split && shown, modifier = Modifier.testTag("thread_sidebar")) {
+                if (split) SidebarReveal(shown = shown, modifier = Modifier.testTag("thread_sidebar")) {
                     sidebarState.SaveableStateProvider("sidebar") { sidebar() }
                 }
                 Box(Modifier.weight(1f).fillMaxHeight()) { chat() }
             }
             // Overlay: opening the portrait panel never recomposes the reader in another slot.
-            if (!split && drawerOpen) {
-                androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = dev.avillagran.ot3android.ui.theme.Ot3Theme.colors.background) {
-                    sidebarState.SaveableStateProvider("sidebar") { sidebar() }
+            if (!split) {
+                if (drawerOpen) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .25f))
+                    .clickable { drawerOpen = false }.semantics { contentDescription = "Close sidebar" })
+                SidebarReveal(shown = drawerOpen, modifier = Modifier.testTag("thread_sidebar_drawer")) {
+                    androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = dev.avillagran.ot3android.ui.theme.Ot3Theme.colors.background) {
+                        sidebarState.SaveableStateProvider("sidebar") { sidebar() }
+                    }
                 }
             }
         }

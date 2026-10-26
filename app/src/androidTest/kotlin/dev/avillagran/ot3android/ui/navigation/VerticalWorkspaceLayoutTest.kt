@@ -37,8 +37,19 @@ class VerticalWorkspaceLayoutTest {
         rule.waitUntil(5000) { androidx.core.view.ViewCompat.getRootWindowInsets(rule.activity.window.decorView)!!
             .isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) }
         rule.waitForIdle()
+        // displayMetrics may shrink during adjustResize while semantics are still from the
+        // previous IME animation frame. Compare against the real keyboard top after layout.
+        fun keyboardTop(): Int {
+            val full = rule.activity.windowManager.currentWindowMetrics.bounds.height()
+            val ime = androidx.core.view.ViewCompat.getRootWindowInsets(rule.activity.window.decorView)!!
+                .getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
+            return full - ime
+        }
+        rule.waitUntil(5_000) {
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNode().boundsInRoot.bottom <= keyboardTop() + density
+        }
         val edited = rule.onNodeWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNode().boundsInRoot
-        assertTrue("Composer remains inside available window", edited.bottom <= rule.activity.resources.displayMetrics.heightPixels)
+        assertTrue("Composer remains above the real IME", edited.bottom <= keyboardTop() + density)
         val compactTimeline = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot
         val compactComposer = rule.onNodeWithTag("thread_composer_surface").fetchSemanticsNode().boundsInRoot
         assertEquals("IME creates no gap", compactTimeline.bottom, compactComposer.top, density)
