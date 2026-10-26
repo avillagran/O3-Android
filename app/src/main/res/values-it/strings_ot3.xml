@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Aperti</string>
     <string name="ot3_notif_approval_required">Approvazione richiesta</string>
     <string name="ot3_notif_question">Domanda</string>
+    <string name="ot3_permission_permissions">Permessi della chat</string>
+    <string name="ot3_permission_supervised">Supervisionato</string>
+    <string name="ot3_permission_supervised_detail">Chiedi prima dei comandi e delle modifiche ai file.</string>
+    <string name="ot3_permission_accept_edits">Accetta modifiche</string>
+    <string name="ot3_permission_accept_edits_detail">Approva le modifiche, chiedi per le altre azioni.</string>
+    <string name="ot3_permission_auto">Automatico</string>
+    <string name="ot3_permission_auto_detail">I provider compatibili approvano le azioni comuni; gli altri chiedono.</string>
+    <string name="ot3_permission_full_access">Accesso completo</string>
+    <string name="ot3_permission_full_access_detail">Consenti comandi e modifiche senza conferma.</string>
 </resources>

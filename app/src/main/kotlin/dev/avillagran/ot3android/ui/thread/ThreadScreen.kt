@@ -120,6 +120,9 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onSelectModel = viewModel::selectModel,
         onSelectModelOption = viewModel::selectModelOption,
         onFavoriteModel = viewModel::favoriteModel,
+        onApprovalDecision = viewModel::respondApproval,
+        onQuestionResponse = viewModel::respondQuestion,
+        onRuntimeMode = viewModel::selectRuntimeMode,
     )
 }
 
@@ -145,6 +148,9 @@ fun ThreadContent(
     onSelectModel: (org.json.JSONObject) -> Unit = {},
     onSelectModelOption: (String, Any) -> Unit = { _, _ -> },
     onFavoriteModel: (org.json.JSONObject, Boolean) -> Unit = { _, _ -> },
+    onApprovalDecision: (String, String) -> Unit = { _, _ -> },
+    onQuestionResponse: (String, String, org.json.JSONObject) -> Unit = { _, _, _ -> },
+    onRuntimeMode: (String) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -229,7 +235,14 @@ fun ThreadContent(
                         }
                     }
                 }
-                Composer(
+                ThreadTasks(state.view.timeline?.optJSONObject("tasks"))
+                ApprovalCard(state.view.timeline?.optJSONArray("approvals"),
+                    state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
+                    state.respondingRequest, state.answeredRequests, onApprovalDecision)
+                QuestionCard(state.view.timeline?.optJSONArray("questions"),
+                    state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
+                    state.respondingRequest, state.answeredRequests, onResponse = onQuestionResponse)
+                if ((state.view.timeline?.optJSONArray("questions")?.length() ?: 0) == 0) Composer(
                 draft = state.draft,
                 canSend = state.canSend,
                 sending = state.sending,
@@ -238,7 +251,11 @@ fun ThreadContent(
                 toolbar = {
                     ComposerModels(state.modelCatalog, state.modelSelection, state.modelsLoading,
                         state.connected && !state.sending && state.queueEdit == null,
-                        onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel)
+                        onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel) {
+                        ComposerPermissions(state.modelCatalog, state.modelSelection, state.view.runtimeMode,
+                            state.connected && !state.view.stale && !state.sending && state.queueEdit == null && state.unconfirmed.isEmpty(),
+                            onRefreshModels, onRuntimeMode)
+                    }
                 },
             )
             }
@@ -246,7 +263,8 @@ fun ThreadContent(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
             StreamState(state.view.connectionState, state.view.stale, onRetryStream)
-            state.view.pendingRequests.forEach { PendingRequestBanner(it) }
+            state.view.pendingRequests.filter { state.view.timeline?.has(if (it.kind == "user_input") "questions" else "approvals") != true }
+                .forEach { PendingRequestBanner(it) }
             state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {

@@ -17,6 +17,90 @@ import org.junit.Test
 class MessageSenderTest {
 
     @Test
+    fun runtimeModeUsesNativeValidationAndExactDurableRetry() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        val transport = connected()
+        assertEquals(SendResult.Failed("invalid_runtime_mode"), sender.runtimeMode(transport, "env-1", "t1", "unsupported"))
+        assertTrue(fake.calls.isEmpty())
+        var calls = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (calls++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 20)
+        }
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), sender.runtimeMode(transport, "env-1", "t1", "auto-accept-edits"))
+        val command = fake.calls.single().args
+        assertEquals("thread.runtime-mode.set", command.getString("type"))
+        assertEquals("auto-accept-edits", command.getString("runtimeMode"))
+        assertEquals("ot3a-1", command.getString("commandId"))
+        assertEquals(SendResult.Accepted("ot3a-1", 20), sender.retry(fake, "ot3a-1"))
+        assertEquals(command.toString(), fake.calls.last().args.toString())
+    }
+
+    @Test
+    fun questionResponsesAndDismissalsUseRustCommandsAndStableUnknownRetry() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        var count = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (count++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 19)
+        }
+        val answers = JSONObject("""{"first":"a","second":["b","c"]}""")
+        val result = sender.answer(connected(), "env-1", "t1", "input", "respond", answers)
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), result)
+        assertEquals("runtime-request.respond", fake.calls[0].args.getString("type"))
+        assertEquals("b", fake.calls[0].args.getJSONObject("answers").getJSONArray("second").getString(0))
+        assertEquals(SendResult.Accepted("ot3a-1", 19), sender.retry(fake, "ot3a-1"))
+        assertEquals(fake.calls[0].args.toString(), fake.calls[1].args.toString())
+        sender.answer(fake, "env-1", "t1", "input", "dismiss", JSONObject())
+        assertEquals("thread.user-input.dismiss", fake.calls.last().args.getString("type"))
+        assertFalse(fake.calls.last().args.has("answers"))
+    }
+
+    private fun approvalProjection(live: Boolean = true, options: String = """[{"decision":"accept","label":"Approve"}]""") = JSONObject("""{
+      "thread":{"id":"t1"},
+      "runtimeRequests":[{"id":"request","kind":"command","status":"pending","responseCapability":{"type":"${if (live) "live" else "not_resumable"}"}}],
+      "turnItems":[{"type":"approval_request","requestId":"request","prompt":"Read the requested file","options":$options}]
+    }""")
+
+    @Test
+    fun approvalUnknownOutcomeUsesNativeDecisionAndTheSameDurableRetry() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        var responses = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (responses++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 12)
+        }
+        val result = sender.approve(connected(), "env-1", "t1", "request", "accept", approvalProjection())
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), result)
+        val args = fake.calls.single().args
+        assertEquals("runtime-request.respond", args.getString("type"))
+        assertEquals("request", args.getString("requestId"))
+        assertEquals("accept", args.getString("decision"))
+        assertEquals(SendResult.Accepted("ot3a-1", 12), sender.retry(fake, "ot3a-1"))
+        assertEquals(fake.calls[0].args.toString(), fake.calls[1].args.toString())
+        assertEquals(1, counter)
+    }
+
+    @Test
+    fun nativeApprovalRejectsGoneUnavailableAndUnofferedChoicesBeforeAnyDispatch() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        val transport = connected()
+        val gone = sender.approve(transport, "env-1", "t1", "gone", "accept", approvalProjection())
+        val notLive = sender.approve(transport, "env-1", "t1", "request", "accept", approvalProjection(live = false))
+        val empty = sender.approve(transport, "env-1", "t1", "request", "accept", approvalProjection(options = "[]"))
+        assertEquals(SendResult.Failed("approval_no_longer_pending"), gone)
+        assertEquals(SendResult.Failed("approval_not_resumable"), notLive)
+        assertEquals(SendResult.Failed("invalid_approval_decision"), empty)
+        assertTrue(fake.calls.isEmpty())
+        assertTrue(dao.rows.value.isEmpty())
+        assertEquals(0, counter)
+    }
+
+    @Test
     fun queueEditUsesRustAndUnknownOutcomeRetainsTheExactAttachmentCommand() = runTest {
         assumeHostJni()
         val sender = MessageSender(OutboxRepository(dao), this, ids)

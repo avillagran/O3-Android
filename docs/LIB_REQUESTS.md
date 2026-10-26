@@ -729,6 +729,15 @@ Source references are to the lib at the tag; the lib checkout stayed at the tag 
   ready `message.dispatch` command and only adds `sourcePlanRef` to it, so it does not
   build one.
 
+- **Rechecked 2026-10-26 against tag v0.3.5:** `awareness.view` landed, but the
+  four `composer.*` functions above are unchanged. UI-3 queue mutations and UI-4
+  approvals/questions now use their native builders. New-message queue/steer, attachment
+  dispatch, and the UI-4 plan follow-up still need the common submission builder.
+  `planWorkflow.followUp` supplies text/interactionMode/sourcePlanRef, and
+  `attachSourceRef` decorates an existing dispatch; neither builds/executes the required
+  interaction-mode + message sequence with stable retry ids. Extend the common builder
+  to cover this recipe instead of adding another protocol sequence to Kotlin.
+
 ### 3. The projection crosses JNI twice per stream update
 
 - What: with `projection.apply` and `timeline.view` the whole projection is serialised to
@@ -1063,3 +1072,17 @@ fields are omitted, cold reseeds without alerts, plan-ready attention has waitin
 finished deadlines use latestRunCompletedAt, and nextDeadline includes snooze expiry.
 See the lib v0.3.5 README for the full authoritative contract. No Kotlin state/count
 logic is introduced to bridge versions.
+
+### U29. Permission picker projection and unadvertised-mode fallback
+
+- Source: ot3 `7b5b1de`, `T3PermissionPicker.qml:11-21`: four presentation
+  definitions, current-mode fallback, and provider-supported runtime modes.
+- `models.catalog` returns provider `supportedRuntimeModes`; `models.runtimeModeCommand`
+  validates/builds changes. Android renders the advertised choices and uses the native
+  command plus durable outbox, without an optimistic current-mode change.
+- Missing common contract: `models.permissionView {catalog, selection?, runtimeMode?}`
+  returning current choice and ordered rows `{id,label,description,icon}`. In particular
+  an empty/missing supported-mode array means all definitions in ot3. Android does not
+  reproduce that domain fallback: it shows no unadvertised choices until Rust exposes it.
+- This limits providers which omit the array; advertised-provider changes remain usable.
+  It does not block composer/requests or awareness runtime work.

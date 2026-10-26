@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Avoimet</string>
     <string name="ot3_notif_approval_required">Hyväksyntä vaaditaan</string>
     <string name="ot3_notif_question">Kysymys</string>
+    <string name="ot3_permission_permissions">Keskustelun oikeudet</string>
+    <string name="ot3_permission_supervised">Valvottu</string>
+    <string name="ot3_permission_supervised_detail">Kysy ennen komentoja ja tiedostomuutoksia.</string>
+    <string name="ot3_permission_accept_edits">Hyväksy muutokset</string>
+    <string name="ot3_permission_accept_edits_detail">Hyväksy muutokset automaattisesti, kysy muista toimista.</string>
+    <string name="ot3_permission_auto">Automaattinen</string>
+    <string name="ot3_permission_auto_detail">Tuetut tarjoajat hyväksyvät rutiinitoimet; muut kysyvät.</string>
+    <string name="ot3_permission_full_access">Täysi käyttöoikeus</string>
+    <string name="ot3_permission_full_access_detail">Salli komennot ja muutokset ilman vahvistusta.</string>
 </resources>

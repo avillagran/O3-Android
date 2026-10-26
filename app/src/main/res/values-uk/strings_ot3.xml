@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Відкриті</string>
     <string name="ot3_notif_approval_required">Потрібне підтвердження</string>
     <string name="ot3_notif_question">Запитання</string>
+    <string name="ot3_permission_permissions">Дозволи чату</string>
+    <string name="ot3_permission_supervised">Під наглядом</string>
+    <string name="ot3_permission_supervised_detail">Питати перед командами та змінами файлів.</string>
+    <string name="ot3_permission_accept_edits">Приймати зміни</string>
+    <string name="ot3_permission_accept_edits_detail">Автоматично схвалювати зміни, питати про інші дії.</string>
+    <string name="ot3_permission_auto">Автоматично</string>
+    <string name="ot3_permission_auto_detail">Сумісні провайдери схвалюють звичайні дії; інші запитують.</string>
+    <string name="ot3_permission_full_access">Повний доступ</string>
+    <string name="ot3_permission_full_access_detail">Дозволити команди та зміни без підтверджень.</string>
 </resources>

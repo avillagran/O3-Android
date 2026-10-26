@@ -19,6 +19,14 @@ import dev.avillagran.ot3android.R
  * that folder's NOTICE.md and add the icon here.
  */
 object Ot3Icons {
+    @DrawableRes val Lock: Int = R.drawable.ic_lock
+    @DrawableRes val LockOpen: Int = R.drawable.ic_lock_open
+    @DrawableRes val Sparkles: Int = R.drawable.ic_sparkles
+    @DrawableRes val PenLine: Int = R.drawable.ic_pen_line
+
+    @DrawableRes val ListTodo: Int = R.drawable.ic_list_todo
+    @DrawableRes val Circle: Int = R.drawable.ic_circle
+    @DrawableRes val CircleDot: Int = R.drawable.ic_circle_dot
     @DrawableRes val Star: Int = R.drawable.ic_star
     @DrawableRes val StarFilled: Int = R.drawable.ic_star_filled
     @DrawableRes val AlarmClock: Int = R.drawable.ic_alarm_clock
@@ -59,7 +67,6 @@ object Ot3Icons {
     @DrawableRes val PanelLeft: Int = R.drawable.ic_panel_left
     @DrawableRes val PanelLeftClose: Int = R.drawable.ic_panel_left_close
     @DrawableRes val Paperclip: Int = R.drawable.ic_paperclip
-    @DrawableRes val PenLine: Int = R.drawable.ic_pen_line
     @DrawableRes val Pin: Int = R.drawable.ic_pin
     @DrawableRes val PinOff: Int = R.drawable.ic_pin_off
     @DrawableRes val RefreshCw: Int = R.drawable.ic_refresh_cw
@@ -123,11 +130,18 @@ object Ot3Icons {
         "server" to Server,
         "settings" to Settings,
         "shield-question" to ShieldQuestion,
+        "lock" to Lock,
+        "lock-open" to LockOpen,
+        "sparkles" to Sparkles,
+
         "sliders-horizontal" to SlidersHorizontal,
         "smartphone" to Smartphone,
         "square-pen" to SquarePen,
         "stop-filled" to StopFilled,
         "star" to Star,
+        "list-todo" to ListTodo,
+        "circle" to Circle,
+        "circle-dot" to CircleDot,
         "star-filled" to StarFilled,
         "t3-logo" to T3Logo,
         "undo-2" to Undo2,

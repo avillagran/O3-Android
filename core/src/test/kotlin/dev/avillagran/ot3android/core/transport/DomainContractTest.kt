@@ -51,6 +51,18 @@ class DomainContractTest {
     }
 
     @Test
+    fun activeTaskProjectionCrossesTheNativeBoundaryWithoutClientDerivation() = runBlocking {
+        val p = projection("kitchen-sink")
+        val view = call("timeline.view", JSONObject().put("projection", p)) as JSONObject
+        val tasks = view.getJSONObject("tasks")
+        assertEquals("run-3", tasks.getString("runId"))
+        assertEquals("Test", tasks.getString("current"))
+        assertEquals(1, tasks.getInt("completed"))
+        assertEquals(2, tasks.getInt("total"))
+        assertEquals(3000, tasks.getJSONArray("items").getJSONObject(0).getInt("durationMs"))
+    }
+
+    @Test
     fun u4ChangesSummaries() = runBlocking {
         val changes = call("changes.summaries", JSONObject().put("projection", projection("kitchen-sink"))) as JSONArray
 

@@ -70,6 +70,7 @@ data class ThreadView(
     val timeline: JSONObject? = null,
     /** The thread's `modelSelection` as compact JSON, sent with each message. */
     val modelSelection: String? = null,
+    val runtimeMode: String? = null,
     val connectionState: ThreadConnection = ThreadConnection.Waiting,
     /** The stream ended in a way that may have lost events; a fresh snapshot is on its way. */
     val stale: Boolean = false,
@@ -120,7 +121,10 @@ class ThreadSession(
     val view: StateFlow<ThreadView> = _view.asStateFlow()
 
     /** The held projection, its stream sequence and its bounded-history fields. */
-    private var projection: JSONObject? = null
+    @Volatile private var projection: JSONObject? = null
+
+    /** Defensive snapshot for native mutation validation; stream-owned objects stay private. */
+    fun projectionSnapshot(): JSONObject? = projection?.let { JSONObject(it.toString()) }
     private var sequence: Long? = null
     private var history = ThreadTimelines.History.NONE
 
@@ -347,6 +351,7 @@ class ThreadSession(
                 pendingRequests = timeline.pendingRequests,
                 timeline = timeline.raw,
                 modelSelection = thread?.optJSONObject("modelSelection")?.toString(),
+                runtimeMode = thread?.optString("runtimeMode")?.takeUnless { it.isBlank() || it == "null" },
                 stale = stale,
                 sequence = sequence,
             )

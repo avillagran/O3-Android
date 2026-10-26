@@ -1369,6 +1369,11 @@ banner (`app/src/main/kotlin/dev/avillagran/ot3android/ui/thread/ThreadScreen.kt
 - Data: `approvals::pending` (rows with kind, capability, options; `lib:src/approvals.rs:11`)
   and `approvals::command` (`:61`) via `Command::approve`; U6 and request item 4.
 
+Implementation progress (2026-10-26): the real stack also renders native tasks with vertical source reveal; the approval card uses native rows and
+`approvals.command` on the current projection, with durable retry ids, non-resumable
+provider gating and explicit visible decisions. Questions/plans/secrets and device
+acceptance remain open. See `docs/ui/compare/ui-4/README.md`.
+
 #### 4.5.2 Question card
 
 - ot3 card: collapse chevron, header (default "Question"), "i/N", "Dismiss question
@@ -1386,6 +1391,11 @@ banner (`app/src/main/kotlin/dev/avillagran/ot3android/ui/thread/ThreadScreen.kt
   becomes the card's collapsed state, using ot3's header.
 - Data: `questions::pending` (`lib:src/questions.rs:5`, U6) and `questions::command`
   (`:37`) via `Command::answer`.
+
+Question implementation progress (2026-10-26): the real question card now pages native
+requests, renders Markdown via Rust, supports selection/custom inputs and 200 ms advance,
+submits all answers through questions.command, and hides the composer while pending.
+Keyboard shortcuts and device/live acceptance remain pending; UI-4 stays open.
 
 #### 4.5.3 Secret request
 
@@ -2223,3 +2233,16 @@ localhost/SSH forwards are reachable by a phone. A route indicator/settings page
 not close this requirement. [CATALOG_SYNC](bridge/CATALOG_SYNC.md) tracks proven source,
 implementation and the remaining authenticated publisher/enrollment/Android integration.
 Physical VQ-only evidence is not proof of the phone's actual UUID, route or filter.
+
+### 2026-10-26 — Request/composer integration acceptance update
+
+UI-3 queue/model/options and UI-4 approval/question/task increments are reconciled with
+the UI-1 release. A compact permission control shares the model/options row; labels,
+descriptions and lock/pen-line/sparkles icons come from T3PermissionPicker.qml and the
+pinned catalog. Choices use native provider supportedRuntimeModes, mutations use
+models.runtimeModeCommand and the durable outbox; current permission waits for the
+thread stream. Native fallback projection for providers without advertised modes is U29.
+Portrait approval/question/permission screenshots and videos are in ui/compare/ui-4/.
+They use a deterministic server through production screens/ViewModels/Rust and do not
+close live or exact desktop visual acceptance. Landscape, secret/plan workflows and
+remaining composer actions are still required.

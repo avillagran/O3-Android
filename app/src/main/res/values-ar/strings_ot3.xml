@@ -142,4 +142,13 @@
     <string name="ot3_notif_open">مفتوحة</string>
     <string name="ot3_notif_approval_required">الموافقة مطلوبة</string>
     <string name="ot3_notif_question">سؤال</string>
+    <string name="ot3_permission_permissions">أذونات المحادثة</string>
+    <string name="ot3_permission_supervised">تحت الإشراف</string>
+    <string name="ot3_permission_supervised_detail">السؤال قبل الأوامر وتغييرات الملفات.</string>
+    <string name="ot3_permission_accept_edits">قبول التعديلات</string>
+    <string name="ot3_permission_accept_edits_detail">اعتماد التعديلات تلقائيًا والسؤال عن الإجراءات الأخرى.</string>
+    <string name="ot3_permission_auto">تلقائي</string>
+    <string name="ot3_permission_auto_detail">يعتمد المزوّدون المتوافقون الإجراءات المعتادة، ويسأل الآخرون.</string>
+    <string name="ot3_permission_full_access">وصول كامل</string>
+    <string name="ot3_permission_full_access_detail">السماح بالأوامر والتعديلات دون تأكيد.</string>
 </resources>

@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Åpne</string>
     <string name="ot3_notif_approval_required">Godkjenning kreves</string>
     <string name="ot3_notif_question">Spørsmål</string>
+    <string name="ot3_permission_permissions">Chattillatelser</string>
+    <string name="ot3_permission_supervised">Overvåket</string>
+    <string name="ot3_permission_supervised_detail">Spør før kommandoer og filendringer.</string>
+    <string name="ot3_permission_accept_edits">Godta endringer</string>
+    <string name="ot3_permission_accept_edits_detail">Godkjenn endringer automatisk, spør om andre handlinger.</string>
+    <string name="ot3_permission_auto">Automatisk</string>
+    <string name="ot3_permission_auto_detail">Støttede leverandører godkjenner rutinehandlinger; andre spør.</string>
+    <string name="ot3_permission_full_access">Full tilgang</string>
+    <string name="ot3_permission_full_access_detail">Tillat kommandoer og endringer uten bekreftelse.</string>
 </resources>

@@ -50,13 +50,45 @@ class MessageSender(
         threadId: String,
         arguments: JSONObject,
         domain: DomainCalls = DomainEngine.shared,
+    ): SendResult = nativeMutation(transport, environmentId, threadId, "queue.command",
+        JSONObject(arguments.toString()).put("thread", threadId), domain)
+
+    /** Rust rechecks that this request is still pending, live, and offers this decision. */
+    suspend fun approve(
+        transport: T3Transport?, environmentId: String, threadId: String,
+        requestId: String, decision: String, projection: JSONObject,
+        domain: DomainCalls = DomainEngine.shared,
+    ): SendResult = nativeMutation(transport, environmentId, threadId, "approvals.command",
+        JSONObject().put("thread", threadId).put("runtimeRequestId", requestId)
+            .put("decision", decision).put("projection", projection), domain)
+
+    /** Answers are explicit form selections; Rust owns the response/dismiss command shape. */
+    suspend fun answer(
+        transport: T3Transport?, environmentId: String, threadId: String,
+        requestId: String, action: String, answers: JSONObject,
+        domain: DomainCalls = DomainEngine.shared,
+    ): SendResult = nativeMutation(transport, environmentId, threadId, "questions.command",
+        JSONObject().put("thread", threadId).put("runtimeRequestId", requestId)
+            .put("action", action).put("answers", answers), domain)
+
+    /** The provider advertises choices; Rust validates/builds the wire command. */
+    suspend fun runtimeMode(
+        transport: T3Transport?, environmentId: String, threadId: String, mode: String,
+        domain: DomainCalls = DomainEngine.shared,
+    ): SendResult = nativeMutation(transport, environmentId, threadId, "models.runtimeModeCommand",
+        JSONObject().put("threadId", threadId).put("commandId", "ot3a-validation")
+            .put("runtimeMode", mode), domain)
+
+    private suspend fun nativeMutation(
+        transport: T3Transport?, environmentId: String, threadId: String,
+        fn: String, arguments: JSONObject, domain: DomainCalls,
     ): SendResult = detached {
         if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
         // Keep the same retry id even before the composer's Flow has observed an unknown result.
         val pending = outbox.observeThread(environmentId, threadId).first().firstOrNull()
         if (pending != null) return@detached SendResult.Failed(COMMAND_PENDING)
         val command = try {
-            domain.domain("queue.command", JSONObject(arguments.toString()).put("thread", threadId)) as JSONObject
+            domain.domain(fn, arguments) as JSONObject
         } catch (error: T3Exception) {
             return@detached error.toFailed()
         }

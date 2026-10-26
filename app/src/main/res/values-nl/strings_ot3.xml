@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Open</string>
     <string name="ot3_notif_approval_required">Goedkeuring vereist</string>
     <string name="ot3_notif_question">Vraag</string>
+    <string name="ot3_permission_permissions">Chatmachtigingen</string>
+    <string name="ot3_permission_supervised">Onder toezicht</string>
+    <string name="ot3_permission_supervised_detail">Vraag toestemming voor opdrachten en bestandswijzigingen.</string>
+    <string name="ot3_permission_accept_edits">Wijzigingen accepteren</string>
+    <string name="ot3_permission_accept_edits_detail">Keur wijzigingen automatisch goed; vraag bij andere acties.</string>
+    <string name="ot3_permission_auto">Automatisch</string>
+    <string name="ot3_permission_auto_detail">Ondersteunde providers keuren routineacties goed; andere vragen toestemming.</string>
+    <string name="ot3_permission_full_access">Volledige toegang</string>
+    <string name="ot3_permission_full_access_detail">Sta opdrachten en wijzigingen zonder bevestiging toe.</string>
 </resources>

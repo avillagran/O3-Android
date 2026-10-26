@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-26T12:55:12.456Z",
+  "events": [
+    {
+      "kind": "tap",
+      "tMs": 416,
+      "x": 540,
+      "y": 1953,
+      "referenceWidth": 1080,
+      "referenceHeight": 2300
+    }
+  ]
+}

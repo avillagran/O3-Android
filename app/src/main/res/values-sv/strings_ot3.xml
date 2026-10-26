@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Öppna</string>
     <string name="ot3_notif_approval_required">Godkännande krävs</string>
     <string name="ot3_notif_question">Fråga</string>
+    <string name="ot3_permission_permissions">Chattbehörigheter</string>
+    <string name="ot3_permission_supervised">Övervakat</string>
+    <string name="ot3_permission_supervised_detail">Fråga före kommandon och filändringar.</string>
+    <string name="ot3_permission_accept_edits">Godkänn ändringar</string>
+    <string name="ot3_permission_accept_edits_detail">Godkänn ändringar automatiskt, fråga om andra åtgärder.</string>
+    <string name="ot3_permission_auto">Automatiskt</string>
+    <string name="ot3_permission_auto_detail">Stödda leverantörer godkänner rutinåtgärder; andra frågar.</string>
+    <string name="ot3_permission_full_access">Fullständig åtkomst</string>
+    <string name="ot3_permission_full_access_detail">Tillåt kommandon och ändringar utan bekräftelse.</string>
 </resources>
