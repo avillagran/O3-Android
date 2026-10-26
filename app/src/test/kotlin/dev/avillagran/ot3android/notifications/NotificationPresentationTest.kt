@@ -226,4 +226,24 @@ class NotificationPresentationTest {
         // A request is not a promotion: an unposted card is never reported as promoted.
         assertFalse(LiveUpdates.isPromoted(n))
     }
+    @Test fun privacyChangeRedactsAlreadyPostedAlertsAndSummariesWithoutChangingTheirRoute() {
+        if (Build.VERSION.SDK_INT >= 33) shadowOf(context as Application).grantPermissions(android.Manifest.permission.POST_NOTIFICATIONS)
+        Ot3NotificationChannels.ensure(context)
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val original = AwarenessAlertBuilder.build(context, NotificationContract.alert(alert())!!, now)!!
+        manager.notify("ot3-alert:test", 1, original)
+        manager.notify("ot3-alert-summary:attention", 2, AwarenessAlertBuilder.summary(context,
+            AlertGroup.Attention, "Sensitive title", listOf("Private project"), ThreadRef("env-1", "thread-9")))
+        refreshNotificationPrivacy(context, LockscreenDetail.State)
+        manager.activeNotifications.forEach {
+            assertEquals(Notification.VISIBILITY_PRIVATE, it.notification.visibility)
+            assertEquals("OT3", it.notification.publicVersion.extras.getString(Notification.EXTRA_TITLE))
+            assertFalse(it.notification.publicVersion.extras.toString().contains("Private project"))
+        }
+        assertEquals(original.contentIntent, manager.activeNotifications.first { it.id == 1 }.notification.contentIntent)
+        refreshNotificationPrivacy(context, LockscreenDetail.Hidden)
+        manager.activeNotifications.forEach { assertNull(it.notification.publicVersion) }
+        refreshNotificationPrivacy(context, LockscreenDetail.Full)
+        manager.activeNotifications.forEach { assertEquals(Notification.VISIBILITY_PUBLIC, it.notification.visibility) }
+    }
 }

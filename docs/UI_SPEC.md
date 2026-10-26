@@ -2271,3 +2271,7 @@ monochrome mark supplies chip branding and short critical text supplies the stat
 a longer brand prefix hid that text in the observed system UI. Full lock-screen content
 remains the default; lock-screen capture and remaining lifecycle cases are not accepted
 yet. See docs/ui/compare/ui-n/runtime/live-node-verification.json.
+
+## 2026-10-26 — notification controls
+
+Settings now persists approval/input/plan/completion/failure preferences and sends them to awareness.view. Rust owns alert suppression and baseline consumption. Full lock-screen detail remains default; State/Hidden update already posted notifications and summaries, preserving absolute expiry and routes. System promotion availability refreshes on resume. See docs/ui/compare/ui-n/controls/README.md for tests and boundaries.

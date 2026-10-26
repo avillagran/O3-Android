@@ -9,4 +9,14 @@
     <string name="follow_live_unsupported">This Android version shows normal ongoing notifications.</string>
     <string name="follow_permission_denied">Notifications are not allowed. Enable them in system settings to follow threads.</string>
     <string name="follow_stop">Stop following</string>
+    <string name="follow_alerts">Alert me about</string>
+    <string name="follow_alert_approval">Approvals</string>
+    <string name="follow_alert_input">Questions</string>
+    <string name="follow_alert_plan">Plans ready</string>
+    <string name="follow_alert_completion">Completed work</string>
+    <string name="follow_alert_failure">Failures</string>
+    <string name="follow_lockscreen">Lock screen content</string>
+    <string name="follow_lock_full">Thread, project, host and status</string>
+    <string name="follow_lock_state">Status only</string>
+    <string name="follow_lock_hidden">Hide content</string>
 </resources>
