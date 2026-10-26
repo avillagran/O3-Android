@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,6 +61,21 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                             }
                         })
                     }
+                    @Composable override fun Usage() {
+                        val model: dev.avillagran.ot3android.ui.usage.UsageViewModel = viewModel {
+                            dev.avillagran.ot3android.ui.usage.UsageViewModel(
+                                fixture.repository.environments, fixture.connections::connectionFlow,
+                                createSavedStateHandle(),
+                            ) { connection, period ->
+                                dev.avillagran.ot3android.core.usage.UsageReader.read(
+                                    connection.transport, period, "2026-10-26", "America/Santiago")
+                            }
+                        }
+                        val state by model.state.collectAsStateWithLifecycle()
+                        dev.avillagran.ot3android.ui.usage.UsageScreen(state,
+                            model::selectEnvironment, model::selectPeriod, model::refresh,
+                            onBack = { navigator.back() })
+                    }
                     @Composable override fun Thread(route: Thread) {
                         val vm: ThreadViewModel = viewModel {
                             ThreadViewModel(route.environmentId, route.threadId, fixture.connections,
@@ -96,6 +112,15 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
     val transport = FakeT3Transport().apply {
         onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
         onShell { fixtureShell() }
+        onCall("server.getUsageSummary") { args ->
+            val input = JSONObject(application.assets.open("usage/summary.input.json").bufferedReader().use { it.readText() })
+            val summary = input.getJSONObject("summary")
+            // The fake server respects the requested window; aggregation remains native.
+            val buckets = summary.getJSONArray("buckets").objects().filter {
+                it.getString("day") >= args.getString("sinceDay") && it.getString("day") <= args.getString("untilDay")
+            }
+            summary.put("buckets", JSONArray(buckets))
+        }
         onCall("server.getConfig") { JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
         onCall("orchestration.dispatchCommand") { JSONObject().put("sequence", 2) }
         onBoundedThread("chat") { bounded() }

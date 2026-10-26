@@ -36,10 +36,41 @@ selected environment and period. Refresh re-reads the selected summary.
 - Explicit Refresh prices (`server.refreshUsageRates`), detailed pricing states.
 - ot3 compact k/M/B token format, provider icons and middle-elided model labels.
   Current totals use full localized integers; model names wrap.
-- Emulator portrait/landscape interaction and video, live diagnostics scope and
-  Xiaomi acceptance. No physical Usage validation is claimed.
+- Live diagnostics scope and Xiaomi acceptance. No physical Usage validation is claimed.
 
 Local result: app JVM 200/200; core JVM 283 passed, 5 opt-in skipped;
 `verifyRoborazziDebug`, `lintDebug`, `assembleDebug` passed with required host JNI
-and bridge SDK. Goldens for both themes were visually inspected. No emulator or
-phone was operated for this increment.
+and bridge SDK. Goldens for both themes were visually inspected. This first
+validation was JVM-only; the emulator follow-up is recorded below.
+
+
+## API 36.1 emulator follow-up
+
+`UsageDeviceTest.settingsPeriodRotationRefreshAndBack` uses the real Settings
+route, UsageViewModel, existing ConnectionManager and JNI with the debug server.
+It opens Usage, verifies the week total, switches to Day, rotates to landscape,
+checks preserved selection, refreshes, scrolls to Models and returns to Settings.
+No dispatch command is sent. The server filters its fixed buckets by the native
+request window. It is **not** a productive NODE or VQ reading.
+
+Captures inspected:
+- [Tokyo Night portrait](emulator-tokyo-night.png)
+- [Latte portrait](emulator-latte.png)
+- [Landscape before](emulator-landscape-before.png) and
+  [landscape after](emulator-landscape.png): environment and periods share a row;
+  four KPI tiles use one row. Lower chart/model content remains scrollable.
+- [Controls video, 19.18 s](usage-controls.mp4): Tokens, day selection, Day period
+  and Refresh. The recorded portrait layout is unchanged by the landscape fix.
+  The video was decoded and its selected-day frame inspected.
+
+Reproduce with `scripts/emulator.sh` AVD `ot3a361` and explicit serial
+`emulator-5580`, then `:app:connectedDebugAndroidTest` filtered to
+`dev.avillagran.ot3android.ui.usage.UsageDeviceTest`. The debug-only
+WorkspaceFixtureActivity supplies deterministic diagnostics; it has no launcher
+entry. No Xiaomi operation is part of this evidence.
+
+Follow-up result: app JVM 200/200, lint and goldens passed after the landscape
+change; API36.1 instrumentation passed 1/1. A subsequent cold-emulator attempt
+could not resolve the fixture Activity; reinstalling the built debug APK and
+rerunning the same final test passed, including the Models scroll assertion.
+The initial failure is not treated as application acceptance evidence.

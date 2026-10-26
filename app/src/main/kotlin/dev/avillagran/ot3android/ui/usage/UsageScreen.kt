@@ -28,7 +28,7 @@ import java.util.Currency
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit) {
-    var environmentsOpen by remember { mutableStateOf(false) }
+    val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     var metric by rememberSaveable { mutableStateOf("cost") }
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.ot3_usage_title)) }, navigationIcon = {
@@ -41,20 +41,12 @@ fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (S
     }) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).padding(horizontal = 14.dp).testTag("usage_page"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
-                Box {
-                    TextButton(onClick = { environmentsOpen = true }, modifier = Modifier.testTag("usage_environment")) {
-                        Text(state.environments.firstOrNull { it.id == state.environmentId }?.label ?: stringResource(R.string.environments_empty))
-                    }
-                    DropdownMenu(expanded = environmentsOpen, onDismissRequest = { environmentsOpen = false }) {
-                        state.environments.forEach { environment ->
-                            DropdownMenuItem(text = { Text(environment.label) }, onClick = { onEnvironment(environment.id); environmentsOpen = false })
-                        }
-                    }
-                }
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("day" to R.string.ot3_usage_day, "week" to R.string.ot3_usage_week, "month" to R.string.ot3_usage_month, "quarter" to R.string.ot3_usage_quarter).forEach { (id, label) ->
-                        FilterChip(selected = state.period == id, onClick = { onPeriod(id) }, label = { Text(stringResource(label)) }, modifier = Modifier.testTag("usage_period_$id"))
-                    }
+                if (landscape) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    UsageEnvironment(state, onEnvironment)
+                    UsagePeriods(state.period, onPeriod)
+                } else Column {
+                    UsageEnvironment(state, onEnvironment)
+                    UsagePeriods(state.period, onPeriod)
                 }
             }
             when {
@@ -63,7 +55,7 @@ fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (S
                 state.failed -> item { Text(stringResource(R.string.ot3_usage_unavailable), color = Ot3Theme.colors.failed) }
             }
             state.summary?.let { summary ->
-                item { UsageTotals(summary) }
+                item { UsageTotals(summary, landscape) }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(if (metric == "cost") R.string.ot3_usage_cost_day else R.string.ot3_usage_tokens_day), modifier = Modifier.weight(1f))
@@ -100,10 +92,34 @@ fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (S
 }
 
 @Composable
-private fun UsageTotals(summary: JSONObject) {
+private fun UsageEnvironment(state: UsageState, onEnvironment: (String) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        TextButton(onClick = { open = true }, modifier = Modifier.testTag("usage_environment")) {
+            Text(state.environments.firstOrNull { it.id == state.environmentId }?.label ?: stringResource(R.string.environments_empty))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            state.environments.forEach { environment ->
+                DropdownMenuItem(text = { Text(environment.label) }, onClick = { onEnvironment(environment.id); open = false })
+            }
+        }
+    }
+}
+
+@Composable
+private fun UsagePeriods(period: String, onPeriod: (String) -> Unit) {
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("day" to R.string.ot3_usage_day, "week" to R.string.ot3_usage_week, "month" to R.string.ot3_usage_month, "quarter" to R.string.ot3_usage_quarter).forEach { (id, label) ->
+            FilterChip(selected = period == id, onClick = { onPeriod(id) }, label = { Text(stringResource(label)) }, modifier = Modifier.testTag("usage_period_$id"))
+        }
+    }
+}
+
+@Composable
+private fun UsageTotals(summary: JSONObject, landscape: Boolean) {
     val fields = listOf("cost" to R.string.ot3_usage_cost, "tokens" to R.string.ot3_usage_tokens, "sessions" to R.string.ot3_usage_sessions, "cacheSavings" to R.string.ot3_usage_cache)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        fields.chunked(2).forEach { pair ->
+        fields.chunked(if (landscape) 4 else 2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 pair.forEach { (field, label) ->
                     Surface(Modifier.weight(1f), color = Ot3Theme.colors.card, contentColor = Ot3Theme.colors.foreground, shape = MaterialTheme.shapes.small) {

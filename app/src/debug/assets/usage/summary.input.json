@@ -1,0 +1,118 @@
+{
+  "summary": {
+    "buckets": [
+      {
+        "day": "2026-10-20",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "totals": {
+          "uncachedInputTokens": 18000,
+          "outputTokens": 3600
+        },
+        "costUsd": 1.2,
+        "cacheSavingsUsd": 0.24,
+        "sessions": 2,
+        "records": 3,
+        "unpricedRecords": 0
+      },
+      {
+        "day": "2026-10-21",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "totals": {
+          "uncachedInputTokens": 52000,
+          "outputTokens": 10400
+        },
+        "costUsd": 3.4,
+        "cacheSavingsUsd": 0.68,
+        "sessions": 2,
+        "records": 3,
+        "unpricedRecords": 0
+      },
+      {
+        "day": "2026-10-22",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "totals": {
+          "uncachedInputTokens": 0,
+          "outputTokens": 0
+        },
+        "costUsd": 0,
+        "cacheSavingsUsd": 0.0,
+        "sessions": 0,
+        "records": 3,
+        "unpricedRecords": 0
+      },
+      {
+        "day": "2026-10-23",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "totals": {
+          "uncachedInputTokens": 29000,
+          "outputTokens": 5800
+        },
+        "costUsd": 2.1,
+        "cacheSavingsUsd": 0.42000000000000004,
+        "sessions": 2,
+        "records": 3,
+        "unpricedRecords": 0
+      },
+      {
+        "day": "2026-10-24",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "totals": {
+          "uncachedInputTokens": 71000,
+          "outputTokens": 14200
+        },
+        "costUsd": 4.8,
+        "cacheSavingsUsd": 0.96,
+        "sessions": 2,
+        "records": 3,
+        "unpricedRecords": 0
+      },
+      {
+        "day": "2026-10-25",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "totals": {
+          "uncachedInputTokens": 21000,
+          "outputTokens": 4200
+        },
+        "costUsd": 1.6,
+        "cacheSavingsUsd": 0.32000000000000006,
+        "sessions": 2,
+        "records": 3,
+        "unpricedRecords": 0
+      },
+      {
+        "day": "2026-10-26",
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "totals": {
+          "uncachedInputTokens": 43000,
+          "outputTokens": 8600
+        },
+        "costUsd": 2.9,
+        "cacheSavingsUsd": 0.58,
+        "sessions": 2,
+        "records": 3,
+        "unpricedRecords": 0
+      }
+    ],
+    "pricing": {
+      "status": "fresh"
+    },
+    "sources": [
+      {
+        "fingerprint": {
+          "provider": "codex"
+        },
+        "status": "ok",
+        "refreshing": false
+      }
+    ]
+  },
+  "sinceDay": "2026-10-20",
+  "untilDay": "2026-10-26"
+}

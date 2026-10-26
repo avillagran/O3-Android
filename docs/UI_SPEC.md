@@ -2294,3 +2294,9 @@ contract. Environment and period are saved with the navigation entry; requests
 cancel on scope changes and results clear while offline. Refresh reads the summary.
 The Limits tab, quota accounts, price refresh, compact formatting/provider icons,
 and device/live acceptance remain open; see [usage evidence](ui/compare/usage/README.md).
+
+Usage landscape checkpoint: controls share a row and four totals share one row
+on phone landscape; portrait retains the 2 × 2 arrangement. API36.1 device test
+covers Settings navigation, period preservation across rotation, refresh and
+scrolling to Models. Captures and video use a synthetic diagnostics server;
+productive/live and physical acceptance remain pending.
