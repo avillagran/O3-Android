@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.ui.navigation
 
 import android.content.ClipData
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -82,6 +83,12 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun Thread(route: Thread) {
+        val graph = LocalContext.current.appGraph
+        DisposableEffect(route.environmentId) {
+            val claim = graph.liveThemeSource.showOnScreen(route.environmentId)
+            graph.appScope.launch { graph.selectionPreferences.setLastEnvironmentId(route.environmentId) }
+            onDispose { claim.close() }
+        }
         // `prompt` prefills the composer once the composer is rebuilt (UI-3).
         ThreadScreen(
             viewModel = appViewModel { graph ->
@@ -104,11 +111,25 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         SettingsScreen(onOpen = { entry ->
             when (entry) {
                 SettingsEntry.Environments -> navigator.push(Environments)
+                SettingsEntry.Appearance -> navigator.push(Appearance)
                 SettingsEntry.Usage -> navigator.push(Usage)
                 SettingsEntry.Archive -> navigator.push(Archive)
                 SettingsEntry.Licenses -> navigator.push(Licenses)
             }
         })
+    }
+
+    @Composable
+    override fun Appearance() {
+        dev.avillagran.ot3android.ui.settings.AppearanceSettingsScreen(
+            viewModel = appViewModel { graph ->
+                dev.avillagran.ot3android.ui.settings.AppearanceSettingsViewModel(
+                    graph.themePreferences, graph.liveThemeSource, graph.environmentRepository,
+                    loadThemes = { graph.themeCatalog().themes },
+                )
+            },
+            onBack = { navigator.back() },
+        )
     }
 
     @Composable
@@ -122,6 +143,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             onOpen = { id -> navigator.addEnvironment(id) },
             onAdd = { navigator.addEnvironment() },
             onEdit = { id -> navigator.addEnvironment(id) },
+            onAppearance = { navigator.push(Appearance) },
             bridgeStatus = bridgeStatus,
             onRefreshBridge = { scope.launch { graph.bridgeCatalog.reconnect() } },
         )

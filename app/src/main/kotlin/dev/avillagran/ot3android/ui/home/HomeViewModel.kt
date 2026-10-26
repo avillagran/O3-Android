@@ -69,7 +69,7 @@ class HomeViewModel(
 
     /** The saved environments (catalog order) with their supervisors, started here; null until the catalog loads. */
     private val supervisors: StateFlow<List<Pair<Environment, ConnectionSupervisor>>?> = repository.environments
-        .map { saved -> saved.mapNotNull { env -> connections.supervisor(env.id)?.also { it.start() }?.let { env to it } } }
+        .map { saved -> saved.mapNotNull { env -> connections.supervisor(env.id)?.also { connections.startIfCurrent(it) }?.let { env to it } } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val environments: Flow<List<HomeEnvironment>> = supervisors.filterNotNull().flatMapLatest { running ->

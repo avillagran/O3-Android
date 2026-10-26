@@ -37,6 +37,7 @@ object EnvironmentsScreenTags {
     const val ADD = "environments_add"
     const val LIST = "environments_list"
     const val EMPTY = "environments_empty"
+    const val APPEARANCE = "environments_appearance"
     fun row(id: String) = "environment_row_$id"
     fun edit(id: String) = "environment_edit_$id"
     fun delete(id: String) = "environment_delete_$id"
@@ -51,6 +52,7 @@ fun EnvironmentsScreen(
     onAdd: () -> Unit,
     onEdit: (environmentId: String) -> Unit,
     modifier: Modifier = Modifier,
+    onAppearance: () -> Unit = {},
     bridgeStatus: String? = null,
     onRefreshBridge: (() -> Unit)? = null,
 ) {
@@ -70,7 +72,11 @@ fun EnvironmentsScreen(
                     else -> R.string.bridge_available
                 }), style = MaterialTheme.typography.bodySmall)
             }
-        }, actions = { if (onRefreshBridge != null && bridgeStatus != "not_loaded") TextButton(onClick = onRefreshBridge) {
+        }, actions = {
+            TextButton(onClick = onAppearance, modifier = Modifier.testTag(EnvironmentsScreenTags.APPEARANCE)) {
+                Text(stringResource(R.string.appearance_title))
+            }
+            if (onRefreshBridge != null && bridgeStatus != "not_loaded") TextButton(onClick = onRefreshBridge) {
             Text(stringResource(R.string.bridge_refresh))
         } }) },
         floatingActionButton = {

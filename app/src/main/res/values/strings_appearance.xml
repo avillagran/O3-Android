@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings → Appearance (UI_SPEC 3.1.3), listed in docs/ui/strings.md, "Appearance".
+     Strings marked "ot3:" are English sources of ot3's catalog: once the catalog generator is
+     on this branch (UI-1) they move to ot3-strings.tsv and take its translations. The others
+     are mobile-only (UI_SPEC rule 4) and stay English in every locale. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- ot3: "Appearance" -->
+    <string name="appearance_title">Appearance</string>
+    <string name="appearance_follow_environment">Follow the environment\'s Omarchy theme</string>
+    <!-- Theme · environment, e.g. "Tokyo Night · omarchy". -->
+    <string name="appearance_live_theme">%1$s · %2$s</string>
+    <string name="appearance_live_theme_cached">%1$s · %2$s (saved)</string>
+    <string name="appearance_not_omarchy">%1$s is not running Omarchy</string>
+    <string name="appearance_no_scope">%1$s does not allow reading files (%2$s)</string>
+    <string name="appearance_read_error">Could not read the theme of %1$s (%2$s)</string>
+    <string name="appearance_waiting">Connecting to %1$s…</string>
+    <string name="appearance_no_environment">No environments connected</string>
+    <string name="appearance_main_environment">Main environment</string>
+    <string name="appearance_main_environment_last_used">Last used</string>
+    <!-- ot3: "Theme" -->
+    <string name="appearance_theme">Theme</string>
+    <string name="appearance_mode_follow_system">Follow system</string>
+    <string name="appearance_mode_dark">Dark</string>
+    <!-- ot3: "Light" -->
+    <string name="appearance_mode_light">Light</string>
+    <string name="appearance_dark_theme">Dark theme</string>
+    <string name="appearance_light_theme">Light theme</string>
+    <string name="appearance_material_you">Material You</string>
+    <string name="appearance_manual_applies">Used when the environment\'s theme is off or not available.</string>
+</resources>

@@ -144,7 +144,7 @@ class BridgeCatalogController(
             managed.upsert(origin.copy(status = "authorized",
                 authorizationExpiresAt = receipt.getLong("expiresAt")))
         }
-        connections.supervisor(row.id)?.start()
+        connections.startIfCurrent(connections.supervisor(row.id))
     }
 
     /** Initial load, resume and reconnect all call the same serialized refresh. */
