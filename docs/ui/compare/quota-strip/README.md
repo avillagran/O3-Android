@@ -92,3 +92,22 @@ includes real orientation changes, with Android's screenrecord letterboxing. No
 failed-run video or captures are included. The captures above were overwritten by
 and exported from the final successful run; synthetic fixture provenance applies
 throughout.
+
+## Rotation synchronization regression
+
+CI run `40393834706` (API 34) timed out opening Limits after the Latte
+landscape tap. The test treated Compose idle as completion of Android rotation
+and tapped a quota node without checking visibility. On API 36.1, the unchanged
+test with software IME enabled passed, but its captured landscape frame was still
+halfway through Android's rotation animation with the keyboard visible. This
+confirms the missing synchronization; the original CI timeout was not reproduced
+locally.
+
+The test now waits for landscape configuration **and** the split workspace's two
+quota groups/sidebar, dismisses the IME, waits for hidden IME insets, and requires
+the tapped group to be displayed. Draft, single shared subscription, Limits/Back,
+and background-release assertions remain in place. No timeout was increased.
+API 36.1 validation enables `show_ime_with_hard_keyboard=1` to exercise software
+keyboard input and verifies the settled landscape capture after dismissal. API 34
+CI remains the cross-version check; this does not establish keyboard-open strip
+usability at every viewport height.

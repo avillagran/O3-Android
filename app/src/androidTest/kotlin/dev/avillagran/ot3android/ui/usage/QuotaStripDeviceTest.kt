@@ -7,6 +7,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import dev.avillagran.ot3android.appGraph
 import dev.avillagran.ot3android.debug.workspace.WorkspaceFixtureActivity
 import dev.avillagran.ot3android.ui.home.HomeTags
@@ -89,12 +90,33 @@ class QuotaStripDeviceTest {
             rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
             capture("thread-after.$theme")
             scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+            // Compose idle does not await Android's configuration/recreation. CI also
+            // has a software keyboard, unlike the local hardware-keyboard AVD: hide
+            // it before tapping the strip, which can otherwise be clipped above the
+            // landscape composer while still present in the semantics tree.
+            rule.waitUntil(15_000) {
+                var landscape = false
+                scenario.onActivity {
+                    landscape = it.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                }
+                landscape && rule.onAllNodesWithTag("quota_group_node · Linux_Codex").fetchSemanticsNodes().size == 2 &&
+                    rule.onNodeWithTag("thread_sidebar").isDisplayed()
+            }
+            closeSoftKeyboard()
+            rule.waitUntil(15_000) {
+                var hidden = false
+                scenario.onActivity {
+                    hidden = androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)
+                        ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == false
+                }
+                hidden
+            }
             rule.waitForIdle()
             capture("thread-landscape.$theme")
             // Landscape has a live Home sidebar too, with the same shared quota owner.
             scenario.onActivity { assertEquals(1, it.fixture.transport.serverConfigCollectors().value) }
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Quota draft retained")
-            rule.onAllNodesWithTag("quota_group_node · Linux_Codex").onLast().performClick()
+            rule.onAllNodesWithTag("quota_group_node · Linux_Codex").onLast().assertIsDisplayed().performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_tab_limits").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("usage_tab_limits").assertIsSelected()
             scenario.onActivity { assertEquals(1, it.fixture.transport.serverConfigCollectors().value) }
