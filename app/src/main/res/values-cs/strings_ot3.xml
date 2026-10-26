@@ -182,4 +182,5 @@
     <string name="ot3_usage_unavailable">Nedostupné</string>
     <string name="ot3_usage_unpriced">%1$s záznamů nemá cenu.</string>
     <string name="ot3_usage_prices_unavailable">Ceny modelů nejsou k dispozici.</string>
+    <string name="ot3_usage_refresh_prices">Obnovit ceny</string>
 </resources>

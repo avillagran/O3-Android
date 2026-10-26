@@ -139,7 +139,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val state by model.state.collectAsStateWithLifecycle()
         dev.avillagran.ot3android.ui.usage.UsageScreen(
             state, model::selectEnvironment, model::selectPeriod, model::refresh,
-            onBack = { navigator.back() },
+            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices,
         )
     }
 

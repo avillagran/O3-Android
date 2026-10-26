@@ -212,3 +212,4 @@ ot3_usage_loading	Loading…
 ot3_usage_unavailable	Unavailable
 ot3_usage_unpriced	{count} records have no price.
 ot3_usage_prices_unavailable	Model prices are unavailable.
+ot3_usage_refresh_prices	Refresh prices

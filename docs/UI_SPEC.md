@@ -2301,6 +2301,11 @@ covers Settings navigation, period preservation across rotation, refresh and
 scrolling to Models. Captures and video use a synthetic diagnostics server;
 productive/live and physical acceptance remain pending.
 
+Usage prices checkpoint: the shared “Refresh prices” action calls typed
+`server.refreshUsageRates` then re-reads the selected native summary. Explicit
+actions are consumed once and do not replay on reconnect. App203 JVM and
+API36.1 two instrumented tests pass; live/physical acceptance remains pending.
+
 ### Remote catalog acceptance checkpoint — 2026-10-26
 
 Physical VQ usage reading is verified on f90f7c1, but not automatic NODE discovery.
