@@ -108,3 +108,13 @@ The prior OmaBridge project thread link could not be read by this T3 server
 (`thread_not_found`); coordination is through these concrete companion PRs and Dev Vault,
 not a claim that an unavailable remote thread received a message. No new top-level
 thread was created. UI2 continues independently with the same gpt-6.1-sol delegate.
+
+### CI follow-up (2026-10-26)
+
+PR24 instrumented run `40269156674` completed core 4/4 and app 23/24. The existing
+vertical-layout test timed out waiting for the real IME. Its logcat records
+`onFailed at PHASE_CLIENT_REQUEST_IME_SHOW` immediately after text insertion; no
+bridge test or gap assertion failed. The test now checks editor/window focus and
+explicitly requests the real IME on the next idle frame before asserting visibility,
+viewport reduction and zero gap. No assertion is removed and no keyboard is simulated.
+The corrected instrumented result is pending CI; UI2 retains the local emulator.
