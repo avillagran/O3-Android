@@ -188,4 +188,6 @@
     <string name="ot3_usage_resets_at">يُعاد الضبط %1$s</string>
     <string name="ot3_diff_previous_file">الملف السابق</string>
     <string name="ot3_diff_next_file">الملف التالي</string>
+    <string name="ot3_diff_wrap">التفاف الأسطر</string>
+    <string name="ot3_diff_no_wrap">دون التفاف الأسطر</string>
 </resources>

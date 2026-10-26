@@ -186,4 +186,6 @@
     <string name="ot3_usage_resets_at">Resets %1$s</string>
     <string name="ot3_diff_previous_file">Previous file</string>
     <string name="ot3_diff_next_file">Next file</string>
+    <string name="ot3_diff_wrap">Wrap</string>
+    <string name="ot3_diff_no_wrap">No wrap</string>
 </resources>

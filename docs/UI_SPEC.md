@@ -2331,7 +2331,9 @@ See [limits evidence](ui/compare/usage-limits/README.md).
 The real Changes modal now offers ot3's narrow previous/next and path selector,
 showing one native file at a time. Selection is saveable and survives whitespace
 refetch; file navigation does not query the server. Shared OT3 touch feedback is used,
-without invented file-switch animation. Wide-screen tree, split layout, wrapping
-preference, context expansion and hunk folding remain pending. Fixture goldens and
+without invented file-switch animation. Wide-screen tree, split layout, context expansion and hunk folding remain pending.
+Wrap/no-wrap is now a saveable dialog control: measured font widths and one horizontal
+patch scroll surface, with no refetch. Full-modal dark/light Robolectric goldens and
+overflow/scroll/state tests cover this control; device evidence is still pending. Fixture goldens and
 focused lifecycle tests are documented in `docs/ui/compare/reader-diff/README.md`;
 new device acceptance remains pending separately from earlier diff read evidence.

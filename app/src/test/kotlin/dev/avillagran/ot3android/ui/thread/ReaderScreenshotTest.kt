@@ -32,6 +32,15 @@ class ReaderScreenshotTest : ScreenshotTest() {
         composeRule.onNodeWithText("Binary file — metadata only").assertDoesNotExist()
     }
 
+    @Test fun diffReadingControls() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        snapshot("diff-controls", screen = true) {
+            ThreadDiffDialog(JSONObject("""{"fromTurnCount":2,"toTurnCount":3}"""), { _, _ -> view }, {})
+        }
+        composeRule.onNodeWithTag("thread_diff_wrap").assertIsDisplayed()
+        composeRule.onNodeWithTag("thread_diff_file_picker").assertIsDisplayed()
+    }
+
     @Test fun compactPromptAndOutsideActions() {
         val short = JSONObject().put("id", "short").put("role", "user").put("text", "Yes").put("createdAt", 1000)
         val long = JSONObject().put("id", "long").put("role", "user").put("text", "Keep the message readable while the longer prompt wraps inside the same right-aligned lane.").put("createdAt", 1000)

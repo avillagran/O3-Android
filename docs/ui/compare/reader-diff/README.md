@@ -15,7 +15,7 @@ publish an old result. Invalid thread/range tests call the actual pinned Rust li
 ## Scope and remaining differences
 
 This is the useful narrow-screen read increment, not complete desktop diff parity.
-Wide-screen file tree, split layout, wrap preference, hunk folding, context expansion,
+Wide-screen file tree, split layout, hunk folding, context expansion,
 syntax highlighting and document preview integration remain. No live-server or phone
 evidence is claimed; fixtures use real ViewModels/JNI/projection with offline transport.
 The patch body is selectable. There are no stage/apply/revert actions.
@@ -59,3 +59,17 @@ the second selection through whitespace refetch, and returns to the timeline. It
 final assertion still requires exactly two diff reads and no command dispatch.
 The test APK compiles; execution of this expanded device scenario is pending CI
 and the reserved local emulator. Compilation alone is not device acceptance.
+
+## Wrap control
+
+Wrap defaults on, as `T3DiffReview.qml:53,137`. Turning it off uses measured Fira Code
+row widths (`:83-90`) and one horizontal scroll container for the complete patch
+(`:196`), leaving the dialog controls fixed. It does not refetch or parse data.
+The dialog preserves wrap state on recreation; new dialogs start wrapped. The
+focused JVM interaction test verifies actual overflow, swipe displacement, saved
+state and unchanged read count. Full-modal Tokyo Night/Latte goldens are
+`ReaderScreenshotTest/diff-controls.*.png`; these are Robolectric, not phone captures.
+
+Final local verification after wrap: app 212/212, lint, debug/test APK builds and
+all screenshot goldens pass. Existing wrapped goldens are unchanged. The expanded
+instrumented reader includes the wrap toggle, but has not run locally yet.

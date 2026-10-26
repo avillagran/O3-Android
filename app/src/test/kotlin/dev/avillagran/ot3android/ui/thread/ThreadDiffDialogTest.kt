@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.ui.thread
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.junit4.StateRestorationTester
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONObject
@@ -16,6 +17,31 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class ThreadDiffDialogTest {
     @get:Rule val rule = createComposeRule()
+
+    @Test fun noWrapScrollsTheWholePatchWithoutRefetchAndSurvivesRecreation() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        view.getJSONArray("files").getJSONObject(0).getJSONArray("rows").getJSONObject(0)
+            .put("text", "long selectable patch text ".repeat(12))
+        var reads = 0
+        val restoration = StateRestorationTester(rule)
+        restoration.setContent {
+            Ot3Theme { ThreadDiffDialog(JSONObject("""{"fromTurnCount":2,"toTurnCount":3}"""), { _, _ -> reads++; view }, {}) }
+        }
+        rule.onNodeWithTag("thread_diff_horizontal").assertDoesNotExist()
+        rule.onNodeWithTag("thread_diff_wrap").performClick()
+        val patch = rule.onNodeWithTag("thread_diff_horizontal")
+        assertTrue(patch.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].maxValue() > 0)
+        patch.performTouchInput { swipeLeft() }
+        rule.waitForIdle()
+        assertTrue(patch.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0)
+        rule.runOnIdle { assertEquals(1, reads) }
+        restoration.emulateSavedInstanceStateRestore()
+        rule.onNodeWithTag("thread_diff_wrap").assertTextContains("Wrap")
+        rule.onNodeWithTag("thread_diff_horizontal").assertExists()
+        rule.onNodeWithTag("thread_diff_wrap").performClick()
+        rule.onNodeWithTag("thread_diff_horizontal").assertDoesNotExist()
+        rule.runOnIdle { assertEquals(2, reads) }
+    }
 
     @Test fun fileNavigationIsLocalAndSelectionSurvivesRefreshAndRecreation() {
         val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())

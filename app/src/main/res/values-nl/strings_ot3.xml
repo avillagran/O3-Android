@@ -187,4 +187,6 @@
     <string name="ot3_usage_resets_at">Wordt gereset %1$s</string>
     <string name="ot3_diff_previous_file">Vorig bestand</string>
     <string name="ot3_diff_next_file">Volgend bestand</string>
+    <string name="ot3_diff_wrap">Regels afbreken</string>
+    <string name="ot3_diff_no_wrap">Geen regelafbreking</string>
 </resources>

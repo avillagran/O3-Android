@@ -187,4 +187,6 @@
     <string name="ot3_usage_resets_at">Odnowienie %1$s</string>
     <string name="ot3_diff_previous_file">Poprzedni plik</string>
     <string name="ot3_diff_next_file">Następny plik</string>
+    <string name="ot3_diff_wrap">Zawijaj wiersze</string>
+    <string name="ot3_diff_no_wrap">Bez zawijania wierszy</string>
 </resources>

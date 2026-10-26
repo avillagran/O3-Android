@@ -72,6 +72,10 @@ class RichReaderDeviceTest {
             rule.onNodeWithTag("thread_diff_file_picker").performClick()
             rule.onNodeWithTag("thread_diff_file_1").performClick()
             rule.onNodeWithText("+rememberSelectedFile()").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_wrap").performClick()
+            rule.onNodeWithTag("thread_diff_horizontal").assertExists()
+            rule.onNodeWithTag("thread_diff_wrap").performClick()
+            rule.onNodeWithTag("thread_diff_horizontal").assertDoesNotExist()
             rule.onNodeWithTag("thread_diff_whitespace").performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithText("+rememberSelectedFile()").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("thread_diff_file_picker").assertTextContains("ui/ThreadWorkspace.kt")

@@ -187,4 +187,6 @@
     <string name="ot3_usage_resets_at">Скидання %1$s</string>
     <string name="ot3_diff_previous_file">Попередній файл</string>
     <string name="ot3_diff_next_file">Наступний файл</string>
+    <string name="ot3_diff_wrap">Переносити рядки</string>
+    <string name="ot3_diff_no_wrap">Без перенесення рядків</string>
 </resources>

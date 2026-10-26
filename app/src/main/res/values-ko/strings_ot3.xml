@@ -187,4 +187,6 @@
     <string name="ot3_usage_resets_at">%1$s에 초기화</string>
     <string name="ot3_diff_previous_file">이전 파일</string>
     <string name="ot3_diff_next_file">다음 파일</string>
+    <string name="ot3_diff_wrap">줄 바꿈</string>
+    <string name="ot3_diff_no_wrap">줄 바꿈 안 함</string>
 </resources>

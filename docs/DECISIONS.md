@@ -1020,3 +1020,11 @@ the common presentation, display native usedPercent and absolute reset times wit
 recreating pooling or pace rules. Screenshot inputs are frozen native outputs; actual
 JNI stream/reducer behavior is tested separately to avoid Robolectric classloader
 collisions when the complete suite runs.
+
+### 2026-10-26 — Local diff reading controls
+
+File navigation and wrap are presentation state, not protocol operations. Preserve
+the selected native path (including oldPath fallback after rename) and wrap mode
+across dialog recreation; neither control fetches again. Unwrapped width comes
+from Fira Code font metrics, as ot3's T3DiffReview does, and the patch scrolls as
+one surface. Rust remains responsible for scope, patch parsing and line limits.
