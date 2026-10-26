@@ -1997,3 +1997,15 @@ contracts](ui/compare/ui-1i/CONTINUITY.md). UI2 starts from the already retained
 `ThreadView.timeline`/`timeline.view`, with no protocol derivation in Kotlin. Review
 must keep live transport, physical Xiaomi, aesthetic approval and release build claims
 separate from emulator fixture checks.
+
+### 2026-10-26 functional acceptance: bridge-distributed environments
+
+Pairing Android with a desktop bridge must discover and synchronize the client's
+authorized desktop environments (acceptance case VQ + NODE), including stable identity,
+portable routes, add/change/withdrawal, reconnection and private offline cache. Preserve
+independent local entries, selection/drafts/reading and per-host thread ownership.
+Discovery is distinct from permission; do not copy desktop private tokens or assume
+localhost/SSH forwards are reachable by a phone. A route indicator/settings page does
+not close this requirement. [CATALOG_SYNC](bridge/CATALOG_SYNC.md) tracks proven source,
+implementation and the remaining authenticated publisher/enrollment/Android integration.
+Physical VQ-only evidence is not proof of the phone's actual UUID, route or filter.

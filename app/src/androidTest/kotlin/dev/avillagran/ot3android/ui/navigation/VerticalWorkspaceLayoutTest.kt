@@ -34,6 +34,16 @@ class VerticalWorkspaceLayoutTest {
         assertEquals("Timeline meets composer without footer reservation", timeline.bottom, composer.top, density)
         // Request the real IME: its inset must reduce the timeline, not become an empty footer.
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performClick().performTextInput("IME layout check")
+        rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertIsFocused()
+        // Semantics text input does not guarantee that the platform accepted the initial
+        // keyboard request. CI logcat showed PHASE_CLIENT_REQUEST_IME_SHOW before the
+        // window/editor was served. Request the real IME after focus and an idle frame.
+        rule.waitUntil(15000) { rule.activity.hasWindowFocus() }
+        rule.runOnIdle {
+            androidx.core.view.WindowCompat.getInsetsController(
+                rule.activity.window, rule.activity.window.decorView,
+            ).show(androidx.core.view.WindowInsetsCompat.Type.ime())
+        }
         rule.waitUntil(5000) { androidx.core.view.ViewCompat.getRootWindowInsets(rule.activity.window.decorView)!!
             .isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) }
         rule.waitForIdle()
