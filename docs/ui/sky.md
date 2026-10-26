@@ -64,17 +64,19 @@ the shader returns premultiplied colour like ot3's.
 
 `withFrameNanos` in a `LaunchedEffect` that runs only while the header has a non-empty
 window bound and the lifecycle is `RESUMED` (`repeatOnLifecycle`). Each frame asks
-`SkyClock.onFrame`; it ticks when its interval has passed (4 ms tolerance) and asks to
+`SkyClock.onFrame` from the single requested-rate `Ot3Ticker`; it ticks when its interval has passed (4 ms tolerance) and asks to
 `delay` until 12 ms before the next, so the loop does not wake on every vsync. A tick
 bumps a snapshot counter read only in `onDrawBehind`: no recomposition, just a redraw.
 
-Interval, ot3's "saver" smoothness (`T3Ticker.qml:22-27`) with its paces
+Interval, ot3's adaptive smoothness (`T3Ticker.qml:22-27`) with its paces
 (`T3Starfield.qml:98-99`):
 
 | State | Interval |
 |---|---|
 | Auto (Full + `onAutoDegrade`) or Light, nothing works, no comet | 125 ms |
-| something works, or explicit Full, or a comet on screen (looked up 0.13 s ahead) | 33 ms |
+| Auto while something works | 33 ms |
+| explicit Full | 16 ms |
+| comet on screen (looked up 0.13 s ahead) | 8 ms |
 | Light, no comet on screen | at least 40 ms |
 
 ## Reduced motion

@@ -35,7 +35,17 @@ class ThreadWorkspaceDeviceTest {
         }
         rule.activityRule.scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
         rule.waitUntil(10_000) { rule.activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE }
+        val density = rule.activity.resources.displayMetrics.density
+        val sidebarList = rule.onNodeWithTag(HomeTags.LIST).fetchSemanticsNode().boundsInRoot
+        val chatViewport = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot
+        assertEquals("Cutout is consumed once before the split, preserving 280 dp content", 280f * density, sidebarList.width, density)
+        assertEquals("Chat must not pay the cutout inset a second time", sidebarList.right, chatViewport.left, density)
         rule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed().performClick()
+        rule.waitUntil(5_000) {
+            rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().any {
+                it.config.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.EditableText) { androidx.compose.ui.text.AnnotatedString("") }.text == "Borrador de rotación"
+            }
+        }
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
         rule.onNodeWithTag("thread_sidebar_toggle").performClick()
         rule.onNodeWithTag(HomeTags.row("node/chat")).performClick() // Reselecting is a no-op.
@@ -45,6 +55,11 @@ class ThreadWorkspaceDeviceTest {
             assertEquals(1, fixture.transport.log.count { it.method == "boundedThread" })
         }
         rule.activityRule.scenario.recreate()
+        rule.waitUntil(5_000) {
+            rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().any {
+                it.config.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.EditableText) { androidx.compose.ui.text.AnnotatedString("") }.text == "Borrador de rotación"
+            }
+        }
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         rule.runOnIdle {

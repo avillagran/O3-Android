@@ -15,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -29,10 +28,6 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.delay
 
 object SkyDefaults {
     /** ot3's brand row height, the part of the header the sky stays solid behind (`T3Panel.qml:1135`). */
@@ -58,6 +53,7 @@ fun SkyHeader(
     energy: Float,
     modifier: Modifier = Modifier,
     brandHeight: Dp = SkyDefaults.BrandHeight,
+    forceCanvas: Boolean = false,
     onAutoDegrade: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -79,28 +75,22 @@ fun SkyHeader(
     val currentMotion by rememberUpdatedState(effective)
     val currentAuto by rememberUpdatedState(auto)
     val currentOnDegrade by rememberUpdatedState(onAutoDegrade)
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    if (animated && visible) {
-        LaunchedEffect(sky, lifecycle) {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                sky.resetTiming()
-                while (true) {
-                    val now = withFrameNanos { it }
-                    val wasDegraded = sky.degraded
-                    val frame = sky.onFrame(now, currentMotion, currentAuto)
-                    if (frame.ticked) tick++
-                    if (!wasDegraded && sky.degraded) {
-                        degraded = true
-                        currentOnDegrade?.invoke()
-                    }
-                    if (frame.waitMs > 0) delay(frame.waitMs)
-                }
+    var interval by remember { mutableIntStateOf(if (energy > 0f) 33 else 125) }
+    val frame by dev.avillagran.ot3android.ui.theme.rememberOt3Tick(animated && visible, interval)
+    LaunchedEffect(frame.nanos, animated, visible, effective) {
+        if (animated && visible && frame.nanos > 0L) {
+            val wasDegraded = sky.degraded
+            if (sky.onFrame(frame.nanos, currentMotion, currentAuto, frame.seconds).ticked) tick++
+            interval = sky.intervalMs(currentMotion, currentAuto).toInt()
+            if (!wasDegraded && sky.degraded) {
+                degraded = true
+                currentOnDegrade?.invoke()
             }
-        }
+        } else sky.resetTiming()
     }
 
     // Typed as Shader so nothing below API 33 touches RuntimeShader.
-    val shader: Shader? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) remember { StarfieldShaders.create() } else null
+    val shader: Shader? = if (!forceCanvas && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) remember { runCatching { StarfieldShaders.create() }.getOrNull() } else null
     Box(
         modifier
             .onGloballyPositioned { visible = it.boundsInWindow().let { b -> b.width > 0f && b.height > 0f } }
@@ -150,15 +140,9 @@ internal fun DrawScope.drawSkyCanvas(plan: SkyCanvasPlan) {
         for (s in plan.stars) {
             val color = s.color.toColor()
             val center = Offset(s.x, s.y)
-            drawCircle(
-                Brush.radialGradient(
-                    *SkyCanvasPlan.HALO_STOPS.map { (f, a) -> f to color.copy(alpha = 0.3f * s.alpha * a) }.toTypedArray(),
-                    center = center,
-                    radius = s.haloRadius,
-                ),
-                radius = s.haloRadius,
-                center = center,
-            )
+            // A sampled Gaussian halo uses plain circles. Creating a radial GPU shader for
+            // every star is unnecessary on the fallback path (and fragile on software GPUs).
+            drawHalo(color, center, s.haloRadius, 0.3f * s.alpha)
             drawCircle(color.copy(alpha = s.alpha), radius = s.coreRadius, center = center)
         }
         for (c in plan.comets) {
@@ -184,17 +168,19 @@ internal fun DrawScope.drawSkyCanvas(plan: SkyCanvasPlan) {
                 ),
             )
             val head = Offset(c.headX, c.headY)
-            drawCircle(
-                Brush.radialGradient(
-                    *SkyCanvasPlan.HALO_STOPS.map { (f, a) -> f to color.copy(alpha = c.alpha * a) }.toTypedArray(),
-                    center = head,
-                    radius = SkyCanvasPlan.GLOW_RADIUS,
-                ),
-                radius = SkyCanvasPlan.GLOW_RADIUS,
-                center = head,
-            )
+            drawHalo(color, head, SkyCanvasPlan.GLOW_RADIUS, c.alpha)
         }
     }
 }
 
 private fun SkyRgba.toColor(): Color = Color(r.coerceIn(0f, 1f), g.coerceIn(0f, 1f), b.coerceIn(0f, 1f), a.coerceIn(0f, 1f))
+
+private fun DrawScope.drawHalo(color: Color, center: Offset, radius: Float, alpha: Float) {
+    var previous = 0f
+    for (i in 6 downTo 1) {
+        val profile = SkyCanvasPlan.HALO_STOPS[i].second
+        val band = ((profile - previous) * alpha).coerceIn(0f, 1f)
+        drawCircle(color.copy(alpha = band), radius * i / 6f, center)
+        previous = profile
+    }
+}

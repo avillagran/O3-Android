@@ -24,9 +24,9 @@ fun ThreadWorkspace(sidebar: @Composable () -> Unit, chat: @Composable () -> Uni
     val split = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE || configuration.smallestScreenWidthDp >= 600
     val sidebarState = rememberSaveableStateHolder()
     var collapsed by rememberSaveable { mutableStateOf(false) }
-    Row(Modifier.fillMaxSize()) {
-        Box(Modifier.width(if (split && !collapsed) 280.dp else 0.dp).fillMaxHeight().testTag("thread_sidebar")) {
-            if (split && !collapsed) sidebarState.SaveableStateProvider("sidebar") { sidebar() }
+    Row(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))) {
+        SidebarReveal(shown = split && !collapsed, modifier = Modifier.testTag("thread_sidebar")) {
+            sidebarState.SaveableStateProvider("sidebar") { sidebar() }
         }
         Box(Modifier.weight(1f).fillMaxHeight()) {
             val control: (@Composable () -> Unit)? = if (split) {

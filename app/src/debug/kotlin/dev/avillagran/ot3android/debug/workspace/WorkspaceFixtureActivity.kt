@@ -34,9 +34,11 @@ class WorkspaceFixtureActivity : ComponentActivity() {
     lateinit var fixture: WorkspaceFixture
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        val bars = androidx.activity.SystemBarStyle.auto(android.graphics.Color.TRANSPARENT,
+            android.graphics.Color.TRANSPARENT) { intent.getBooleanExtra("dark", false) }
+        enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         setContent {
-            fixture = viewModel()
+            fixture = viewModel { WorkspaceFixture(application, intent.getBooleanExtra("rich", false)) }
             val nav = rememberOt3NavController()
             val navigator = remember(nav) { Ot3Navigator(nav) }
             val screens = remember(navigator, fixture) {
@@ -66,12 +68,15 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                     }
                 }
             }
-            Ot3Theme { Ot3NavHost(nav, screens) }
+            val fixtureColors = remember { dev.avillagran.ot3android.ui.theme.OmarchyThemeCatalog.loadBlocking(application)
+                .let { catalog -> dev.avillagran.ot3android.ui.theme.Ot3Colors.fromTheme(catalog[if (intent.getBooleanExtra("dark", false)) "tokyo-night" else "catppuccin-latte"]!!) } }
+            Ot3Theme(colors = fixtureColors, motion = dev.avillagran.ot3android.ui.theme.rememberOt3Motion(
+                dev.avillagran.ot3android.core.data.prefs.AnimationPreference.AUTO)) { Ot3NavHost(nav, screens) }
         }
     }
 }
 
-class WorkspaceFixture(application: Application) : AndroidViewModel(application) {
+class WorkspaceFixture(application: Application, private val rich: Boolean = false) : AndroidViewModel(application) {
     private val database = Room.inMemoryDatabaseBuilder(application, Ot3Database::class.java).build()
     private val cursors = object : ShellCursorStore {
         override suspend fun cursor(environmentId: String): Long? = null
@@ -110,7 +115,17 @@ class WorkspaceFixture(application: Application) : AndroidViewModel(application)
             .put("linkedPullRequest", JSONObject().put("number", 42).put("repository", "example/fixture")
                 .put("url", "https://github.com/example/fixture/pull/42")
                 .put("snapshot", JSONObject().put("state", "open").put("isDraft", true)))
-            .put("createdAt", "2026-10-25T10:00:00Z").put("status", "idle")))
+            .put("createdAt", "2026-10-25T10:00:00Z").put("status", "idle")).also { threads ->
+                if (rich) {
+                    fun row(id: String, title: String) = JSONObject().put("id", id).put("projectId", "project")
+                        .put("title", title).put("branch", "feat/ui-1i").put("createdAt", "2026-10-25T09:00:00Z")
+                    threads.put(row("working", "Cielo, efectos y movimiento").put("status", "running")
+                        .put("activeRunId", "r1").put("latestRunId", "r1").put("latestRunStartedAt", "2026-10-25T23:00:00Z"))
+                    threads.put(row("approval", "Revisar cambios de navegación").put("pendingRuntimeRequest", JSONObject().put("kind", "approval").put("id", "q1")))
+                    threads.put(row("failed", "Verificación del composer").put("status", "failed").put("latestRunId", "r2"))
+                    threads.put(row("settled", "Tipografía y roles").put("settledAt", "2026-10-25T08:00:00Z"))
+                }
+            })
     private fun bounded(): JSONObject {
         val messages = JSONArray()
         repeat(60) { i -> messages.put(JSONObject().put("id", "m$i").put("role", if (i % 2 == 0) "user" else "assistant")

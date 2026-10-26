@@ -89,3 +89,35 @@ ot3's sentence case and tone.
 | `mobile_env_retrying_attempt` | Retrying · attempt {n} | same | `t3m:src/features/connection/ConnectionEnvironmentRow.tsx:134` |
 | `mobile_component_catalog` | UI components | the debug catalog is T3 Mobile's | `t3m:src/Stack.tsx:703` |
 | `mobile_snooze_until` | Snooze until | ot3's snooze presets are a popup menu without a title | `t3m:src/features/threads/threadListV2.ts:95-118` |
+
+| `mobile_route_public` | Public address | ot3 lists a host's "Public addresses" (`ot3:ui/qml/T3ConnectionAccess.qml:149`) but never labels the route a client uses; the phone shows one route at a time (UI_SPEC 4.2.1) | none: T3 Mobile has one address per environment |
+| `mobile_route_last` | An environment needs at least one route. | ot3 removes a route only through T3's catalog | none |
+| `mobile_add_as_route` | Add as a route | ot3's gateway check ends with "Ready: in the T3 app, add this address…" (`ot3:ui/js/OmaBridgeText.js:82`); the phone is that app | none |
+| `mobile_animations_system_off` | Off while Android's Remove animations is on | ot3 has no OS animation setting (UI_SPEC 3.4.4) | `t3m:src/lib/designTokens.ts:8` (each animation follows the system setting) |
+| `mobile_limits_empty` | No provider on the selected environments reports subscription limits. | ot3 hides an empty strip | `t3m:src/features/usage/UsageLimitsPooled.tsx:323-327` |
+| `mobile_usage_connect` | Connect an environment to see usage. | ot3's page always has its local backend | `t3m:src/features/usage/UsageRouteScreen.tsx:305-314` |
+
+## ot3 strings missing from ot3's catalog
+
+ot3 shows these, but builds them outside `T3I18n.tr`, so `ot3:translations/i18n.json`
+(and the lib's `i18n.json`) do not have them; ot3 itself shows them in English. Android
+lists them in `values/strings_mobile.xml` with ot3's exact English until the lib returns
+them from U26 / U27 as catalog keys (LIB_REQUESTS.md, "2026-10-25: usage limits and
+routes").
+
+| Android name | English | ot3 source |
+|---|---|---|
+| `ot3x_route_lan` | Local network | `ot3:src/connection_network.rs:51` |
+| `ot3x_route_tailscale` | Tailscale | `ot3:src/connection_network.rs:51` |
+| `ot3x_quota_access_denied` | Access denied | `ot3:ui/js/UsageLimits.js:35` |
+| `ot3x_quota_outdated` | Disconnected; readings may be outdated | `ot3:ui/js/UsageLimits.js:35` |
+| `ot3x_quota_refresh_failed` | Could not refresh limits | `ot3:ui/js/UsageLimits.js:35` |
+| `ot3x_resets_in` | resets in {time} | `ot3:ui/js/NativeUsageLimits.js:566` |
+| `ot3x_resets_now` | resets now | `ot3:ui/js/NativeUsageLimits.js:564` |
+| `ot3x_resets_momentarily` | Resets momentarily | `ot3:ui/js/NativeUsageLimits.js:565` |
+
+"Connected through OmaBridge · {gateway}" is not a new string: it is the catalog's
+"Connected through OmaBridge" joined with " · " and the name, as ot3 does
+(`ot3:ui/qml/T3ConnectionOmaBridge.qml:39`). Every other text of the motion, usage and
+OmaBridge sections (Animations page, usage page and strip, OmaBridge page) is in the
+catalog.

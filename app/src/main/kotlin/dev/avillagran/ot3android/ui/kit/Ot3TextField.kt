@@ -50,6 +50,7 @@ fun Ot3TextField(
     label: String? = placeholder,
     enabled: Boolean = true,
     singleLine: Boolean = true,
+    framed: Boolean = true,
     leadingIcon: String? = null,
     trailing: (@Composable () -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -88,8 +89,8 @@ fun Ot3TextField(
                 Row(
                     Modifier
                         .heightIn(min = Ot3Sizes.fieldHeight)
-                        .background(colors.field, shape)
-                        .border(Ot3Sizes.border, border, shape)
+                        .background(if (framed) colors.field else androidx.compose.ui.graphics.Color.Transparent, shape)
+                        .then(if (framed) Modifier.border(Ot3Sizes.border, border, shape) else Modifier)
                         .padding(start = if (leadingIcon != null) Ot3Spacing.xxl else Ot3Spacing.xl, end = if (trailing != null) 0.dp else Ot3Spacing.xl),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

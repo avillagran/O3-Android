@@ -14,6 +14,19 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import dev.avillagran.ot3android.ui.sky.*
+import dev.avillagran.ot3android.ui.theme.Ot3Theme
+import dev.avillagran.ot3android.ui.theme.Ot3MotionLevel
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
+import dev.avillagran.ot3android.ui.kit.Ot3TextField
+import dev.avillagran.ot3android.ui.kit.CountPills
+import dev.avillagran.ot3android.ui.kit.CountPillsModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -21,15 +34,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.Animatable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +63,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.avillagran.ot3android.R
@@ -89,7 +105,7 @@ sealed interface HomeIntent {
 
 /**
  * Home (UI_SPEC §4.1): header, search and filter, one list with shelves, the New thread FAB.
- * Structure and state only: plain Material until the kit and the sky header restyle it.
+ * Real ot3 brand, sky and rows; insets are owned once by this screen.
  * Back clears and closes the search while Home is the visible entry ([isTop]); sheets above
  * Home and the keyboard take back first (§2.3).
  */
@@ -104,20 +120,29 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
     }
     Scaffold(
         modifier = modifier.testTag(HomeTags.ROOT),
-        floatingActionButton = {
-            if (state != null && state.content != HomeContent.NoEnvironments) {
-                ExtendedFloatingActionButton(
-                    onClick = { onIntent(HomeIntent.NewThread) },
-                    icon = { Icon(painterResource(Ot3Icons.SquarePen), contentDescription = null) },
-                    text = { Text(stringResource(R.string.ot3_home_new_thread)) },
-                    modifier = Modifier.testTag(HomeTags.NEW_THREAD),
-                )
-            }
-        },
+        contentWindowInsets = WindowInsets(0),
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            Header(state, onIntent)
-            SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
+        Column(Modifier.padding(padding).consumeWindowInsets(padding)
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).fillMaxSize()) {
+            val colors = Ot3Theme.colors
+            val motion = Ot3Theme.motion
+            SkyHeader(
+                palette = SkyPalette(colors.background, colors.foreground, colors.accent, colors.sky.lightSky,
+                    colors.sky.brightness, colors.sky.nebula, colors.sky.meteorRate, colors.sky.ink),
+                motion = when (motion.level) {
+                    Ot3MotionLevel.FULL -> SkyMotion.Full
+                    Ot3MotionLevel.LIGHT -> SkyMotion.Light
+                    Ot3MotionLevel.OFF -> SkyMotion.Off
+                },
+                energy = if ((state?.header?.counts?.working ?: 0) > 0) 1f else 0f,
+                onAutoDegrade = if (motion.preference == dev.avillagran.ot3android.core.data.prefs.AnimationPreference.AUTO) ({}) else null,
+                modifier = Modifier.fillMaxWidth().testTag("home_sky"),
+            ) {
+                Column(Modifier.statusBarsPadding()) {
+                    Header(state, onIntent)
+                    SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
+                }
+            }
             when (val content = state?.content ?: HomeContent.Connecting) {
                 HomeContent.NoEnvironments -> Message(stringResource(R.string.mobile_no_environments), HomeTags.NO_ENVIRONMENTS) {
                     Button(onClick = { onIntent(HomeIntent.AddEnvironment) }) { Text(stringResource(R.string.environments_add)) }
@@ -141,27 +166,17 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
 private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit) {
     val header = state?.header
     var menuOpen by remember { mutableStateOf(false) }
-    Row(
-        Modifier.fillMaxWidth().statusBarsPadding().padding(start = 16.dp, end = 4.dp, top = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    val colors = Ot3Theme.colors
+    SkyBrandRow(colors.foreground, colors.dim,
+        modifier = Modifier.testTag("home_brand"),
+        logo = { Icon(painterResource(Ot3Icons.T3Logo), null, tint = colors.foreground) },
     ) {
-        // ot3 does not translate the wordmark.
-        Text(WORDMARK, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         header?.counts?.let { counts ->
-            // ot3's bar badges (work / ready / input), digits only until the kit draws the pills.
-            if (counts.working + counts.done + counts.waiting > 0) {
-                Text(
-                    "${counts.working} · ${counts.done} · ${counts.waiting}",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.testTag(HomeTags.COUNTS),
-                )
-            }
+            CountPills(CountPillsModel(counts.working, counts.done, counts.waiting), Modifier.testTag(HomeTags.COUNTS))
         }
-        Spacer(Modifier.weight(1f))
         if (header != null && header.dot != HeaderDot.None) {
             Row(
-                Modifier.clickable { onIntent(HomeIntent.OpenEnvironments) }.padding(4.dp).testTag(HomeTags.CONNECTION),
+                Modifier.heightIn(min = 48.dp).clickable { onIntent(HomeIntent.OpenEnvironments) }.padding(horizontal = 4.dp).testTag(HomeTags.CONNECTION),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
@@ -172,9 +187,8 @@ private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit) {
             }
         }
         Box {
-            IconButton(onClick = { menuOpen = true }, modifier = Modifier.testTag(HomeTags.OVERFLOW)) {
-                Icon(painterResource(Ot3Icons.EllipsisVertical), contentDescription = stringResource(R.string.home_more))
-            }
+            Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { menuOpen = true },
+                modifier = Modifier.testTag(HomeTags.OVERFLOW))
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(text = { Text(stringResource(R.string.ot3_home_add_project)) }, onClick = { menuOpen = false; onIntent(HomeIntent.AddProject) })
                 // The quota strip needs usage data (U14): listed, not offered yet.
@@ -195,12 +209,14 @@ private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit) {
 @Composable
 private fun SearchRow(query: String, filterActive: Boolean, onIntent: (HomeIntent) -> Unit, onFocus: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
+        Ot3TextField(
             value = query,
             onValueChange = { onIntent(HomeIntent.SetQuery(it)) },
-            placeholder = { Text(stringResource(R.string.ot3_search_threads_placeholder)) },
+            placeholder = stringResource(R.string.ot3_search_threads_placeholder),
+            leadingIcon = "search",
+            framed = false,
             singleLine = true,
-            trailingIcon = if (query.isNotEmpty()) {
+            trailing = if (query.isNotEmpty()) {
                 {
                     IconButton(onClick = { onIntent(HomeIntent.ClearSearch) }, modifier = Modifier.testTag(HomeTags.SEARCH_CLEAR)) {
                         Icon(painterResource(Ot3Icons.X), contentDescription = stringResource(R.string.ot3_search_clear))
@@ -220,6 +236,8 @@ private fun SearchRow(query: String, filterActive: Boolean, onIntent: (HomeInten
         } else {
             IconButton(onClick = { onIntent(HomeIntent.OpenFilters) }, modifier = Modifier.testTag(HomeTags.FILTER), content = filterIcon)
         }
+        Ot3IconButton("square-pen", stringResource(R.string.ot3_home_new_thread), { onIntent(HomeIntent.NewThread) },
+            modifier = Modifier.testTag(HomeTags.NEW_THREAD))
     }
 }
 
@@ -240,6 +258,7 @@ private fun Message(text: String, tag: String, action: (@Composable () -> Unit)?
 
 @Composable
 private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit) {
+    val motion = Ot3Theme.motion
     Column {
         if (state.offline) {
             Text(
@@ -252,7 +271,8 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit) {
         LazyColumn(Modifier.fillMaxSize().alpha(if (state.stale) 0.6f else 1f).testTag(HomeTags.LIST)) {
             items(state.items, key = { it.key }, contentType = { it::class }) { item ->
                 when (item) {
-                    is HomeItem.Row -> ThreadRow(item.row, onIntent)
+                    is HomeItem.Row -> ThreadRow(item.row, onIntent, Modifier.animateItem(
+                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()))
                     is HomeItem.ShelfHeader -> ShelfHeader(item, onIntent)
                     is HomeItem.ShowMoreSettled -> TextButton(
                         onClick = { onIntent(HomeIntent.ShowMoreSettled) },
@@ -272,8 +292,13 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit) {
 
 /** A `sidebar.view` row in the kit's card or slim row. */
 @Composable
-private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit) {
+private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModifier: Modifier = Modifier) {
     val haptics = LocalHapticFeedback.current
+    val motion = Ot3Theme.motion
+    val drift = remember(row.key) { Animatable(if (motion.animates) -18f else 0f) }
+    LaunchedEffect(row.key, motion.animates) { drift.animateTo(0f, motion.rowArriveDrift()) }
+    val density = LocalDensity.current.density
+    val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
     val model = row.toThreadRowModel()
     val onClick = { onIntent(HomeIntent.OpenRow(row)) }
     val onLongClick = {
@@ -290,7 +315,7 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit) {
     }
     // Swipes (Settle, Move to active, Wake, Archive; Snooze) are modelled in row.swipe but all
     // mutate, so no gesture is attached until the lib's command builders are reachable.
-    val modifier = Modifier.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
+    val modifier = animatedModifier.graphicsLayer { translationX = drift.value * density * direction }.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
     if (row.slim) {
         ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, modifier = modifier)
     } else {
@@ -321,8 +346,6 @@ private fun MessageRow(item: HomeItem.Message, onIntent: (HomeIntent) -> Unit) {
         Text(item.match.snippet, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
-
-private const val WORDMARK = "T3 Code"
 
 object HomeTags {
     const val ROOT = "home"

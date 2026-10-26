@@ -54,7 +54,7 @@ class Ot3NavigationTest {
     private fun launch(restoration: StateRestorationTester? = null) {
         val content: @Composable () -> Unit = {
             navController = rememberOt3NavController()
-            Ot3NavHost(navController, screens)
+            dev.avillagran.ot3android.ui.theme.Ot3Theme { Ot3NavHost(navController, screens) }
         }
         if (restoration != null) restoration.setContent(content) else composeRule.setContent(content)
         composeRule.waitForIdle()
@@ -220,7 +220,9 @@ class Ot3NavigationTest {
         var link by mutableStateOf<Thread?>(null)
         composeRule.setContent {
             navController = rememberOt3NavController()
-            Ot3NavHost(navController, screens, deepLink = link, onDeepLinkHandled = { link = null })
+            dev.avillagran.ot3android.ui.theme.Ot3Theme {
+                Ot3NavHost(navController, screens, deepLink = link, onDeepLinkHandled = { link = null })
+            }
         }
         composeRule.waitForIdle()
         onUi { navigator.selectTab(TopTab.Settings) }
@@ -240,7 +242,9 @@ class Ot3NavigationTest {
         var link by mutableStateOf(ThreadDeepLink.parse(Uri.parse("ot3a://thread/e1/t1")))
         composeRule.setContent {
             navController = rememberOt3NavController()
-            Ot3NavHost(navController, screens, deepLink = link, onDeepLinkHandled = { link = null })
+            dev.avillagran.ot3android.ui.theme.Ot3Theme {
+                Ot3NavHost(navController, screens, deepLink = link, onDeepLinkHandled = { link = null })
+            }
         }
         composeRule.waitForIdle()
         assertEquals(listOf("Home", "Thread"), stack())

@@ -241,6 +241,7 @@ private fun RowFrame(
                 .background(fill, shape)
                 .then(if (focused) Modifier.border(Ot3Sizes.border, colors.accent, shape) else Modifier),
         ) {
+            ThreadAura(row, slim, Modifier.matchParentSize())
             content()
         }
     }

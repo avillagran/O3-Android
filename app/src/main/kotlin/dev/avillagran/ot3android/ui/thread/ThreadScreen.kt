@@ -1,10 +1,23 @@
 package dev.avillagran.ot3android.ui.thread
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.graphics.SolidColor
+import dev.avillagran.ot3android.ui.theme.Ot3Theme
+import dev.avillagran.ot3android.ui.kit.Ot3Spinner
+import dev.avillagran.ot3android.ui.kit.rememberKitClock
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +36,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -138,13 +150,18 @@ fun ThreadContent(
 
     Scaffold(
         modifier = modifier.testTag(ThreadScreenTags.ROOT),
+        contentWindowInsets = WindowInsets.safeDrawing,
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                expandedHeight = 56.dp,
+                windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Ot3Theme.colors.background),
                 title = {
                     Column {
                         Text(
                             state.title ?: stringResource(R.string.sidebar_untitled),
+                            style = MaterialTheme.typography.titleSmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.testTag(ThreadScreenTags.TITLE),
@@ -188,14 +205,14 @@ fun ThreadContent(
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
             StreamState(state.view.connectionState, state.view.stale, onRetryStream)
             state.view.pendingRequests.forEach { PendingRequestBanner(it) }
             state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {
-                    !state.view.loaded -> CircularProgressIndicator(
-                        Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING),
+                    !state.view.loaded -> Ot3Spinner(
+                        Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp,
                     )
                     state.view.messages.isEmpty() -> Text(
                         stringResource(R.string.thread_empty),
@@ -215,8 +232,8 @@ private fun Timeline(messages: List<ThreadMessage>) {
     val newestFirst = remember(messages) { messages.asReversed() }
     LazyColumn(
         reverseLayout = true,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
         modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE),
     ) {
         items(newestFirst, key = { it.id }) { message -> MessageBubble(message) }
@@ -226,7 +243,7 @@ private fun Timeline(messages: List<ThreadMessage>) {
 @Composable
 private fun MessageBubble(message: ThreadMessage) {
     val user = message.role == "user"
-    val colors = MaterialTheme.colorScheme
+    val colors = Ot3Theme.colors
     val typing = stringResource(R.string.thread_message_typing)
     Row(
         horizontalArrangement = if (user) Arrangement.End else Arrangement.Start,
@@ -234,14 +251,14 @@ private fun MessageBubble(message: ThreadMessage) {
             .semantics { if (message.streaming) stateDescription = typing },
     ) {
         Surface(
-            color = if (user) colors.primaryContainer else colors.surfaceVariant,
-            contentColor = if (user) colors.onPrimaryContainer else colors.onSurfaceVariant,
-            shape = RoundedCornerShape(16.dp),
+            color = if (user) colors.surface else colors.background,
+            contentColor = colors.foreground,
+            shape = RoundedCornerShape(6.dp),
             modifier = Modifier.widthIn(max = 560.dp),
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 SelectionContainer {
-                    Text(message.text, style = MaterialTheme.typography.bodyLarge)
+                    Text(message.text, style = MaterialTheme.typography.bodyMedium)
                 }
                 // Decoration only: the bubble's state description says it is still being written.
                 if (message.streaming) {
@@ -254,13 +271,13 @@ private fun MessageBubble(message: ThreadMessage) {
 
 @Composable
 private fun StreamingCursor(modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "cursor")
-    val alpha by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.2f,
-        animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
-        label = "cursorAlpha",
-    )
+    if (!Ot3Theme.motion.animates) {
+        Text("▍", style = MaterialTheme.typography.bodyMedium, modifier = modifier)
+        return
+    }
+    val clock by rememberKitClock(true)
+    val phase = clock % 1f
+    val alpha = 1f - 0.8f * (if (phase < 0.5f) phase * 2f else (1f - phase) * 2f)
     Text("▍", style = MaterialTheme.typography.bodyLarge, modifier = modifier.alpha(alpha))
 }
 
@@ -268,7 +285,7 @@ private fun StreamingCursor(modifier: Modifier = Modifier) {
 private fun WorkingLabel() {
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag(ThreadScreenTags.WORKING)) {
-        CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp)
+        Ot3Spinner(size = 12.dp, tint = Ot3Theme.colors.working)
         Spacer(Modifier.width(4.dp))
         StatusLabel(stringResource(R.string.status_working), colors.tertiaryContainer, colors.onTertiaryContainer)
     }
@@ -377,26 +394,39 @@ private fun Composer(
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(tonalElevation = 2.dp, modifier = modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(8.dp)) {
-            OutlinedTextField(
+    val colors = Ot3Theme.colors
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val border by animateColorAsState(if (focused) colors.composerFocus else colors.composerBorder,
+        Ot3Theme.motion.colorChange(), label = "composerBorder")
+    Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                .border(1.dp, border, RoundedCornerShape(10.dp))
+                .background(colors.surface, RoundedCornerShape(10.dp)).padding(4.dp),
+        ) {
+            BasicTextField(
                 value = draft,
                 onValueChange = onDraftChange,
-                // Locked while it is being sent, so the text sent is the text shown.
                 enabled = !sending,
-                placeholder = { Text(stringResource(R.string.thread_composer_hint)) },
+                interactionSource = interaction,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foreground),
+                cursorBrush = SolidColor(colors.accent),
                 maxLines = 6,
-                modifier = Modifier.weight(1f).testTag(ThreadScreenTags.COMPOSER),
-            )
-            Spacer(Modifier.width(4.dp))
-            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                if (sending) {
-                    CircularProgressIndicator(Modifier.size(24.dp).testTag(ThreadScreenTags.SENDING))
-                } else {
-                    IconButton(onClick = onSend, enabled = canSend, modifier = Modifier.testTag(ThreadScreenTags.SEND)) {
-                        Icon(painterResource(R.drawable.ic_send), stringResource(R.string.thread_send))
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag(ThreadScreenTags.COMPOSER),
+                decorationBox = { inner ->
+                    Box(Modifier.padding(horizontal = 10.dp, vertical = 12.dp)) {
+                        if (draft.isEmpty()) Text(stringResource(R.string.thread_composer_hint),
+                            style = MaterialTheme.typography.bodyMedium, color = colors.dim)
+                        inner()
                     }
-                }
+                },
+            )
+            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                if (sending) Ot3Spinner(Modifier.testTag(ThreadScreenTags.SENDING), size = 24.dp)
+                else Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend,
+                    modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = colors.accent)
             }
         }
     }

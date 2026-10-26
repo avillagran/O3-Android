@@ -17,6 +17,8 @@ import org.junit.runner.RunWith
 class StarfieldShaderCompileTest {
     @Test
     fun starfieldCompilesAndTakesEveryUniform() {
+        RuntimeShader(dev.avillagran.ot3android.ui.navigation.REVEAL_AGSL)
+        RuntimeShader(dev.avillagran.ot3android.ui.kit.THREAD_AURA_AGSL)
         val shader = RuntimeShader(STARFIELD_AGSL)
         val u = SkyMath.uniforms(PreviewTokyoNight, SkyMotion.Full, 1f, 10f, 1f, 411f, 126f, 2.625f)
         u.forEachUniform { name, values -> shader.setFloatUniform(name, values) }
