@@ -154,3 +154,17 @@ must consent; a bridge transport grant is not an implicit grant to every desktop
 Implementation started in the shared lib, Android cache adapter and isolated native QUIC catalog transport. Desktop publication adapter, Android native binding,
 enrollment and lifecycle integration remain to be implemented/tested in isolation;
 no productive deployment or listener is authorized by this request.
+
+## OB6 — Delegated issuance for remote environments (2026-10-26)
+
+Confirmed against f7d93a9: LocalT3Authority can issue only for local T3 base dirs;
+NODE is remote to the desktop. Existing Client::enroll binds credentials to the
+calling desktop, so relabeling its receipt as Android is invalid. Need an explicit
+upstream-bridge → downstream-client delegation request over authenticated QUIC,
+with issuer-local configuration, environment/client allowlist and bounded read-only
+sessions. Android continues pairing once with its selected desktop bridge.
+
+See [remote authority evidence and exact implementation plan](bridge/REMOTE_AUTHORITY.md).
+This is separate from the proven missing deployment of catalog-publish. Existing
+isolated two-T3-on-one-host tests do not prove remote issuance. Default denial and
+natural expiry vs immediate server-side revocation must remain explicit.

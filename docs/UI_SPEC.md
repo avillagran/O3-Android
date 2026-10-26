@@ -2305,3 +2305,12 @@ Usage prices checkpoint: the shared “Refresh prices” action calls typed
 `server.refreshUsageRates` then re-reads the selected native summary. Explicit
 actions are consumed once and do not replay on reconnect. App203 JVM and
 API36.1 two instrumented tests pass; live/physical acceptance remains pending.
+
+### Remote catalog acceptance checkpoint — 2026-10-26
+
+Physical VQ usage reading is verified on f90f7c1, but not automatic NODE discovery.
+Read-only desktop preflight confirms NODE enabled and matching portable descriptor;
+installed bridge lacks catalog publication. Candidate LocalT3Authority is local-only,
+so remote NODE additionally needs OB6 delegated issuance. Android must keep one bridge
+pairing flow; do not substitute manual per-host setup as acceptance. See
+[remote authority](bridge/REMOTE_AUTHORITY.md) for identity, trust and test boundaries.
