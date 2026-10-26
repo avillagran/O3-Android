@@ -7,8 +7,9 @@ import org.json.JSONObject
  * The data a notification shows, as the lib will return it (LIB_REQUESTS.md, "UI-N: thread
  * awareness"; UI_SPEC "Notifications and Live Updates"). Kotlin reads these objects and
  * builds Android notifications from them. It never derives a phase, a count, a transition or
- * an expiry: every such value arrives here already decided. Until the lib exposes
- * `awareness.*` nothing produces these objects; the builders are tested with fixtures.
+ * an expiry: every such value arrives here already decided. The current v0.3.4 pin has no
+ * awareness runtime. U28 shipped in v0.3.5; pinning it and consuming its real outputs
+ * follows the UI-1 release. The preparation builders are tested with fixtures.
  */
 
 /** T3's agent awareness phase (`t3:packages/shared/src/agentAwareness.ts:11-18`). */
