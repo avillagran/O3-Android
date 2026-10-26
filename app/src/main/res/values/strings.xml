@@ -119,4 +119,6 @@
     <string name="settings_usage">Usage</string>
     <string name="settings_archive">Archived threads</string>
     <string name="settings_licenses">Licenses</string>
+    <string name="mobile_show_sidebar">Mostrar chats</string>
+    <string name="mobile_hide_sidebar">Contraer chats</string>
 </resources>

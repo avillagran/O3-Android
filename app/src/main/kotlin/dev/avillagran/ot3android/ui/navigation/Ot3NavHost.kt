@@ -11,12 +11,15 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.FloatingWindow
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -63,10 +66,14 @@ fun Ot3NavHost(
     val graph: NavGraphBuilder.() -> Unit = remember(resolvedScreens, current) {
         { ot3Graph(resolvedScreens) { entry -> entry.id == current.value?.id } }
     }
+    val visibleEntries = navController.visibleEntries.collectAsState()
+    val contentDestination = visibleEntries.value.lastOrNull {
+        it.destination !is FloatingWindow
+    }?.destination
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            if (!WindowInsets.isImeVisible) Ot3NavigationBar(navigator, TopTab.of(current.value))
+            if (contentDestination?.hasRoute(Thread::class) != true && !WindowInsets.isImeVisible) Ot3NavigationBar(navigator, TopTab.of(current.value))
         },
     ) { padding ->
         NavHost(

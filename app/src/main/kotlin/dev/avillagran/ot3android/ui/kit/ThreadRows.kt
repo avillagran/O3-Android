@@ -9,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -154,9 +155,9 @@ fun ThreadSlimRow(
         selected = selected,
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.height(Ot3Sizes.slimRowHeight),
+        modifier = modifier.heightIn(min = Ot3Sizes.slimRowHeight),
     ) {
-        Box(Modifier.fillMaxHeight().padding(horizontal = Ot3Sizes.cardRowPaddingHorizontal), contentAlignment = Alignment.CenterStart) {
+        Column(Modifier.padding(horizontal = Ot3Sizes.cardRowPaddingHorizontal, vertical = 4.dp)) {
             CaptionLine(row, slim = true, onSubagentsClick = onSubagentsClick, onUnpin = onUnpin) {
                 Text(
                     row.title,
@@ -168,6 +169,14 @@ fun ThreadSlimRow(
                 )
                 row.pullRequest?.let { PrBadge(it, onClick = onPullRequestClick) }
             }
+            val metadata = listOfNotNull(row.environmentName, row.branch).joinToString(" · ")
+            if (metadata.isNotEmpty()) Text(
+                metadata,
+                style = Ot3Theme.typography.material.bodySmall,
+                color = Ot3Theme.colors.dim,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+            )
         }
     }
 }
@@ -203,6 +212,7 @@ private fun RowFrame(
     val name = rowAccessibilityName(row)
     Box(
         modifier
+            .then(if (slim) Modifier.height(IntrinsicSize.Min) else Modifier)
             .fillMaxWidth()
             .combinedClickable(
                 interactionSource = interaction,

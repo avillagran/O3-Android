@@ -85,6 +85,26 @@ class HomeStateBuilderTest {
     private fun HomeUiState.headers() = items.filterIsInstance<HomeItem.ShelfHeader>()
 
     @Test
+    fun branchAndPullRequestBadgeComeFromTheLibWithoutHostInference() {
+        val source = env("remote", "Servidor QA", shell(
+            listOf(project("p", "Repository")),
+            thread("pr", "p", "branch" to "feat/metadata", "linkedPullRequest" to JSONObject()
+                .put("number", 42).put("repository", "owner/repo")
+                .put("url", "https://github.com/owner/repo/pull/42")
+                .put("snapshot", JSONObject().put("state", "open").put("isDraft", true))),
+            thread("none", "p"),
+        ))
+        val state = build(listOf(source))
+        val row = state.rows.getValue("remote/pr")
+        assertEquals("Servidor QA", row.environmentLabel)
+        assertEquals("feat/metadata", row.branch)
+        assertEquals("draft", row.pullRequestBadge?.optString("state"))
+        assertEquals("42", row.pullRequestBadge?.optString("text"))
+        assertNull(state.rows.getValue("remote/none").branch)
+        assertNull(state.rows.getValue("remote/none").pullRequestBadge)
+    }
+
+    @Test
     fun mergesEveryEnvironmentIntoOneListInTheLibsOrder() {
         val input = HomeInput(listOf(laptop, server), now = now)
         val sidebar = runBlocking { HomeStateBuilder.view(DomainEngine.shared, input) }
@@ -103,7 +123,7 @@ class HomeStateBuilderTest {
     }
 
     @Test
-    fun environmentLabelsOnlyWhenMoreThanOneIsSaved() {
+    fun environmentLabelsRemainVisibleWithOneOrMultipleHosts() {
         val two = build()
         assertTrue(two.multipleEnvironments)
         assertEquals("Laptop", two.rows.getValue("e1/a").environmentLabel)
@@ -113,7 +133,7 @@ class HomeStateBuilderTest {
 
         val one = build(listOf(laptop))
         assertFalse(one.multipleEnvironments)
-        assertNull(one.rows.getValue("e1/a").environmentLabel)
+        assertEquals("Laptop", one.rows.getValue("e1/a").environmentLabel)
         assertTrue(one.filterOptions.environments.isEmpty())
         assertEquals(listOf(ProjectOption("e1/p1", "Alpha", null, "/w/alpha")), one.filterOptions.projects)
         assertEquals(mapOf("e1/p1" to ProjectOption("e1/p1", "Alpha", null, "/w/alpha")), one.projects)

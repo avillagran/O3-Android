@@ -65,8 +65,8 @@ object HomeStateBuilder {
         }
         // Section rows carry their nesting; `threads` adds the rows no section lists (filtered out).
         val listed = (sidebar.active + sidebar.working + sidebar.snoozed + sidebar.settled)
-            .associate { row -> row.key to homeRow(row, sidebar, projects, multiple, input) }
-        val rows = sidebar.threads.associate { row -> row.key to homeRow(row, sidebar, projects, multiple, input) } + listed
+            .associate { row -> row.key to homeRow(row, sidebar, projects, input) }
+        val rows = sidebar.threads.associate { row -> row.key to homeRow(row, sidebar, projects, input) } + listed
         fun row(lib: SidebarRow): HomeRow = listed.getValue(lib.key)
 
         val items = buildList {
@@ -130,7 +130,7 @@ object HomeStateBuilder {
         else -> "unavailable"
     }
 
-    private fun homeRow(row: SidebarRow, sidebar: Sidebar, projects: Map<String, ProjectOption>, multiple: Boolean, input: HomeInput): HomeRow {
+    private fun homeRow(row: SidebarRow, sidebar: Sidebar, projects: Map<String, ProjectOption>, input: HomeInput): HomeRow {
         val homeRow = HomeRow(
             key = row.key,
             environmentId = row.environmentId,
@@ -139,7 +139,7 @@ object HomeStateBuilder {
             projectId = row.projectId,
             projectKey = row.projectKey,
             projectTitle = row.projectTitle,
-            environmentLabel = row.environmentName.takeIf { multiple },
+            environmentLabel = row.environmentName,
             branch = row.branch,
             path = row.worktreePath ?: row.projectKey?.let { projects[it]?.workspaceRoot },
             worktree = row.worktreePath != null,
@@ -160,6 +160,7 @@ object HomeStateBuilder {
             // ot3 draws cards for the inbox and slim rows for settled, snoozed and sub-threads.
             style = if (row.settled || row.snoozed || row.depth > 0) RowStyle.Slim else RowStyle.Card,
             swipe = SwipeActions.None,
+            pullRequestBadge = row.raw.optJSONObject("pullRequestBadge"),
         )
         return homeRow.copy(swipe = ThreadActions.swipe(homeRow, input.actions(row.environmentId)))
     }

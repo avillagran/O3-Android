@@ -5,6 +5,8 @@ import androidx.compose.ui.res.stringResource
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.home.HomeRow
 import dev.avillagran.ot3android.core.home.RowStyle
+import dev.avillagran.ot3android.ui.kit.PrBadgeModel
+import dev.avillagran.ot3android.ui.kit.PrState
 import dev.avillagran.ot3android.ui.kit.ProjectChipModel
 import dev.avillagran.ot3android.ui.kit.RowStatus
 import dev.avillagran.ot3android.ui.kit.RowTime
@@ -36,6 +38,9 @@ fun HomeRow.toThreadRowModel(): ThreadRowModel {
         status = statusLabel.takeIf { it.isNotEmpty() }?.let { RowStatus.fromLib(detail, statusText(detail, it), statusRole) },
         time = RowTime(TimeKind.fromLib(time.kind), timeText(time.label)),
         branch = branch,
+        pullRequest = pullRequestBadge?.let {
+            PrBadgeModel(PrState.fromLib(it.optString("state")), it.optString("text"), it.optString("kind") == "stack")
+        },
         workspaceIcon = if (worktree) WORKTREE_ICON else null,
         environmentName = environmentLabel,
         pinned = pinned,

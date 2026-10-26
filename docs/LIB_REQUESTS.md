@@ -865,3 +865,13 @@ What the app still derives in Kotlin after UI-1f, and what would remove it.
   preset times (`T3ThreadRow.qml:104-110`) in Kotlin. They are presentation rules ot3
   writes in QML, not protocol, so they are listed here rather than moved silently.
 
+
+## 2026-10-25: UI-1h host metadata audit
+
+`sidebar.view.environmentName` is the caller-provided environment display name,
+not host OS or a machine type (`src/sidebar/view.rs:136`). Android now shows that
+label and the shell's `branch` on all real rows, plus the lib's `pullRequestBadge`.
+No blocker for these fields. For parity with desktop machine glyphs, expose an
+optional authoritative host/machine presentation field through the shared contract;
+until available Android omits the glyph instead of guessing from label/URL.
+See `docs/ui/compare/ui-1h/METADATA.md`. No Kotlin protocol implementation added.
