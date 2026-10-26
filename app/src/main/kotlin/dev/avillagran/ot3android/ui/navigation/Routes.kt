@@ -67,6 +67,10 @@ data class PullRequestFile(val environmentId: String, val projectId: String, val
 @Serializable
 data object Settings
 
+/** Follow the environment's live theme, or choose a bundled/manual theme. */
+@Serializable
+data object Appearance
+
 /** Saved environments (4.2). */
 @Serializable
 data object Environments

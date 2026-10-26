@@ -138,4 +138,8 @@
     <string name="ot3_pr_open">مفتوحة</string>
     <string name="ot3_pr_merged">مدمجة</string>
     <string name="ot3_pr_closed">مغلقة</string>
+    <string name="ot3_notif_approve">موافقة</string>
+    <string name="ot3_notif_open">مفتوحة</string>
+    <string name="ot3_notif_approval_required">الموافقة مطلوبة</string>
+    <string name="ot3_notif_question">سؤال</string>
 </resources>

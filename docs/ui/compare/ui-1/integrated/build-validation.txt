@@ -1,0 +1,153 @@
+Calculating task graph as no cached configuration is available for tasks: :app:testDebugUnitTest :core:testDebugUnitTest :app:verifyRoborazziDebug :app:lintDebug :core:lintDebug :app:assembleDebug
+> Task :app:preBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:preBuild UP-TO-DATE
+> Task :core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:preDebugBuild UP-TO-DATE
+> Task :core:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :core:prepareLintJarForPublish UP-TO-DATE
+> Task :core:writeDebugAarMetadata UP-TO-DATE
+> Task :lucide-vectors:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:writeDebugLintModelMetadata UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :core:generateDebugResValues UP-TO-DATE
+> Task :core:processDebugNavigationResources UP-TO-DATE
+> Task :core:extractProguardFiles UP-TO-DATE
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :core:mergeDebugShaders UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :core:javaPreCompileDebug UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :core:compileDebugShaders NO-SOURCE
+> Task :core:generateDebugAssets UP-TO-DATE
+> Task :core:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:processDebugManifest UP-TO-DATE
+> Task :lucide-vectors:processResources NO-SOURCE
+> Task :core:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core:extractDeepLinksDebug UP-TO-DATE
+> Task :core:prepareDebugArtProfile UP-TO-DATE
+> Task :core:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:generateDebugResources UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :core:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core:packageDebugResources UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :lucide-vectors:compileKotlin UP-TO-DATE
+> Task :core:mergeDebugAssets UP-TO-DATE
+> Task :lucide-vectors:compileJava NO-SOURCE
+> Task :lucide-vectors:classes UP-TO-DATE
+> Task :core:parseDebugLocalResources UP-TO-DATE
+> Task :lucide-vectors:jar UP-TO-DATE
+> Task :core:compileDebugLibraryResources UP-TO-DATE
+> Task :app:generateOt3Icons UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:checkDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :core:generateDebugRFile UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:generateDebugResources
+> Task :app:processDebugNavigationResources
+> Task :core:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:kspDebugKotlin UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :core:verifyDebugBridgeSdk
+> Task :core:compileDebugKotlin UP-TO-DATE
+> Task :core:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:processDebugJavaRes UP-TO-DATE
+> Task :core:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core:createFullJarDebug UP-TO-DATE
+> Task :core:mergeDebugJavaResource UP-TO-DATE
+> Task :core:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:extractDebugAnnotations UP-TO-DATE
+> Task :core:generateDebugLintModel UP-TO-DATE
+> Task :core:syncDebugLibJars UP-TO-DATE
+> Task :core:generateDebugLintReportModel UP-TO-DATE
+> Task :core:lintAnalyzeDebug UP-TO-DATE
+> Task :core:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:copyRoomSchemas NO-SOURCE
+> Task :core:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:compressDebugAssets
+> Task :core:mergeDebugJniLibFolders
+> Task :app:packageDebugResources
+> Task :app:parseDebugLocalResources
+> Task :core:mergeDebugNativeLibs
+> Task :app:mergeLibDexDebug
+> Task :core:stripDebugDebugSymbols
+> Task :core:copyDebugJniLibsProjectOnly
+> Task :core:copyDebugJniLibsProjectAndLocalJars
+> Task :app:mergeDebugResources
+> Task :core:bundleDebugLocalLintAar
+> Task :app:mergeDebugNativeLibs
+> Task :app:stripDebugDebugSymbols
+> Task :core:generateDebugAndroidTestLintModel
+> Task :core:generateDebugUnitTestLintModel
+> Task :app:processDebugResources
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:generateDebugUnitTestConfig
+> Task :core:lintAnalyzeDebugAndroidTest
+> Task :core:testDebugUnitTest
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes
+> Task :app:generateDebugLintReportModel
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:generateDebugAndroidTestLintModel
+> Task :core:lintAnalyzeDebugUnitTest
+> Task :core:lintReportDebug
+> Task :core:lintDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///home/node/Work/ot3-android/app/src/test/kotlin/dev/avillagran/ot3android/notifications/NotificationPresentationTest.kt:122:50 'val isActivityIntent: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/node/Work/ot3-android/app/src/test/kotlin/dev/avillagran/ot3android/notifications/NotificationPresentationTest.kt:166:39 'static field PRIORITY_HIGH: Int' is deprecated. Deprecated in Java.
+w: file:///home/node/Work/ot3-android/app/src/test/kotlin/dev/avillagran/ot3android/notifications/NotificationPresentationTest.kt:166:56 'field priority: Int' is deprecated. Deprecated in Java.
+
+> Task :app:mergeProjectDexDebug
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:packageDebug
+> Task :app:assembleDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///home/node/Work/ot3-android/app/build/reports/lint-results-debug.html
+
+> Task :app:lintDebug
+> Task :app:testDebugUnitTest
+> Task :app:verifyRoborazziDebug
+> Task :app:finalizeTestRoborazziDebug
+
+BUILD SUCCESSFUL in 31s
+114 actionable tasks: 47 executed, 67 up-to-date
+Configuration cache entry stored.

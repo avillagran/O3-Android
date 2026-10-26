@@ -5,12 +5,14 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +47,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         fallback.map { JSONObject().put("id", it.id).put("role", it.role).put("text", it.text)
             .put("createdAt", it.createdAt).put("streaming", it.streaming).put("rev", it.rev) }
     }.asReversed()
-    val list = rememberLazyListState()
+    val list = rememberSaveable(saver = readingAnchorSaver(rows)) { LazyListState() }
     val scope = rememberCoroutineScope()
     val away by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 80 } }
     Box(Modifier.fillMaxSize()) {
@@ -65,6 +67,23 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         }
     }
 }
+
+/**
+ * Saves the reading anchor by row id, not only by index. A projection that lands between the
+ * last layout and `onSaveInstanceState` (rotation while a row streams) moves rows before the
+ * list re-measures; the index then names a neighbour after recreation. The id comes from the
+ * last layout, so it is the row the reader was looking at.
+ */
+private fun readingAnchorSaver(rows: List<JSONObject>): Saver<LazyListState, *> = listSaver(
+    save = { state ->
+        val anchor = state.layoutInfo.visibleItemsInfo.firstOrNull { it.index == state.firstVisibleItemIndex }
+        listOf(anchor?.key as? String ?: "", state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset)
+    },
+    restore = { (key, index, offset) ->
+        val byKey = rows.indexOfFirst { it.optString("id") == key }
+        LazyListState(if (byKey >= 0) byKey else index as Int, offset as Int)
+    },
+)
 
 @Composable
 private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?) {

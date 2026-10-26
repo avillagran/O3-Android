@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.util.UUID
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * The saved environments: rows in Room, tokens in the [TokenStore] (Keystore-backed), shell
@@ -21,13 +23,23 @@ class EnvironmentRepository(
     private val tokens: suspend () -> TokenStore,
     private val cursors: ShellCursorStore,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val managed: dev.avillagran.ot3android.core.data.local.BridgeManagedDao? = null,
     private val newId: () -> String = { UUID.randomUUID().toString() },
+    val mutations: Mutex = Mutex(),
 ) {
+    val bridgeStates = managed?.observeAll() ?: kotlinx.coroutines.flow.flowOf(emptyList())
+
     val environments: Flow<List<Environment>> = dao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
     suspend fun find(id: String): Environment? = dao.findById(id)?.toDomain()
 
-    suspend fun token(id: String): String? = tokens().token(id)
+    suspend fun token(id: String): String? = mutations.withLock {
+        // Discovery has no credential. Revoked/expired rows cannot restart streams
+        // from a previously issued session while waiting for re-enrollment.
+        val origin = managed?.find(id)
+        if (origin != null && (origin.status != "authorized" || (origin.authorizationExpiresAt ?: 0L) <= clock())) return@withLock null
+        tokens().token(id)
+    }
 
     /**
      * Creates or updates an environment. With [id] null, an existing entry for the same
@@ -42,7 +54,7 @@ class EnvironmentRepository(
         environmentId: String?,
         token: String?,
         matchServer: Boolean = true,
-    ): Environment {
+    ): Environment = mutations.withLock {
         val all = environments.first()
         val existing = all.firstOrNull { it.id == id }
             ?: environmentId?.takeIf { matchServer }?.let { serverId -> all.firstOrNull { it.environmentId == serverId } }
@@ -58,10 +70,23 @@ class EnvironmentRepository(
             createdAt = clock(),
             sortOrder = (all.maxOfOrNull { it.sortOrder } ?: -1) + 1,
         )
-        if (token != null) tokens().setToken(saved.id, token)
+        if (token == null && managed?.find(saved.id) != null) {
+            require(existing != null && existing.baseUrl == saved.baseUrl && existing.environmentId == saved.environmentId) {
+                "managed_environment_requires_new_credential"
+            }
+        }
+        if (token != null) {
+            // Room and Keystore cannot commit together. Persist a deny gate before
+            // replacing a managed credential; interruption must require a retry.
+            managed?.find(saved.id)?.let { managed.upsert(it.copy(status = "credential_updating")) }
+            tokens().setToken(saved.id, token)
+        }
         if (existing != null && existing.baseUrl != saved.baseUrl) cursors.setCursor(saved.id, null)
+        // A metadata edit without a new credential must not turn a withdrawn bridge
+        // session into an independent local credential and bypass the gate.
         dao.upsert(saved.toEntity())
-        return saved
+        if (token != null) managed?.delete(saved.id)
+        saved
     }
 
     /** Records a successful connection and the server's environment id; a removed environment stays removed. */
@@ -70,9 +95,13 @@ class EnvironmentRepository(
     }
 
     /** Removes the row, its token and its shell cursor together. */
-    suspend fun delete(id: String) {
+    suspend fun delete(id: String) = mutations.withLock {
+        managed?.find(id)?.let { managed.upsert(it.copy(status = "credential_deleting")) }
         dao.deleteById(id)
         tokens().delete(id)
         cursors.setCursor(id, null)
+        // Keep the gate until the credential has actually been removed, including
+        // when Keystore/storage deletion fails part-way through.
+        managed?.delete(id)
     }
 }

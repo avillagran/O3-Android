@@ -1,0 +1,66 @@
+Printing with useUnmergedTree = 'false'
+Node #2399 at (l=0.0, t=128.0, r=1080.0, b=2337.0)px
+ |-Node #2400 at (l=0.0, t=128.0, r=1080.0, b=2337.0)px, Tag: 'pair_screen'
+   IsContainer = 'true'
+   Shape = 'RectangleShape'
+    |-Node #2421 at (l=0.0, t=296.0, r=1080.0, b=2337.0)px
+    | IsTraversalGroup = 'true'
+    | Shape = 'androidx.compose.foundation.VerticalScrollableClipShape@95ebadf'
+    | VerticalScrollAxisRange = 'ScrollAxisRange(value=0.0, maxValue=0.0, reverseScrolling=false)'
+    | Actions = [ScrollBy, ScrollByOffset]
+    |  |-Node #2422 at (l=63.0, t=338.0, r=1017.0, b=450.0)px
+    |  | Text = '[On the computer running T3 Code, run t3 pair, then scan its QR code or paste the link it prints.]'
+    |  | Actions = [ClearTextSubstitution, GetTextLayoutResult, SetTextSubstitution, ShowTextSubstitution]
+    |  |-Node #2423 at (l=63.0, t=492.0, r=1017.0, b=660.0)px, Tag: 'pair_link'
+    |  | ContentDataType = 'AndroidContentDataType(androidAutofillType=1)'
+    |  | ContentType = 'androidx.compose.ui.autofill.AndroidContentType@7091237'
+    |  | EditableText = ''
+    |  | FillableData = 'androidx.compose.ui.autofill.AndroidFillableData@ea6b847'
+    |  | Focused = 'false'
+    |  | ImeAction = 'Go'
+    |  | InputText = ''
+    |  | IsEditable = 'true'
+    |  | Text = '[Pairing link]'
+    |  | TextSelectionRange = 'TextRange(0, 0)'
+    |  | [Password]
+    |  | Actions = [ClearTextSubstitution, GetTextLayoutResult, InsertTextAtCursor, OnClick, OnFillData, OnLongClick, PasteText, PerformImeAction, RequestFocus, SetSelection, SetText, SetTextSubstitution, ShowTextSubstitution]
+    |  | MergeDescendants = 'true'
+    |  |  |-Node #2429 at (l=861.0, t=535.0, r=1017.0, b=640.0)px, Tag: 'pair_paste'
+    |  |    Focused = 'false'
+    |  |    Role = 'Button'
+    |  |    Shape = 'RoundedCornerShape(topStart = CornerSize(size = 50.0%), topEnd = CornerSize(size = 50.0%), bottomEnd = CornerSize(size = 50.0%), bottomStart = CornerSize(size = 50.0%))'
+    |  |    Text = '[Paste]'
+    |  |    Actions = [ClearTextSubstitution, GetTextLayoutResult, OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution]
+    |  |    MergeDescendants = 'true'
+    |  |-Node #2438 at (l=63.0, t=713.0, r=326.0, b=818.0)px, Tag: 'pair_scan'
+    |  | Focused = 'false'
+    |  | Role = 'Button'
+    |  | Shape = 'RoundedCornerShape(topStart = CornerSize(size = 50.0%), topEnd = CornerSize(size = 50.0%), bottomEnd = CornerSize(size = 50.0%), bottomStart = CornerSize(size = 50.0%))'
+    |  | Text = '[Scan QR]'
+    |  | Actions = [ClearTextSubstitution, GetTextLayoutResult, OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution]
+    |  | MergeDescendants = 'true'
+    |  |-Node #2441 at (l=358.0, t=713.0, r=628.0, b=818.0)px, Tag: 'pair_continue'
+    |  | Role = 'Button'
+    |  | Shape = 'RoundedCornerShape(topStart = CornerSize(size = 50.0%), topEnd = CornerSize(size = 50.0%), bottomEnd = CornerSize(size = 50.0%), bottomStart = CornerSize(size = 50.0%))'
+    |  | Text = '[Continue]'
+    |  | [Disabled]
+    |  | Actions = [ClearTextSubstitution, GetTextLayoutResult, OnClick, SetTextSubstitution, ShowTextSubstitution]
+    |  | MergeDescendants = 'true'
+    |  |-Node #2444 at (l=63.0, t=870.0, r=1017.0, b=990.0)px, Tag: 'bridge_pair_status'
+    |    Text = '[Bridge saved. Authorized computers appear automatically in Home.]'
+    |    Actions = [ClearTextSubstitution, GetTextLayoutResult, SetTextSubstitution, ShowTextSubstitution]
+    |-Node #2404 at (l=0.0, t=128.0, r=1080.0, b=296.0)px
+      IsTraversalGroup = 'true'
+       |-Node #2405 at (l=0.0, t=128.0, r=1080.0, b=296.0)px
+         Shape = 'RectangleShape'
+          |-Node #2407 at (l=22.0, t=160.0, r=127.0, b=265.0)px
+          | ContentDescription = '[Back]'
+          | Focused = 'false'
+          | Role = 'Button'
+          | Shape = 'RoundedCornerShape(topStart = CornerSize(size = 50.0%), topEnd = CornerSize(size = 50.0%), bottomEnd = CornerSize(size = 50.0%), bottomStart = CornerSize(size = 50.0%))'
+          | Actions = [OnClick, RequestFocus]
+          | MergeDescendants = 'true'
+          |-Node #2409 at (l=148.0, t=179.0, r=566.0, b=244.0)px
+             |-Node #2410 at (l=148.0, t=179.0, r=566.0, b=244.0)px
+               Text = '[Pair with link or QR]'
+               Actions = [ClearTextSubstitution, GetTextLayoutResult, SetTextSubstitution, ShowTextSubstitution]

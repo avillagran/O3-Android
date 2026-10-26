@@ -8,11 +8,12 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [EnvironmentEntity::class, OutboxEntity::class, DraftEntity::class],
-    version = 2,
+    entities = [EnvironmentEntity::class, OutboxEntity::class, DraftEntity::class, BridgeManagedEntity::class],
+    version = 3,
     exportSchema = true,
 )
 abstract class Ot3Database : RoomDatabase() {
+    abstract fun bridgeManagedDao(): BridgeManagedDao
     abstract fun environmentDao(): EnvironmentDao
     abstract fun outboxDao(): OutboxDao
     abstract fun draftDao(): DraftDao
@@ -38,7 +39,13 @@ abstract class Ot3Database : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS = arrayOf(MIGRATION_1_2)
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `bridge_managed` (`id` TEXT NOT NULL, `provenance` TEXT NOT NULL, `status` TEXT NOT NULL, `authorizationExpiresAt` INTEGER, PRIMARY KEY(`id`))")
+            }
+        }
+
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 
         fun create(context: Context): Ot3Database =
             Room.databaseBuilder(context.applicationContext, Ot3Database::class.java, NAME)

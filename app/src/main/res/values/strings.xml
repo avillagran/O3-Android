@@ -1,7 +1,7 @@
 <!-- The app's own strings, English only until each screen moves to ot3's catalog (strings_ot3.xml)
      or the mobile-only list (strings_mobile.xml); see docs/ui/strings.md. -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">ot3</string>
+    <string name="app_name">OT3</string>
 
     <string name="action_back">Back</string>
     <string name="action_retry">Retry</string>
@@ -142,4 +142,17 @@
     <string name="composer_legacy_models">Legacy models</string>
     <string name="composer_add_favorite">Add to favorites</string>
     <string name="composer_remove_favorite">Remove from favorites</string>
+    <string name="bridge_pending">Waiting for approval on your bridge. After approving, tap Continue.</string>
+    <string name="bridge_approved">Bridge saved. Authorized computers appear automatically in Home.</string>
+    <string name="bridge_connecting">Connecting to bridge…</string>
+    <string name="bridge_failed">Bridge unavailable or invitation refused. Check the bridge and retry.</string>
+    <string name="bridge_sdk_unavailable">This build does not include the bridge SDK. You can still pair a computer with its T3 link.</string>
+    <string name="bridge_revoked">Bridge access revoked</string>
+    <string name="bridge_expired">Bridge catalog or session expired — reconnect bridge</string>
+    <string name="bridge_authorized">Authorized by bridge</string>
+    <string name="bridge_needs_authority">Discovered — waiting for T3 authority</string>
+    <string name="bridge_offline">Bridge offline — saved catalog retained</string>
+    <string name="bridge_available">Bridge connected</string>
+    <string name="bridge_refresh">Refresh bridge</string>
+    <string name="bridge_pair_help">Or paste or scan an OmaBridge invitation to add its authorized computers automatically.</string>
 </resources>

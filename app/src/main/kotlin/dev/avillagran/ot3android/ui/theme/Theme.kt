@@ -85,18 +85,20 @@ object Ot3Theme {
 fun Ot3AppTheme(
     catalog: OmarchyThemeCatalog,
     settings: AppearanceSettings,
+    liveTheme: dev.avillagran.ot3android.core.theme.ThemeSelection.Live? = null,
     content: @Composable () -> Unit,
 ) {
-    val dark = when (settings.mode) {
+    val dark = liveTheme?.let { !it.isLight } ?: when (settings.mode) {
         AppearanceMode.FOLLOW_SYSTEM -> isSystemInDarkTheme()
         AppearanceMode.DARK -> true
         AppearanceMode.LIGHT -> false
     }
     val themeId = if (dark) settings.darkThemeId else settings.lightThemeId
     val context = LocalContext.current
-    val materialYou = themeId == AppearanceSettings.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val bundled = remember(catalog, themeId, dark, materialYou) {
-        if (materialYou) null else catalog[themeId]?.takeIf { it.isLight != dark }?.let(Ot3Colors::fromTheme) ?: catalog.defaultColors(dark)
+    val materialYou = liveTheme == null && themeId == AppearanceSettings.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val bundled = remember(catalog, themeId, dark, materialYou, liveTheme) {
+        liveTheme?.let { Ot3Colors.fromTheme(ThemeTokens.parse(it.tokens)) }
+            ?: if (materialYou) null else catalog[themeId]?.takeIf { it.isLight != dark }?.let(Ot3Colors::fromTheme) ?: catalog.defaultColors(dark)
     }
     // Material You goes through theme.tokens off the main thread; until it answers, the colours
     // already shown stay (nothing is drawn before the first ones, so no state is lost).

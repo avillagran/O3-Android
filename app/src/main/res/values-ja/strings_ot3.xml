@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">オープン</string>
     <string name="ot3_pr_merged">マージ済み</string>
     <string name="ot3_pr_closed">クローズ済み</string>
+    <string name="ot3_notif_approve">承認</string>
+    <string name="ot3_notif_open">オープン</string>
+    <string name="ot3_notif_approval_required">承認が必要</string>
+    <string name="ot3_notif_question">質問</string>
 </resources>
