@@ -1,0 +1,12 @@
+{
+  "ready": true,
+  "theme": "retro-82",
+  "displayName": "Retro 82",
+  "appearance": "dark",
+  "fromCache": false,
+  "sdkInt": 36,
+  "source": "real desktop via AppGraph, native transport and theme.tokens",
+  "sessionRevoked": true,
+  "forwardClosed": true,
+  "boundary": "Real desktop and real Android AppGraph on isolated emulator; temporary manually seeded QA environment, not bridge discovery or Xiaomi live follow."
+}
