@@ -1316,12 +1316,16 @@ item 4) through today's `MessageSender`.
   unavailable", and actions Edit in composer, Steer the active run, Remove from queue
   (`ot3:ui/qml/T3Queue.qml:37-80`); swipe to remove (T3 Mobile).
 - Data: `queue::derive` (items, `held`, `canSteer`, `canReorder`, hidden message ids;
-  `lib:src/queue.rs:5`) and `queue::command` (`:31`), U5. Interim: hidden.
+  `lib:src/queue.rs:5`) and `queue::command` (`:31`), U5. Native reads and durable commands are integrated.
 
 Implementation progress (2026-10-26): the queue strip and sheet now consume the real
 `timeline.view.queue`, with Rust-built persisted Resume/Remove/Reorder/Steer/Edit commands.
-Editing leaves the unsent draft intact. Source drag reorder and reveal motion, plus
-emulator/live evidence, are pending; this does not close UI-3. See
+Editing leaves the unsent draft intact and maps only documented native edit inputs. A
+48 dp grip now supports touch drag (.5 source opacity, 2 dp accent insertion line),
+with an Up/Down step menu and accessibility actions. Same/adjacent/tap/cancel/stale
+inputs are no-ops; only stream updates change visible order. Phone Ot3Sheet replaces
+desktop inline reveal; no edge autoscroll or direct grip arrow-key binding. Productive
+provider/phone acceptance and other composer gaps remain; this does not close UI-3. See
 `docs/ui/compare/ui-3/README.md` for the remaining differences.
 
 #### 4.4.7 Attachments

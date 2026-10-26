@@ -20,6 +20,7 @@ Sources, in order of preference (UI_SPEC 3.8):
 |---|---|---|
 | `alarm-clock.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `arrow-up.svg` | ot3 folder | Lucide ISC |
+| `grip-vertical.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `bot.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `chart-no-axes-column.svg` | ot3 `IconAssets.js` | Lucide ISC |
 | `check.svg` | ot3 `IconAssets.js` | Lucide ISC |

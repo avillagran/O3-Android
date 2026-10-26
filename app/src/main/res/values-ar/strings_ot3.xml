@@ -212,4 +212,6 @@
     <string name="ot3_pr_action_required">إجراء مطلوب</string>
     <string name="ot3_pr_skipped">تم التخطي</string>
     <string name="ot3_pr_cancelled">ملغى</string>
+    <string name="ot3_queue_reorder">إعادة ترتيب الرسالة</string>
+    <string name="ot3_queue_move_down">انقل لأسفل</string>
 </resources>

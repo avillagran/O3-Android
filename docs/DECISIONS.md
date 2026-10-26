@@ -1110,3 +1110,17 @@ Unpublished files are deleted on failure/cancellation. Recheck the live connecti
 immediately before publishing and cancel UI work on lifecycle/generation changes.
 Use the existing kit CopyButton's busy/check/error feedback and 1.8-second reset;
 show its 48 dp touch action on thumbnails and viewer rather than requiring hover.
+
+### 2026-10-26 — Touch queue input, authoritative order
+
+Use a 48 dp grip with immediate source opacity0.5 and 2 dp accent insertion marker.
+Pointer position chooses native beforeRunId/null input; server rows are never reordered
+optimistically. Stable run-order/pending/eligibility/connection/edit/orientation inputs
+cancel stale drags without reacting to JSON object recreation. Keep long queues usable
+through grip Up/Down menu/TalkBack actions rather than introducing edge-autoscroll.
+
+Continue through MessageSender's durable queue path and reuse error/unknown retry
+feedback inside the sheet. queue.derive supplies capabilities; queue.command validates
+shape, not projection membership. Map projected queue-edit rows to documented native
+inputs before invoking that strict builder; preserve original attachments/context and
+unsent draft. JNI and a real queue-edit rotation test exposed the prior metadata bug.

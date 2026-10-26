@@ -19,6 +19,7 @@ import dev.avillagran.ot3android.R
  * that folder's NOTICE.md and add the icon here.
  */
 object Ot3Icons {
+    @DrawableRes val GripVertical: Int = R.drawable.ic_grip_vertical
     @DrawableRes val Lock: Int = R.drawable.ic_lock
     @DrawableRes val LockOpen: Int = R.drawable.ic_lock_open
     @DrawableRes val Sparkles: Int = R.drawable.ic_sparkles
@@ -130,6 +131,7 @@ object Ot3Icons {
         "server" to Server,
         "settings" to Settings,
         "shield-question" to ShieldQuestion,
+        "grip-vertical" to GripVertical,
         "lock" to Lock,
         "lock-open" to LockOpen,
         "sparkles" to Sparkles,

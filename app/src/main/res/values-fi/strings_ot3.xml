@@ -211,4 +211,6 @@
     <string name="ot3_pr_action_required">Toimenpide vaaditaan</string>
     <string name="ot3_pr_skipped">Ohitettu</string>
     <string name="ot3_pr_cancelled">Peruttu</string>
+    <string name="ot3_queue_reorder">Muuta viestin järjestystä</string>
+    <string name="ot3_queue_move_down">Siirrä alas</string>
 </resources>

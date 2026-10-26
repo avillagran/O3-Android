@@ -211,4 +211,6 @@
     <string name="ot3_pr_action_required">需要操作</string>
     <string name="ot3_pr_skipped">已跳过</string>
     <string name="ot3_pr_cancelled">已取消</string>
+    <string name="ot3_queue_reorder">调整消息顺序</string>
+    <string name="ot3_queue_move_down">下移</string>
 </resources>

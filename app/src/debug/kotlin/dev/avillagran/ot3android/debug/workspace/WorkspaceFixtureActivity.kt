@@ -128,6 +128,31 @@ class WorkspaceFixtureActivity : ComponentActivity() {
 }
 
 class WorkspaceFixture(application: Application, private val rich: Boolean = false, private val request: String = "") : AndroidViewModel(application) {
+    var queueHold: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+    var queueUnknownFirst = false
+    var queueRejectNext = false
+    private var queueDispatches = 0
+    private var queueOrder = listOf("q1", "q2", "q3", "q4")
+    private var queueSequence = 1L
+    suspend fun publishQueueOrder(order: List<String>) {
+        queueOrder = order
+        val runs = bounded().getJSONObject("projection").getJSONArray("runs").objects().filter { it.optString("status") == "queued" }
+        val events = runs.map { row -> JSONObject().put("kind", "event").put("event", JSONObject().put("type", "run.updated").put("payload", row)) }
+        transport.emitThread("chat", ThreadUpdates.event(*events.toTypedArray(), cursor = ++queueSequence))
+    }
+    private fun addQueue(projection: JSONObject) {
+        projection.put("providerThreads", JSONArray("""[{"id":"pt-queue","appThreadId":"chat","providerSessionId":"ps-queue"}]"""))
+        projection.put("providerSessions", JSONArray("""[{"id":"ps-queue","status":"ready","capabilities":{"turns":{"supportsQueuedMessages":true,"supportsSteer":true}}}]"""))
+        projection.put("providerTurns", JSONArray("""[{"id":"turn-active","runAttemptId":"attempt-active","status":"running"}]"""))
+        val runs = JSONArray().put(JSONObject("""{"id":"active-run","status":"running","activeAttemptId":"attempt-active","providerThreadId":"pt-queue"}"""))
+        queueOrder.forEachIndexed { index, run ->
+            runs.put(JSONObject().put("id", run).put("status", "queued").put("userMessageId", "message-$run").put("queuePosition", index + 1).put("ordinal", listOf("q1", "q2", "q3", "q4").indexOf(run) + 2))
+            projection.getJSONArray("messages").put(JSONObject().put("id", "message-$run").put("runId", run).put("role", "user").put("text", "Queued instruction $run")
+                .put("createdAt", "2026-10-26T20:00:00Z").put("attachments", if (run == "q1") JSONArray("""[{"type":"file","name":"notes.txt","url":"https://fixture.invalid/notes"}]""") else JSONArray())
+                .put("context", JSONObject().put("filePaths", JSONArray().put("/fixture/notes.txt"))))
+        }
+        projection.put("runs", runs)
+    }
     var prListState: androidx.compose.foundation.lazy.LazyListState? = null
     private val database = Room.inMemoryDatabaseBuilder(application, Ot3Database::class.java).build()
     private val cursors = object : ShellCursorStore {
@@ -191,7 +216,15 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
             summary.put("buckets", JSONArray(buckets))
         }
         onCall("server.getConfig") { JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
-        onCall("orchestration.dispatchCommand") { JSONObject().put("sequence", 2) }
+        onCall("orchestration.dispatchCommand") {
+            if (request == "queue") {
+                queueDispatches++
+                queueHold?.await()
+                if (queueRejectNext) { queueRejectNext = false; throw dev.avillagran.t3.T3Exception("rpc_rejected") }
+                if (queueUnknownFirst && queueDispatches == 1) throw dev.avillagran.t3.T3Exception("rpc_outcome_unknown")
+            }
+            JSONObject().put("sequence", 2)
+        }
         onBoundedThread("chat") { bounded() }
         onDomain("timeline.view") { DomainEngine.shared.domain("timeline.view", it) }
         onDomain("projection.apply") { DomainEngine.shared.domain("projection.apply", it) }
@@ -259,7 +292,7 @@ The checks completed; review the activity and changed files above.
             .put("thread", JSONObject().put("id", "chat").put("title", "Navegación y metadatos")
                 .put("runtimeMode", "approval-required").put("modelSelection", JSONObject().put("instanceId", "fixture-provider").put("model", "fixture-model")))
             .put("messages", messages).put("runs", if (rich) JSONArray("""[{"id":"run-reader","status":"completed","createdAt":"2026-10-25T10:57:00Z"}]""") else JSONArray())
-            .put("runtimeRequests", if (request.isBlank()) JSONArray() else JSONArray().put(JSONObject()
+            .put("runtimeRequests", if (request !in listOf("approval", "question")) JSONArray() else JSONArray().put(JSONObject()
                 .put("id", "request-fixture").put("kind", if (request == "question") "user_input" else "command")
                 .put("status", "pending").put("createdAt", "2026-10-25T10:59:00Z")
                 .put("responseCapability", JSONObject().put("type", "live"))))
@@ -267,7 +300,7 @@ The checks completed; review the activity and changed files above.
                 if (request == "approval") items.put(JSONObject("""{"id":"approval-fixture","type":"approval_request","requestId":"request-fixture","prompt":"./gradlew :app:testDebugUnitTest","options":[{"decision":"accept","label":"Approve"},{"decision":"decline","label":"Decline"},{"decision":"acceptForSession","label":"Always allow this session","warning":"Applies to later requests"}]}"""))
                 if (request == "question") items.put(JSONObject("""{"id":"question-fixture","type":"user_input_request","requestId":"request-fixture","questions":[{"id":"theme","header":"Review theme","question":"Which **theme** should be checked next?","allowCustomAnswer":false,"options":[{"label":"Tokyo Night","value":"tokyo-night"},{"label":"Catppuccin Latte","value":"catppuccin-latte"}]}]}"""))
             })
-            .put("checkpoints", if (rich) JSONArray("""[{"id":"cp-reader","runId":"run-reader","appRunOrdinal":1,"status":"ready","capturedAt":"2026-10-25T10:58:45Z","files":[{"path":"ui/TimelineReader.kt","kind":"modified","additions":42,"deletions":8},{"path":"ui/ThreadWorkspace.kt","kind":"modified","additions":18,"deletions":5}]}]""") else JSONArray()))
+            .put("checkpoints", if (rich) JSONArray("""[{"id":"cp-reader","runId":"run-reader","appRunOrdinal":1,"status":"ready","capturedAt":"2026-10-25T10:58:45Z","files":[{"path":"ui/TimelineReader.kt","kind":"modified","additions":42,"deletions":8},{"path":"ui/ThreadWorkspace.kt","kind":"modified","additions":18,"deletions":5}]}]""") else JSONArray())).also { if (request == "queue") addQueue(it.getJSONObject("projection")) }
     }
 }
 

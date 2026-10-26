@@ -211,4 +211,6 @@
     <string name="ot3_pr_action_required">Åtgärd krävs</string>
     <string name="ot3_pr_skipped">Överhoppad</string>
     <string name="ot3_pr_cancelled">Avbruten</string>
+    <string name="ot3_queue_reorder">Ändra meddelandets ordning</string>
+    <string name="ot3_queue_move_down">Flytta ned</string>
 </resources>

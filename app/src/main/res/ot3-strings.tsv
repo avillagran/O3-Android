@@ -245,3 +245,7 @@ ot3_pr_pending	Pending
 ot3_pr_action_required	Action required
 ot3_pr_skipped	Skipped
 ot3_pr_cancelled	Cancelled
+
+# Queue touch reorder
+ot3_queue_reorder	Reorder message
+ot3_queue_move_down	Move down
