@@ -1128,3 +1128,11 @@ and bounded future timestamps, excessive skew, expired and malformed windows,
 and replay/revision behavior. Audit enrollment receipt validation for the same
 clock boundary. Android integration is pending this diagnosis/common policy;
 no Kotlin timestamp adjustment or weakened acceptance has been added.
+
+Tracked in https://github.com/avillagran/lib-t3-rust/issues/14. A standalone Rust
+reproduction against the exact OmaBridge pin027a025 accepts issuedAt==now and
+rejects issuedAt==now+1ms with the same error as actual expiration. This module is
+consumed directly by OmaBridge; Android's v0.3.5 C ABI does not expose
+connectionCatalog.reconcileBridge (unknown_function). See the sanitized
+`docs/bridge/evidence/2026-10-26/delegated/clock-reconcile.json`. The764ms marker
+includes transport latency and is not an exact host/device clock-offset measurement.

@@ -1,0 +1,41 @@
+{
+  "commonSource": "027a0253500d1a5283ab6f2d9b4c626969892f43",
+  "caller": "standalone Rust executable, local only",
+  "issue": "https://github.com/avillagran/lib-t3-rust/issues/14",
+  "results": [
+    {
+      "case": "same_clock",
+      "error": null,
+      "expiresAt": 2000,
+      "issuedAt": 1000,
+      "now": 1000,
+      "ok": true
+    },
+    {
+      "case": "ahead_1ms",
+      "error": "bridge_catalog_expired",
+      "expiresAt": 2000,
+      "issuedAt": 1001,
+      "now": 1000,
+      "ok": false
+    },
+    {
+      "case": "ahead_764ms",
+      "error": "bridge_catalog_expired",
+      "expiresAt": 2000,
+      "issuedAt": 1764,
+      "now": 1000,
+      "ok": false
+    },
+    {
+      "case": "expired",
+      "error": "bridge_catalog_expired",
+      "expiresAt": 1000,
+      "issuedAt": 900,
+      "now": 1000,
+      "ok": false
+    }
+  ],
+  "androidClockCauseProven": false,
+  "noNetworkOrCredentials": true
+}
