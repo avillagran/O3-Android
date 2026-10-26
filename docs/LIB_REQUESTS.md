@@ -988,3 +988,20 @@ until they land (UI_SPEC rule 6). Live limits themselves need nothing new:
   - Optionally expose `connectionCatalog.view` / `mutate` for apps that keep T3's catalog
     document; ot3-Android keeps its own Room table (UI_SPEC 4.2.1), so the two functions
     above are what it uses.
+
+### UI2a client integration audit (2026-10-26)
+
+U10 and U25 are consumed by the new native timeline reader: `timeline.view` blocks,
+`toolInspector.request(reference, environment, threadId)` → typed `call` →
+`toolInspector.parse(reference, environment, threadId, response)`. No new contract is
+requested for Markdown, tool output, reasoning or file summaries. UI3's existing contracts
+still need Android integration; this increment does not mark that UI complete.
+
+U18's pure functions exist (`history.path`, `history.envelope`), but the current native
+transport exposes `boundedThread(threadId)` without an authenticated page request. The
+remaining transport request is `historyPage(threadId: String, cursor: String): JSONObject`,
+returning the existing normalized `history.envelope` with its opaque next cursor. Android
+needs it to merge only historical presentation rows without overwriting live control state,
+and retain the visible id/offset. Until integrated there is an informative history boundary,
+with no action that falsely appears to page. This is a transport request, not a request to
+reimplement history parsing or eligibility in Kotlin. Root coordinates lib work separately.

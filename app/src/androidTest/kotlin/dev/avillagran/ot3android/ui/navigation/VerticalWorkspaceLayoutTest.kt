@@ -31,6 +31,10 @@ class VerticalWorkspaceLayoutTest {
         rule.onNodeWithTag("home_sky").assertDoesNotExist()
         val timeline = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot
         val composer = rule.onNodeWithTag("thread_composer_surface").fetchSemanticsNode().boundsInRoot
+        val title = rule.onNodeWithTag(ThreadScreenTags.TITLE).fetchSemanticsNode().boundsInRoot
+        val sidebarControl = rule.onNodeWithTag("thread_sidebar_toggle").fetchSemanticsNode().boundsInRoot
+        assertTrue("Sidebar control shares the chat toolbar instead of a second header row",
+            sidebarControl.top < title.bottom && sidebarControl.bottom > title.top)
         assertEquals("Timeline meets composer without footer reservation", timeline.bottom, composer.top, density)
         // Request the real IME: its inset must reduce the timeline, not become an empty footer.
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performClick().performTextInput("IME layout check")
@@ -47,8 +51,19 @@ class VerticalWorkspaceLayoutTest {
         rule.waitUntil(5000) { androidx.core.view.ViewCompat.getRootWindowInsets(rule.activity.window.decorView)!!
             .isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) }
         rule.waitForIdle()
+        // displayMetrics may shrink during adjustResize while semantics are still from the
+        // previous IME animation frame. Compare against the real keyboard top after layout.
+        fun keyboardTop(): Int {
+            val full = rule.activity.windowManager.currentWindowMetrics.bounds.height()
+            val ime = androidx.core.view.ViewCompat.getRootWindowInsets(rule.activity.window.decorView)!!
+                .getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
+            return full - ime
+        }
+        rule.waitUntil(5_000) {
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNode().boundsInRoot.bottom <= keyboardTop() + density
+        }
         val edited = rule.onNodeWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNode().boundsInRoot
-        assertTrue("Composer remains inside available window", edited.bottom <= rule.activity.resources.displayMetrics.heightPixels)
+        assertTrue("Composer remains above the real IME", edited.bottom <= keyboardTop() + density)
         val compactTimeline = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot
         val compactComposer = rule.onNodeWithTag("thread_composer_surface").fetchSemanticsNode().boundsInRoot
         assertEquals("IME creates no gap", compactTimeline.bottom, compactComposer.top, density)

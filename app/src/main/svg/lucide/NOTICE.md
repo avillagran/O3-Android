@@ -75,3 +75,5 @@ folder, copied from the same tarball. The T3 mark comes from T3 Code (MIT, Copyr
 T3 Tools Inc., `ot3:licenses/T3-Code-MIT.txt`) and identifies T3 Code; it is not covered by
 Lucide's licence. `stop-filled` is ot3's (MIT, Copyright (c) 2026 Andrés Villagrán). All of
 these notices are collected in `docs/LICENSES.md` for Settings → About → Licenses.
+
+Panel-left and panel-left-close: ot3 ui/assets/icons at 7b5b1de, Lucide ISC, stroke 1.75.

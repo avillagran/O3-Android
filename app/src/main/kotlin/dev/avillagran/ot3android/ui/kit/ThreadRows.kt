@@ -199,8 +199,8 @@ private fun RowFrame(
     val focused by interaction.collectIsFocusedAsState()
     val fill by animateColorAsState(
         when {
-            selected -> colors.rowSelected
             pressed -> colors.rowPressed
+            selected -> colors.rowSelected
             row.draft -> colors.rowDraft
             else -> Color.Transparent
         },
