@@ -20,7 +20,7 @@
   vídeos 8,0/9,8/3,1 s y contacto nebula. Fixture real graph/VM/Rust no acredita por sí
   sola aceptación estética ni transporte vivo.
 - APK: `artifacts/ot3-ui1i-debug.apk`, SHA256
-  `fb26547c96d39e3676a51ba7acdf1701c5fcc2a3188c2cea122935870b1aa2a3`.
+  `d60b59e1aea9a1d960368d006b2f1880939d7bfea7ae6da37151352f1d7060a9`.
 - Pendientes exactos: UI2 full `ThreadView.timeline` (roles, Markdown, actividad,
   sender/time/acciones/history); UI3 contrato composer/modelo/adjuntos/queue/steer.
   `CONTINUITY.md` contiene orden, fuentes y aceptación. Arc flight/departure drift y

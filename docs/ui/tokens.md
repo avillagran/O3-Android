@@ -273,7 +273,7 @@ spring, so durations stay exact.
 | Panels | Panel card geometry / opacity | 190 ms OutCubic / 140 ms OutCubic | desktop window chrome: not ported (navigation follows T3 Mobile, 5.4) | `ot3:ui/qml/PinnedKeyboardPanel.qml:400-408,426-429` |
 | Quota and usage | Bars | not animated in ot3 (fills are bindings) | Android adds none either; the strip itself appears through `Ot3Reveal` | `ot3:ui/qml/QuotaStrip.qml:87`; `ot3:ui/qml/T3UsagePage.qml:58,71`; `ot3:ui/qml/T3Panel.qml:1520` |
 | OmaBridge | Indicator | not animated (60 s refresh timer) | same | `ot3:ui/qml/T3OmaBridgeIndicator.qml:29` |
-| Auras | Row comet, pulse, glints, burst | aura fade 600 ms, burst 1 300 ms, pulse sin(clock × 1.8), glints fract(clock × 0.45) | not ported in v1 (UI_SPEC 3.7) | `ot3:ui/qml/T3ThreadRow.qml:144-150,194-195`; `ot3:ui/assets/shaders/threadaura.frag:88,95,108,114` |
+| Auras | Row comet, pulse, glints, burst | aura fade 600 ms, burst 1 300 ms, pulse sin(clock × 1.8), glints fract(clock × 0.45) | UI1i overrides the original v1 exclusion (UI_SPEC 3.7 / UI1i addendum): source AGSL, shared ticker, 600 ms work/attention fade and 1300 ms change burst; Canvas fallback | `ot3:ui/qml/T3ThreadRow.qml:144-150,194-195`; `ot3:ui/assets/shaders/threadaura.frag:88,95,108,114` |
 
 ### 5.4 T3 Mobile motion kept for navigation
 

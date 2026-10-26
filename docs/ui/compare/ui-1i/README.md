@@ -80,7 +80,7 @@ Read-only source: `~/Work/omarchy-t3-code-ref`, commit `7b5b1de`.
 |---|---|---|
 | `T3Panel.qml:1121-1187`, `T3Starfield.qml`, `starfield.frag` | SkyHeader and real T3 logo/Code/OMARCHY in production Home; sky includes search; energy is lib working count > 0 | status/cutout + 48 dp actions; no sky in chat |
 | `T3ThreadRow.qml:176-324` | existing three-line card/slim roles retained, host/branch/status/PR; real aura layered under content | 48 dp minimum slim rows; no desktop hover requirement |
-| `threadaura.frag`, `T3ThreadRow.qml:144-211` | AGSL port of comet, attention glints, 1300 ms state-change star; static attention when motion is off | safe Canvas pulse fallback; shader math/provenance in ThreadAuraShader.kt |
+| `threadaura.frag`, `T3ThreadRow.qml:144-211` | AGSL port of comet, attention glints, 600 ms work/attention fade and 1300 ms state-change star; static attention when motion is off | safe Canvas pulse fallback; shader math/provenance in ThreadAuraShader.kt |
 | `T3Motion.qml`, `T3Reveal.qml:27-64` | fixed-width default nebula reveal, declared spring fallback; 130 ms pressed/selected feedback; source row durations | Navigation Compose defaults for push/pop; 260 ms only for tablet panes; style selectors and full arc flight remain follow-up |
 | `T3Panel.qml:1655-1753`, `1893-1905` | user surface, unboxed assistant text, 6 dp corners, 14 sp body; compact chat toolbar/composer | sender/time, Markdown, activity and action rows are UI2; chat is not visually complete |
 | `T3Composer.qml`, typography/tokens | focused composer role, multiline text, integrated 48 dp send control, smaller margins | full option/model/attachment/queue row is UI3 |
@@ -146,7 +146,7 @@ ANDROID_SERIAL=emulator-5580 OT3A_REQUIRE_HOST_JNI=1 \
   competing UiAutomation registrations, and reopened only for captures.
 - **PASS:** final debug APK installed and exercised with the fixture. Local delivery:
   `artifacts/ot3-ui1i-debug.apk` (ignored build artifact, not committed).
-  SHA-256: `fb26547c96d39e3676a51ba7acdf1701c5fcc2a3188c2cea122935870b1aa2a3`.
+  SHA-256: `d60b59e1aea9a1d960368d006b2f1880939d7bfea7ae6da37151352f1d7060a9`.
 - Emulator stopped with `scripts/emulator.sh stop` after evidence. No physical device
   was inspected or operated. Signed release/final distribution build, live server
   behavior and Xiaomi/performance/aesthetic approval remain unverified.
