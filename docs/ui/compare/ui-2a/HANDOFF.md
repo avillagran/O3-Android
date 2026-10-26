@@ -83,3 +83,7 @@ UI1g remains separate, untouched, for root coordination.
 
 Emulator shutdown is performed through `scripts/emulator.sh stop` before final delivery.
 APK and SHA256 are listed in README and `artifacts/ui2a/`; APK is intentionally untracked.
+
+## Root follow-up
+
+Compact toolbar review correction and new APK/evidence are described in README's final section. The permanent control no longer occupies a separate 48 dp row. Latest APK hash efd7e3afcd159458acad9e1913798912d11e41fae4492b5b8cdc5088299502b5. Root repeated 2 JVM workspace tests + 11 focal device tests and lint PASS; emulator stopped and session closed.

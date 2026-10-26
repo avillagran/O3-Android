@@ -6,7 +6,7 @@ Source-confirmed access gap: `ThreadWorkspace.kt` only provided a nullable contr
 landscape; the child toolbar had to invoke it. `ThreadWorkspaceTest.kt` manually invoked
 the local and explicitly asserted no portrait control. This only tested the fixture's
 cooperation, not MainActivity's reachable control. The workspace now owns a persistent,
-48 dp minimum button above the chat, independent of loaded/error state or child toolbar.
+48 dp minimum button sharing the existing chat toolbar action area, independent of loaded/error state or child toolbar.
 The portrait panel overlays the reader at 280 dp with a dismissible scrim; both orientations use the existing nebula reveal.
 Chat composition and its ViewModel/session stay mounted when the panel changes. Opening or closing the sidebar clears Compose focus and hides the IME without erasing the draft.
 This architectural weakness is proven from source; it does not establish exactly what
@@ -105,3 +105,33 @@ SHA256: `d9076fc8a2fc43ea823e9fbadfa2cf06e4f9cfe0941180baaf37704000e189ee`.
 This APK includes the debug fixture, not release signing. The optional CI APK-upload step
 was removed before publication because GitHub rejected the current PAT without workflow
 scope. The tested APK is delivered locally with its checksum; no new credential was needed.
+
+
+## Root review: compact workspace chrome (latest APK)
+
+Review found that the first UI2a control added a separate 48 dp row above the 56 dp
+chat toolbar. This repeated the vertical-space problem. The workspace-owned icon now
+occupies a reserved action slot in that existing toolbar; it is still rendered by the
+workspace above the drawer/scrim, remains reachable when unloaded, and does not overlap
+Stop. Source icons are ot3's panel-left/panel-left-close, with 48 dp touch targets.
+A device assertion requires the control and title to overlap vertically, preventing
+restoration of a second header row. Root repeated 2 workspace JVM tests, compilation,
+11 focal emulator tests (including real IME, MainActivity unloaded access and
+rotation/draft/scroll/one stream) and lint successfully. No golden assets changed.
+
+Latest raw captures: [portrait reader](compact-portrait-reader.png),
+[portrait drawer](compact-portrait-sidebar.png),
+[landscape sidebar](compact-landscape-sidebar.png),
+[landscape collapsed](compact-landscape-collapsed.png).
+Latest actual reveal recordings: [portrait](compact-sidebar-portrait.mp4) and
+[landscape](compact-sidebar-landscape.mp4). Both use the same real graph/offline-rich
+fixture; landscape is explicitly launched as before. The earlier comparison/recordings
+above document the initial implementation with the separate control strip, **not**
+this final compact chrome. Root used device_screenshot for inspection and the exact
+launcher returned by device_open for capture. Keyboard geometry is verified by the
+repeated instrumented test; earlier keyboard videos predate the compact toolbar.
+
+New APK: `artifacts/ui2a/ot3-android-ui2a-compact-debug.apk`.
+SHA256: `efd7e3afcd159458acad9e1913798912d11e41fae4492b5b8cdc5088299502b5`.
+This supersedes the earlier d9076f APK for this branch. Emulator stopped and automation
+session closed. Xiaomi, live server and aesthetic approval remain unverified.

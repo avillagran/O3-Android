@@ -182,6 +182,7 @@ fun ThreadContent(
                     }
                 },
                 actions = {
+
                     if (state.view.working) {
                         IconButton(
                             onClick = onInterrupt,
@@ -190,6 +191,9 @@ fun ThreadContent(
                         ) {
                             Icon(painterResource(R.drawable.ic_stop), stringResource(R.string.thread_interrupt))
                         }
+                    }
+                    if (dev.avillagran.ot3android.ui.navigation.LocalWorkspaceSidebarAction.current) {
+                        Spacer(Modifier.width(48.dp))
                     }
                 },
             )

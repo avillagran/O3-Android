@@ -31,6 +31,10 @@ class VerticalWorkspaceLayoutTest {
         rule.onNodeWithTag("home_sky").assertDoesNotExist()
         val timeline = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot
         val composer = rule.onNodeWithTag("thread_composer_surface").fetchSemanticsNode().boundsInRoot
+        val title = rule.onNodeWithTag(ThreadScreenTags.TITLE).fetchSemanticsNode().boundsInRoot
+        val sidebarControl = rule.onNodeWithTag("thread_sidebar_toggle").fetchSemanticsNode().boundsInRoot
+        assertTrue("Sidebar control shares the chat toolbar instead of a second header row",
+            sidebarControl.top < title.bottom && sidebarControl.bottom > title.top)
         assertEquals("Timeline meets composer without footer reservation", timeline.bottom, composer.top, density)
         // Request the real IME: its inset must reduce the timeline, not become an empty footer.
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performClick().performTextInput("IME layout check")
