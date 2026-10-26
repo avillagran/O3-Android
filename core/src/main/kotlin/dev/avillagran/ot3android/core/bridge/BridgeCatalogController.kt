@@ -27,6 +27,8 @@ class BridgeCatalogController(
     private val tokens: suspend () -> dev.avillagran.ot3android.core.security.TokenStore,
     private val native: suspend (JSONObject) -> JSONObject = NativeBridge::request,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val mutations: Mutex,
+    private val stopConnection: suspend (String) -> Unit = connections::forget,
 ) {
     private val mutex = Mutex()
     @Volatile private var handle: Long? = null
@@ -68,37 +70,41 @@ class BridgeCatalogController(
         mutableStatus.value = invoke("refresh").getString("status")
         val dao = database.environmentDao()
         val managed = database.bridgeManagedDao()
-        val origins = managed.all().associateBy { it.id }
-        val previous = dao.observeAll().first()
+        val (origins, previous) = mutations.withLock {
+            managed.all().associateBy { it.id } to dao.observeAll().first()
+        }
         val local = JSONArray()
         previous.forEach { row ->
             local.put(JSONObject().put("id", row.id).put("environmentId", row.environmentId)
                 .put("baseUrl", row.baseUrl).put("provenance", origins[row.id]?.provenance)
-                .put("authorizationExpiresAt", origins[row.id]?.authorizationExpiresAt))
+                .put("authorizationExpiresAt", origins[row.id]?.takeIf { it.status == "authorized" }?.authorizationExpiresAt))
         }
         val plan = invoke("projection", JSONObject().put("local", local))
         val stops = plan.getJSONArray("stop")
         // Await stream termination outside Room's transaction: shutdown may write cursors.
-        for (i in 0 until stops.length()) connections.forget(stops.getString(i))
-        database.withTransaction {
-            val rows = plan.getJSONArray("upserts")
-            var nextOrder = (previous.maxOfOrNull { it.sortOrder } ?: -1) + 1
-            for (i in 0 until rows.length()) {
-                val row = rows.getJSONObject(i)
-                val id = row.getString("id")
-                val old = previous.firstOrNull { it.id == id }
-                val latest = dao.findById(id)
-                // Explicit ownership changes and removals win. Connection timestamps
-                // may change while streams stop; they must not suppress a withdrawal.
-                if (managed.find(id) != origins[id] || (old == null) != (latest == null)) continue
-                // The native plan chooses ownership and route. This adapter preserves
-                // all host-owned state, including local IDs, order, cursors and drafts.
-                dao.upsert(EnvironmentEntity(id, row.getString("label"),
-                    if (row.isNull("baseUrl")) "" else row.getString("baseUrl"),
-                    row.getString("environmentId"), latest?.createdAt ?: clock(),
-                    latest?.lastConnectedAt, latest?.sortOrder ?: nextOrder++))
-                managed.upsert(BridgeManagedEntity(id, row.getString("provenance"), row.getString("status"),
-                    if (row.isNull("authorizationExpiresAt")) null else row.getLong("authorizationExpiresAt")))
+        for (i in 0 until stops.length()) stopConnection(stops.getString(i))
+        mutations.withLock {
+            database.withTransaction {
+                val rows = plan.getJSONArray("upserts")
+                var nextOrder = (previous.maxOfOrNull { it.sortOrder } ?: -1) + 1
+                for (i in 0 until rows.length()) {
+                    val row = rows.getJSONObject(i)
+                    val id = row.getString("id")
+                    val old = previous.firstOrNull { it.id == id }
+                    val latest = dao.findById(id)
+                    // Explicit ownership changes and removals win. Connection timestamps
+                    // may change while streams stop; they must not suppress a withdrawal.
+                    if (managed.find(id) != origins[id] ||
+                        old?.copy(lastConnectedAt = latest?.lastConnectedAt) != latest) continue
+                    // The native plan chooses ownership and route. This adapter preserves
+                    // all host-owned state, including local IDs, order, cursors and drafts.
+                    dao.upsert(EnvironmentEntity(id, row.getString("label"),
+                        if (row.isNull("baseUrl")) "" else row.getString("baseUrl"),
+                        row.getString("environmentId"), latest?.createdAt ?: clock(),
+                        latest?.lastConnectedAt, latest?.sortOrder ?: nextOrder++))
+                    managed.upsert(BridgeManagedEntity(id, row.getString("provenance"), row.getString("status"),
+                        if (row.isNull("authorizationExpiresAt")) null else row.getLong("authorizationExpiresAt")))
+                }
             }
         }
         val enrollment = plan.getJSONArray("enroll")
@@ -119,15 +125,25 @@ class BridgeCatalogController(
     private suspend fun enrollUnlocked(environmentId: String) {
         val receipt = invoke("enroll", JSONObject().put("environmentId", environmentId))
         val managed = database.bridgeManagedDao()
-        val origins = managed.all().associateBy { it.id }
-        val row = database.environmentDao().observeAll().first().firstOrNull {
-            it.environmentId == receipt.getString("environmentId") &&
-                origins[it.id]?.provenance == receipt.getString("provenance")
-        } ?: error("managed_environment_missing")
-        connections.forget(row.id)
-        tokens().setToken(row.id, receipt.getString("accessToken"))
-        managed.upsert(checkNotNull(origins[row.id]).copy(status = "authorized",
-            authorizationExpiresAt = receipt.getLong("expiresAt")))
+        val (row, origin) = mutations.withLock {
+            val origins = managed.all().associateBy { it.id }
+            val row = database.environmentDao().observeAll().first().firstOrNull {
+                it.environmentId == receipt.getString("environmentId") &&
+                    origins[it.id]?.provenance == receipt.getString("provenance")
+            } ?: return
+            row to checkNotNull(origins[row.id])
+        }
+        stopConnection(row.id)
+        mutations.withLock {
+            // Stream shutdown suspends. An explicit local save/removal wins and
+            // must never receive the old bridge's credential or ownership.
+            if (managed.find(row.id) != origin || database.environmentDao().findById(row.id)
+                    ?.copy(lastConnectedAt = row.lastConnectedAt) != row) return
+            managed.upsert(origin.copy(status = "credential_updating"))
+            tokens().setToken(row.id, receipt.getString("accessToken"))
+            managed.upsert(origin.copy(status = "authorized",
+                authorizationExpiresAt = receipt.getLong("expiresAt")))
+        }
         connections.supervisor(row.id)?.start()
     }
 

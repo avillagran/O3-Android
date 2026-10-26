@@ -18,6 +18,9 @@ data class BridgeManagedEntity(
 @Dao
 interface BridgeManagedDao {
     @Query("SELECT * FROM bridge_managed")
+    fun observeAll(): kotlinx.coroutines.flow.Flow<List<BridgeManagedEntity>>
+
+    @Query("SELECT * FROM bridge_managed")
     suspend fun all(): List<BridgeManagedEntity>
 
     @Query("SELECT * FROM bridge_managed WHERE id = :id")

@@ -86,13 +86,17 @@ class AppGraph(
     val bridgeCatalog: dev.avillagran.ot3android.core.bridge.BridgeCatalogController by lazy {
         dev.avillagran.ot3android.core.bridge.BridgeCatalogController(
             database, connectionManager, appScope, { credentialStore() },
+            mutations = environmentRepository.mutations,
         )
     }
 
     suspend fun pairBridge(invitation: org.json.JSONObject): Boolean {
         bridgeCatalog.open(java.io.File(appContext.noBackupFilesDir, "omabridge").absolutePath)
         val approved = bridgeCatalog.pair(invitation)
-        if (approved) bridgeCatalog.selectBridge(invitation.getJSONObject("address").getString("id"))
+        if (approved) {
+            bridgeCatalog.selectBridge(invitation.getJSONObject("address").getString("id"))
+            bridgeCatalog.refresh()
+        }
         return approved
     }
 

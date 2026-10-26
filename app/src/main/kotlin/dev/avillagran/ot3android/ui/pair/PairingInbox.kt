@@ -38,6 +38,7 @@ class PairingInbox {
         fun linkOf(intent: Intent?): String? {
             if (intent?.action != Intent.ACTION_VIEW) return null
             val data = intent.data ?: return null
+            if (data.scheme == "omabridge" && data.host == "pair") return data.toString()
             if (data.scheme !in setOf("http", "https") || data.path != "/pair") return null
             return data.toString()
         }

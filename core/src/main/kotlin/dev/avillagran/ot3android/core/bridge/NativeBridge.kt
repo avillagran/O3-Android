@@ -21,7 +21,10 @@ object NativeBridge {
                 when (val code = response.optString("error")) {
                     "invalid_input", "invalid_invitation", "unsupported or expired invitation",
                     "pairing denied", "connection setup deadline reached", "no route allowed by local relay policy",
-                    "bridge_not_selected", "peer_address_missing" -> code
+                    "bridge_not_selected", "peer_address_missing", "bridge_catalog_expired", "bridge_catalog_rollback",
+                    "bridge_catalog_equivocation", "bridge_catalog_identity_mismatch", "invalid_bridge_catalog",
+                    "route unavailable", "catalog unavailable", "authority session is not bounded read-only",
+                    "enrollment must be bounded read-only", "descriptor identity mismatch", "T3 session issuance failed" -> code
                     else -> "bridge_operation_failed"
                 }
             }

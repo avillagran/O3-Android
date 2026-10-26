@@ -25,6 +25,7 @@ class BridgeCredentialGateTest {
         }
         val managed = object : BridgeManagedDao {
             var row: BridgeManagedEntity? = null
+            override fun observeAll() = kotlinx.coroutines.flow.flow { emit(all()) }
             override suspend fun all() = listOfNotNull(row)
             override suspend fun find(id: String) = row?.takeIf { it.id == id }
             override suspend fun upsert(row: BridgeManagedEntity) { this.row = row }
