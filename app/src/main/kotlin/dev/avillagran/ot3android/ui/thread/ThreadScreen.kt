@@ -113,6 +113,9 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onBack = onBack,
         modifier = modifier,
         onInspect = viewModel::inspect,
+        onQueueCommand = viewModel::queueCommand,
+        onEditQueued = viewModel::editQueued,
+        onCancelQueueEdit = viewModel::cancelQueueEdit,
     )
 }
 
@@ -131,6 +134,9 @@ fun ThreadContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onInspect: suspend (org.json.JSONObject) -> org.json.JSONObject? = { null },
+    onQueueCommand: (org.json.JSONObject) -> Unit = {},
+    onEditQueued: (org.json.JSONObject) -> Unit = {},
+    onCancelQueueEdit: () -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -199,14 +205,30 @@ fun ThreadContent(
             )
         },
         bottomBar = {
-            Composer(
+            Column(Modifier.navigationBarsPadding().imePadding()) {
+                ThreadQueue(
+                    state.view.timeline?.optJSONObject("queue"),
+                    state.connected && !state.queueBusy && state.unconfirmed.isEmpty(),
+                    onQueueCommand,
+                    onEditQueued,
+                    editingRunId = state.queueEdit?.let { org.json.JSONObject(it).optString("runId") },
+                )
+                if (state.queueEdit != null) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.queue_editing), Modifier.weight(1f), color = Ot3Theme.colors.dim)
+                        TextButton(onClick = onCancelQueueEdit, enabled = !state.queueBusy) {
+                            Text(stringResource(R.string.queue_cancel_edit))
+                        }
+                    }
+                }
+                Composer(
                 draft = state.draft,
                 canSend = state.canSend,
                 sending = state.sending,
                 onDraftChange = onDraftChange,
                 onSend = onSend,
-                modifier = Modifier.navigationBarsPadding().imePadding(),
             )
+            }
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {

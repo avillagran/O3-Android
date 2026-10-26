@@ -2,6 +2,8 @@ package dev.avillagran.ot3android.core.thread
 
 import dev.avillagran.ot3android.core.data.local.OutboxEntity
 import dev.avillagran.ot3android.core.transport.T3Transport
+import dev.avillagran.ot3android.core.transport.DomainCalls
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +42,27 @@ class MessageSender(
     private val scope: CoroutineScope,
     private val newId: () -> String = { ID_PREFIX + UUID.randomUUID() },
 ) {
+    /** Rust builds queue mutations; the host only assigns and durably stores the retry id. */
+    suspend fun queue(
+        transport: T3Transport?,
+        environmentId: String,
+        threadId: String,
+        arguments: JSONObject,
+        domain: DomainCalls = DomainEngine.shared,
+    ): SendResult = detached {
+        if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
+        val command = try {
+            domain.domain("queue.command", JSONObject(arguments.toString()).put("thread", threadId)) as JSONObject
+        } catch (error: T3Exception) {
+            return@detached error.toFailed()
+        }
+        val commandId = newId()
+        command.put("commandId", commandId)
+        val bytes = command.toString()
+        outbox.add(environmentId, threadId, commandId, bytes)
+        dispatch(transport, commandId, bytes)
+    }
+
     suspend fun send(
         transport: T3Transport?,
         environmentId: String,

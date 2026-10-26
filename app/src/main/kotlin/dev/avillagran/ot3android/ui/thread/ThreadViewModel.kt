@@ -50,17 +50,19 @@ data class ThreadUiState(
     val composer: ComposerState = ComposerState(),
     val interrupting: Boolean = false,
     val notice: ThreadNotice? = null,
+    val queueBusy: Boolean = false,
+    val queueEdit: String? = null,
 ) {
     val connected: Boolean get() = connection is ConnectionState.Connected
 
-    val draft: String get() = composer.draft
+    val draft: String get() = queueEdit?.let { org.json.JSONObject(it).optString("text") } ?: composer.draft
 
-    val sending: Boolean get() = composer.sending
+    val sending: Boolean get() = composer.sending || queueBusy
 
     /** Commands whose outcome is unknown, each with Resend and Discard. */
     val unconfirmed: List<PendingCommand> get() = composer.unconfirmed
 
-    val canSend: Boolean get() = composer.canSend && connected
+    val canSend: Boolean get() = connected && !queueBusy && if (queueEdit != null) unconfirmed.isEmpty() else composer.canSend
 
     val canInterrupt: Boolean get() = view.working && view.activeRunId != null && connected && !interrupting
 }
@@ -69,6 +71,8 @@ data class ThreadUiState(
 private data class Local(
     val interrupting: Boolean = false,
     val notice: ThreadNotice? = null,
+    val queueBusy: Boolean = false,
+    val queueEdit: String? = null,
 )
 
 /**
@@ -126,6 +130,8 @@ class ThreadViewModel(
             composer = composer,
             interrupting = local.interrupting,
             notice = local.notice,
+            queueBusy = local.queueBusy,
+            queueEdit = local.queueEdit,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId)))
 
@@ -139,12 +145,49 @@ class ThreadViewModel(
     }
 
     fun onDraftChange(text: String) {
+        if (local.value.queueEdit != null) {
+            local.update { current ->
+                if (current.queueBusy || current.queueEdit == null) current
+                else current.copy(queueEdit = org.json.JSONObject(current.queueEdit).put("text", text).toString())
+            }
+            return
+        }
         composer.onDraftChange(text)
+    }
+
+    /** Editing never replaces the unsent Room draft. The server stream owns the queue row. */
+    fun editQueued(row: org.json.JSONObject) {
+        if (!local.value.queueBusy) local.update { it.copy(queueEdit = row.toString()) }
+    }
+
+    fun cancelQueueEdit() {
+        if (!local.value.queueBusy) local.update { it.copy(queueEdit = null) }
+    }
+
+    /** Queue capability and row data are already projected by Rust's timeline.view. */
+    fun queueCommand(arguments: org.json.JSONObject) {
+        if (!state.value.connected || local.value.queueBusy || state.value.unconfirmed.isNotEmpty()) return
+        local.update { it.copy(queueBusy = true, notice = null) }
+        appScope.launch {
+            try {
+                val result = sender.queue(transport(), environmentId, threadId, arguments)
+                onResult(result)
+                if (arguments.optString("action") == "edit" && result !is SendResult.Failed) {
+                    local.update { it.copy(queueEdit = null) }
+                }
+            } finally {
+                local.update { it.copy(queueBusy = false) }
+            }
+        }
     }
 
     fun send() {
         val current = state.value
-        if (!current.connected) return
+        if (!current.connected || local.value.queueBusy) return
+        if (current.queueEdit != null) {
+            queueCommand(org.json.JSONObject(current.queueEdit).put("action", "edit"))
+            return
+        }
         if (composer.send(current.modelSelection)) local.update { it.copy(notice = null) }
     }
 

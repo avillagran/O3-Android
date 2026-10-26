@@ -1311,6 +1311,12 @@ item 4) through today's `MessageSender`.
 - Data: `queue::derive` (items, `held`, `canSteer`, `canReorder`, hidden message ids;
   `lib:src/queue.rs:5`) and `queue::command` (`:31`), U5. Interim: hidden.
 
+Implementation progress (2026-10-26): the queue strip and sheet now consume the real
+`timeline.view.queue`, with Rust-built persisted Resume/Remove/Reorder/Steer/Edit commands.
+Editing leaves the unsent draft intact. Source drag reorder and reveal motion, plus
+emulator/live evidence, are pending; this does not close UI-3. See
+`docs/ui/compare/ui-3/README.md` for the remaining differences.
+
 #### 4.4.7 Attachments
 
 - Attach opens a sheet: Photos (Android photo picker), Files (Storage Access Framework),

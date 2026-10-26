@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.core.thread
 import dev.avillagran.ot3android.core.data.local.OutboxEntity
 import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
+import dev.avillagran.ot3android.core.transport.assumeHostJni
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
@@ -14,6 +15,40 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MessageSenderTest {
+
+    @Test
+    fun queueEditUsesRustAndUnknownOutcomeRetainsTheExactAttachmentCommand() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        var responses = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (responses++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 8)
+        }
+        val arguments = JSONObject("""{"action":"edit","runId":"queued","text":"Revised","attachments":[{"type":"file","name":"notes.txt","url":"https://t3.test/a"}],"context":{"filePaths":["/repo/file"]}}""")
+        val result = sender.queue(connected(), "env-1", "t1", arguments)
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), result)
+        val stored = dao.rows.value.getValue("ot3a-1")
+        val command = JSONObject(stored.commandJson)
+        assertEquals("queued-run.edit", command.getString("type"))
+        assertEquals("t1", command.getString("threadId"))
+        assertEquals("notes.txt", command.getJSONArray("attachments").getJSONObject(0).getString("name"))
+        assertEquals("/repo/file", command.getJSONObject("context").getJSONArray("filePaths").getString(0))
+        assertEquals(SendResult.Accepted("ot3a-1", 8), sender.retry(fake, "ot3a-1"))
+        assertEquals(fake.calls[0].args.toString(), fake.calls[1].args.toString())
+        assertTrue(dao.rows.value.isEmpty())
+    }
+
+    @Test
+    fun queueRejectsInvalidRustCommandBeforePersistingOrDispatching() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        val result = sender.queue(connected(), "env-1", "t1", JSONObject().put("action", "steer").put("runId", "queued"))
+        assertTrue(result is SendResult.Failed)
+        assertTrue(dao.rows.value.isEmpty())
+        assertTrue(fake.calls.isEmpty())
+        assertEquals(0, counter)
+    }
 
     private val dao = MemoryOutboxDao()
     private val fake = FakeT3Transport()
