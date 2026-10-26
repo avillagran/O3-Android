@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">%1$s tietueella ei ole hintaa.</string>
     <string name="ot3_usage_prices_unavailable">Mallien hinnat eivät ole saatavilla.</string>
     <string name="ot3_usage_refresh_prices">Päivitä hinnat</string>
+    <string name="ot3_usage_limits">Rajat</string>
+    <string name="ot3_usage_resets_at">Nollautuu %1$s</string>
 </resources>

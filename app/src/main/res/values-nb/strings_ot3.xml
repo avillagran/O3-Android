@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">%1$s oppføringer mangler pris.</string>
     <string name="ot3_usage_prices_unavailable">Modellpriser er ikke tilgjengelige.</string>
     <string name="ot3_usage_refresh_prices">Oppdater priser</string>
+    <string name="ot3_usage_limits">Grenser</string>
+    <string name="ot3_usage_resets_at">Tilbakestilles %1$s</string>
 </resources>

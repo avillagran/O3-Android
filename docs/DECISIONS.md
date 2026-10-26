@@ -1009,3 +1009,14 @@ Local date formatting uses APIs available at minSdk 24. Period/environment chang
 cancel reads, and connection replacement invalidates the result. Preserve selection
 with the navigation entry SavedStateHandle. Limits and pricing refresh are separate
 remaining work, not inferred from the synthetic summary used in screenshot tests.
+
+### 2026-10-26 — Visible quota stream and probe pacing
+
+The Limits tab owns a typed server-config stream only while its selected environment
+is visible. Rust quotaSources.apply folds and sanitizes observations; Android only
+controls lifetime, retry and presentation. The application shares a monotonic
+five-minute probe gate per environment, counting failed attempts. Until U26 exposes
+the common presentation, display native usedPercent and absolute reset times without
+recreating pooling or pace rules. Screenshot inputs are frozen native outputs; actual
+JNI stream/reducer behavior is tested separately to avoid Robolectric classloader
+collisions when the complete suite runs.

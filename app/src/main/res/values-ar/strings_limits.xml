@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">لا تتوفر حدود للاستخدام.</string>
+    <string name="limits_used">تم استخدام %1$s</string>
+    <string name="limits_checked">تم التحقق في %1$s</string>
+</resources>

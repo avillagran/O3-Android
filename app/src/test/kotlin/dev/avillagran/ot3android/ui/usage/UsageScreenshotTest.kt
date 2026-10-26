@@ -8,6 +8,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class UsageScreenshotTest : ScreenshotTest() {
+    @Test fun nativeProviderAndHubWindows() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val nativeState = JSONObject(context.assets.open("usage/limits.view.json").bufferedReader().use { it.readText() })
+        val state = UsageState(listOf(Environment("node", "NODE", "http://node.test", createdAt = 0)), "node", tab = "limits", limits = nativeState)
+        snapshot("limits") { UsageScreen(state, {}, {}, {}, {}) }
+        composeRule.onNodeWithText("38% used").assertIsDisplayed()
+        composeRule.onNodeWithText("Team accounts").assertExists()
+    }
+
     @Test fun unavailablePricesExposeExplicitAction() {
         val summary = JSONObject(checkNotNull(javaClass.getResource("/usage/summary.view.json")).readText())
             .put("pricing", "unavailable").put("unpricedRecords", 3)

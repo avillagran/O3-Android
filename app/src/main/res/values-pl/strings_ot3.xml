@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">%1$s rekordów nie ma ceny.</string>
     <string name="ot3_usage_prices_unavailable">Ceny modeli są niedostępne.</string>
     <string name="ot3_usage_refresh_prices">Odśwież ceny</string>
+    <string name="ot3_usage_limits">Limity</string>
+    <string name="ot3_usage_resets_at">Odnowienie %1$s</string>
 </resources>

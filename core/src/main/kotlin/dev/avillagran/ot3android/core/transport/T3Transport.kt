@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android.core.transport
 
+import dev.avillagran.t3.T3Batch
 import dev.avillagran.t3.T3Exception
 import dev.avillagran.t3.ThreadUpdate
 import kotlinx.coroutines.flow.Flow
@@ -87,6 +88,11 @@ interface T3Transport : DomainCalls, Closeable {
      * one subscription and closes it when collection ends. See [threadStream] for the rules.
      */
     fun shellStream(afterSequence: Long? = null, completionMarker: Boolean = false): Flow<ThreadUpdate>
+
+    /** Cold typed server configuration subscription; includes native usage limit sources.
+     * Emits the terminal batch and completes. Opening failures throw; hosts own reconnects.
+     */
+    fun serverConfigStream(): Flow<T3Batch> = throw UnsupportedOperationException("serverConfigStream")
 
     /**
      * A thread stream. Cold: each collection opens one subscription and closes it when the

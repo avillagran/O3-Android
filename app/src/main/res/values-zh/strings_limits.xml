@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">暂无可用的使用限额。</string>
+    <string name="limits_used">已使用 %1$s</string>
+    <string name="limits_checked">检查时间：%1$s</string>
+</resources>

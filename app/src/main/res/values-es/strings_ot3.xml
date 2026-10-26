@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">%1$s registros no tienen precio.</string>
     <string name="ot3_usage_prices_unavailable">Los precios de los modelos no están disponibles.</string>
     <string name="ot3_usage_refresh_prices">Actualizar precios</string>
+    <string name="ot3_usage_limits">Límites</string>
+    <string name="ot3_usage_resets_at">Se restablece %1$s</string>
 </resources>

@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">Inga användningsgränser tillgängliga.</string>
+    <string name="limits_used">%1$s använt</string>
+    <string name="limits_checked">Kontrollerat %1$s</string>
+</resources>

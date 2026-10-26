@@ -16,6 +16,35 @@ import org.junit.Test
 /** Real navigation/VM/connection and JNI, synthetic diagnostics server. */
 class UsageDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
+    @Test fun limitsStreamRotationTabsAndBackReleaseSubscription() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("nav_tab_Settings").performClick()
+            rule.onNodeWithTag("settings_Usage").performClick()
+            rule.onNodeWithTag("usage_tab_limits").performClick()
+            rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithText("38% used").assertIsDisplayed()
+            scenario.onActivity { assertEquals(1, it.fixture.transport.serverConfigCollectors().value); it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+            rule.waitForIdle()
+            rule.onNodeWithTag("usage_tab_limits").assertIsSelected()
+            rule.onNodeWithTag("usage_page").performScrollToNode(hasText("Team accounts"))
+            rule.onNodeWithText("Team accounts").assertIsDisplayed()
+            rule.onNodeWithTag("usage_page").performScrollToIndex(0)
+            rule.onNodeWithTag("usage_tab_usage").performClick()
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }
+            scenario.onActivity { assertEquals(0, it.fixture.transport.serverConfigCollectors().value) }
+            rule.onNodeWithTag("usage_tab_limits").performClick()
+            rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithText("Back").performClick()
+            rule.waitForIdle()
+            scenario.onActivity {
+                assertEquals(0, it.fixture.transport.serverConfigCollectors().value)
+                assertEquals(1, it.fixture.transport.calls.count { call -> call.fn == "server.refreshProviders" })
+            }
+        }
+    }
+
     @Test fun refreshPricesReadsUpdatedSummaryWithoutDispatch() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)

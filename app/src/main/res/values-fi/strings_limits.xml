@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">Käyttörajoja ei ole saatavilla.</string>
+    <string name="limits_used">%1$s käytetty</string>
+    <string name="limits_checked">Tarkistettu %1$s</string>
+</resources>

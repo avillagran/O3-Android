@@ -27,7 +27,7 @@ import java.util.Currency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit, onRefreshPrices: () -> Unit = {}) {
+fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit, onRefreshPrices: () -> Unit = {}, onTab: (String) -> Unit = {}) {
     val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     var metric by rememberSaveable { mutableStateOf("cost") }
     Scaffold(topBar = {
@@ -41,20 +41,23 @@ fun UsageScreen(state: UsageState, onEnvironment: (String) -> Unit, onPeriod: (S
     }) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).padding(horizontal = 14.dp).testTag("usage_page"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
-                if (landscape) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("usage" to R.string.ot3_usage_title, "limits" to R.string.ot3_usage_limits).forEach { (id, label) ->
+                        FilterChip(selected = state.tab == id, onClick = { onTab(id) }, label = { Text(stringResource(label)) }, modifier = Modifier.testTag("usage_tab_$id"))
+                    }
+                    if (landscape && state.tab == "usage") UsagePeriods(state.period, onPeriod, Modifier.weight(1f))
+                    else Spacer(Modifier.weight(1f))
                     UsageEnvironment(state, onEnvironment)
-                    UsagePeriods(state.period, onPeriod)
-                } else Column {
-                    UsageEnvironment(state, onEnvironment)
-                    UsagePeriods(state.period, onPeriod)
                 }
+                if (!landscape && state.tab == "usage") UsagePeriods(state.period, onPeriod)
             }
             when {
                 state.busy -> item { Text(stringResource(R.string.ot3_usage_loading)) }
                 state.offline -> item { Text(stringResource(R.string.ot3_usage_offline)) }
                 state.failed -> item { Text(stringResource(R.string.ot3_usage_unavailable), color = Ot3Theme.colors.failed) }
             }
-            state.summary?.let { summary ->
+            if (state.tab == "limits") usageLimits(state.limits)
+            state.summary?.takeIf { state.tab == "usage" }?.let { summary ->
                 item { UsageTotals(summary, landscape) }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -112,8 +115,8 @@ private fun UsageEnvironment(state: UsageState, onEnvironment: (String) -> Unit)
 }
 
 @Composable
-private fun UsagePeriods(period: String, onPeriod: (String) -> Unit) {
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+private fun UsagePeriods(period: String, onPeriod: (String) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf("day" to R.string.ot3_usage_day, "week" to R.string.ot3_usage_week, "month" to R.string.ot3_usage_month, "quarter" to R.string.ot3_usage_quarter).forEach { (id, label) ->
             FilterChip(selected = period == id, onClick = { onPeriod(id) }, label = { Text(stringResource(label)) }, modifier = Modifier.testTag("usage_period_$id"))
         }
