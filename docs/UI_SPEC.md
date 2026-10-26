@@ -2314,3 +2314,11 @@ installed bridge lacks catalog publication. Candidate LocalT3Authority is local-
 so remote NODE additionally needs OB6 delegated issuance. Android must keep one bridge
 pairing flow; do not substitute manual per-host setup as acceptance. See
 [remote authority](bridge/REMOTE_AUTHORITY.md) for identity, trust and test boundaries.
+
+Delegated issuer checkpoint: OmaBridge PR4 (`bdf01d4`) implements OB6 with
+explicit issuer consent. The native two-bridge/two-real-T3 smoke passes, including
+read-only scope and expiry. Android now requires distinct issuer identity and
+completed delegated issuance evidence. API36.1 acceptance remains red at catalog
+freshness (`bridge_catalog_expired`); the common clock-skew request is tracked in
+LIB_REQUESTS. No productive NODE discovery, Home capture, or physical acceptance
+is claimed. Lab TLS artifacts are replaced by production-flavor SDKs after tests.

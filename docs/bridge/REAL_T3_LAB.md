@@ -99,3 +99,11 @@ Both core and app Gradle invocations explicitly select `emulator-5580`, includin
 `android.injected.device.serial`; a connected physical phone is not a test target.
 Do not interpret normal CI's opt-in skip as a passing delegated lab. The final
 candidate source must be committed and pinned before running this acceptance test.
+
+Current candidate `bdf01d4`: native real-T3 smoke passes; both Android lab runs
+fail at catalog refresh with `bridge_catalog_expired`. Instrumentation log timing
+measured host minus device at receipt as764ms, including transport latency.
+The common validator rejects any future issue timestamp. This is recorded in
+LIB_REQUESTS; no clock normalization or acceptance bypass is added here. Full UI
+lab execution did not start because core acceptance failed. SDK production flavor
+was restored for host, x86_64 and arm64 after the diagnostic runs.
