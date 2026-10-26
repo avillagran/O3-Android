@@ -60,3 +60,35 @@ Limits routing, background/resume, empty observations and disconnect/reconnect.
   policy. Bars/numbers never animate. The existing Usage/Limits **160 ms tab fade
   remains pending**, separate from this strip/lifecycle increment.
 - Physical-device and productive provider/network evidence remain separate work.
+
+## Verified result
+
+- JVM: **218 app tests passed**, **287 core passed / 5 skipped** (including the
+  native quota pipeline and focused shared-source/refcount/reconnect tests).
+- `assembleDebug`, `assembleDebugAndroidTest`, production bridge verification,
+  `lintDebug` and **all** `verifyRoborazziDebug` passed, sequentially before device QA.
+- API 36.1 `ot3a361`, explicit serial `emulator-5580`: **6/6** instrumented tests
+  passed (`QuotaStripDeviceTest` 3 and existing `UsageDeviceTest` 3). The run includes
+  actual Appearance persistence/recreation, both themes, empty/offline/reconnect,
+  draft retention, overlap in the landscape Home sidebar/thread, Limits/Back,
+  zero config collectors in background and provider probe pacing across navigation.
+- The source change to composable Usage dispatch is regression-covered by the typed
+  route/Back test. A full non-incremental Kotlin compile was used before final QA;
+  both production and debug overrides were verified to match the interface signature.
+- Debug APK SHA256:
+  `5287d9c9203091ffbe6daf8b9d58163f6fde7c2bcad8d4a4f85285565dc31775`.
+  This is a development fixture build, not a phone delivery or release.
+- Helper/app closed, Device panel detached and emulator stopped after export.
+
+| Surface | Tokyo Night | Catppuccin Latte |
+|---|---|---|
+| Home | [before](device/home-before.tokyo-night.png) / [after](device/home-after.tokyo-night.png) | [before](device/home-before.catppuccin-latte.png) / [after](device/home-after.catppuccin-latte.png) |
+| Thread, same draft | [before](device/thread-before.tokyo-night.png) / [after](device/thread-after.tokyo-night.png) | [before](device/thread-before.catppuccin-latte.png) / [after](device/thread-after.catppuccin-latte.png) |
+| Landscape shared sidebar + thread | [Tokyo](device/thread-landscape.tokyo-night.png) | [Latte](device/thread-landscape.catppuccin-latte.png) |
+
+[Actual toggle and navigation video, 18 seconds](toggle-navigation.mp4) is a trimmed,
+scaled recording of the successful instrumented run, covering both palettes. It
+includes real orientation changes, with Android's screenrecord letterboxing. No
+failed-run video or captures are included. The captures above were overwritten by
+and exported from the final successful run; synthetic fixture provenance applies
+throughout.

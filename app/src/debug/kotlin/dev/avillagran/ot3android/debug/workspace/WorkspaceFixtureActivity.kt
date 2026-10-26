@@ -64,6 +64,7 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                                 onOpenLimits = { navigator.push(dev.avillagran.ot3android.ui.navigation.QuotaLimits()) })
                         })
                     }
+                    // Route arguments are explicit, matching the production screen dispatch.
                     @Composable override fun Usage(initialTab: String, environmentId: String?) {
                         val model: dev.avillagran.ot3android.ui.usage.UsageViewModel = viewModel {
                             dev.avillagran.ot3android.ui.usage.UsageViewModel(
