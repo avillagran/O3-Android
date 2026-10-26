@@ -19,6 +19,8 @@ import dev.avillagran.ot3android.R
  * that folder's NOTICE.md and add the icon here.
  */
 object Ot3Icons {
+    @DrawableRes val Star: Int = R.drawable.ic_star
+    @DrawableRes val StarFilled: Int = R.drawable.ic_star_filled
     @DrawableRes val AlarmClock: Int = R.drawable.ic_alarm_clock
     @DrawableRes val ArrowUp: Int = R.drawable.ic_arrow_up
     @DrawableRes val Bot: Int = R.drawable.ic_bot
@@ -125,6 +127,8 @@ object Ot3Icons {
         "smartphone" to Smartphone,
         "square-pen" to SquarePen,
         "stop-filled" to StopFilled,
+        "star" to Star,
+        "star-filled" to StarFilled,
         "t3-logo" to T3Logo,
         "undo-2" to Undo2,
         "x" to X,

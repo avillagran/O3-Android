@@ -52,6 +52,8 @@ data class ThreadUiState(
     val notice: ThreadNotice? = null,
     val queueBusy: Boolean = false,
     val queueEdit: String? = null,
+    val modelCatalog: String? = null,
+    val modelsLoading: Boolean = false,
 ) {
     val connected: Boolean get() = connection is ConnectionState.Connected
 
@@ -73,6 +75,9 @@ private data class Local(
     val notice: ThreadNotice? = null,
     val queueBusy: Boolean = false,
     val queueEdit: String? = null,
+    val modelCatalog: String? = null,
+    val modelsLoading: Boolean = false,
+    val selectedModel: String? = null,
 )
 
 /**
@@ -89,10 +94,12 @@ class ThreadViewModel(
     outbox: OutboxRepository,
     private val sender: MessageSender,
     private val appScope: CoroutineScope,
+    private val preferences: dev.avillagran.ot3android.core.data.prefs.ComposerPreferences? = null,
 ) : ViewModel() {
 
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
     private val local = MutableStateFlow(Local())
+    private var modelSave: kotlinx.coroutines.Job? = null
 
     private val session = ThreadSession(
         threadId,
@@ -125,17 +132,27 @@ class ThreadViewModel(
         ThreadUiState(
             view = view,
             title = view.title ?: shellRow?.title,
-            modelSelection = view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
+            modelSelection = local.selectedModel ?: view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
             connection = connection,
             composer = composer,
             interrupting = local.interrupting,
             notice = local.notice,
             queueBusy = local.queueBusy,
             queueEdit = local.queueEdit,
+            modelCatalog = local.modelCatalog,
+            modelsLoading = local.modelsLoading,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId)))
 
     init {
+        viewModelScope.launch {
+            try {
+                val saved = preferences?.model(environmentId, threadId)
+                if (saved != null) local.update { if (it.selectedModel == null) it.copy(selectedModel = saved) else it }
+            } catch (_: java.io.IOException) {
+                local.update { it.copy(notice = ThreadNotice.Failed("model_draft_read_failed")) }
+            }
+        }
         viewModelScope.launch {
             val found = connections.supervisor(environmentId) ?: return@launch
             found.start()
@@ -154,6 +171,87 @@ class ThreadViewModel(
         }
         composer.onDraftChange(text)
     }
+
+    /** Native catalog projection hides disabled/hidden models and preserves provider identities. */
+    fun refreshModels() {
+        if (local.value.modelsLoading) return
+        val live = transport() ?: return
+        local.update { it.copy(modelsLoading = true) }
+        viewModelScope.launch {
+            try {
+                val config = live.call("server.getConfig", org.json.JSONObject()) as org.json.JSONObject
+                val catalog = dev.avillagran.ot3android.core.transport.DomainEngine.shared.domain(
+                    "models.catalog", org.json.JSONObject().put("config", config),
+                ) as org.json.JSONObject
+                if (transport() === live) local.update { it.copy(modelCatalog = catalog.toString()) }
+            } catch (error: dev.avillagran.t3.T3Exception) {
+                local.update { it.copy(notice = ThreadNotice.Failed(error.code, error.reason, error.requiredScope)) }
+            } finally {
+                local.update { it.copy(modelsLoading = false) }
+            }
+        }
+    }
+
+    fun selectModel(row: org.json.JSONObject) {
+        if (state.value.sending || local.value.queueEdit != null || !row.optBoolean("available")) return
+        // Values are the exact identities in models.catalog, not provider/display-name guesses.
+        val selected = org.json.JSONObject().put("instanceId", row.getString("instanceId"))
+            .put("model", row.getString("model")).put("options", org.json.JSONArray())
+        saveModelSelection(selected)
+    }
+
+    fun favoriteModel(row: org.json.JSONObject, favorite: Boolean) {
+        val catalog = local.value.modelCatalog?.let(::orgJson) ?: return
+        if (!catalog.optBoolean("favoritesReady") || local.value.modelsLoading) return
+        val live = transport() ?: return
+        local.update { it.copy(modelsLoading = true) }
+        viewModelScope.launch {
+            try {
+                val domain = dev.avillagran.ot3android.core.transport.DomainEngine.shared
+                val payload = domain.domain("models.favoritePayload", org.json.JSONObject()
+                    .put("provider", row.getString("instanceId")).put("model", row.getString("model"))
+                    .put("favorite", favorite)) as org.json.JSONObject
+                val settings = live.call("server.updateSettings", payload) as org.json.JSONObject
+                val preferences = domain.domain("models.preferences", org.json.JSONObject().put("settings", settings)) as org.json.JSONObject
+                if (transport() === live) local.update { current ->
+                    val updated = current.modelCatalog?.let(::orgJson) ?: catalog
+                    current.copy(modelCatalog = updated.put("favorites", preferences.getJSONArray("favorites"))
+                        .put("favoritesReady", preferences.getBoolean("favoritesReady")).toString())
+                }
+            } catch (error: dev.avillagran.t3.T3Exception) {
+                local.update { it.copy(notice = ThreadNotice.Failed(error.code, error.reason, error.requiredScope)) }
+            } finally {
+                local.update { it.copy(modelsLoading = false) }
+            }
+        }
+    }
+
+    fun selectModelOption(id: String, value: Any) {
+        if (state.value.sending || local.value.queueEdit != null) return
+        val selection = (local.value.selectedModel ?: state.value.modelSelection)?.let(::orgJson) ?: return
+        val previous = selection.optJSONArray("options") ?: org.json.JSONArray()
+        val options = org.json.JSONArray()
+        for (i in 0 until previous.length()) {
+            val option = previous.getJSONObject(i)
+            if (option.optString("id") != id) options.put(option)
+        }
+        options.put(org.json.JSONObject().put("id", id).put("value", value))
+        saveModelSelection(selection.put("options", options))
+    }
+
+    private fun saveModelSelection(selection: org.json.JSONObject) {
+        val bytes = selection.toString()
+        local.update { it.copy(selectedModel = bytes) }
+        modelSave?.cancel()
+        modelSave = appScope.launch {
+            try { preferences?.saveModel(environmentId, threadId, bytes) }
+            catch (_: java.io.IOException) {
+                local.update { it.copy(notice = ThreadNotice.Failed("model_draft_save_failed")) }
+            }
+        }
+    }
+
+    private fun orgJson(value: String) = org.json.JSONObject(value)
 
     /** Editing never replaces the unsent Room draft. The server stream owns the queue row. */
     fun editQueued(row: org.json.JSONObject) {
@@ -188,7 +286,7 @@ class ThreadViewModel(
             queueCommand(org.json.JSONObject(current.queueEdit).put("action", "edit"))
             return
         }
-        if (composer.send(current.modelSelection)) local.update { it.copy(notice = null) }
+        if (composer.send(local.value.selectedModel ?: current.modelSelection)) local.update { it.copy(notice = null) }
     }
 
     /** Resends an unconfirmed command, byte-identical; the draft is not touched. */

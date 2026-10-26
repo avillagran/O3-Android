@@ -56,6 +56,8 @@ class AppGraph(
 
     val selectionPreferences: SelectionPreferences by lazy { SelectionPreferences(appContext) }
 
+    val composerPreferences by lazy { dev.avillagran.ot3android.core.data.prefs.ComposerPreferences(appContext) }
+
     val shellCursors: ShellCursorPreferences by lazy { ShellCursorPreferences(appContext) }
 
     val appearancePreferences: AppearancePreferences by lazy { AppearancePreferences(appContext) }

@@ -27,7 +27,7 @@ source-style drag reorder is still pending.
 
 ## Remaining composer differences
 
-- Model picker with favorites/provider rail; option descriptors and permission picker.
+- Model picker now reads models.catalog, renders provider/favorites sections and server-owned favorites, and sends the selected instance/model/options with the next message. Boolean/select descriptors render directly. Per-thread model/option drafts persist in DataStore. Source provider icons, rail sizing, fuzzy search ordering and legacy badges still need visual completion; search currently preserves native catalog order with a text filter. Permission picker remains open.
 - Plan / Build and slash/completion workflows.
 - New-message queue/steer delivery and attachment sends require the existing common
   `composer.message` builder request (LIB_REQUESTS §2); no Kotlin replacement is added.
@@ -38,3 +38,17 @@ source-style drag reorder is still pending.
   an unfinished queue edit as a new message.
 
 This increment does not close UI-3 or claim parity with the desktop composer.
+
+## Model/options increment (2026-10-26)
+
+- Source: ot3 T3ModelPicker.qml and T3ModelOptions.qml; model selection shape follows
+  T3Backend.qml:739-755. Native catalog controls enabled/hidden/order/availability.
+- Server calls: server.getConfig -> models.catalog; favorite mutations use
+  models.favoritePayload -> server.updateSettings -> models.preferences. No local copy
+  of server favorites. An uninitialized favorites list stays read-only.
+- Model and descriptor options persist per environment/thread in a separate non-secret
+  DataStore. DataStore recreation and separator-containing identities are tested.
+- Compose tests cover duplicate model slugs on distinct provider instances, advertised
+  option ids/values and unavailable favorite preferences.
+- Complete app/core JVM and lint passed after this change. No model-picker device
+  evidence yet; emulator remains reserved for UI-1 integration.

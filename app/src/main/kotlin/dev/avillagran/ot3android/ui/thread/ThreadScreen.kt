@@ -116,6 +116,10 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onQueueCommand = viewModel::queueCommand,
         onEditQueued = viewModel::editQueued,
         onCancelQueueEdit = viewModel::cancelQueueEdit,
+        onRefreshModels = viewModel::refreshModels,
+        onSelectModel = viewModel::selectModel,
+        onSelectModelOption = viewModel::selectModelOption,
+        onFavoriteModel = viewModel::favoriteModel,
     )
 }
 
@@ -137,6 +141,10 @@ fun ThreadContent(
     onQueueCommand: (org.json.JSONObject) -> Unit = {},
     onEditQueued: (org.json.JSONObject) -> Unit = {},
     onCancelQueueEdit: () -> Unit = {},
+    onRefreshModels: () -> Unit = {},
+    onSelectModel: (org.json.JSONObject) -> Unit = {},
+    onSelectModelOption: (String, Any) -> Unit = { _, _ -> },
+    onFavoriteModel: (org.json.JSONObject, Boolean) -> Unit = { _, _ -> },
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -227,6 +235,11 @@ fun ThreadContent(
                 sending = state.sending,
                 onDraftChange = onDraftChange,
                 onSend = onSend,
+                toolbar = {
+                    ComposerModels(state.modelCatalog, state.modelSelection, state.modelsLoading,
+                        state.connected && !state.sending && state.queueEdit == null,
+                        onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel)
+                },
             )
             }
         },
@@ -364,6 +377,7 @@ private fun Composer(
     onDraftChange: (String) -> Unit,
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
+    toolbar: @Composable () -> Unit = {},
 ) {
     val colors = Ot3Theme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -371,11 +385,12 @@ private fun Composer(
     val border by animateColorAsState(if (focused) colors.composerFocus else colors.composerBorder,
         Ot3Theme.motion.colorChange(), label = "composerBorder")
     Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
+        Column {
         Row(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                .border(1.dp, border, RoundedCornerShape(10.dp))
-                .background(colors.surface, RoundedCornerShape(10.dp)).padding(4.dp),
+                .border(1.dp, border, RoundedCornerShape(17.dp))
+                .background(colors.surface, RoundedCornerShape(17.dp)).padding(4.dp),
         ) {
             BasicTextField(
                 value = draft,
@@ -399,6 +414,8 @@ private fun Composer(
                 else Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend,
                     modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = colors.accent)
             }
+        }
+        toolbar()
         }
     }
 }

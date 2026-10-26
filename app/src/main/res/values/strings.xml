@@ -133,4 +133,13 @@
     <string name="queue_editing">Editing queued message</string>
     <string name="queue_cancel_edit">Cancel edit</string>
     <string name="queue_command_pending">Wait for the current action, or retry its unconfirmed command.</string>
+    <string name="composer_model">Model</string>
+    <string name="composer_loading_models">Loading models…</string>
+    <string name="composer_search_models">Search models…</string>
+    <string name="composer_options">Model options</string>
+    <string name="composer_favorites">Favorites</string>
+    <string name="composer_no_models">No results</string>
+    <string name="composer_legacy_models">Legacy models</string>
+    <string name="composer_add_favorite">Add to favorites</string>
+    <string name="composer_remove_favorite">Remove from favorites</string>
 </resources>

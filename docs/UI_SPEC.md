@@ -1262,6 +1262,11 @@ focused, 12 dp margins (`ot3:ui/qml/T3Composer.qml:263-271`). Layout (T3 Mobile)
   with the next message. Interim: read-only label from the thread's `modelSelection`
   (`app/src/main/kotlin/dev/avillagran/ot3android/ui/thread/ThreadViewModel.kt:48`).
 
+Implementation progress (2026-10-26): model selection and select/boolean descriptors
+now consume the native model catalog; server favorites use native payload/preferences,
+and local per-thread model/options persist in DataStore. Provider icons, exact rail and
+fuzzy-search presentation plus emulator evidence remain open. UI-3 is not closed.
+
 #### 4.4.4 Options, permissions and Plan / Build
 
 - **Options** (`sliders-horizontal`): a sheet of the model's descriptors, label + select
