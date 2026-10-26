@@ -115,12 +115,33 @@ Validation: focused JVM motion/screen/view-model tests and lint passed; all six
 existing UsageScreenshotTest Tokyo Night/Latte goldens pass unchanged. The clock
 controlled test checks intermediate opacity, completion, tab restart, and turning
 motion off during an entrance. Screen interaction checks metric and period
-retention and no refresh on a round trip. This increment has JVM evidence only;
-no new emulator recording or physical/live acceptance is claimed.
+retention and no refresh on a round trip. The following device follow-up adds emulator evidence; physical/live acceptance
+is not claimed.
 
 Device evidence attempt: `device_list` found `ot3a361` stopped; `device_open`
 failed before ADB came online. The project launcher was then awaited with that
 same API36.1 AVD and software rendering. It exited during compatibility checks:
 `FATAL | Your device does not have enough disk space to run avd: ot3a361`.
 The host had 2.0 GiB free; no guest boot, instrumentation or video occurred.
-Emulator evidence remains pending host disk headroom.
+The disk blocker was resolved by reclaiming regenerable build cache. The device
+panel launcher subsequently failed with SIGSEGV using GPU auto; the awaited
+project launcher with software rendering booted API36.1 on `emulator-5580`.
+
+
+API36.1 follow-up: `repeatedTabEntrancesKeepOneSubscription` passed both normally
+and with opt-in `motionEvidence=true`. Three tab round trips retain the Tokens
+metric, have one configuration collector on Limits and zero on Usage, trigger one
+provider probe in total and no price refresh. Debug/instrumentation builds and lint
+pass. No normal CI sleeps were added: recording pauses and clock stepping are
+exclusive to the opt-in instrumentation argument.
+
+[Video](motion-device/tab-entrance.mp4) (10.88 s, Tokyo Night) shows the same native
+body at intermediate opacity and settled opacity; [entering](motion-device/limits-entering.png)
+and [settled](motion-device/limits-settled.png) frames show the stable header and
+controls. Inspected the full contact sheet and transition frames. Compose test
+clocks otherwise fast-forward animations before screenrecord draws them, so this
+video explicitly advances 16 ms clock frames with wall-clock pauses. It proves
+rendered intermediate/settled states and layout, **not** real-time 160 ms timing
+or manually assessed feel; duration/reduced motion are covered by the JVM clock
+test. Data are synthetic over the real connection/VM/JNI path. The guest was
+stopped after recording; no Xiaomi operation occurred.
