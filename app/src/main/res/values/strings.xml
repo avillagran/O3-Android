@@ -132,4 +132,5 @@
     <string name="queue_unavailable">Queued message · content unavailable</string>
     <string name="queue_editing">Editing queued message</string>
     <string name="queue_cancel_edit">Cancel edit</string>
+    <string name="queue_command_pending">Wait for the current action, or retry its unconfirmed command.</string>
 </resources>

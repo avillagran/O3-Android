@@ -9,6 +9,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -51,6 +52,9 @@ class MessageSender(
         domain: DomainCalls = DomainEngine.shared,
     ): SendResult = detached {
         if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
+        // Keep the same retry id even before the composer's Flow has observed an unknown result.
+        val pending = outbox.observeThread(environmentId, threadId).first().firstOrNull()
+        if (pending != null) return@detached SendResult.Failed(COMMAND_PENDING)
         val command = try {
             domain.domain("queue.command", JSONObject(arguments.toString()).put("thread", threadId)) as JSONObject
         } catch (error: T3Exception) {
@@ -153,6 +157,9 @@ class MessageSender(
 
         /** Not a lib code: the command is no longer in the outbox. */
         const val NOT_IN_OUTBOX = "not_in_outbox"
+
+        /** Host bookkeeping: wait for the current durable mutation before starting another. */
+        const val COMMAND_PENDING = "command_pending"
 
         /** The lib's code for arguments its validator refuses. */
         const val INVALID_INPUT = "invalid_input"

@@ -418,6 +418,7 @@ private fun noticeText(notice: ThreadNotice): String = when (notice) {
             ?: stringResource(R.string.thread_notice_rejected_plain)
         "write_not_authorized" -> stringResource(R.string.thread_notice_scope, notice.requiredScope ?: "orchestration:operate")
         "not_connected" -> stringResource(R.string.thread_notice_not_connected)
+        "command_pending" -> stringResource(R.string.queue_command_pending)
         else -> errorText(notice.code)
     }
 }

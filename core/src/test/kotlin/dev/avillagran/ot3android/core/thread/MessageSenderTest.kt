@@ -34,6 +34,10 @@ class MessageSenderTest {
         assertEquals("t1", command.getString("threadId"))
         assertEquals("notes.txt", command.getJSONArray("attachments").getJSONObject(0).getString("name"))
         assertEquals("/repo/file", command.getJSONObject("context").getJSONArray("filePaths").getString(0))
+        // A second tap before UI flow delivery cannot mint a different mutation id.
+        assertEquals(SendResult.Failed(MessageSender.COMMAND_PENDING), sender.queue(fake, "env-1", "t1", arguments))
+        assertEquals(1, fake.calls.size)
+        assertEquals(1, counter)
         assertEquals(SendResult.Accepted("ot3a-1", 8), sender.retry(fake, "ot3a-1"))
         assertEquals(fake.calls[0].args.toString(), fake.calls[1].args.toString())
         assertTrue(dao.rows.value.isEmpty())
