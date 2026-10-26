@@ -211,4 +211,6 @@
     <string name="ot3_pr_action_required">Azione richiesta</string>
     <string name="ot3_pr_skipped">Saltato</string>
     <string name="ot3_pr_cancelled">Annullata</string>
+    <string name="ot3_queue_reorder">Riordina messaggio</string>
+    <string name="ot3_queue_move_down">Sposta giù</string>
 </resources>

@@ -211,4 +211,6 @@
     <string name="ot3_pr_action_required">Потрібна дія</string>
     <string name="ot3_pr_skipped">Пропущено</string>
     <string name="ot3_pr_cancelled">Скасовано</string>
+    <string name="ot3_queue_reorder">Змінити порядок повідомлення</string>
+    <string name="ot3_queue_move_down">Перемістити вниз</string>
 </resources>

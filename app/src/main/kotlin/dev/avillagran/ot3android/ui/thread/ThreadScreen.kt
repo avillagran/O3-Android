@@ -238,10 +238,15 @@ fun ThreadContent(
             Column(Modifier.navigationBarsPadding().imePadding()) {
                 ThreadQueue(
                     state.view.timeline?.optJSONObject("queue"),
-                    state.connected && !state.queueBusy && state.unconfirmed.isEmpty(),
+                    state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
                     onQueueCommand,
                     onEditQueued,
                     editingRunId = state.queueEdit?.let { org.json.JSONObject(it).optString("runId") },
+                    dragOwner = state.view.threadId to state.queueConnection,
+                    feedback = {
+                        state.notice?.let { Text(noticeText(it), Modifier.padding(horizontal = 16.dp), color = Ot3Theme.colors.failed) }
+                        state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
+                    },
                 )
                 if (state.queueEdit != null) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {

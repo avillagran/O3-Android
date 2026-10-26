@@ -211,4 +211,6 @@
     <string name="ot3_pr_action_required">Handling kræves</string>
     <string name="ot3_pr_skipped">Sprunget over</string>
     <string name="ot3_pr_cancelled">Annulleret</string>
+    <string name="ot3_queue_reorder">Omarranger besked</string>
+    <string name="ot3_queue_move_down">Flyt ned</string>
 </resources>

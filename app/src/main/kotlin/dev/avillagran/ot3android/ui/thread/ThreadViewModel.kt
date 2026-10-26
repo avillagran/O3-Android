@@ -47,6 +47,7 @@ data class ThreadUiState(
     /** The thread's `modelSelection` (compact JSON) from the projection, else the shell row's. */
     val modelSelection: String? = null,
     val connection: ConnectionState = ConnectionState.Disconnected,
+    val queueConnection: Connection? = null,
     val composer: ComposerState = ComposerState(),
     val interrupting: Boolean = false,
     val notice: ThreadNotice? = null,
@@ -117,8 +118,10 @@ class ThreadViewModel(
         onResult = ::onResult,
     )
 
-    private val connection: Flow<ConnectionState> =
-        supervisor.flatMapLatest { it?.state ?: flowOf(ConnectionState.Disconnected) }
+    private val connection: Flow<Pair<ConnectionState, Connection?>> = supervisor.flatMapLatest { current ->
+        if (current == null) flowOf(ConnectionState.Disconnected to null)
+        else combine(current.state, current.connection) { status, owner -> status to owner }
+    }
 
     /** This thread's sidebar row: the title before the snapshot, and the fallback model selection. */
     private val shellRow: Flow<ShellThread?> = supervisor
@@ -137,7 +140,8 @@ class ThreadViewModel(
             view = view,
             title = view.title ?: shellRow?.title,
             modelSelection = local.selectedModel ?: view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
-            connection = connection,
+            connection = connection.first,
+            queueConnection = connection.second,
             composer = composer,
             interrupting = local.interrupting,
             notice = local.notice,
@@ -316,7 +320,7 @@ class ThreadViewModel(
 
     /** Queue capability and row data are already projected by Rust's timeline.view. */
     fun queueCommand(arguments: org.json.JSONObject) {
-        if (!state.value.connected || local.value.queueBusy || local.value.respondingRequest != null || state.value.unconfirmed.isNotEmpty()) return
+        if (!state.value.connected || state.value.view.stale || state.value.sending || local.value.queueBusy || local.value.respondingRequest != null || state.value.unconfirmed.isNotEmpty()) return
         local.update { it.copy(queueBusy = true, notice = null) }
         appScope.launch {
             try {
@@ -335,7 +339,7 @@ class ThreadViewModel(
         val current = state.value
         if (!current.connected || local.value.queueBusy || local.value.respondingRequest != null) return
         if (current.queueEdit != null) {
-            queueCommand(org.json.JSONObject(current.queueEdit).put("action", "edit"))
+            queueCommand(queueEditArguments(org.json.JSONObject(current.queueEdit)))
             return
         }
         if (composer.send(local.value.selectedModel ?: current.modelSelection)) local.update { it.copy(notice = null) }
@@ -419,3 +423,9 @@ class ThreadViewModel(
         session.close()
     }
 }
+
+/** UI row metadata is not an argument of the strict native queue.command contract. */
+internal fun queueEditArguments(row: org.json.JSONObject): org.json.JSONObject = org.json.JSONObject()
+    .put("action", "edit").put("runId", row.getString("runId")).put("text", row.optString("text"))
+    .put("attachments", row.optJSONArray("attachments") ?: org.json.JSONArray())
+    .apply { row.optJSONObject("context")?.let { put("context", it) } }

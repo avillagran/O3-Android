@@ -211,4 +211,6 @@
     <string name="ot3_pr_action_required">操作が必要</string>
     <string name="ot3_pr_skipped">スキップ</string>
     <string name="ot3_pr_cancelled">キャンセル済み</string>
+    <string name="ot3_queue_reorder">メッセージの順序を変更</string>
+    <string name="ot3_queue_move_down">下へ移動</string>
 </resources>
