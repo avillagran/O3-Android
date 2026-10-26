@@ -29,4 +29,20 @@ class MainActivitySmokeTest {
         composeRule.onNodeWithTag(ConnectScreenTags.URL).assertIsDisplayed()
         composeRule.onNodeWithTag(ConnectScreenTags.TOKEN).assertIsDisplayed()
     }
+    @Test fun productionDeepLinkKeepsSidebarReachableWithoutLoadedThread() {
+        composeRule.activityRule.scenario.onActivity {
+            it.startActivity(android.content.Intent(it, MainActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP).setData(android.net.Uri.parse("ot3a://thread/missing-environment/missing-thread")))
+        }
+        composeRule.waitUntil(10_000) {
+            composeRule.onAllNodesWithTag("thread_sidebar_toggle").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed().performClick()
+        composeRule.onNodeWithTag(HomeTags.NO_ENVIRONMENTS).assertIsDisplayed()
+        composeRule.onNodeWithTag("thread_sidebar_toggle").performClick()
+        composeRule.onNodeWithTag(dev.avillagran.ot3android.ui.thread.ThreadScreenTags.LOADING).assertIsDisplayed()
+        composeRule.activityRule.scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed()
+    }
+
 }

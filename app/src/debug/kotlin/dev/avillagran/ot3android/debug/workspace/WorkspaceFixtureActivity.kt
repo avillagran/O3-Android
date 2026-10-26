@@ -98,6 +98,9 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         onBoundedThread("chat") { bounded() }
         onDomain("timeline.view") { DomainEngine.shared.domain("timeline.view", it) }
         onDomain("projection.apply") { DomainEngine.shared.domain("projection.apply", it) }
+        onCall("orchestration.getTurnItem") { args ->
+            JSONObject().put("item", fixtureItems().objects().firstOrNull { it.optString("id") == args.optString("itemId") })
+        }
     }
     val connections = ConnectionManager(repository, cursors, object : T3TransportFactory {
         override fun create(): T3Transport = transport
@@ -129,10 +132,31 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
     private fun bounded(): JSONObject {
         val messages = JSONArray()
         repeat(60) { i -> messages.put(JSONObject().put("id", "m$i").put("role", if (i % 2 == 0) "user" else "assistant")
-            .put("text", "Mensaje $i: posición de lectura conservada al girar y contraer el panel.")
+            .put("text", if (rich && i == 59) """# Reader implementation
+
+The **native reader** keeps *your place* while the run streams. See [the reference](https://example.org/docs).
+
+- Rust owns the ordered timeline
+- Android renders the supplied blocks
+
+```kotlin
+val thread = session.view.value // a deliberately long line that scrolls horizontally without wrapping the code
+println(thread.title)
+```
+
+The checks completed; review the activity and changed files above.
+""" else "Mensaje $i: posición de lectura conservada al girar y contraer el panel.")
             .put("createdAt", "2026-10-25T10:${i.toString().padStart(2, '0')}:00Z").put("attachments", JSONArray())) }
         return JSONObject().put("snapshotSequence", 1).put("projection", JSONObject()
             .put("thread", JSONObject().put("id", "chat").put("title", "Navegación y metadatos"))
-            .put("messages", messages).put("runs", JSONArray()).put("runtimeRequests", JSONArray()).put("turnItems", JSONArray()))
+            .put("messages", messages).put("runs", if (rich) JSONArray("""[{"id":"run-reader","status":"completed","createdAt":"2026-10-25T10:57:00Z"}]""") else JSONArray())
+            .put("runtimeRequests", JSONArray()).put("turnItems", if (rich) fixtureItems() else JSONArray())
+            .put("checkpoints", if (rich) JSONArray("""[{"id":"cp-reader","runId":"run-reader","appRunOrdinal":1,"status":"ready","capturedAt":"2026-10-25T10:58:45Z","files":[{"path":"ui/TimelineReader.kt","kind":"modified","additions":42,"deletions":8},{"path":"ui/ThreadWorkspace.kt","kind":"modified","additions":18,"deletions":5}]}]""") else JSONArray()))
     }
 }
+
+private fun JSONArray.objects(): List<JSONObject> = (0 until length()).mapNotNull(::optJSONObject)
+private fun fixtureItems() = JSONArray("""[
+ {"id":"think-reader","threadId":"chat","runId":"run-reader","type":"reasoning","status":"completed","createdAt":"2026-10-25T10:58:10Z","updatedAt":"2026-10-25T10:58:15Z","text":"Compare the native reader with the reference, then verify draft and anchor preservation."},
+ {"id":"test-reader","threadId":"chat","runId":"run-reader","type":"command_execution","status":"completed","createdAt":"2026-10-25T10:58:20Z","updatedAt":"2026-10-25T10:58:30Z","input":"./gradlew :app:testDebugUnitTest","output":"Reader checks passed. No network requests were sent.","exitCode":0}
+]""")
