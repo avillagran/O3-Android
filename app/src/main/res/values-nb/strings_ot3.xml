@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Åpne</string>
     <string name="ot3_pr_merged">Flettede</string>
     <string name="ot3_pr_closed">Lukkede</string>
+    <string name="ot3_notif_approve">Godkjenn</string>
+    <string name="ot3_notif_open">Åpne</string>
+    <string name="ot3_notif_approval_required">Godkjenning kreves</string>
+    <string name="ot3_notif_question">Spørsmål</string>
 </resources>

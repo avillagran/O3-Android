@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Öppna</string>
     <string name="ot3_pr_merged">Sammanslagna</string>
     <string name="ot3_pr_closed">Stängda</string>
+    <string name="ot3_notif_approve">Godkänn</string>
+    <string name="ot3_notif_open">Öppna</string>
+    <string name="ot3_notif_approval_required">Godkännande krävs</string>
+    <string name="ot3_notif_question">Fråga</string>
 </resources>

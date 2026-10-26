@@ -38,12 +38,15 @@ class MainActivity : ComponentActivity() {
             // The window background matches the default theme until both are read (a few ms).
             val catalog by produceState<OmarchyThemeCatalog?>(null) { value = appGraph.themeCatalog() }
             val settings by appearance.collectAsStateWithLifecycle(initialValue = null)
+            val selection by appGraph.liveThemeSource.selection.collectAsStateWithLifecycle()
             val link by deepLink.collectAsState()
             val pairingLink by appGraph.pairingInbox.link.collectAsStateWithLifecycle()
             val themeCatalog = catalog
             val appearanceSettings = settings
-            if (themeCatalog != null && appearanceSettings != null) {
-                Ot3AppTheme(themeCatalog, appearanceSettings) {
+            val readingInitialTheme = selection is dev.avillagran.ot3android.core.theme.ThemeSelection.Fallback &&
+                (selection as dev.avillagran.ot3android.core.theme.ThemeSelection.Fallback).reason == dev.avillagran.ot3android.core.theme.FallbackReason.Loading
+            if (themeCatalog != null && appearanceSettings != null && !readingInitialTheme) {
+                Ot3AppTheme(themeCatalog, appearanceSettings, selection as? dev.avillagran.ot3android.core.theme.ThemeSelection.Live) {
                     Surface(Modifier.fillMaxSize()) {
                         Ot3NavHost(
                             deepLink = link,

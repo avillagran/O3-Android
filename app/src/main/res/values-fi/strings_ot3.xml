@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Avoimet</string>
     <string name="ot3_pr_merged">Yhdistetyt</string>
     <string name="ot3_pr_closed">Suljetut</string>
+    <string name="ot3_notif_approve">Hyväksy</string>
+    <string name="ot3_notif_open">Avoimet</string>
+    <string name="ot3_notif_approval_required">Hyväksyntä vaaditaan</string>
+    <string name="ot3_notif_question">Kysymys</string>
 </resources>

@@ -81,6 +81,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## T3 Mobile notification module
+
+- **What:** the notification presentation in
+  `app/src/main/kotlin/dev/avillagran/ot3android/notifications/` (`Ot3Notifications.kt`,
+  `LiveUpdates.kt`) adapts T3 Mobile's `AgentNotifications.kt`,
+  `AgentActivityPresentation.kt` and `T3AgentNotificationsModule.kt` at `680152e27b`;
+  what was taken and what differs is in that folder's `NOTICE.md`.
+- **Licence:** MIT, Copyright (c) 2026 T3 Tools Inc.; text in
+  `app/src/main/assets/licenses/t3code-MIT.txt` (T3 Code's `LICENSE` at `680152e27b`,
+  SHA-256 `935d8f2af0c703f9c39517ee57cc4930b19d02d533be930b63f0e82f93614b43`).
+- **Status bar icon:** `app/src/main/res/drawable/ic_stat_ot3.xml` is the T3 mark below,
+  path unchanged, recentred, white; no raster or generated image.
+
 ## T3 mark
 
 - **What:** `app/src/main/svg/lucide/t3-logo.svg` (`ic_t3_logo`), copied from

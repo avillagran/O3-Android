@@ -8,14 +8,20 @@ import dev.avillagran.ot3android.core.connection.ServerProbe
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.local.Ot3Database
 import dev.avillagran.ot3android.core.data.prefs.AppearancePreferences
+
 import dev.avillagran.ot3android.core.data.prefs.HomePreferences
 import dev.avillagran.ot3android.core.data.prefs.SelectionPreferences
 import dev.avillagran.ot3android.core.data.prefs.ShellCursorPreferences
 import dev.avillagran.ot3android.core.pairing.PairingService
 import dev.avillagran.ot3android.core.security.CredentialStore
+import dev.avillagran.ot3android.core.theme.EnvironmentThemeReader
+import dev.avillagran.ot3android.core.theme.FileThemeCache
+import dev.avillagran.ot3android.core.theme.LiveThemeSource
+import dev.avillagran.ot3android.core.theme.ThemePreferences
 import dev.avillagran.ot3android.core.thread.DraftRepository
 import dev.avillagran.ot3android.core.thread.MessageSender
 import dev.avillagran.ot3android.core.thread.OutboxRepository
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.core.transport.NativeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
@@ -77,11 +83,51 @@ class AppGraph(
     }
 
     val environmentRepository: EnvironmentRepository by lazy {
-        EnvironmentRepository(database.environmentDao(), { credentialStore() }, shellCursors)
+        EnvironmentRepository(database.environmentDao(), { credentialStore() }, shellCursors, managed = database.bridgeManagedDao())
     }
 
     val connectionManager: ConnectionManager by lazy {
         ConnectionManager(environmentRepository, shellCursors, transportFactory, appScope)
+    }
+
+    /**
+     * The live-theme settings over the manual choice. `AppearancePreferences(context)` shares
+     * the process-wide `appearance` DataStore, so building it here costs no second store.
+     */
+    val themePreferences: ThemePreferences by lazy { ThemePreferences(appContext, appearancePreferences) }
+
+    /**
+     * The environment's live Omarchy theme (UI_SPEC 3.1.3), started on first use. Following an
+     * environment starts its supervisor, so the main environment connects for its theme.
+     */
+    val liveThemeSource: LiveThemeSource by lazy {
+        LiveThemeSource(
+            scope = appScope,
+            reader = EnvironmentThemeReader(DomainEngine.shared),
+            cache = FileThemeCache(appContext.filesDir.resolve("live-theme")),
+            settings = themePreferences.settings,
+            environments = environmentRepository.environments,
+            lastUsedEnvironmentId = selectionPreferences.lastEnvironmentId,
+            connections = connectionManager::connectionFlow,
+        ).also { it.start() }
+    }
+
+    /** Candidate native bridge flow; opened explicitly with an invitation, not by a host label. */
+    val bridgeCatalog: dev.avillagran.ot3android.core.bridge.BridgeCatalogController by lazy {
+        dev.avillagran.ot3android.core.bridge.BridgeCatalogController(
+            database, connectionManager, appScope, { credentialStore() },
+            mutations = environmentRepository.mutations,
+        )
+    }
+
+    suspend fun pairBridge(invitation: org.json.JSONObject): Boolean {
+        bridgeCatalog.open(java.io.File(appContext.noBackupFilesDir, "omabridge").absolutePath)
+        val approved = bridgeCatalog.pair(invitation)
+        if (approved) {
+            bridgeCatalog.selectBridge(invitation.getJSONObject("address").getString("id"))
+            bridgeCatalog.refresh()
+        }
+        return approved
     }
 
     val serverProbe: ServerProbe by lazy { ServerProbe(transportFactory) }
@@ -101,7 +147,7 @@ class AppGraph(
         stopConnection = connectionManager::forget,
         handOver = { id ->
             connectionManager.forget(id)
-            connectionManager.supervisor(id)?.start()
+            connectionManager.startIfCurrent(connectionManager.supervisor(id))
         },
     )
 
@@ -117,6 +163,15 @@ class AppGraph(
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
         appScope.launch { themeCatalog() }
+        appScope.launch(Dispatchers.IO) {
+            val state = java.io.File(appContext.noBackupFilesDir, "omabridge")
+            if (java.io.File(state, "mobile-selected-bridge.json").exists() &&
+                dev.avillagran.ot3android.core.bridge.NativeBridge.isAvailable()) {
+                try { bridgeCatalog.open(state.absolutePath) }
+                catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                catch (_: Exception) { /* Keep saved environments; show offline on next explicit retry. */ }
+            }
+        }
     }
 
     private companion object {

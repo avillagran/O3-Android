@@ -1580,7 +1580,7 @@ section title with icon); each row pushes its page.
 |---|---|---|---|---|
 | Connections | Environments | 4.2, routes 4.2.1 | catalog, supervisor, `connectionCatalog.routeKind` / `routePlan` (U27) | yes; route editing in UI-6 |
 | | OmaBridge | 4.9.1 | OmaBridge device client and remote `manage` ([OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md)) | **blocked** on OB1–OB3 |
-| | Notifications | permission and, later, the follow service (`docs/ARCHITECTURE.md:27-29`) | — | permission only |
+| | Notifications | permission, **Follow active threads**, idle stop, lock-screen detail, Live Update settings (4.14) | `awareness.view` (U28), supervisors by lease | permission only until UI-N |
 | Interface | Appearance | Theme, Dark theme, Light theme (3.1.3); Language; Show provider usage; Group working, snoozed and settled threads; Math rendering; **Animations**: Animated starfield, Star speed, Shooting stars, Threads changing section, Section change speed, Show and hide, Transition speed, Animation smoothness (3.4.4; `ot3:ui/qml/T3Preferences.qml:246-275`) | DataStore | yes |
 | Server | Providers | status per instance ("Signed in", "Not installed", "Update to {version}") read-only, and favourite models with stars (`ot3:ui/qml/T3ProviderInstances.qml:84-124`; `ot3:ui/qml/T3Preferences.qml:283-293`) | `server.getConfig`, `models::preferences` (U7) | yes |
 | | General | ot3's server field groups (New threads, Organization, Behavior, Projects & threads, Text generation; `ot3:ui/qml/T3Preferences.qml:58-63`) | `server.getSettings` / `updateSettings`, `native_settings::snapshot` / `patch` (`lib:src/native_settings.rs:107,152`, U23) | read-only, edit after U23 |
@@ -1834,7 +1834,191 @@ Data: `orchestration.getArchivedShellSnapshot` (typed API), unarchive and delete
 | Provider install and sign-in flows | `ot3:ui/qml/T3ProviderInstances.qml:84-124` | Provider accounts | read-only status in v1 |
 | Multiselect, drag reorder, bulk actions | chat row 7 | — | later |
 | Row auras, FPS meter, bar widget | `ot3:ui/assets/shaders/threadaura.frag`, `T3FpsMeter.qml`, `BarWidget.qml` | — | desktop chrome |
-| T3 Connect, live notifications | `ot3:ui/qml/T3ConnectionCloud.qml` | `ConnectOnboarding`, agent awareness | phase 3 |
+| T3 Connect | `ot3:ui/qml/T3ConnectionCloud.qml` | `ConnectOnboarding` | phase 3 |
+| Push through FCM or a relay | — | agent awareness over T3 Connect's relay | no own relay; relay-free notifications are UI-N (4.14) |
+
+### 4.14 Notifications and Live Updates
+
+Added 2026-10-26 at Andrés's request: on a physical Android 16 phone the official T3 app
+shows a status bar chip, a lock-screen card and a notch/shade card while an agent works;
+ot3-Android must do the same, without FCM, a relay or any push server (`docs/ARCHITECTURE.md`
+layer 4). Delivered as tranche **UI-N** (section 5). This section decides behaviour; the
+presentation builders exist (`app/.../notifications/`), the runtime does not yet.
+Acceptance and the API matrix: [ui/compare/ui-n/README.md](ui/compare/ui-n/README.md).
+
+Sources (pins as section 0; `t3relay:` is `t3:infra/relay/src/agentActivity/`):
+
+- ot3's bar: `ot3:ui/qml/BarWidget.qml:20-22` (counts `working`, `done`, `waiting`,
+  `failed`; stale after 90 s), `ot3:ui/qml/T3BarIndicator.qml:117-120` (tone: failed, then
+  waiting, then working; moves only while working). Counts come from
+  `ot3:ui/js/SidebarModel.js:45-49`, now `lib:src/sidebar/view.rs:349-358` (`sidebar.view`
+  `counts`, v0.3.4). Tooltip "Working: {working} · Ready: {ready} · Waiting for input:
+  {waiting}" (`ot3:app/shell.qml:119`).
+- ot3's desktop alerts: `ot3:src/main.rs:54-144`. Per environment that is `ready`, a thread
+  alerts when `pending` turns on or its `revision` changes, never before the environment's
+  first observation (`@initialized`), and a failed delivery is retried; label Done for
+  `reason` `response`/`review`, Failed for `failed`, Waiting otherwise. `pending`, `reason`
+  and `revision` are already `sidebar.view` row fields (`lib:src/sidebar/view.rs:21-90`;
+  `revision` = SHA-256 of reason, run, request id and completion stamp, `:75-82`). The
+  seen-state diff itself is ot3-only.
+- T3's phases: `t3:packages/shared/src/agentAwareness.ts:59-135` (starting, running,
+  waiting_for_approval, waiting_for_input, completed, failed, stale; subagents excluded;
+  settled finished threads dropped). Transition selection `t3relay:agentActivityAlerts.ts:14-161`
+  (attention = newly approval/input; finished = newly completed/failed, fresh ≤ 2 min; no
+  baseline means replay, no alert). Lifetimes `t3relay:agentActivityPayloads.ts:18-35`
+  (running/starting 2 h, waiting 24 h), finished display 15 min
+  (`t3relay:agentActivityAggregate.ts:59`). Android presentation
+  `t3m:modules/t3-agent-notifications/android/.../AgentNotifications.kt:247-341`,
+  `AgentActivityPresentation.kt:19-163`; operations note
+  `t3:docs/operations/android-notifications.md:7-21,71-75`.
+- Android (official, read 2026-10-26): the live-update guide (eligibility, chip, user
+  control; updated 2026-10-23), Android 16 CDD 3.8.3.1 for API 36.1 devices, the API
+  reference (`setRequestPromotedOngoing` added in 36.1), FGS types and Android 15 behaviour
+  changes, background-start restrictions, notification permission, Doze. URLs in the
+  acceptance file.
+
+#### 4.14.1 Surfaces
+
+| Surface | When | Content | API |
+|---|---|---|---|
+| **Ongoing card** (one, tag `ot3-activity`) | something works or waits for you, while following | title (one thread: its title; several: the lib's summary), `status · project · host`, elapsed time from the phase's start when the lib gives a stable one, up to five rows expanded, one action | all; promoted only on 36.1+ |
+| **Status bar chip** | the card is promoted | `Working`, `N live` (2–9, then `9+ live`), `Approve`, `Answer` | 36.1+ |
+| **Finished card** | every followed run ended | same card, not ongoing, no chip, no promotion request; tap opens the priority thread; expires 15 min after the newest result | all (timeout API 26+) |
+| **Alerts** (`ot3-alerts`) | approval, question, done, failed transitions decided by the lib | thread title; `Status: project`; grouped `ot3-attention` / `ot3-finished` with a silent summary for several | all |
+
+The chip, card and alerts never show a thread on screen as new: the lib receives the
+thread on screen and consumes its alert (T3's rule, `AgentNotifications.kt:148-161`).
+
+#### 4.14.2 Data: one shell source, decided in Rust
+
+- **Single source.** Each environment has one `ConnectionSupervisor` and one shell stream
+  (DECISIONS 2026-10-25). The follow service never opens its own: it reads the same
+  `ShellState` per environment and passes all of them to the lib. Counts are
+  `sidebar.view` `counts`; phases, card, alerts, dedupe, expiry, chip kind and grouping
+  come from the proposed `awareness.view` (LIB_REQUESTS.md U28). **No Kotlin rule
+  computes a phase, a count, a transition, a deadline or a chip kind.** U28 shipped in lib v0.3.5. The UI-1 pre-release keeps its matched v0.3.4
+  artifacts; runtime wiring and the v0.3.5 pin follow that release (rule 6: no interim
+  reimplementation of notification semantics).
+- **Baseline.** The lib returns an opaque `baseline` the host persists per installation
+  (DataStore) and passes back. A missing baseline for an environment means "first
+  observation": no alerts (cold start, new environment, cleared data). Reconnecting
+  (`Unreachable` → `Connected`) passes the environment as not ready meanwhile, so its rows
+  are neither withdrawn nor replayed as transitions (ot3 `main.rs:75-77`).
+- **Authorisation.** Only environments with a saved credential and a supervisor that is
+  not `Unauthorized` are passed. A bridge-catalog entry that is discovered but not
+  authorised, withdrawn or revoked (`docs/bridge/CATALOG_SYNC.md`) never contributes a row,
+  a card or an alert; revocation removes its rows from the next view, which the lib
+  reports as withdrawal, not as Done.
+
+#### 4.14.3 Leasing: the app and the follow service share supervisors
+
+Today `ConnectionManager.setForeground(false)` stops every running supervisor on the
+process's `ON_STOP`. UI-N changes that to leases, without a second stream:
+
+1. `ConnectionManager.lease(environmentId, holder)` returns a handle; `holder` is `Ui`
+   (screens) or `Follow` (the service). A supervisor runs while it has at least one lease.
+2. `ON_STOP` releases only `Ui` leases. When **Follow threads** is on and the service
+   holds `Follow` leases, those supervisors keep running; the others stop as today.
+3. `ON_RESUME` and default-network changes keep calling `wakeAll()` (`wakeSubscriptions`),
+   for leased supervisors too. Reconnection keeps the supervisor's jittered `Backoff`
+   and stops on `unauthorized`; the service adds no retry loop.
+4. The service releases its leases on idle stop, on disconnect from the notification,
+   when the toggle goes off, on `onTimeout`, and when an environment is forgotten or its
+   grant is withdrawn.
+
+#### 4.14.4 Follow service
+
+- **Opt-in.** Settings → Notifications → **Follow active threads** (off by default),
+  with a sentence: it keeps a connection open while threads work so their state shows
+  in the status bar and lock screen; it uses battery and stops by itself.
+- **Start** only from a visible app (toggle on, or opening a thread / sending a message
+  while the toggle is on and something works): API 31+ forbids starting a foreground
+  service from the background. No start from `BOOT_COMPLETED`, no restart at boot, no alarms to resurrect it, no battery-optimisation exemption
+  request (Doze's FCM-first policy; this app has no FCM).
+- **Type: `specialUse`** with the subtype property
+  `android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE` = "Follows coding-agent runs the user
+  started on their own T3 server over its WebSocket and shows their live status; no push
+  service exists for self-hosted servers", and `FOREGROUND_SERVICE_SPECIAL_USE`. Rejected:
+  `dataSync`, whose description is transfer work and which, for targetSdk 35+, is capped
+  at 6 h per 24 h across the app, reset only when the user brings the app to the
+  foreground, with `ForegroundServiceStartNotAllowedException` once exhausted. Long or
+  repeated runs would hit it. The service still implements `onTimeout(int, int)` and stops
+  within seconds, so a later type change cannot crash it. Play's App content declaration
+  is needed only if the app ships on Play.
+- **Stop.** When nothing has worked or needed the user for **15 minutes** (default; 5, 15,
+  30 or 60 in Settings), the service demotes the card to a finished/waiting card with its
+  lib deadline (finished 15 min, waiting up to 24 h) and stops. 15 minutes equals T3's
+  finished-card lifetime, so the card and the service end together. Also on
+  **Disconnect** (notification action), toggle off, `onTimeout`, revoked or removed
+  environments, and notification permission revoked.
+- **Notification.** The foreground service's notification **is** the ongoing card
+  (`startForeground(ACTIVITY_ID, card)`), so there is never a second "ot3 is running"
+  notification.
+- **Battery.** No wakelocks, no exact alarms, no polling: the shell stream is push.
+  Doze suspends network for apps (the guide lists no FGS exception), so a dozing phone
+  may delay updates until a maintenance window or the user wakes it; the card says so
+  through the lib's `stale` phase rather than pretending.
+
+#### 4.14.5 Live Updates (API 36.1+) and older APIs
+
+- The card asks for promotion (`setRequestPromotedOngoing(true)`) only while active,
+  ongoing, uncolourised (`setColorized(false)`; `setColor` only tints the icon), with a
+  content title, BigText style, on a channel above `IMPORTANCE_MIN`, never a group
+  summary, no custom views: the guide's eligibility list. The manifest adds the normal
+  permission `android.permission.POST_PROMOTED_NOTIFICATIONS` (no runtime prompt).
+- The chip text is `setShortCriticalText`; the guide shows text of fewer than 7
+  characters whole, otherwise as much as fits a 96 dp chip, or only the icon when less
+  than half fits. ot3's English chips are at most 7 characters (tested; `Approve` and
+  `9+ live` are exactly 7, as in T3); their exact rendering and translations are checked
+  only on a device capture.
+- **Requested is not promoted.** Settings shows `LiveUpdates.support`: Unsupported
+  (below API 36.1), NotAllowed (`canPostPromotedNotifications()` false), Allowed. Only a
+  posted notification's `FLAG_PROMOTED_ONGOING` proves promotion; OEMs may add criteria
+  and users may demote a card. No screen or document may claim a chip from the request
+  flag or from a build.
+- On API 36+, **Live Update settings** opens `Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS`
+  with `EXTRA_APP_PACKAGE` (the constant in the API 36/37 SDK and T3's module; the guide
+  names `ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS`, which the SDK does not have), else
+  the app's notification settings (26+), else app details.
+- Below 36.1 the same card is a normal ongoing notification. API 24–25 have no channels
+  and no timeout: priority LOW/HIGH stand in for channels, and while the service runs it
+  cancels expired cards; T3's single inexact `setAndAllowWhileIdle` alarm for a stopped
+  process (`AgentNotifications.kt:280-290`) is adopted in the runtime tranche.
+
+#### 4.14.6 Channels, alerts and actions
+
+- Channels `ot3-activity` (LOW, no badge) and `ot3-alerts` (HIGH), names "Thread
+  activity" and "Thread alerts". Users own their importance afterwards.
+- Alert groups `ot3-attention` (approval, question; also a ready plan, ot3's `waiting`)
+  and `ot3-finished` (done, failed), as T3's "N agents need attention" / "N agents
+  finished". Alerts carry the lib's stable id as tag, so retries, reconnects and cold
+  starts cannot repeat or collide. Done and Failed alerts may carry the lib's deadline
+  (`setTimeoutAfter`); no foreground service lives for an alert.
+- **Open** (tap) always works: the thread deep link `ot3a://thread/{environmentId}/{threadId}`
+  through `MainActivity` (`ThreadDeepLink`). Approve and Answer open the same thread, where
+  UI-4's card asks for a visible confirmation and then sends through
+  `approvals.command` / `questions.command` and the outbox with a stable command id.
+  **No broadcast receiver or notification action ever approves or answers in one step.**
+- Permission: API 33+ asks `POST_NOTIFICATIONS` in context (turning the toggle on), with
+  the existing `mobile_notifications_permission` rationale; if denied, the toggle stays
+  off and links to the app's notification settings. The service never starts without it
+  (its notification would be hidden from the shade).
+
+#### 4.14.7 Lock screen and privacy
+
+Settings → Notifications → **Lock screen**: *Full* is the default requested by Andrés:
+the same thread title, project · host, state and elapsed time as the unlocked card.
+*Status only* supplies a public version “OT3 · Working” without thread or project titles;
+*Hidden* uses the system “contents hidden” placeholder. System notification privacy
+settings still apply. The Android application label is **OT3**; the short critical text
+contains only the state/count to fit the platform's chip budget. A complete rendered
+“OT3 · N live” chip is an acceptance target, not a result proved by the builder.
+
+#### 4.14.8 What this tranche does not do
+
+No FCM, no relay, no push server, no T3 Connect. No widget. No sound selection beyond
+the channel. No notification for a thread whose environment is not authorised. No claim
+about OEM chips or a physical lock screen without a capture of that device.
 
 ## 5. Delivery plan
 
@@ -1869,6 +2053,7 @@ Seven PRs, each mergeable alone, each ending with captures compared side by side
 | **UI-6 Settings, palette, usage, archive** | Settings root and pages, theme picker with previews, Add environment with QR and pairing link, Providers and favourites, Usage page with Usage and Limits tabs and the full quota strip (4.10.3), route editing (4.2.1), Appearance → Animations (3.4.4), Archived threads, command palette, Licenses (4.2, 4.9–4.12) | Settings → Appearance → Animations wired to `Ot3Motion`; usage tabs 160 ms fade; quota strip and Limits without bar animation; route editor. Recordings: each Show and hide style at normal pace, usage tabs | Settings vs `ot3-preferences-*.png`; archive vs `ot3-archive.png` | theme switching; scope; palette ranking; usage aggregation via the lib | U7, U14, U17, U23; U26 for pooled limits, U27 for route kinds and fallback |
 | **UI-7 Tablets and foldables** | navigation rail, list / detail / inspector panes with T3 Mobile's breakpoints, hinge alignment, empty detail, inspector content, tablet minimap, hardware keyboard shortcuts and the shortcut helper (2.4, 4.3.8) | panes 260 ms InOutCubic, detail replacement not animated, tablet minimap marker 150 ms. Recordings: list → detail → inspector, fold posture | split layout at 1280 × 800 dp and 840 × 1200 dp against the phone goldens | breakpoint function at each threshold; back across panes; key handling | U12 |
 | **UI-OB OmaBridge page** (blocked) | Settings → Connections → OmaBridge (4.9.1): the phone's identity and pairing by OmaBridge QR, managed hosts (publish, approvals, paired devices, revoke), gateways with check and "Add as a route", the approvals dot; direct OmaBridge peer routes and ot3's per-environment plans (4.2.2) | ot3's cards and buttons, no extra motion; pending-approval dot appears without animation. Recordings: pair → approved | page vs ot3's `T3OmaBridgeManage` (a capture is added to `ui/reference/` when the work starts) | snapshot mapping; action gating by `REMOTE_ACTIONS`; route plan with a peer route | **blocked** on [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB1–OB3; U27 |
+| **UI-N Notifications and Live Updates** (after UI-2a's timeline reader and the bridge catalog integration) | 4.14: preparation PR (this spec, presentation builders, channels, status icon, contract parser, Robolectric 24/26/33/36); then runtime: supervisor leases, `specialUse` follow service, Settings → Notifications, permission flow, alerts from `awareness.view`, thread-on-screen suppression, lock-screen modes, Live Update settings | none of its own: the card and chip are system UI; ot3's bar-indicator motion is desktop chrome (4.13) | captures on the API 36.1 emulator: status bar chip, lock screen (each lock-screen mode), shade expanded/collapsed, finished card, grouped alerts; a physical capture only when Andrés allows it | builders and channels per API level; contract fixtures from the lib; lease and service lifecycle on the JVM; no promotion claim from a request | **U28 delivered in v0.3.5**; Android pin/runtime follows UI-1 release; shells come from the existing supervisors (`ShellState`, U2 reducer half still open) |
 
 UI-1 also records the decisions of section 1 in `docs/DECISIONS.md` (the architecture
 line on themes already changes with this spec).
@@ -1928,6 +2113,7 @@ ot3's own crate, not in the lib, and would move into the lib first.
 | U25 | **new** `toolInspector.scope` / `request` / `parse` | `lib:src/tool_inspector.rs:61,89,236` | Inspector (4.3.3) | not offered |
 | U26 | **new, 2026-10-25** `quotaSources.present`: ot3's pooled limits (accounts per provider across environments, segments, remaining %, pace, expected-remaining marker, earliest reset text, notices, external links) | **ot3 only** (JS port of T3's `usageLimits.ts`): `ot3:ui/js/UsageLimits.js:5-43`, `ot3:ui/js/NativeUsageLimits.js:153-567` | Quota strip, Limits tab (4.10) | one bar per window from `quotaSources.limits`, no pooling, pace or marker |
 | U27 | **new, 2026-10-25** routes: `connectionCatalog.routeKind` (address → public / LAN / Tailscale, with a link hint) and `connectionCatalog.routePlan` (ordered attempts and fallback); `pairingTarget` returning the route hint | grouping and ordering only, Rust-only: `lib:src/connection_catalog.rs:73-212`; classification **ot3 only**: `ot3:src/connection_network.rs:48-54` | Route indicator and editing (4.2.1, 4.2.2) | user-chosen kind, preferred route only |
+| U28 | **new, 2026-10-26** `awareness.view`: T3's awareness phases per thread, the ongoing card, attention / finished alerts deduplicated against an opaque host-held baseline (no alerts on first observation), on-screen suppression, absolute deadlines, chip kind and grouped titles | phases **T3 only** (`t3:packages/shared/src/agentAwareness.ts:59-135`, `t3:infra/relay/src/agentActivity/agentActivityAlerts.ts`); ot3's seen-state diff **ot3 only** (`ot3:src/main.rs:54-144`); counts, `pending`, `reason`, `revision` already in `sidebar.view` | Notifications (4.14) | runtime not started |
 
 Order of need: nothing blocks UI-1 (U2 and U21 complete it); U0, U3, U4 and U10 gate
 UI-2; U5, U7 and U8 gate UI-3; U6, U15 and U24 gate UI-4; U9, U19, U20 and U22 gate UI-5;

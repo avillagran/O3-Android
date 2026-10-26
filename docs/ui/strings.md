@@ -57,6 +57,34 @@ Plurals: ot3 has none (counts are written as "Working ({count})",
 `ot3:ui/qml/T3Panel.qml:1242`); Android keeps those strings as they are instead of
 inventing `<plurals>`.
 
+## Appearance
+
+Settings → Appearance (UI_SPEC 3.1.3), in `values/strings_appearance.xml` until the
+catalog generator is on `main`. Rows with an ot3 key move to `ot3-strings.tsv` then; the
+others are mobile-only.
+
+| Android name | English | ot3 key, or why ot3 lacks it | Source |
+|---|---|---|---|
+| `appearance_title` | Appearance | ot3: `Appearance` | ot3 catalog |
+| `appearance_theme` | Theme | ot3: `Theme` | ot3 catalog |
+| `appearance_mode_light` | Light | ot3: `Light` | ot3 catalog |
+| `appearance_follow_environment` | Follow the environment's Omarchy theme | ot3 runs on the Omarchy host and always follows it | UI_SPEC 3.1.3 |
+| `appearance_live_theme` | {theme} · {environment} | same | UI_SPEC 3.1.3 ("Tokyo Night · omarchy") |
+| `appearance_live_theme_cached` | {theme} · {environment} (saved) | same; shown until the environment is read | UI_SPEC 3.1.3 (cache) |
+| `appearance_not_omarchy` | {environment} is not running Omarchy | same | UI_SPEC 3.1.3 |
+| `appearance_no_scope` | {environment} does not allow reading files ({scope}) | ot3 reads its own files | UI_SPEC 3.1.3 (missing scope) |
+| `appearance_read_error` | Could not read the theme of {environment} ({code}) | same | UI_SPEC 3.1.3 (error) |
+| `appearance_waiting` | Connecting to {environment}… | ot3 has its local backend | UI_SPEC 3.1.3 |
+| `appearance_no_environment` | No environments connected | same | `t3m:src/features/home/HomeScreen.tsx:160` |
+| `appearance_main_environment` | Main environment | ot3 has one environment on screen | UI_SPEC 3.1.3 |
+| `appearance_main_environment_last_used` | Last used | same | UI_SPEC 3.1.3 |
+| `appearance_mode_follow_system` | Follow system | ot3 follows Omarchy, not a system mode | UI_SPEC 3.1.3 |
+| `appearance_mode_dark` | Dark | ot3's catalog has "Dark appearance" but no "Dark" | UI_SPEC 3.1.3 |
+| `appearance_dark_theme` | Dark theme | ot3 has one live theme | UI_SPEC 3.1.3 |
+| `appearance_light_theme` | Light theme | same | UI_SPEC 3.1.3 |
+| `appearance_material_you` | Material You | Android only | `t3m:src/lib/mobileTheme.ts:19` |
+| `appearance_manual_applies` | Used when the environment's theme is off or not available. | ot3 has no manual fallback | UI_SPEC 3.1.3 |
+
 ## Mobile-only strings
 
 Each row names the mobile state and the T3 Mobile source that has it; wording follows
@@ -96,6 +124,10 @@ ot3's sentence case and tone.
 | `mobile_animations_system_off` | Off while Android's Remove animations is on | ot3 has no OS animation setting (UI_SPEC 3.4.4) | `t3m:src/lib/designTokens.ts:8` (each animation follows the system setting) |
 | `mobile_limits_empty` | No provider on the selected environments reports subscription limits. | ot3 hides an empty strip | `t3m:src/features/usage/UsageLimitsPooled.tsx:323-327` |
 | `mobile_usage_connect` | Connect an environment to see usage. | ot3's page always has its local backend | `t3m:src/features/usage/UsageRouteScreen.tsx:305-314` |
+| `mobile_notif_channel_activity` | Thread activity | ot3 has no notification channels | `t3m:modules/t3-agent-notifications/android/src/main/java/expo/modules/t3agentnotifications/AgentNotifications.kt:315-319` ("Ongoing agent activity") |
+| `mobile_notif_channel_alerts` | Thread alerts | same | same file `:314` ("Agent alerts") |
+| `mobile_notif_answer` | Answer | ot3 answers in the panel; the phone needs a chip and action word | same module, `AgentActivityPresentation.kt:36-41` |
+| `mobile_notif_live` | {count} live | the desktop bar shows counts, not a chip | `AgentActivityPresentation.kt:131-132` |
 
 ## ot3 strings missing from ot3's catalog
 

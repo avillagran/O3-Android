@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Otevřené</string>
     <string name="ot3_pr_merged">Sloučené</string>
     <string name="ot3_pr_closed">Uzavřené</string>
+    <string name="ot3_notif_approve">Schválit</string>
+    <string name="ot3_notif_open">Otevřené</string>
+    <string name="ot3_notif_approval_required">Vyžaduje schválení</string>
+    <string name="ot3_notif_question">Otázka</string>
 </resources>
