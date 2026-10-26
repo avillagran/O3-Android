@@ -88,3 +88,23 @@ is changed and no native desktop tokens are exported.
    only when Andrés allows it. Do not equate metadata-only unit tests with thread sync.
 
 The work remains open until this end-to-end path is implemented and verified.
+
+## Reviewable increments and verified checks
+
+- Shared lib [PR11](https://github.com/avillagran/lib-t3-rust/pull/11),
+  `027a025`: six focused contract/ABI tests and the complete `cargo test --locked`
+  pass; CI native x86/ARM, Kotlin and AAR checks green when checked.
+- Native bridge [PR2](https://github.com/avillagran/omabridge/pull/2),
+  `82acc55`: two new tests include actual loopback QUIC with separate temporary
+  device identities. VQ+NODE restricted catalog, withdrawal, route change, restoration,
+  offline/restart/reconnect and revocation pass. Full `cargo test --locked --all-targets`,
+  Clippy with warnings denied and format check pass. An initial pre-linger response
+  was truncated; that result is discarded and the corrected full suite is green.
+- Android [PR24](https://github.com/avillagran/ot3-android/pull/24): six focal JVM tests
+  and `:core:lintDebug` pass. Those tests verify the host adapter/cache, not live JNI
+  calls into the new unreleased contract. No AAR/host binary shared with UI2 changed.
+
+The prior OmaBridge project thread link could not be read by this T3 server
+(`thread_not_found`); coordination is through these concrete companion PRs and Dev Vault,
+not a claim that an unavailable remote thread received a message. No new top-level
+thread was created. UI2 continues independently with the same gpt-6.1-sol delegate.
