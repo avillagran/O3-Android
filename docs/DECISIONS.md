@@ -1051,3 +1051,13 @@ Keep the open diff at reader scope, keyed by the selected thread, rather than in
 a virtualized Changes row. Device rotation can dispose that row while the modal is
 open. A real-workspace regression now checks both orientations and a single stream;
 standalone dialog restoration was insufficient to catch this failure.
+
+
+### 2026-10-26 — Native attachment image access and bounded rendering
+
+Read native attachment descriptors through T3Client.image rather than constructing
+asset URLs in Android. Kotlin owns only lifecycle, connection-generation guards and
+platform decoding with bounded dimensions. Keep the image dialog at reader scope
+so virtualization cannot dismiss it during rotation. Native calls have no per-read
+cancel handle; UI cancellation discards late results while Rust retains its deadline.
+Markdown media-file references are not attachment IDs and await U30 JNI exposure.
