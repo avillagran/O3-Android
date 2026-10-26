@@ -15,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -29,10 +28,6 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.delay
 
 object SkyDefaults {
     /** ot3's brand row height, the part of the header the sky stays solid behind (`T3Panel.qml:1135`). */
@@ -80,24 +75,18 @@ fun SkyHeader(
     val currentMotion by rememberUpdatedState(effective)
     val currentAuto by rememberUpdatedState(auto)
     val currentOnDegrade by rememberUpdatedState(onAutoDegrade)
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    if (animated && visible) {
-        LaunchedEffect(sky, lifecycle) {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                sky.resetTiming()
-                while (true) {
-                    val now = withFrameNanos { it }
-                    val wasDegraded = sky.degraded
-                    val frame = sky.onFrame(now, currentMotion, currentAuto)
-                    if (frame.ticked) tick++
-                    if (!wasDegraded && sky.degraded) {
-                        degraded = true
-                        currentOnDegrade?.invoke()
-                    }
-                    if (frame.waitMs > 0) delay(frame.waitMs)
-                }
+    var interval by remember { mutableIntStateOf(if (energy > 0f) 33 else 125) }
+    val frame by dev.avillagran.ot3android.ui.theme.rememberOt3Tick(animated && visible, interval)
+    LaunchedEffect(frame.nanos, animated, visible, effective) {
+        if (animated && visible && frame.nanos > 0L) {
+            val wasDegraded = sky.degraded
+            if (sky.onFrame(frame.nanos, currentMotion, currentAuto, frame.seconds).ticked) tick++
+            interval = sky.intervalMs(currentMotion, currentAuto).toInt()
+            if (!wasDegraded && sky.degraded) {
+                degraded = true
+                currentOnDegrade?.invoke()
             }
-        }
+        } else sky.resetTiming()
     }
 
     // Typed as Shader so nothing below API 33 touches RuntimeShader.

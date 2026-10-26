@@ -1,11 +1,8 @@
 package dev.avillagran.ot3android.ui.kit
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import dev.avillagran.ot3android.ui.theme.LocalOt3Motion
 
 /**
@@ -15,18 +12,10 @@ import dev.avillagran.ot3android.ui.theme.LocalOt3Motion
 @Composable
 internal fun rememberKitClock(running: Boolean, still: Float = 0f): State<Float> {
     val animates = running && LocalOt3Motion.current.animates
-    val time = remember { mutableFloatStateOf(still) }
-    LaunchedEffect(animates) {
-        if (!animates) {
-            time.floatValue = still
-            return@LaunchedEffect
-        }
-        val start = withInfiniteAnimationFrameNanos { it }
-        while (true) {
-            withInfiniteAnimationFrameNanos { now -> time.floatValue = (now - start) / 1_000_000_000f }
-        }
-    }
-    return time
+    val frame = dev.avillagran.ot3android.ui.theme.rememberOt3Tick(animates)
+    return remember(frame, animates, still) { androidx.compose.runtime.derivedStateOf {
+        if (animates) frame.value.seconds else still
+    } }
 }
 
 /** ot3's working icon turns at 112.5°/s on the sky clock (`ot3:ui/qml/T3ThreadRow.qml:277`). */

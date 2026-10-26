@@ -1,11 +1,5 @@
 package dev.avillagran.ot3android.ui.thread
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -21,6 +15,8 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.graphics.SolidColor
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
+import dev.avillagran.ot3android.ui.kit.Ot3Spinner
+import dev.avillagran.ot3android.ui.kit.rememberKitClock
 import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,7 +36,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -216,8 +211,8 @@ fun ThreadContent(
             state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {
-                    !state.view.loaded -> CircularProgressIndicator(
-                        Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING),
+                    !state.view.loaded -> Ot3Spinner(
+                        Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp,
                     )
                     state.view.messages.isEmpty() -> Text(
                         stringResource(R.string.thread_empty),
@@ -280,13 +275,9 @@ private fun StreamingCursor(modifier: Modifier = Modifier) {
         Text("▍", style = MaterialTheme.typography.bodyMedium, modifier = modifier)
         return
     }
-    val transition = rememberInfiniteTransition(label = "cursor")
-    val alpha by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.2f,
-        animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
-        label = "cursorAlpha",
-    )
+    val clock by rememberKitClock(true)
+    val phase = clock % 1f
+    val alpha = 1f - 0.8f * (if (phase < 0.5f) phase * 2f else (1f - phase) * 2f)
     Text("▍", style = MaterialTheme.typography.bodyLarge, modifier = modifier.alpha(alpha))
 }
 
@@ -294,7 +285,7 @@ private fun StreamingCursor(modifier: Modifier = Modifier) {
 private fun WorkingLabel() {
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag(ThreadScreenTags.WORKING)) {
-        CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp)
+        Ot3Spinner(size = 12.dp, tint = Ot3Theme.colors.working)
         Spacer(Modifier.width(4.dp))
         StatusLabel(stringResource(R.string.status_working), colors.tertiaryContainer, colors.onTertiaryContainer)
     }
@@ -433,7 +424,7 @@ private fun Composer(
                 },
             )
             Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                if (sending) CircularProgressIndicator(Modifier.size(24.dp).testTag(ThreadScreenTags.SENDING))
+                if (sending) Ot3Spinner(Modifier.testTag(ThreadScreenTags.SENDING), size = 24.dp)
                 else Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend,
                     modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = colors.accent)
             }

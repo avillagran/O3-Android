@@ -5,8 +5,8 @@ import kotlin.math.min
 
 /**
  * The sky's clock, ot3's `T3Starfield` leader (`ot3:ui/qml/T3Starfield.qml:66-117`) on
- * ot3's "saver" smoothness (`ot3:ui/qml/T3Ticker.qml:22-27`): an idle Auto or Light sky
- * ticks every 125 ms (drift of 5 dp/s looks the same), everything else every 33 ms, and
+ * ot3's adaptive smoothness (`ot3:ui/qml/T3Ticker.qml:22-27`): an idle Auto or Light sky
+ * ticks every 125 ms (drift of 5 dp/s looks the same), busy Auto every 33 ms, explicit Full every 16 ms and meteors every 8 ms, and
  * Light never faster than 40 ms unless a comet is on screen. Pure Kotlin: the composable
  * feeds it frame times and reads [clock], [drift] and [energy].
  */
@@ -56,10 +56,14 @@ internal class SkyClock {
         slowTicks = 0f
     }
 
-    /** Milliseconds between ticks for [motion] (`T3Starfield.qml:98-99`, saver pace). */
+    /** Milliseconds between ticks for [motion] (`T3Starfield.qml:98-99`, adaptive pace). */
     fun intervalMs(motion: SkyMotion, auto: Boolean): Long {
-        val slow = !meteorNow && !(motion == SkyMotion.Full && !auto) && !busy
-        val base = if (slow) SLOW_MS else AMBIENT_MS
+        val base = when {
+            meteorNow -> 8L
+            motion == SkyMotion.Full && !auto -> 16L
+            !busy -> SLOW_MS
+            else -> AMBIENT_MS
+        }
         return if (motion == SkyMotion.Light && !meteorNow) max(LIGHT_MIN_MS, base) else base
     }
 
@@ -77,14 +81,14 @@ internal class SkyClock {
      * passed (within [TOLERANCE_MS], so a 33 ms interval lands on every second 60 Hz
      * frame) and asks to sleep until shortly before the next one.
      */
-    fun onFrame(nowNanos: Long, motion: SkyMotion, auto: Boolean): Frame {
+    fun onFrame(nowNanos: Long, motion: SkyMotion, auto: Boolean, sharedSeconds: Float? = null): Frame {
         applyTarget(nowNanos)
         val interval = intervalMs(motion, auto)
         val elapsedMs = if (lastTick < 0L) Long.MAX_VALUE else (nowNanos - lastTick) / 1_000_000L
         if (elapsedMs < interval - TOLERANCE_MS) {
             return Frame(ticked = false, waitMs = max(0L, interval - elapsedMs - WAKE_EARLY_MS))
         }
-        tick(nowNanos, interval, motion, auto)
+        tick(nowNanos, interval, motion, auto, sharedSeconds)
         return Frame(ticked = true, waitMs = max(0L, intervalMs(motion, auto) - WAKE_EARLY_MS))
     }
 
@@ -102,11 +106,11 @@ internal class SkyClock {
         rampStart = nowNanos
     }
 
-    private fun tick(nowNanos: Long, interval: Long, motion: SkyMotion, auto: Boolean) {
+    private fun tick(nowNanos: Long, interval: Long, motion: SkyMotion, auto: Boolean, sharedSeconds: Float?) {
         val dt = if (lastTick < 0L) interval / 1000f else min((nowNanos - lastTick) / 1e9f, MAX_STEP_S)
         lastTick = nowNanos
         if (dt <= 0f) return
-        clock += dt
+        clock = sharedSeconds ?: (clock + dt)
         energy = energyAt(nowNanos)
         drift += dt * (SkyMath.IDLE_SPEED + (SkyMath.BUSY_SPEED - SkyMath.IDLE_SPEED) * energy)
         // Look one slow tick ahead so a comet never starts at the low rate.

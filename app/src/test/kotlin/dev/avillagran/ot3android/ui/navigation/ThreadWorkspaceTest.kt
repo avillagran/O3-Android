@@ -37,6 +37,7 @@ class ThreadWorkspaceTest {
                 smallestScreenWidthDp = 411
             }
             CompositionLocalProvider(LocalConfiguration provides config) {
+                dev.avillagran.ot3android.ui.theme.Ot3Theme {
                 ThreadWorkspace(sidebar = { Text("Host node · feat/example", Modifier.testTag("sidebar_content")) }) {
                     androidx.compose.foundation.layout.Column {
                     LocalThreadSidebarControl.current?.invoke()
@@ -44,6 +45,7 @@ class ThreadWorkspaceTest {
                     var draft by rememberSaveable { mutableStateOf("") }
                     OutlinedTextField(draft, { draft = it }, Modifier.testTag("draft"))
                     }
+                }
                 }
             }
         }

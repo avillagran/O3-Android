@@ -59,9 +59,10 @@ Acceptance:
 
 ## Remaining visual scope beyond this correction
 
-Selectable nebula/warp/fold reveal styles and their pace/effect preference UI are not
-implemented by UI1i. Navigation uses the existing mobile 260 ms fade; sidebar reveal
-ports the QML software/spring path (520 ms, OutBack 1.3, fixed natural width, edge clip).
+Selectable warp/fold reveal styles and the pace/effect preference UI are not
+implemented by UI1i. Navigation uses Navigation Compose defaults with predictive back. Sidebar reveal ports
+the default nebula shader (560 ms InOutCubic); spring (520 ms OutBack 1.3) is only the
+older-API/software/compile-failure fallback. Natural width is fixed and the edge clips.
 Departure drift and cross-shelf flight arcs are also pending. The full shader variants remain part of the motion inventory/spec work, not a claim
 that all desktop effects or the complete chat have shipped. UI1i does ship the actual
 Home sky, row comet/glints/change shader, pressed feedback and reduced-motion limits.

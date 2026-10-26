@@ -463,7 +463,7 @@ is a flight with InOutQuart by default, not a plain 520 ms InOutCubic move
 | Thread rows (Home) | `LazyColumn` items keyed by thread, `Modifier.animateItem(fadeInSpec, placementSpec, fadeOutSpec)` with ot3's arrival, gap and departure specs; the drift is a `graphicsLayer.translationX` started when a key first appears and mirrored in RTL | 5.3 Rows | UI-1 |
 | Row changes shelf | the moving key's placement uses `tween(rowMoveMs, InOutQuart)` (Swoop) or `InOutCubic` (Glide), plus a per-key `Animatable` 0 → 1 driving bow = sin(πt): `translationX` = swing × bow, `rotationZ` ±1.4° × bow, scale 1 + 0.04 × bow, `shadowElevation` from black @ 0.32 × bow; into a collapsed shelf the row sinks and fades with smoothstep(0.55, 1). The section of each row comes from `sidebar.view`, so the move is detected by key, not guessed | 5.3 Rows | UI-1 |
 | Status icon | pop (scale 0.3 → 1 OutBack 2.4, 460 ms; alpha 200 ms) when the lib's status label changes; tint 320 ms; `circle-dashed` turns 112.5°/s from `Ot3Ticker` while the sky animates | 5.3 Rows | UI-1 |
-| Working badge pulse | ot3 does not pulse the badge or the count pills; "working" reads through the spinning status icon, the sky's comets and the working pill's spinner and shimmer. The pills change without animation. The row aura's pulse stays out of v1 (3.7) | — | — |
+| Working badge pulse | ot3 does not pulse the badge or the count pills; "working" reads through the spinning status icon, the sky's comets and the working pill's spinner and shimmer. The pills change without animation. UI1i supersedes the original v1 aura exclusion (3.7): the row aura uses the source shader and shared ticker; pills still do not pulse | — | — |
 | Shelves | header and list through `Ot3Reveal`; the chevron swaps icon | 5.1 | UI-1 |
 | Sky | energy `tween(1600, InOutSine)` when "any thread works" flips; drift 5 → 42 dp/s × star speed; comets only while energy > 0; frame pacing as ot3 (125 / 33 / 16 / 8 ms); Auto's downgrade (3.4.4) | 5.3 Sky; 3.5 | UI-1 |
 | Connection dot | T3 Mobile's 1 100 ms pulse while connecting or reconnecting (a state ot3's dot does not have, rule 4); still when connected | 5.4 | UI-1 |
@@ -499,7 +499,7 @@ DataStore with ot3's keys and defaults:
 | Show and hide (`transitionStyle`) | Nebula, Hyperspace, Fold, Spring, Instant; Nebula (`:272`) | kept; below API 33 Nebula, Hyperspace and Fold draw as Spring |
 | Transition speed (`transitionSpeed`) | Slow, Normal, Fast (`:273`) | kept |
 | Animation smoothness (`animationRate`) | Adaptive, Saver (30 fps), Maximum (display rate); Adaptive (`:269`; `ot3:ui/qml/T3Panel.qml:91`) | kept; battery saver forces Saver |
-| Working threads, Threads needing input, Thread state changes, Effect intensity (`:263-265,268`) | aura effects | not shown: auras are out of v1 (3.7) |
+| Working threads, Threads needing input, Thread state changes, Effect intensity (`:263-265,268`) | aura effects | UI1i includes the source default auras; effect preference controls remain future work (see addendum) |
 | Bar indicator, Frame rate meter (`:270-271`) | desktop bar and diagnostics | not shown (the FPS meter stays a debug-build option) |
 
 What each starfield mode does, as in ot3 (`ot3:ui/qml/T3Starfield.qml:23-26,47-48,97-99`;
@@ -621,9 +621,12 @@ Rules, generator and the list: [ui/strings.md](ui/strings.md). The layout is RTL
   number (`ot3:ui/qml/T3PullRequestBadge.qml:20-31`); tap opens the PR or, with several,
   the Thread pull requests sheet (`t3m:src/features/threads/use-open-thread-pull-requests.ts:13-33`).
   Data: `pull_requests::sidebar_badge` (`lib:src/pull_requests.rs:82`, U19).
-- **Not ported in v1:** the row auras (working comet around the row, glints, bursts;
-  `ot3:ui/assets/shaders/threadaura.frag`, colours at `ot3:ui/qml/T3ThreadRow.qml:203-205`),
-  for list performance on mid-range phones.
+- **UI1i overrides the original v1 exclusion:** row auras are included by Andrés's
+  current acceptance requirement (also superseding the exclusion in §3.4.3). Port the
+  working comet, attention glints and change burst from `threadaura.frag`, with colours
+  from `T3ThreadRow.qml:203-205`, shared ticker, guarded AGSL and Canvas fallback.
+  Performance on a physical mid-range phone remains unverified; do not claim it from
+  emulator evidence. The effect style/intensity selectors are not implemented yet.
 
 ### 3.8 Iconography
 
@@ -1969,13 +1972,18 @@ A fixture can prove reproducible state/layout; it does not grant aesthetic accep
   card/slim row roles. Working energy comes from the lib. Do not draw sky in chat.
 - Ship the source row aura (work comet, attention glints, 1300 ms change star), guarded
   AGSL plus Canvas fallback, pressed/selected feedback and visible surface motion.
-  App Off/system animator scale 0 stop clocks/transitions; attention stays static.
-- Sidebar reveal keeps the child's natural 280 dp width and clips from its edge using
-  T3Reveal's safe spring path: 520 ms, OutBack 1.3, slide/opacity. Mobile navigation
-  keeps the 260 ms fade. Arrival uses 416 ms total (83 ms pause + 333 ms OutCubic fade /
-  OutBack 1.2 drift); departure opacity uses 312 ms, placement 520 ms InOutCubic.
-  Selectable shader reveal styles, pace and complete cross-shelf flight remain named
-  motion follow-ups, not silently claimed as complete.
+  Decorative Off stops clocks/row reveals; attention stays static. System animator
+  scale 0 also disables native navigation through Android's own transition scaling.
+- Sidebar reveal keeps the child's natural 280 dp width and uses T3Reveal's default
+  nebula shader (560 ms InOutCubic, reach = min(1, extent / 0.6)); spring 520 ms OutBack
+  1.3 is only the declared fallback on older APIs, software rendering or shader failure.
+  Stack push/pop use Navigation Compose defaults and predictive back. 260 ms belongs
+  only to tablet panes. Arrival uses 83 ms pause + 333 ms OutCubic fade / OutBack 1.2
+  drift, departure opacity 312 ms, keyed shelf placement 520 ms InOutQuart. Full arc
+  flight/departure drift and the preference selectors remain explicit follow-ups.
+- A single requested-rate ticker now drives sky, spinner, shimmer, status icon and row
+  aura. T3Motion supplies only reveal style/pace; component durations stay independent.
+  Pills, approval cards, quota/usage/OmaBridge receive no invented animation.
 - Chat chrome is 56 dp below the safe area; timeline meets the minimal composer with
   no app-footer gap, also with the real IME. User surface and assistant prose use ot3
   roles, 6 dp corners and readable 14 sp body. This does **not** complete chat parity.

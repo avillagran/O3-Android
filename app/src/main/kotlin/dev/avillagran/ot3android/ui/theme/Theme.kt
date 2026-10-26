@@ -53,7 +53,9 @@ fun Ot3Theme(
         // ot3 has no tonal elevation; surfaces separate by tint and hairline.
         LocalTonalElevationEnabled provides false,
     ) {
-        MaterialTheme(colorScheme = colorScheme, typography = typography.material, shapes = Ot3Shapes, content = content)
+        ProvideOt3Ticker(motion) {
+            MaterialTheme(colorScheme = colorScheme, typography = typography.material, shapes = Ot3Shapes, content = content)
+        }
     }
 }
 

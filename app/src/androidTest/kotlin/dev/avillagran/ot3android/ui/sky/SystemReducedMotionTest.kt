@@ -2,6 +2,8 @@ package dev.avillagran.ot3android.ui.sky
 
 import android.Manifest
 import android.provider.Settings
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -49,4 +51,29 @@ class SystemReducedMotionTest {
             instrumentation.uiAutomation.dropShellPermissionIdentity()
         }
     }
+    @Test fun decorativeConsumersJoiningLaterShareTheExistingPhase() {
+        rule.mainClock.autoAdvance = false
+        var join by androidx.compose.runtime.mutableStateOf(false)
+        var first = 0f
+        var second = -1f
+        rule.setContent {
+            Ot3Theme {
+                val one = dev.avillagran.ot3android.ui.kit.rememberKitClock(true)
+                val two = if (join) dev.avillagran.ot3android.ui.kit.rememberKitClock(true) else null
+                androidx.compose.runtime.SideEffect {
+                    first = one.value
+                    second = two?.value ?: -1f
+                }
+                Text("ticker")
+            }
+        }
+        rule.mainClock.advanceTimeBy(300)
+        rule.runOnIdle { join = true }
+        rule.mainClock.advanceTimeBy(100)
+        rule.runOnIdle {
+            org.junit.Assert.assertTrue("Ticker must advance", first > 0f)
+            assertEquals("Joining a row/spinner must not restart its clock", first, second, 0f)
+        }
+    }
+
 }

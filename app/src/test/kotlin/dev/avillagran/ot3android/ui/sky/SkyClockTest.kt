@@ -34,11 +34,11 @@ class SkyClockTest {
     }
 
     @Test
-    fun explicitFullTicksAtThirtyHertzEvenIdle() {
+    fun explicitFullTicksAtDisplayPaceEvenIdle() {
         val sky = SkyClock().apply { setEnergyTarget(0f); meteorReach = 0f }
-        assertEquals(33L, sky.intervalMs(SkyMotion.Full, auto = false))
+        assertEquals(16L, sky.intervalMs(SkyMotion.Full, auto = false))
         val (ticks, _) = sky.run(1f, SkyMotion.Full, auto = false)
-        assertEquals(30f, ticks.toFloat(), 2f)
+        assertEquals(60f, ticks.toFloat(), 2f)
     }
 
     @Test
@@ -130,7 +130,7 @@ class SkyClockTest {
             sky.onFrame(now, SkyMotion.Light, auto = false)
             if (sky.meteorNow) {
                 sawMeteor = true
-                assertEquals(33L, sky.intervalMs(SkyMotion.Light, auto = false))
+                assertEquals(8L, sky.intervalMs(SkyMotion.Light, auto = false))
             }
             now += 33_000_000L
         }

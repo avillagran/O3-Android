@@ -10,7 +10,6 @@ import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.LinearEasing
@@ -75,6 +74,8 @@ object Ot3Motion {
         u * u * ((overshoot + 1f) * u + overshoot) + 1f
     }
 
+    val EaseInOutQuart: Easing = Easing { t -> if (t < 0.5f) 8f * t * t * t * t else { val u = -2f * t + 2f; 1f - u * u * u * u / 2f } }
+
     val RowDriftEasing: Easing = easeOutBack(1.2f)
     val StatusPopEasing: Easing = easeOutBack(2.4f)
 }
@@ -127,7 +128,7 @@ data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationP
 
     fun <T> rowDepart(): FiniteAnimationSpec<T> = tween(Ot3Motion.ROW_DEPART_MS, Ot3Motion.EaseInCubic)
 
-    fun <T> shelfMove(): FiniteAnimationSpec<T> = tween(Ot3Motion.SHELF_MOVE_MS, Ot3Motion.EaseInOutCubic)
+    fun <T> shelfMove(): FiniteAnimationSpec<T> = tween(Ot3Motion.SHELF_MOVE_MS, Ot3Motion.EaseInOutQuart)
 
     fun <T> statusPop(): FiniteAnimationSpec<T> = tween(Ot3Motion.STATUS_POP_MS, Ot3Motion.StatusPopEasing)
 
