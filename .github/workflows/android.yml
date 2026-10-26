@@ -62,6 +62,13 @@ jobs:
           scripts/fetch-or-build-lib.sh --release --host-jni
           cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
 
+      # values*/strings_ot3.xml are generated from the catalog in the pinned AAR and
+      # committed; a lib bump that changes strings fails here until they are regenerated.
+      - name: ot3 strings match the AAR's catalog
+        run: |
+          python3 -I tools/tests/test_import_ot3_strings.py
+          python3 -I tools/import-ot3-strings --check
+
       # :app:verifyRoborazziDebug runs the app's JVM tests and compares every screenshot
       # with its golden in app/src/test/snapshots/.
       - name: Unit tests, screenshot tests, lint and debug build

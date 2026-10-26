@@ -1,4 +1,4 @@
-# Strings the app takes from ot3's catalog (ot3:translations/i18n.json).
+# Strings the app takes from ot3's catalog (assets/lib-t3-rust/i18n.json in the lib's AAR).
 # One row per string: android_name<TAB>ot3 English key. Names start with ot3_.
 # tools/import-ot3-strings turns this file into values*/strings_ot3.xml; see docs/ui/strings.md.
 # Lines starting with # and blank lines are ignored.

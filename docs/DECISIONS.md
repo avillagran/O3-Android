@@ -765,6 +765,29 @@ API 34 google_apis x86_64, 2 GB), `-gpu swiftshader_indirect`, cold boot, consol
   core's do. Tests that call the lib are plain JUnit, not Robolectric: each Robolectric
   sandbox has its own class loader and a JNI library loads in one class loader only.
 
+## 2026-10-25: UI-1f: ot3 strings generated at build time from the lib's AAR
+
+- **`tools/import-ot3-strings` reads the catalog from the AAR.** It opens
+  `libs/lib-t3-rust-android.aar` and reads `assets/lib-t3-rust/i18n.json` instead of
+  `translations/i18n.json` in an ot3 checkout; `--ot3` and `OT3_CHECKOUT` are gone. The lib
+  version comes from the AAR's `META-INF/lib-t3-rust.properties` and must match the tag in
+  `libs/lib-t3-rust.lock`; every `strings_ot3.xml` header names that version, the asset and
+  the catalog's sha256. On v0.3.4 the asset is byte-identical to the ot3 file used so far, so
+  regenerating changed only the headers.
+- **Build-time generation, not runtime `i18n.t`.** Looking strings up through the lib at
+  run time would cost a JNI call per string per recomposition, and domain calls belong off
+  the main thread, which a `Text` cannot wait for. Android resources give locale selection
+  and per-app language, RTL handling, lint (missing translations, format arguments),
+  Compose previews and Robolectric screenshots without the native library, and
+  `stringResource` caching.
+- **Drift is caught in CI.** The catalog is pinned by the AAR, which is pinned by the lock;
+  CI runs `python3 -I tools/import-ot3-strings --check` after fetching the AAR, so a lib bump
+  that changes any imported string fails until the outputs are regenerated and committed.
+  The outputs stay committed and the Gradle build never runs Python.
+- **Runtime `i18n.t` / `i18n.catalog` stay available** for English sources the lib returns
+  at run time, if a later screen needs them. Today none does: Home maps the lib's `detail`
+  to its `ot3_status_*` resources.
+
 ## Pending decisions
 
 - **Adopt compileSdk/targetSdk 37, AGP 9.x (Gradle 9) and Compose 1.12 together**, in one
