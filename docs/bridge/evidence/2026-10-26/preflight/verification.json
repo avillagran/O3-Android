@@ -1,0 +1,27 @@
+{
+  "observedAt": "2026-10-26T18:43:47.789219+00:00",
+  "readOnly": true,
+  "environmentId": "8b55eaad-3149-443c-953f-afd6dd002666",
+  "desktopCatalog": {
+    "available": true,
+    "present": true,
+    "unique": true,
+    "enabled": true,
+    "routeCount": 1
+  },
+  "installedBridge": {
+    "available": true,
+    "version": "0.2.1",
+    "catalogPublish": false
+  },
+  "nodeDescriptor": {
+    "available": true,
+    "matches": true
+  },
+  "portableDescriptor": {
+    "available": true,
+    "matches": true
+  },
+  "authorization": "not_tested",
+  "androidDiscovery": "not_tested"
+}
