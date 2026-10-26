@@ -46,6 +46,7 @@ class AppGraph(
     context: Context,
     val transportFactory: T3TransportFactory = NativeT3TransportFactory(),
 ) {
+    val providerRefreshGate = dev.avillagran.ot3android.ui.usage.ProviderRefreshGate()
     private val appContext = context.applicationContext
     val applicationContext: Context get() = appContext
 

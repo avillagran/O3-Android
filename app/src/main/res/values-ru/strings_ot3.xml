@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">У %1$s записей нет цены.</string>
     <string name="ot3_usage_prices_unavailable">Цены моделей недоступны.</string>
     <string name="ot3_usage_refresh_prices">Обновить цены</string>
+    <string name="ot3_usage_limits">Лимиты</string>
+    <string name="ot3_usage_resets_at">Сброс %1$s</string>
 </resources>

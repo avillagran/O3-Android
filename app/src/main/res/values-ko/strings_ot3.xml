@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">%1$s개 기록에 가격이 없습니다.</string>
     <string name="ot3_usage_prices_unavailable">모델 가격을 사용할 수 없습니다.</string>
     <string name="ot3_usage_refresh_prices">가격 새로 고침</string>
+    <string name="ot3_usage_limits">한도</string>
+    <string name="ot3_usage_resets_at">%1$s에 초기화</string>
 </resources>

@@ -182,4 +182,6 @@
     <string name="ot3_usage_unpriced">%1$s records have no price.</string>
     <string name="ot3_usage_prices_unavailable">Model prices are unavailable.</string>
     <string name="ot3_usage_refresh_prices">Refresh prices</string>
+    <string name="ot3_usage_limits">Limits</string>
+    <string name="ot3_usage_resets_at">Resets %1$s</string>
 </resources>

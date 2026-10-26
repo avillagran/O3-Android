@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">Limity využití nejsou k dispozici.</string>
+    <string name="limits_used">Využito %1$s</string>
+    <string name="limits_checked">Zkontrolováno %1$s</string>
+</resources>

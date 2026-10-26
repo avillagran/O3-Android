@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">%1$s 件のレコードに価格がありません。</string>
     <string name="ot3_usage_prices_unavailable">モデルの価格を取得できません。</string>
     <string name="ot3_usage_refresh_prices">価格を更新</string>
+    <string name="ot3_usage_limits">上限</string>
+    <string name="ot3_usage_resets_at">%1$s にリセット</string>
 </resources>

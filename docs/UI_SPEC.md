@@ -2314,3 +2314,14 @@ installed bridge lacks catalog publication. Candidate LocalT3Authority is local-
 so remote NODE additionally needs OB6 delegated issuance. Android must keep one bridge
 pairing flow; do not substitute manual per-host setup as acceptance. See
 [remote authority](bridge/REMOTE_AUTHORITY.md) for identity, trust and test boundaries.
+
+### Limits page checkpoint — 2026-10-26
+
+Settings → Usage → Limits subscribes only while visible, for the selected environment,
+using typed server configuration updates with hub sources enabled. Native
+quotaSources.apply owns folding and private-field removal. The page renders provider
+and hub accounts with separate used-percentage bars and platform-formatted absolute
+reset/check times. One application-scoped probe per environment per five minutes,
+including failures; cancellation and reconnect generations clear stale data.
+U26 pooling/remaining/pace, compact Home/thread strips and tab fade remain pending.
+See [limits evidence](ui/compare/usage-limits/README.md).

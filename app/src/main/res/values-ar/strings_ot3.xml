@@ -184,4 +184,6 @@
     <string name="ot3_usage_unpriced">%1$s سجلات بلا سعر.</string>
     <string name="ot3_usage_prices_unavailable">أسعار النماذج غير متاحة.</string>
     <string name="ot3_usage_refresh_prices">حدّث الأسعار</string>
+    <string name="ot3_usage_limits">الحدود</string>
+    <string name="ot3_usage_resets_at">يُعاد الضبط %1$s</string>
 </resources>

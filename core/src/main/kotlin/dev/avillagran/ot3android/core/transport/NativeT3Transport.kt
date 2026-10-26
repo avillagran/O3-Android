@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android.core.transport
 
+import dev.avillagran.t3.T3Batch
 import dev.avillagran.t3.T3Client
 import dev.avillagran.t3.T3Exception
 import dev.avillagran.t3.ThreadStream
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -97,6 +99,34 @@ class NativeT3Transport(
     ): Flow<ThreadUpdate> = updates {
         ThreadStream.thread(client, threadId, afterSequence, completionMarker, boundedSnapshot, compactTurnItems)
     }
+
+    override fun serverConfigStream(): Flow<T3Batch> = channelFlow {
+        val subscription = client.subscribeFn(
+            "server.subscribeServerConfig", JSONObject().put("usageLimitSources", true),
+        )
+        launch {
+            while (isActive) {
+                val batch = try {
+                    subscription.poll(POLL_TIMEOUT_MS)
+                } catch (error: Exception) {
+                    if (!isActive) break
+                    when {
+                        error is T3Exception -> T3Batch(
+                            JSONArray(), true, error.code.takeUnless { it == "unknown_subscription" },
+                            error.reason.takeUnless { error.code == "unknown_subscription" },
+                        )
+                        error is IllegalStateException && error.message == "client_closed" ->
+                            T3Batch(JSONArray(), true, null)
+                        else -> throw error
+                    }
+                }
+                if (batch.items.length() > 0 || batch.closed) send(batch)
+                if (batch.closed) break
+            }
+            channel.close()
+        }
+        awaitClose { subscription.close() }
+    }.buffer(0).flowOn(io)
 
     override suspend fun wakeSubscriptions(): Int = native { client.wakeSubscriptions() }
 

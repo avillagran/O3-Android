@@ -74,7 +74,7 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                         val state by model.state.collectAsStateWithLifecycle()
                         dev.avillagran.ot3android.ui.usage.UsageScreen(state,
                             model::selectEnvironment, model::selectPeriod, model::refresh,
-                            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices)
+                            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices, onTab = model::selectTab)
                     }
                     @Composable override fun Thread(route: Thread) {
                         val vm: ThreadViewModel = viewModel {
@@ -113,6 +113,12 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
     val transport = FakeT3Transport().apply {
         onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
         onShell { fixtureShell() }
+        onCall("server.refreshProviders") { JSONObject() }
+        onServerConfigStream { kotlinx.coroutines.flow.flow {
+            val events = JSONArray(application.assets.open("usage/limits.events.json").bufferedReader().use { it.readText() })
+            emit(dev.avillagran.t3.T3Batch(events, false, null))
+            kotlinx.coroutines.awaitCancellation()
+        } }
         onCall("server.refreshUsageRates") { pricesFresh = true; JSONObject().put("status", "fresh") }
         onCall("server.getUsageSummary") { args ->
             val input = JSONObject(application.assets.open("usage/summary.input.json").bufferedReader().use { it.readText() })

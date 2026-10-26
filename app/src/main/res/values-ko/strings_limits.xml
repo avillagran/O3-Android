@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">사용 한도를 확인할 수 없습니다.</string>
+    <string name="limits_used">%1$s 사용됨</string>
+    <string name="limits_checked">확인: %1$s</string>
+</resources>

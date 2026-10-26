@@ -183,4 +183,6 @@
     <string name="ot3_usage_unpriced">%1$s poster saknar pris.</string>
     <string name="ot3_usage_prices_unavailable">Modellpriser är inte tillgängliga.</string>
     <string name="ot3_usage_refresh_prices">Uppdatera priser</string>
+    <string name="ot3_usage_limits">Gränser</string>
+    <string name="ot3_usage_resets_at">Återställs %1$s</string>
 </resources>
