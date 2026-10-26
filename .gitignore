@@ -22,3 +22,6 @@
 /libs/host/
 /libs/.fetch-or-build.lock
 google-services.json
+__pycache__/
+
+core/src/main/jniLibs/

@@ -328,7 +328,7 @@ older history) at some cost in behaviour or bandwidth.
   Wakeup probing is already on the ABI (`wakeSubscriptions`, `T3Subscription.wake()`,
   `ThreadStream.wake()`), so no separate probe operation is requested.
 
-### 6. Pairing-link parser (blocking since 2026-10-25)
+### 6. Pairing-link parser (resolved 2026-10-25, v0.3.3; used since UI-1f)
 
 Also U17 in the UI specification's requests below, which gates UI-6. UI_SPEC section 4.2
 planned URL + token only until it lands; pairing shipped earlier on a temporary port, so
@@ -359,6 +359,11 @@ it now blocks removing that port rather than the screen.
   pairingCode?}` → `{httpBaseUrl, pairingCode}`, with a `T3Api` wrapper. The app still pins
   v0.3.2, so `PairingLink.kt` stays until it moves to v0.3.3; `PairingLinkTest`'s table
   can then check the wrapper instead.
+- Resolved 2026-10-25 (UI-1f): `PairingLink.kt` is deleted. `core/pairing/PairingTargets.kt`
+  calls `connectionCatalog.pairingTarget` through `DomainEngine` and returns the redacted
+  `PairingTarget`; neither the arguments nor the result are logged. `PairingTargetsTest` runs
+  the same 70-input table (and the lib's own test) against the domain operation through the
+  host JNI library: every case matches what the Rust function returned at v0.3.2.
 - In Rust today: `connection_catalog::pairing_target` (`src/connection_catalog.rs:5-58`,
   test at `:265-290`); the catalog functions `view`, `mutate` and `register` (`:73`, `:107`,
   `:213`) could follow, with storage staying in Kotlin.
@@ -794,7 +799,7 @@ function is listed in `describe().domain` with its args but no test here calls i
 | U14 | Usage and quotas | **Closed in v0.3.4** | `usageSummary.request`, `quotaSources.limits`; `usageSummary.window`, `aggregate`, `quotaSources.providers`, `sources`, `apply` | `u14UsageRequestAndQuotaLimits`; the rest describe only |
 | U15 | `planWorkflow.view` / `followUp` | **Closed in v0.3.4** | `planWorkflow.view` (plans with `markdown.blocks` blocks); `followUp`, `attachSourceRef`, `implementationTitle`, `mode` | `u15PlanWorkflowView`; the rest describe only |
 | U16 | ot3's string catalog in the lib or the AAR | **Closed in v0.3.4** | `i18n.t`, `i18n.resolve`, `i18n.catalog`; `i18n.languages`; AAR asset `lib-t3-rust/i18n.json` | `u16StringsInSpanishAndArabic` (`Close` → `Cerrar` / `إغلاق`, Arabic `rtl`, 1796 strings for `es`); `languages` describe only; the asset by `unzip -l` of the AAR and the APK |
-| U17 | Pairing-link parser (phase 1 item 6) | **Closed in v0.3.3** | `connectionCatalog.pairingTarget` | `u17PairingTarget`. The app does not use it yet: `core/pairing/PairingLink.kt` (merged with #9) still parses links in Kotlin and has to switch to it. |
+| U17 | Pairing-link parser (phase 1 item 6) | **Closed in v0.3.3** | `connectionCatalog.pairingTarget` | `u17PairingTarget`; used by `PairingTargets` since UI-1f, `PairingTargetsTest` runs the 70-input table against it. |
 | U18 | History paging (phase 1 item 7) | **Closed in v0.3.3** | `history.path`; `history.envelope` | `u18HistoryPath`; `envelope` describe only |
 | U19 | `pullRequests.sidebarBadge`, `payload` | **Closed in v0.3.4** | `pullRequests.sidebarBadge`; `request`, `payload`, `threadCommand` | `u19PullRequestBadge`; the rest describe only |
 | U20 | Branch picker | **Closed in v0.3.4** | `branchPicker.selectionTarget`; `dedupe`, `deriveLocal`, `sanitize`, `mismatch`, `temporaryBranch` | `u20BranchPickerSelectionTarget`; the rest describe only |
@@ -834,3 +839,227 @@ importer to them (DECISIONS.md, 2026-10-25), the later tranches use the rest.
 | v0.3.3 1: no shell reducer in `domain` | Open | No `shell.*` among the 108 entries. |
 | v0.3.3 2: no `message.dispatch` or `run.interrupt` builder | Open | `composer.*` unchanged; `planWorkflow.attachSourceRef` decorates a ready command. |
 | v0.3.3 3: the projection crosses JNI twice per update | Open | `projection.apply` / `timeline.view` signatures unchanged; no handle. |
+
+## 2026-10-25: live Omarchy theme
+
+UI_SPEC 3.1.3 reads the host's `~/.local/state/omarchy/current/theme/colors.toml` and
+`theme.name` through T3. It works with v0.3.4 (DECISIONS.md, "Live Omarchy theme,
+implementation"), with one workaround and one wrong field. Evidence: PROTOCOL_NOTES.md,
+"Live Omarchy theme".
+
+### 1. No typed way to get HOME or to read a `~` path
+
+- **Expected (UI_SPEC):** HOME from `filesystem.getMetadata`, which expands `~`.
+- **Live:** `call("filesystem.getMetadata", {paths: ["~"]})` → `{entries: [{kind:
+  "directory"}]}`: no path. `call("projects.readFile", {cwd: "~", relativePath:
+  ".local/state/omarchy/current/theme/colors.toml", allowMissing: true})` →
+  `rpc_rejected`. `projects.readFile` with an absolute HOME as `cwd` works.
+- **Workaround in the app:** HOME = `filesystem.browse({partialPath:
+  "~/.local/state/omarchy/current/theme"}).parentPath` minus
+  `/.local/state/omarchy/current`: two extra calls per environment (getMetadata for
+  existence, since `browse` fails on a missing directory), and string surgery on a path.
+- **Wanted (any one):** `filesystem.readFile({path, allowMissing?})` that expands `~`
+  like `getMetadata` (`{contents, byteLength, truncated, exists}`, scope
+  `filesystem:read`); or `getMetadata` entries with the resolved `path`; or a typed
+  `server.omarchyTheme()` → `{name, colors} | null` that reads both files in one call.
+
+### 2. `requiredScope` names the token's scope, not the missing one
+
+- **Live:** with a token holding only `orchestration:read`,
+  `call("filesystem.getMetadata", {paths: ["~"]})` and `call("projects.readFile", …)`
+  throw `T3Exception(code = "write_not_authorized", reason = "The authenticated token is
+  missing required scope: filesystem:read.", requiredScope = "orchestration:read")`.
+- **Wanted:** `requiredScope = "filesystem:read"` (the scope the server says is missing);
+  and, for reads, a code that does not say "write" (e.g. `not_authorized`), or a note in
+  ANDROID.md that `write_not_authorized` covers reads too. The app falls back to the
+  function's `describe` scope.
+
+## 2026-10-25: UI-1f, after moving to `sidebar.view`, `theme.tokens` and `connectionCatalog.pairingTarget`
+
+What the app still derives in Kotlin after UI-1f, and what would remove it.
+
+### 1. `theme.tokens`: Material containers (nice to have)
+
+- Proposed: two more `roles` (and `layers`) in `theme.tokens`: `accentContainer` (accent
+  @ 0.14) and `failedContainer` (`failed` @ 0.14), with Qt's blend like every other role.
+- Why: Android maps them onto Material's `primaryContainer`, `secondaryContainer` (the
+  navigation bar indicator) and `errorContainer` (tokens.md section 2). ot3 has no such
+  role, so `theme.tokens` does not return them and `Ot3Colors` blends them with straight
+  alpha (`Ot3Blend`), the only colour the app computes. The chip fills
+  (`projectFills`) already have accent @ 0.14 for themes whose accent is a palette slot,
+  but not for hackerman and kanagawa, so they cannot stand in.
+- In Rust today: `theme::drawn` and `LAYERS` (`src/theme.rs:20-37`, `:139`).
+
+### 2. Thread menu rules and snooze presets (nice to have)
+
+- Proposed: the thread menu's items with their visibility and enablement for a row and a
+  capability set (`sidebar.threadAction` builds the command, not the menu), and ot3's
+  snooze presets for a `now` and a time zone.
+- Why: `core/home/ThreadActions.kt` keeps ot3's menu rules (`T3ThreadRow.qml:378-410`) and
+  preset times (`T3ThreadRow.qml:104-110`) in Kotlin. They are presentation rules ot3
+  writes in QML, not protocol, so they are listed here rather than moved silently.
+
+
+## 2026-10-25: UI-1h host metadata audit
+
+`sidebar.view.environmentName` is the caller-provided environment display name,
+not host OS or a machine type (`src/sidebar/view.rs:136`). Android now shows that
+label and the shell's `branch` on all real rows, plus the lib's `pullRequestBadge`.
+No blocker for these fields. For parity with desktop machine glyphs, expose an
+optional authoritative host/machine presentation field through the shared contract;
+until available Android omits the glyph instead of guessing from label/URL.
+See `docs/ui/compare/ui-1h/METADATA.md`. No Kotlin protocol implementation added.
+
+## 2026-10-25: usage limits and routes
+
+Two requests from the UI specification's motion, usage and OmaBridge requirements
+(UI_SPEC 4.2.1, 4.10, section 6 rows U26 and U27), checked against v0.3.4 (`e2ec546`):
+`describe().domain` and `src/`. Neither blocks a tranche: the screens ship a reduced form
+until they land (UI_SPEC rule 6). Live limits themselves need nothing new:
+`server.subscribeServerConfig` with `usageLimitSources: true` already carries them
+(`bindings/android/describe.json:5710,6037`) and `quotaSources.apply` folds the stream
+(`:1267`).
+
+### U26. `quotaSources.present`: ot3's pooled limits (nice to have)
+
+- What: the quota strip and the Limits tab show, per provider, one bar per window with a
+  segment per account pooled across environments, the remaining percent, the pace, an
+  expected-remaining marker, the earliest reset as "resets in 2h 5m", and notices
+  ("Access denied", "Disconnected; readings may be outdated", "Could not refresh
+  limits", external usage links). ot3 computes all of it in JavaScript ported from T3's
+  `packages/shared/src/usageLimits.ts` (ot3 `ui/js/UsageLimits.js:5-43`,
+  `ui/js/NativeUsageLimits.js:153-567`, provenance `ui/js/NativeUsageLimits.sources.json:2`);
+  T3 Mobile uses the same helpers (`apps/mobile/src/features/usage/UsageLimitsPooled.tsx:302-309`).
+- Why Android needs it: it is derived presentation of protocol data (account identity,
+  workspace disambiguation, fresh-observation choice, pooling, pace); porting 600 lines of
+  it to Kotlin breaks the architecture rule and drifts from ot3.
+- Evidence: the seven usage functions in `describe().domain` are `usageSummary.window`,
+  `request`, `aggregate` and `quotaSources.limits`, `providers`, `sources`, `apply`
+  (`describe.json:1163-1267`); none pools or computes pace (`grep -n
+  'pool\|pace\|elapsed\|resets in' src/quota_sources.rs` finds nothing). `limits` also
+  drops `unavailable.message` and `resetCredits` (`src/quota_sources.rs:23-74`).
+- Proposed: `quotaSources.present {environments: [{id, name, connected, error?,
+  refreshFailed?, state}], now}` where `state` is `quotaSources.apply`'s, returning ot3's
+  `UsageLimits.present` shape:
+
+  ```json
+  {"providers":[{"provider":"codex","label":"Codex",
+     "accounts":[{"key":"…","label":"…","plan":"pro","hosts":"node, laptop",
+                  "windows":[{"label":"5 hours","availablePercent":62,"reset":"resets in 2h 5m"}]}],
+     "windows":[{"id":"five_hour","kind":"session","label":"5 hours","availablePercent":62,
+                 "pace":"ahead","expectedAvailable":71.5,
+                 "segments":[{"key":"…","availablePercent":62,"expectedAvailable":71.5,"reset":"resets in 2h 5m"},null],
+                 "nextReset":"resets in 2h 5m"}],
+     "weekly":{"…":"same window object or null"},"shortWindow":{"…":"same or null"}}],
+   "notices":["node: Disconnected; readings may be outdated"],
+   "external":[{"label":"ChatGPT usage","url":"https://chatgpt.com/#settings/Usage"}]}
+  ```
+
+  English source strings in `reset` and `notices`, so the app translates them with
+  `i18n.t` (the reset should come as `{key, args}` or as `resetsAt` plus a separate
+  `i18n` key if the catalog gains "resets in {time}"). Driver labels from ot3's map
+  (`ui/js/UsageLimits.js:38-41`).
+
+### U27. Routes of an environment: `routeKind`, `routePlan`, route hint (nice to have)
+
+- What: an environment can be saved with several addresses (public, local network,
+  Tailscale, an OmaBridge gateway); the app shows the route in use and falls back when
+  one is unreachable (UI_SPEC 4.2.1).
+- Why Android needs it: classifying an address and ordering attempts are connection
+  policy; ot3 classifies host addresses in Rust (`src/connection_network.rs:48-54`:
+  loopback "This machine", `100.` "Tailscale", other private "Local network", "Tailscale
+  HTTPS") and the lib already groups and orders routes (`src/connection_catalog.rs:73-212`),
+  Rust-only.
+- Evidence: `connectionCatalog.pairingTarget` is the only `connectionCatalog` function in
+  `describe().domain` (`describe.json:733-749`); `view`, `mutate` (`prefer-route`,
+  `remove-route`) and `register` are not exposed; nothing reports a route in use or
+  classifies an address; `grep -rni omabridge src` is empty.
+- Proposed:
+  - `connectionCatalog.routeKind {url, hint?}` → `{kind: "public"|"lan"|"tailscale"|"omabridge"|"loopback", reason}`
+    (`hint` from the link; `lan` for RFC 1918, link-local, `.local` and `.lan`;
+    `tailscale` for `100.64.0.0/10` and `*.ts.net`).
+  - `connectionCatalog.routePlan {routes: [{id, kind, url, order, lastOkAt?, lastOkNetwork?}], network: {type: "wifi"|"cellular"|"ethernet"|"vpn"|"none", id?}, failures?: [{id, error, at}]}`
+    → `{attempts: [{id, timeoutMs}], retryAfterMs?}`: the route that last worked on this
+    network first, then the user's order; skip `lan` on cellular; never fall back after
+    `unauthorized` or `t3_environment_mismatch`.
+  - `connectionCatalog.pairingTarget` also returns `routeHint` when the link carries
+    `route=omabridge` (and `gateway=<name>`), the format proposed in
+    [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB4.
+  - Optionally expose `connectionCatalog.view` / `mutate` for apps that keep T3's catalog
+    document; ot3-Android keeps its own Room table (UI_SPEC 4.2.1), so the two functions
+    above are what it uses.
+
+## 2026-10-26: UI-N thread awareness (notifications and Live Updates)
+
+Checked against v0.3.4 (`e2ec546`, the pinned AAR) and the companion branch
+`feat/bridge-catalog-sync` (`027a025`): `git grep -i 'notif\|attention\|awareness'` over
+`src/` finds only `reconnect::notify` (network wake-ups, `src/reconnect.rs:89-103`). What
+exists and is enough for counts: `sidebar.view` returns `counts`
+`{working, done, waiting, failed}` (`src/sidebar/view.rs:349-358`, ot3's bar semantics,
+`ot3:ui/js/SidebarModel.js:45-49`) and each row's `pending`, `reason`, `revision`,
+`detail` (`approval` / `input` / `plan` / ...) and `state` (`src/sidebar/view.rs:21-90,
+193-245`). What does not exist: any notion of a transition, a seen baseline, an alert,
+an expiry or a card. UI_SPEC 4.14 needs them; Kotlin must not derive them (ARCHITECTURE
+layer 1, UI_SPEC rule 6), so UI-N's runtime waits for this request.
+
+### U28. `awareness.view`: phases, card, alerts and dedupe (blocking UI-N runtime)
+
+- What: one pure domain function the follow service calls on every shell change (and on
+  a deadline tick), shared by ot3 (desktop alerts and bar) and Android.
+- Why in the lib: three implementations of the same rules exist today, none reachable
+  from Kotlin: T3's phases (`t3:packages/shared/src/agentAwareness.ts:59-135`), T3's
+  transition selection and lifetimes (`t3:infra/relay/src/agentActivity/agentActivityAlerts.ts:14-161`,
+  `agentActivityPayloads.ts:18-35`, `agentActivityAggregate.ts:59`, `fcmPayloads.ts:8-48`)
+  and ot3's seen-state diff (`ot3:src/main.rs:54-144`, keyed by `sidebar.view`'s
+  `revision`, first observation per environment silent through `@initialized`).
+- Proposed call:
+  `awareness.view {environments: [{id, name, shell?, state?}], now, baseline?, onScreen?: {environmentId, threadId}, preferences?: {approval, input, completion, failure}, lifecycle?: "cold"|"resumed"|"running"}`
+  (same `environments` shape as `sidebar.view`; `state` non-null while not connected, so
+  the environment's rows are neither withdrawn nor replayed).
+- Proposed result:
+  - `counts` — identical to `sidebar.view` `counts`.
+  - `rows` — per non-subagent thread with a phase: `{route: {environmentId, threadId}, phase, title, project, host, status, since?, expiresAt}`, priority order (approval/input, failed, running, completed). `phase` is T3's seven-value set; `status` is the i18n source string resolved like `statusLabel`. `since` only when a stable phase-entry time exists (T3 hides its timer because `updatedAt` moves, `t3m:.../AgentActivityPresentation.kt:160-162`).
+  - `card` — `{active, phase, title, subtitle, status, chip?: {kind: "working"|"live"|"approve"|"answer", count}, since?, expiresAt, route, rows ≤ 5}` or null. `expiresAt` absolute: running 2 h, waiting 24 h, finished 15 min after the newest result; never extended by a replay.
+  - `alerts` — `[{id, group: "attention"|"finished", phase, title, body, route, expiresAt?}]`, already deduplicated: `id` stable over retries (`[environmentId, threadId, phase, revision]`); attention on entering approval/input/plan-ready, finished on entering completed/failed and only if fresh (≤ 2 min, T3); none for an environment without a baseline entry, none for `onScreen` (consumed into the baseline, as T3 `AgentNotifications.kt:148-161`), none for settled or snoozed threads.
+  - `summaries` — `[{group, title, lines, route}]` when a group has several alerts ("2 agents need attention" / "2 agents finished" as catalog strings).
+  - `baseline` — opaque JSON the host stores and passes back; bounded (drops threads that left every shell); version field so a lib upgrade can reset it silently.
+  - `nextDeadline` — the earliest `expiresAt`, so the host can schedule one tick instead of polling.
+- Decision for the lib owner: ot3 alerts on `pending` + `revision` (also ready plans and
+  "review" completions); T3 alerts on phase transitions. Proposed: ot3's key (already in
+  `sidebar.view`) with T3's groups, freshness and lifetimes. Either way the rule lives
+  here, with fixtures shared by ot3 and Android.
+- Tests to include: cold start (no baseline → no alerts), reconnect after outage (no
+  replay), retry with same input (no duplicate), on-screen suppression consumed, two
+  threads entering attention together (one summary), finished older than 2 min (no
+  alert), settled/snoozed/subagent excluded, deadline arithmetic, revoked environment
+  removed without a finished alert.
+- Android consumes it through `NotificationContract` (`app/.../notifications/`), already
+  parsing the proposed `card` and `alerts` shapes with fixtures; nothing calls the lib yet.
+
+### UI2a client integration audit (2026-10-26)
+
+U10 and U25 are consumed by the new native timeline reader: `timeline.view` blocks,
+`toolInspector.request(reference, environment, threadId)` → typed `call` →
+`toolInspector.parse(reference, environment, threadId, response)`. No new contract is
+requested for Markdown, tool output, reasoning or file summaries. UI3's existing contracts
+still need Android integration; this increment does not mark that UI complete.
+
+U18's pure functions exist (`history.path`, `history.envelope`), but the current native
+transport exposes `boundedThread(threadId)` without an authenticated page request. The
+remaining transport request is `historyPage(threadId: String, cursor: String): JSONObject`,
+returning the existing normalized `history.envelope` with its opaque next cursor. Android
+needs it to merge only historical presentation rows without overwriting live control state,
+and retain the visible id/offset. Until integrated there is an informative history boundary,
+with no action that falsely appears to page. This is a transport request, not a request to
+reimplement history parsing or eligibility in Kotlin. Root coordinates lib work separately.
+
+### U28 update — delivered in lib v0.3.5 (2026-10-26)
+
+The final native awareness.view is released; it is no longer an unimplemented lib
+dependency. Android remains pinned to v0.3.4 for the UI-1 pre-release and will adopt
+v0.3.5 immediately afterwards with the follow service and real native output fixtures.
+The final contract adds locale, preferences.plan, alert.status and summary.body. Optional
+fields are omitted, cold reseeds without alerts, plan-ready attention has waiting_for_input,
+finished deadlines use latestRunCompletedAt, and nextDeadline includes snooze expiry.
+See the lib v0.3.5 README for the full authoritative contract. No Kotlin state/count
+logic is introduced to bridge versions.

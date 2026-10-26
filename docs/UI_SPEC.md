@@ -18,6 +18,7 @@ Auxiliary tables:
 - [ui/omarchy-themes.md](ui/omarchy-themes.md): importing Omarchy themes into the APK.
 - [ui/strings.md](ui/strings.md): string sourcing and the mobile-only strings.
 - [ui/screen-map.md](ui/screen-map.md): every ot3 audit row mapped to an Android screen and PR.
+- [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md): what the phone needs from OmaBridge (4.2.2, 4.9.1).
 - [ui/reference/](ui/reference/README.md): 13 ot3 captures used as the visual target.
 
 ## 0. Sources and citations
@@ -31,7 +32,13 @@ Every claim about ot3 or T3 Mobile cites `file:line` in a pinned snapshot:
 | `t3:` | t3code-nightly, other packages and docs | `680152e27` | repository root |
 | `lib:` | lib-t3-rust | `v0.3.2` (`26e67a7`), the version in `libs/lib-t3-rust.lock` | repository root |
 | `omarchy:` | Omarchy 4.0.2 (MIT) | installed package | `/usr/share/omarchy/` |
+| `omab:` | OmaBridge 0.2.1 (`avillagran/omabridge`) | `364b288` (main, 2026-10-25) | repository root |
 | none | this repository | `ae993ba` | repository root |
+
+Sections added on 2026-10-25 for motion, provider usage and OmaBridge (3.4, 4.2.1–4.2.2,
+4.9.1, 4.10) cite `lib:` at **v0.3.4** (`e2ec546`), the version in
+`libs/lib-t3-rust.lock` since then; the older sections keep their v0.3.2 lines. The ot3
+pin stays `7b5b1de`: every file those sections cite exists there.
 
 Two caveats from the research. The line numbers inside ot3's own audit matrices refer to
 an older working tree (`ot3:docs/audit/CHAT_PARITY.md:3`), so this spec cites ot3 code,
@@ -98,7 +105,7 @@ settles the pending decision at `docs/DECISIONS.md:294`), nested graphs per tab.
 
 The three tabs (Chats, PRs, Settings) are T3 Mobile's Android tabs
 (`t3m:modules/t3-native-controls/android/src/main/java/expo/modules/t3nativecontrols/T3WorkspaceNavigationModule.kt:66,357-365`):
-a `NavigationBar` on phones, hidden while the keyboard is up
+a `NavigationBar` on phones, hidden throughout Chat (including its sheets) and while the keyboard is up
 (`t3m:src/features/workspace/AndroidWorkspaceNavigation.android.tsx:78`), and a 72 dp
 rail on tablets (2.4). They replace ot3's sidebar-header PR toggle
 (`ot3:ui/qml/T3Panel.qml:1152`) and footer Preferences button
@@ -172,9 +179,45 @@ positional threshold, `combinedClickable(onLongClick)` with
 The current sidebar's pull to refresh (`app/src/main/kotlin/dev/avillagran/ot3android/ui/sidebar/SidebarScreen.kt:129`)
 goes away; "Refresh" moves to the Home overflow menu, as in ot3's footer.
 
-### 2.4 Tablets and foldables
+### 2.4 Adaptive Chat, tablets and foldables
 
-T3 Mobile's breakpoints, all in `t3m:src/lib/layout.ts`, are kept exactly:
+**Andrés, 2026-10-25 — UI-1h overrides:** phone rotation is free. An open Chat
+in **any landscape phone**, as well as a device with smallest width ≥ 600 dp,
+shows Home as a 280 dp left sidebar and the selected Chat on the right. A visible,
+labelled control contracts/reopens the sidebar; its choice survives rotation and
+activity recreation. Portrait phones show Chat alone. Chat hides the global
+Chats / PRs / Settings footer; the composer remains anchored above IME/system bars
+and an explicit Back returns to Home, restoring the footer. Hardware Back keeps
+its navigation semantics. Home's search Back handler is inactive in the sidebar.
+Selecting the current row is a no-op, including for the navigation entry/session.
+The selected row uses `rowSelected`.
+
+Selection (environment + thread), draft and reading anchor/offset must survive
+rotation, resize and sidebar collapse. The same destination-scoped ThreadViewModel
+owns the session across those layout changes: no additional bounded fetch or
+thread subscription. The lazy timeline uses saveable list state; collapsing the
+sidebar preserves its own list state. Keyboard appearance must leave the composer
+visible in both orientations. No orientation lock on phones.
+
+All Home/sidebar rows, including slim settled/snoozed/subagent rows, show the
+**environment label and branch when present**, alongside the existing status and
+lib-computed PR badge. Missing values are omitted. `environmentName` is the saved
+environment label supplied to `sidebar.view`, never an inferred hostname or OS.
+Field provenance and limits: [UI-1h metadata audit](ui/compare/ui-1h/METADATA.md).
+
+Acceptance for UI-1h: JVM navigation/footer/restoration checks; emulator tests on
+the actual Home/Thread screens with real ViewModels and a deterministic offline
+transport; rotate portrait → landscape → portrait, collapse/reopen and reselect;
+assert draft and reading position, one thread stream and one bounded snapshot;
+Back restores Home/footer. Capture portrait, split, collapsed and IME states plus
+a short emulator video under `docs/ui/compare/ui-1h/`. Record exact commands,
+fixture/live distinction, APK checksum and unverified physical-phone scope.
+
+The remaining tablet/inspector plan below applies where it does not conflict with
+these phone Chat requirements (rail/inspector work remains UI-7).
+
+
+T3 Mobile's reference breakpoints, all in `t3m:src/lib/layout.ts`:
 
 | Layout | Condition | Panes | Source |
 |---|---|---|---|
@@ -198,7 +241,7 @@ T3 Mobile's breakpoints, all in `t3m:src/lib/layout.ts`, are kept exactly:
 - Foldables: with a vertical hinge, the list/detail split snaps to it when the left side
   keeps ≥ 280 dp and the right ≥ 320 dp (`t3m:src/lib/layout.ts:146-162`; posture logic
   `.../T3FoldPostureModule.kt:65-128`).
-- Rotation: portrait on phones, free rotation when the smallest width is ≥ 600 dp
+- Reference rotation policy (overridden for Android Chat by UI-1h above): portrait on phones, free rotation when the smallest width is ≥ 600 dp
   (`t3m:plugins/withAndroidTabletOrientation.cjs:3-24`).
 
 Compose: `NavigationSuiteScaffold` (bar ↔ rail, with the suite type chosen by these
@@ -334,19 +377,187 @@ ot3-specific and Material roles only inside Material components.
 
 Every component size: [ui/tokens.md](ui/tokens.md) section 4.
 
-### 3.4 Motion and reduced motion
+### 3.4 Motion
 
-- Durations and curves are ot3's: colour changes 130 ms, switch 120 ms OutCubic, row
-  arrival 360 ms with an OutBack drift, departure 300 ms, shelf moves 520 ms, status icon
-  pop 460 ms ([ui/tokens.md](ui/tokens.md) section 5). Navigation uses Android's
-  predictive-back transitions; panes use T3 Mobile's 260 ms.
-- ot3 has its own animation preference instead of an OS hook: **Animated starfield**
-  Auto / Full / Light / Off (`ot3:ui/qml/T3Preferences.qml:260`), with Auto dropping to
-  Light after 90 slow ticks (`ot3:ui/qml/T3Starfield.qml:113-115`). Android keeps the
-  preference and adds the platform rules: animator duration scale 0 → Off; battery saver
-  → Light. T3 Mobile requires every animation to opt into reduced motion
-  (`t3m:src/lib/designTokens.ts:8`).
-- Lazy lists use `animateItem` with ot3's specs; under Off they snap.
+Revised 2026-10-25 (Andrés): the app must **move like ot3**, with the same rows arriving
+and leaving, shelves opening, the sky speeding up with comets while something works, and
+the spinners and shimmer. This section is the rule set. Every duration and curve, with its
+source and its Compose spec, is in [ui/tokens.md](ui/tokens.md) section 5.
+
+#### 3.4.1 Inventory of ot3's animations
+
+Counted at the pin, over `ui/qml` (`ui/js` has none; `ui/style` adds the tooltip's two
+transitions, `ot3:ui/style/OmarchyT3/ToolTip.qml:53-54`):
+
+```
+P='Behavior on|NumberAnimation|ColorAnimation|SequentialAnimation|ParallelAnimation|Transition|SpringAnimation|PropertyAnimation|RotationAnimation|OpacityAnimator|ScaleAnimator|XAnimator|YAnimator|RotationAnimator|UniformAnimator|SmoothedAnimation|PauseAnimation|ScriptAction|PropertyAction|AnchorAnimation|PathAnimation|FrameAnimation|Timer'
+grep -rE "$P" ui/qml | wc -l               # 142 lines in 42 files
+grep -rohE "$P" ui/qml | sort | uniq -c    # Timer 80, NumberAnimation 36, Behavior on 29,
+                                           # ColorAnimation 9, Transition 4, ParallelAnimation 4,
+                                           # SequentialAnimation 3, PropertyAction 2, PauseAnimation 2
+```
+
+- **Declarative animation:** 88 keyword uses on 61 lines in 15 files (the fourth
+  `Transition` hit is the label "Transition speed", `ot3:ui/qml/T3Preferences.qml:273`).
+  ot3 uses no `SpringAnimation`, `SmoothedAnimation`, `*Animator` or `FrameAnimation`.
+  The three real `Transition`s are the sidebar lists' remove, displaced and move
+  (`ot3:ui/qml/T3Panel.qml:750-758`).
+- **Clock-driven animation:** one shared ticker (`ot3:ui/qml/T3Ticker.qml:22-27,44`)
+  read by five `T3Tick` users: the sky, the spinner, the shimmer and the row's aura and
+  state icon (`ot3:ui/qml/T3Starfield.qml:95`; `ot3:ui/qml/WorkIndicator.qml:20`;
+  `ot3:ui/qml/T3ActivityText.qml:10`; `ot3:ui/qml/T3ThreadRow.qml:211,278`). Four
+  surfaces animate shaders: sky, shimmer, reveal and aura. Of the 73 `Timer { }`s, only
+  the ticker and the bar mark's 125 ms step (`ot3:ui/qml/T3BarIndicator.qml:23-26`) draw
+  motion; the rest are debounces and polls (all 19 in `T3Backend.qml`).
+- **Easing types used:** OutCubic 15, OutBack 6, InOutSine 5, InOutCubic 4, InCubic 4,
+  InOutQuart 2, OutQuad 1; animations without an easing are QML's Linear.
+
+By surface (lines are keyword lines):
+
+| Surface | Lines | What moves | Source |
+|---|---|---|---|
+| Thread rows | 26 | arrival (fade + horizontal drift with OutBack), departure, neighbours closing the gap, in-list move, **flight to another shelf** (arc with swing, tilt, lift and shadow), status icon pop and tint, working icon spin, draft pen reveal, hover colour, aura and burst | `ot3:ui/qml/T3ThreadRow.qml:123-150,181,194-195,224-227,272-286`; `ot3:ui/qml/T3Panel.qml:575-669,750-758`; `ot3:ui/qml/T3RowFlight.qml:17-88` |
+| Shelves, sidebar, find bar, usage strip, queue, tasks, project drafts | 2 (shared) | `T3Reveal`: show / hide in the style and pace of `T3Motion` | `ot3:ui/qml/T3Reveal.qml:30-37`; instances in [ui/tokens.md](ui/tokens.md) 5.1 |
+| Sky | 1 + ticker | energy ramp idle ↔ busy, drift speed, comets only while working, Auto's downgrade | `ot3:ui/qml/T3Starfield.qml:23-33,47-48,95-115` |
+| Composer | 5 | focus border, send colour, draft saved / saving | `ot3:ui/qml/T3Composer.qml:265-266,683-694,732` |
+| Dictation bubble | 8 | grow / shrink morph, recording dot pulse, level bars, mic ring | `ot3:ui/qml/T3Composer.qml:530-653` |
+| Timeline | 6 | spinner, shimmer, minimap marker, wheel glide | `ot3:ui/qml/WorkIndicator.qml:21-53`; `ot3:ui/qml/T3ActivityText.qml:12-33`; `ot3:ui/qml/T3TimelineMinimap.qml:103,105`; `ot3:ui/js/WheelMotion.js:4,15` |
+| Panel card | 8 | window card geometry and opacity | `ot3:ui/qml/PinnedKeyboardPanel.qml:400-408,426-429` |
+| Controls | 4 + tooltip | switch knob, text field border, icon button, picker row | `ot3:ui/qml/T3Switch.qml:17`; `ot3:ui/qml/T3TextField.qml:23`; `ot3:ui/qml/T3IconButton.qml:26`; `ot3:ui/qml/T3PickerRow.qml:18` |
+| Count pills, approvals, questions, quota strip, usage page, OmaBridge indicator | 0 | nothing: ot3 does not animate them (the quota strip only appears through `T3Reveal`) | `ot3:ui/qml/T3StatusBadges.qml:1-28`; `ot3:ui/qml/QuotaStrip.qml:87`; `ot3:ui/qml/T3UsagePage.qml:58,71`; `ot3:ui/qml/T3OmaBridgeIndicator.qml:29` |
+
+Not animated in ot3 either, so not on Android: shelf chevrons (icon swap,
+`ot3:ui/qml/T3Panel.qml:1242,1287,1336`), new messages, activity block expansion, jump to
+latest (`ot3:ui/qml/T3Panel.qml:1934-1940`), the composer's expanded state and the
+Preferences pages, which "swap instantly" (`ot3:ui/qml/T3Panel.qml:1105-1106`).
+
+#### 3.4.2 `T3Motion` and the motion tokens
+
+`T3Motion.qml` is not a duration table: it holds two values, the show/hide **style**
+(`nebula` by default, `warp`, `fold`, `spring`, `instant`) and a **pace** multiplier
+(slow 1.6, normal 1, fast 0.6), and only `T3Reveal` reads them
+(`ot3:ui/qml/T3Motion.qml:5-12`; `ot3:ui/qml/T3Reveal.qml:18-19,34`). Everything else
+hard-codes its duration. Android keeps that split:
+
+- `Ot3Motion`, an immutable value in a `CompositionLocal`, holds the resolved settings:
+  `revealStyle`, `pace`, `rowMoveEffect` (Swoop, Glide, Fade, Off), `rowMoveMs` (820 /
+  520 / 300), `starfield` (effective Full, Light, Off), `starSpeed`, `meteorScale` and
+  `reduced` (3.4.4).
+- `Ot3Durations` and `Ot3Easing` hold ot3's literal numbers and exact Penner curves
+  (tokens.md 5.2, 5.3), so a value is changed in one place and cited once.
+- `Ot3Reveal` is the one show/hide primitive (tokens.md 5.1): shelves, the quota strip,
+  the find bar, the queue and tasks strips use it. `AnimatedVisibility` with stock
+  `expandVertically` is not used for these, because it cannot reproduce nebula's
+  dissolve-then-close.
+
+Corrections to the first version of this section: rows arrive in 416 ms (pause 83 ms,
+then 333 ms) and leave in 312 ms, not 360 / 300 ms, because the panel passes
+`rowMoveMs × 0.8` and `× 0.6` (`ot3:ui/qml/T3Panel.qml:635,641,657`); a section change
+is a flight with InOutQuart by default, not a plain 520 ms InOutCubic move
+(`ot3:ui/qml/T3RowFlight.qml:85-87`).
+
+#### 3.4.3 What each Android surface animates
+
+| Surface | Android | Spec (tokens.md 5) | Tranche |
+|---|---|---|---|
+| Thread rows (Home) | `LazyColumn` items keyed by thread, `Modifier.animateItem(fadeInSpec, placementSpec, fadeOutSpec)` with ot3's arrival, gap and departure specs; the drift is a `graphicsLayer.translationX` started when a key first appears and mirrored in RTL | 5.3 Rows | UI-1 |
+| Row changes shelf | the moving key's placement uses `tween(rowMoveMs, InOutQuart)` (Swoop) or `InOutCubic` (Glide), plus a per-key `Animatable` 0 → 1 driving bow = sin(πt): `translationX` = swing × bow, `rotationZ` ±1.4° × bow, scale 1 + 0.04 × bow, `shadowElevation` from black @ 0.32 × bow; into a collapsed shelf the row sinks and fades with smoothstep(0.55, 1). The section of each row comes from `sidebar.view`, so the move is detected by key, not guessed | 5.3 Rows | UI-1 |
+| Status icon | pop (scale 0.3 → 1 OutBack 2.4, 460 ms; alpha 200 ms) when the lib's status label changes; tint 320 ms; `circle-dashed` turns 112.5°/s from `Ot3Ticker` while the sky animates | 5.3 Rows | UI-1 |
+| Working badge pulse | ot3 does not pulse the badge or the count pills; "working" reads through the spinning status icon, the sky's comets and the working pill's spinner and shimmer. The pills change without animation. UI1i supersedes the original v1 aura exclusion (3.7): the row aura uses the source shader and shared ticker; pills still do not pulse | — | — |
+| Shelves | header and list through `Ot3Reveal`; the chevron swaps icon | 5.1 | UI-1 |
+| Sky | energy `tween(1600, InOutSine)` when "any thread works" flips; drift 5 → 42 dp/s × star speed; comets only while energy > 0; frame pacing as ot3 (125 / 33 / 16 / 8 ms); Auto's downgrade (3.4.4) | 5.3 Sky; 3.5 | UI-1 |
+| Connection dot | T3 Mobile's 1 100 ms pulse while connecting or reconnecting (a state ot3's dot does not have, rule 4); still when connected | 5.4 | UI-1 |
+| Swipe actions | T3 Mobile's spring (ζ 0.855, stiffness 471, clamped), dismissal 220 ms then 180 ms collapse | 5.4 | UI-1 |
+| FAB | Material's extended FAB collapse, T3 Mobile's 8 / 12 dp thresholds | 5.4 | UI-1 |
+| Controls (kit) | switch 120 OutCubic, field border 140, button and row press 130 / 100, tooltip 120 / 80 | 5.3 Controls | UI-1 |
+| Quota strip | appears through `Ot3Reveal`; bars and numbers update without animation, as in ot3 | 5.3 Quota | UI-1, UI-6 |
+| Route indicator | icon swap, no animation, as ot3's OmaBridge mark | 5.3 OmaBridge | UI-1 |
+| Stack push / pop | Navigation Compose defaults with predictive back (rule 1); detail replacement in the split layout is not animated | 5.4 | UI-1 (UI-7 for panes) |
+| Sheets | M3 `ModalBottomSheet` physics and predictive back | 5.4 | each tranche with its sheets |
+| Timeline | spinner, shimmer (2.2 s, 72 dp), working pill entry; messages appear without animation, as in ot3 | 5.3 Timeline | UI-2 |
+| Composer | focus border and send colour 130 ms, draft saved check (OutBack 2.2) and saving spinner | 5.3 Composer | UI-3 |
+| Queue, tasks, plan banner | strips through `Ot3Reveal`; cards themselves not animated | 5.1 | UI-3, UI-4 |
+| Usage tabs | T3 Mobile's 160 ms fade between Usage and Limits | 5.4 | UI-6 |
+| Panes (tablets) | T3 Mobile's 260 ms InOutCubic | 5.4 | UI-7 |
+| Minimap (tablets) | marker 150 ms | 5.3 Timeline | UI-7 |
+| Dictation bubble | out of v1 with dictation (4.4.8); its values are recorded for later | 5.3 Composer | — |
+
+#### 3.4.4 Reduced motion
+
+ot3 has no OS hook (no "reduced motion" anywhere in `ui/`); it has its own preferences,
+page Appearance → **Animations** (`ot3:ui/qml/T3Preferences.qml:258-275`). Android
+keeps the ones that apply to a phone, in Settings → Appearance → Animations, stored in
+DataStore with ot3's keys and defaults:
+
+| ot3 preference (key) | Choices, default | Android |
+|---|---|---|
+| Animated starfield (`starfieldMode`) | Auto, Full, Light, Off; Auto (`:260`) | kept |
+| Star speed (`starfieldSpeed`) | Slow, Normal, Fast (`:261`) | kept |
+| Shooting stars (`starfieldMeteors`) | None, Few, Normal, Many (`:262`) | kept |
+| Threads changing section (`threadMoveEffect`) | Swoop, Glide, Fade, Off; Swoop (`:266`) | kept |
+| Section change speed (`threadMoveSpeed`) | Slow, Normal, Fast (`:267`) | kept |
+| Show and hide (`transitionStyle`) | Nebula, Hyperspace, Fold, Spring, Instant; Nebula (`:272`) | kept; below API 33 Nebula, Hyperspace and Fold draw as Spring |
+| Transition speed (`transitionSpeed`) | Slow, Normal, Fast (`:273`) | kept |
+| Animation smoothness (`animationRate`) | Adaptive, Saver (30 fps), Maximum (display rate); Adaptive (`:269`; `ot3:ui/qml/T3Panel.qml:91`) | kept; battery saver forces Saver |
+| Working threads, Threads needing input, Thread state changes, Effect intensity (`:263-265,268`) | aura effects | UI1i includes the source default auras; effect preference controls remain future work (see addendum) |
+| Bar indicator, Frame rate meter (`:270-271`) | desktop bar and diagnostics | not shown (the FPS meter stays a debug-build option) |
+
+What each starfield mode does, as in ot3 (`ot3:ui/qml/T3Starfield.qml:23-26,47-48,97-99`;
+`ot3:ui/qml/T3ThreadRow.qml:276`; `ot3:ui/qml/T3Preferences.qml:263`):
+
+- **Full:** everything above.
+- **Light:** the sky still drifts but ticks at most every 40 ms (except while a comet
+  crosses); comets only in the header.
+- **Off:** the sky is a static frame, no comets, and the working status icon stops
+  turning. In ot3, Off does not stop reveals, row motion, spinners or the shimmer: those
+  have their own preferences (Show and hide → Instant, Threads changing section → Off).
+- **Auto:** Full, dropping to Light **for the session** when a counter passes 90: +1 for
+  each frame slower than twice its interval, −0.5 for each good one (floor 0), counted
+  only while busy, in Full and with no comet on screen (`ot3:ui/qml/T3Starfield.qml:12-13,113-115`).
+  Android measures the interval from `withFrameNanos`.
+
+Platform rules on top (rule 5):
+
+- **Remove animations** (`Settings.Global.ANIMATOR_DURATION_SCALE` = 0, also
+  `ValueAnimator.areAnimatorsEnabled()` false): `Ot3Motion.reduced = true`, which forces
+  starfield Off, Show and hide Instant, Threads changing section Off, and stops the
+  spinner's rotation (a static arc) and the shimmer (plain text). Everything snaps; colour
+  changes are immediate. The Settings rows show "Off" with the reason line.
+- **Animator duration scale ≠ 1:** durations are multiplied by it on top of ot3's pace,
+  as the platform does for its own transitions.
+- **Battery saver** (`PowerManager.isPowerSaveMode`): starfield Auto/Full → Light, and
+  Animation smoothness → Saver (frame intervals capped at 33 ms).
+- **Not visible or paused:** the sky and every clock-driven animation stop with the
+  lifecycle (`paused: !root.opened` in ot3, `ot3:ui/qml/T3Panel.qml:849`).
+- T3 Mobile's rule that every animation opts into reduced motion
+  (`t3m:src/lib/designTokens.ts:8`) holds through `Ot3Motion`: no animation reads a
+  duration except through it, which a lint test checks (no `tween(` with a literal
+  outside `ui/kit/motion/`).
+
+#### 3.4.5 Acceptance: screen recordings
+
+Stills cannot show motion, so each tranche adds, next to its comparison stills in
+`docs/ui/compare/<tranche>/`, **one short recording per moving surface it delivers**:
+
+- Recorded on the reference emulator only (`docs/DECISIONS.md`, "The emulator is the
+  reference device"): `scripts/emulator.sh start --headless`, then
+  `adb -s emulator-5580 shell screenrecord --time-limit 10 --size 720x1600 /sdcard/<name>.mp4`,
+  `adb -s emulator-5580 pull /sdcard/<name>.mp4`, and `scripts/emulator.sh stop` when done.
+  Never a physical device.
+- At most 10 s each, converted to **WebM** (VP9, `ffmpeg -i in.mp4 -c:v libvpx-vp9 -b:v 0
+  -crf 40 -an out.webm`) or, for surfaces that must preview inline on GitHub, a **GIF**
+  (`ffmpeg -i in.mp4 -vf "fps=20,scale=360:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" out.gif`),
+  under 4 MB; the MP4 is not committed.
+- Driven by fixtures, not a live server, so a recording can be redone: the debug-only
+  Component catalog (3.9) gets a **Motion** page that replays a scripted sequence (a
+  thread starts working, finishes, is settled, a shelf collapses and opens), at normal
+  pace, in tokyo-night.
+- Named `<surface>-<theme>.webm` (for example `home-rows-tokyo-night.webm`) and listed in
+  the tranche's comparison sheet with what to look for: timing by eye against ot3's
+  numbers in tokens.md 5, OutBack overshoot visible on arrival and on the status icon pop,
+  comets only while something works, and with Remove animations on, a second clip
+  showing that everything snaps.
+- The motion part of each tranche is listed in the "Motion" column of section 5.
 
 ### 3.5 The sky header
 
@@ -362,13 +573,15 @@ fading out towards the list (`ot3:ui/qml/T3Panel.qml:1121-1128`;
 | Stars | three parallax layers with one star at most per grid cell: cells 29 / 53 / 97 px, densities 0.42 / 0.38 / 0.32, radii 0.55 / 0.8 / 1.15 (× 0.55–1.25 per star), weights 0.55 / 0.8 / 1, drift factors 0.30 / 0.62 / 1 | `ot3:ui/assets/shaders/starfield.frag:47,88-90` |
 | Twinkle | `0.55 + 0.45 · sin(t · (0.6…2.8) + h · 61)` | `ot3:ui/assets/shaders/starfield.frag:48-49` |
 | Colour | star ink (foreground) mixed towards the accent by up to 0.6 | `ot3:ui/assets/shaders/starfield.frag:92`; `ot3:ui/qml/T3Starfield.qml:59` |
-| Drift | 5 dp/s idle, **42 dp/s while any thread works**, eased over 1 600 ms InOutSine, direction (1, 0.18) | `ot3:ui/qml/T3Starfield.qml:28-33`; `ot3:ui/assets/shaders/starfield.frag:84` |
-| Comets | 4 channels with periods 2.1 + 1.37·n s; a channel fires when its hash < rate × scale × energy, and energy is 0 when idle, so **comets only appear while something works**; 0.75–1.25 s each; right to left and downwards; tail clamp(0.22 × diagonal, 60, 240) dp; colour meteor ink mixed 25 % with the accent | `ot3:ui/assets/shaders/starfield.frag:56-78,113` |
+| Drift | 5 dp/s idle, **42 dp/s while any thread works**, eased over 1 600 ms InOutSine, direction (1, 0.18), × Star speed 0.5 / 1 / 1.8 | `ot3:ui/qml/T3Starfield.qml:28-33,106`; `ot3:ui/qml/T3Panel.qml:853`; `ot3:ui/assets/shaders/starfield.frag:84` |
+| Comets | 4 channels with periods 2.1 + 1.37·n s; a channel fires when its hash < rate × scale × energy (scale = Shooting stars: none 0, few 0.4, normal 1, many 2.2, `ot3:ui/qml/T3Panel.qml:854`), and energy is 0 when idle, so **comets only appear while something works**; 0.75–1.25 s each; right to left and downwards; tail clamp(0.22 × diagonal, 60, 240) dp; colour meteor ink mixed 25 % with the accent | `ot3:ui/assets/shaders/starfield.frag:56-78,113` |
 | Light themes | star ink = foreground; meteor ink = foreground on light skies and white on dark ones; ink gain 1.7 on light skies instead of 1 | `ot3:ui/qml/T3Starfield.qml:59-63`; `ot3:ui/assets/shaders/starfield.frag:98-100` |
 
 Implementation: on API 33+, an AGSL `RuntimeShader` port of `starfield.frag` (the shader
 is the same author's) drawn with `drawWithCache` + `ShaderBrush`, uniforms updated from a
-`withFrameNanos` loop at ot3's ambient frame interval (33 ms; `ot3:ui/qml/T3Ticker.qml:22-26`).
+`withFrameNanos` loop at ot3's frame intervals: 125 ms idle, 33 ms while busy, 16 ms
+with an explicit Full, 8 ms while a comet crosses, at least 40 ms in Light
+(`ot3:ui/qml/T3Starfield.qml:98-99`; `ot3:ui/qml/T3Ticker.qml:22-27`).
 Below API 33 (minSdk is 24, `app/build.gradle.kts:15`), a `Canvas` version of the same
 grid hash draws the stars and comets without the nebula. The loop runs only while the
 header is visible and the app is resumed; Off draws a static frame; Light keeps comets
@@ -408,9 +621,12 @@ Rules, generator and the list: [ui/strings.md](ui/strings.md). The layout is RTL
   number (`ot3:ui/qml/T3PullRequestBadge.qml:20-31`); tap opens the PR or, with several,
   the Thread pull requests sheet (`t3m:src/features/threads/use-open-thread-pull-requests.ts:13-33`).
   Data: `pull_requests::sidebar_badge` (`lib:src/pull_requests.rs:82`, U19).
-- **Not ported in v1:** the row auras (working comet around the row, glints, bursts;
-  `ot3:ui/assets/shaders/threadaura.frag`, colours at `ot3:ui/qml/T3ThreadRow.qml:203-205`),
-  for list performance on mid-range phones.
+- **UI1i overrides the original v1 exclusion:** row auras are included by Andrés's
+  current acceptance requirement (also superseding the exclusion in §3.4.3). Port the
+  working comet, attention glints and change burst from `threadaura.frag`, with colours
+  from `T3ThreadRow.qml:203-205`, shared ticker, guarded AGSL and Canvas fallback.
+  Performance on a physical mid-range phone remains unverified; do not claim it from
+  emulator evidence. The effect style/intensity selectors are not implemented yet.
 
 ### 3.8 Iconography
 
@@ -478,10 +694,12 @@ until a lib request in section 6 lands.
 
 ```
 ┌─────────────── sky ───────────────┐
-│ ▣ T3 Code      ▮▮ ▮   ● Online  ⋮ │  brand row: wordmark, count pills, connection
+│ ▣ T3 Code      ▮▮ ▮  ⧉ ● Online ⋮ │  brand row: wordmark, count pills, route, connection
 │   OMARCHY                          │
 │ ⌕ Search threads…            ☰    │  search field + filter
 ├────────────────────────────────────┤
+│ Codex  5 hours ▰▰▰▱ 62% 2h 05m  ˅ │  quota strip when shown (4.10.2), list header
+│        Weekly  ▰▰▱▱ 48% 3d 4h      │
 │ OC omarchy-t3-code      ✓ Done    │  card rows (82 dp): pinned, then active
 │ Migrar Omarchy Ares a Plugin       │
 │ ⎇ main                  ⑂ 314  ◎  │
@@ -508,8 +726,13 @@ until a lib request in section 6 lands.
   `t3m:src/features/home/workspace-connection-status.ts:19-35`). Tap opens Settings →
   Environments (`t3m:src/features/home/WorkspaceConnectionTitle.tsx:133-166`).
   Data: `ConnectionSupervisor.connection` per environment (existing).
-- **Overflow:** Add project (`ot3:ui/qml/T3Panel.qml:1185`), Show provider usage
-  (`ot3:ui/qml/T3Panel.qml:1153-1158`, shows the quota strip of 4.10 under the header),
+- **Route in use:** between the count pills and the connection dot, a 16 dp icon for the
+  route the main environment is connected through (public address, local network,
+  Tailscale or OmaBridge), `dim`; hidden while not connected. Same rules and data as the
+  thread top bar's (4.2.1).
+- **Overflow:** Add project (`ot3:ui/qml/T3Panel.qml:1185`), Show provider usage /
+  Hide provider usage (`ot3:ui/qml/T3Panel.qml:1153-1158`; it shows the compact quota
+  strip of 4.10.2 as the list's header),
   Group working, snoozed and settled threads (`ot3:ui/qml/T3Panel.qml:1410`), Refresh
   (`ot3:ui/qml/T3Panel.qml:1411`), Command palette.
 
@@ -644,6 +867,109 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
   item 8), `connection_catalog::pairing_target` for links and QR payloads
   (`lib:src/connection_catalog.rs:5`, U17). Interim: URL + token only, as today.
 
+#### 4.2.1 Routes and the route in use
+
+Added 2026-10-25 (Andrés): an environment can be reached in several ways, and the app
+says which one it is using.
+
+- **ot3:** each environment lists its routes from T3's connection catalog: icon
+  (`terminal` for SSH, else `cloud`), the address, a star for "Preferred route" (the first
+  one), "Edit connection", "Remove route" and "Add route" (`ot3:ui/qml/T3Connections.qml:68,71-79`;
+  routes grouped per environment by `lib:src/connection_catalog.rs:73-99`). ot3 connects
+  through the preferred route only, with no fallback to the others
+  (`ot3:src/connections.rs:315`); its OmaBridge plan is tried before it
+  (`ot3:src/connections.rs:317-351`), and the OmaBridge route in use is recorded
+  (`ot3:src/omabridge_route.rs:103-110`; `ot3:src/connections.rs:356`) and shown as
+  "Connected through OmaBridge · {peer}" (`ot3:ui/qml/T3ConnectionOmaBridge.qml:38-44`).
+  ot3's own Access page names the host's addresses "This machine", "Local network",
+  "Tailscale" (an address in `100.`), "Tailscale HTTPS" and "Public addresses"
+  (`ot3:src/connection_network.rs:48,51,54`; `ot3:ui/qml/T3ConnectionAccess.qml:149`).
+- **Kinds on Android:** **Public address**, **Local network**, **Tailscale**,
+  **OmaBridge** (4.2.2). SSH routes are desktop-only (4.2) and T3 Connect relay targets are
+  phase 3 (4.13), as ot3 never routes them over OmaBridge either
+  (`ot3:docs/CONNECTION_OMABRIDGE.md:7-11`). The kind of a route is the lib's
+  (`connectionCatalog.routeKind`, U27), from the URL with ot3's rules (loopback, private
+  and link-local addresses and `.local` names → Local network; `100.64.0.0/10` and
+  `*.ts.net` → Tailscale; otherwise Public address), a hint carried by the pairing link
+  (`route=omabridge`, [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB4) and the user's
+  choice in the route editor; the user's choice beats the hint, which beats the URL rule.
+- **Indicator** (UI-1): a 16 dp icon in `dim`: Public address `globe` (ot3 has it),
+  Local network `house-wifi`, Tailscale `network` (both Lucide, added to the icon set),
+  OmaBridge ot3's `omabridge` mark (`ot3:ui/js/IconAssets.js:75`). It sits in the Home
+  brand row for the main environment (4.1.1), after the environment name in the thread
+  top bar (4.3.1), in each Environments row ("Connected · Local network") and in the
+  Thread details sheet. Long press shows the label: "Public address", "Local network",
+  "Tailscale" or "Connected through OmaBridge · {gateway}"; hidden while not connected. It
+  is an icon swap without animation, as ot3's mark is (`ot3:ui/qml/BarWidget.qml:77`).
+- **Which route is used:** the routes of an environment share its T3 session (one bearer
+  token; ot3 carries the same bearer over OmaBridge, `ot3:src/connections.rs:328`).
+  Before the token goes to a route, the app fetches that route's descriptor and requires
+  the environment id it saved (ot3's `verify_environment`, `ot3:src/omabridge_route.rs:94-101`;
+  lib `fetchDescriptor`), so a wrong host never sees the token. The order of attempts is
+  the lib's `connectionCatalog.routePlan` (U27): the route that last worked on the
+  current network first, then the user's order, falling back on unreachable routes but
+  not on `unauthorized`. A network change (`ConnectivityManager` callback) re-plans.
+  `ConnectionSupervisor` reports the route in use with its connection state.
+- **Interim, until U27:** ot3's own behaviour: only the preferred route is tried, the
+  user changes the preferred route by hand, and the kind is the one the user picked (no
+  Kotlin classification of addresses).
+- **Route editing** (UI-6), in the expanded environment of 4.2: ot3's route list
+  (icon by kind, address, star "Preferred route", "Remove route") and "Add route": an
+  address, the kind ("Automatic" from the lib, or one of the four), and a descriptor check
+  before saving ("The address answers, but with another T3 Code." when the id differs,
+  `ot3:ui/js/OmaBridgeText.js:81-85`). No new pairing: the route reuses the environment's
+  token. Remove asks ot3's confirmation and refuses to remove the last route.
+- **Storage:** Room schema 2 adds `environment_routes` (environment id, route id, kind,
+  kind source, URL, label, order, last success time and network); today's `baseUrl`
+  becomes route 0 in a tested migration (`core/src/main/kotlin/dev/avillagran/ot3android/core/data/local/EnvironmentEntity.kt:7`).
+  Credentials stay in the credential store, per environment.
+- **What the lib catalog already has:** grouping several targets of one environment into
+  `routes` with `connectionId`, `kind` (`_tag`), `ssh` and `url`
+  (`lib:src/connection_catalog.rs:73-99`), `prefer-route` and `remove-route`
+  (`:107-212`) and `register` (`:213-265`). All of it is Rust-only: the only
+  `connectionCatalog` function in `describe().domain` is `pairingTarget`
+  (`lib:bindings/android/describe.json:733-749`). There is no address classification,
+  no route in use, no health or fallback order and no OmaBridge kind (no `omabridge` in
+  the lib outside the string catalog). Request U27 in section 6 and LIB_REQUESTS.md.
+
+#### 4.2.2 OmaBridge as a route
+
+- **What OmaBridge is:** paired devices carrying named services (T3 Code, SSH) over
+  authenticated QUIC (iroh), with no account, VPN interface or control plane
+  (`omab:README.md:7,21`). Peers learn addresses only from invitations
+  (`omab:src/network.rs:918`). ot3 drives it through the local `omabridge` binary
+  (`omabridge manage` on stdin, `ot3:src/omabridge_device.rs:27-48`) and a loopback
+  `forward` per environment (`ot3:src/omabridge_route.rs:114-168`).
+- **A phone cannot run it today:** "There is no Android/iOS client and no phone QR
+  scanner" (`omab:README.md:205`; `omab:docs/verification.md:153`). OmaBridge's own
+  answer for "the T3 Code mobile and desktop apps" is a **gateway**: a public HTTPS
+  address on a device with a public IP that pipes each connection into the `t3` service of
+  one paired device (`omab:README.md:157,165`; only `t3` may be exposed,
+  `omab:src/gateway.rs:40-41`). Its URL is `https://{host}:{port}/`
+  (`omab:src/gateway.rs:59-61`); TLS by SNI only, so an IP-only URL fails
+  (`omab:README.md:160`); OmaBridge adds no authentication of its own, T3's pairing and
+  session do (`omab:README.md:162`); WebSockets work, with a 2-minute idle limit against
+  T3's 15 s ping (`omab:src/gateway.rs:34-36`).
+- **So the v1 OmaBridge route is a gateway address.** It is added like any address:
+  as a new environment (Add environment with a pairing link or QR for the gateway URL and
+  a `t3 pair` code; ot3 already offers running gateway URLs as pairing endpoints under
+  "Public addresses", `ot3:ui/qml/T3ConnectionAccess.qml:29-30,148-151`, and tells the
+  user "Ready: in the T3 app, add this address with a pairing code from `t3 pair` on this
+  device.", `ot3:ui/js/OmaBridgeText.js:81-85`) or as a further route of an existing
+  environment (4.2.1). Its kind is OmaBridge when the link carries the hint or the user
+  picks it; nothing in the gateway's bytes tells a client it is one (the gateway does not
+  interpret traffic, `omab:src/gateway.rs:5-7`), hence request OB4.
+- **Direct OmaBridge** (the phone as a paired device, QUIC to the host, no public port)
+  needs an Android OmaBridge client: [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB1.
+  When it exists, an OmaBridge route can also be a peer (device id + `t3`), carried
+  through an in-process loopback bridge like ot3's `forward`, and ot3's per-environment
+  plans apply: "Automatic", "OmaBridge first, then the saved route", "Only through
+  OmaBridge", "Saved route only" (`ot3:docs/CONNECTION_OMABRIDGE.md:17-26`;
+  `ot3:ui/qml/T3ConnectionOmaBridge.qml:38-44,68-103`).
+- **Rejected:** reading OmaBridge's state through the T3 server's file API, as the theme
+  is read (3.1.3): the state directory holds the device's private key
+  (`omab:src/lib.rs:66-76`), and every change needs `omabridge manage` anyway.
+
 ### 4.3 Thread
 
 - **ot3:** header `ot3:ui/qml/T3Panel.qml:1471-1548`, timeline `ot3:ui/qml/T3Panel.qml:1559-1954`,
@@ -682,7 +1008,10 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
 - **Title** (title 16 sp Medium) and subtitle "{project} · {environment}" in `dim` with
   the project chip, T3 Mobile's subtitle (`t3m:src/features/threads/ThreadRouteScreen.tsx:425-430`)
   with ot3's project icon (`ot3:ui/qml/T3Panel.qml:1477-1485`). Back arrow on compact
-  layouts only (`t3m:src/features/threads/ThreadHeader.tsx:101-103`).
+  layouts only (`t3m:src/features/threads/ThreadHeader.tsx:101-103`). After the
+  environment name, the **route in use** icon of that environment (4.2.1); its label
+  ("Connected through OmaBridge · laptop") is the icon's long-press tooltip and a row of
+  the Thread details sheet.
 - **Actions**, split by T3 Mobile's Android rule (one visible action on phones, three at
   600 dp and wider, the rest in overflow; `t3m:src/components/ui/headerMenu.android.ts:45-56`):
   Git & changes (`git-branch`, `ot3:ui/qml/T3Panel.qml:1489`); Find in conversation
@@ -1228,9 +1557,10 @@ section title with icon); each row pushes its page.
 
 | Group | Page | Content | Data | v1 |
 |---|---|---|---|---|
-| Connections | Environments | 4.2 | catalog, supervisor | yes |
-| | Notifications | permission and, later, the follow service (`docs/ARCHITECTURE.md:27-29`) | — | permission only |
-| Interface | Appearance | Theme, Dark theme, Light theme (3.1.3); Language; Show provider usage; Group working, snoozed and settled threads; Math rendering; Animated starfield Auto / Full / Light / Off (`ot3:ui/qml/T3Preferences.qml:246-275`) | DataStore | yes |
+| Connections | Environments | 4.2, routes 4.2.1 | catalog, supervisor, `connectionCatalog.routeKind` / `routePlan` (U27) | yes; route editing in UI-6 |
+| | OmaBridge | 4.9.1 | OmaBridge device client and remote `manage` ([OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md)) | **blocked** on OB1–OB3 |
+| | Notifications | permission, **Follow active threads**, idle stop, lock-screen detail, Live Update settings (4.14) | `awareness.view` (U28), supervisors by lease | permission only until UI-N |
+| Interface | Appearance | Theme, Dark theme, Light theme (3.1.3); Language; Show provider usage; Group working, snoozed and settled threads; Math rendering; **Animations**: Animated starfield, Star speed, Shooting stars, Threads changing section, Section change speed, Show and hide, Transition speed, Animation smoothness (3.4.4; `ot3:ui/qml/T3Preferences.qml:246-275`) | DataStore | yes |
 | Server | Providers | status per instance ("Signed in", "Not installed", "Update to {version}") read-only, and favourite models with stars (`ot3:ui/qml/T3ProviderInstances.qml:84-124`; `ot3:ui/qml/T3Preferences.qml:283-293`) | `server.getConfig`, `models::preferences` (U7) | yes |
 | | General | ot3's server field groups (New threads, Organization, Behavior, Projects & threads, Text generation; `ot3:ui/qml/T3Preferences.qml:58-63`) | `server.getSettings` / `updateSettings`, `native_settings::snapshot` / `patch` (`lib:src/native_settings.rs:107,152`, U23) | read-only, edit after U23 |
 | | Source control | `ot3:ui/qml/T3Preferences.qml:64-66` | same | read-only |
@@ -1245,24 +1575,202 @@ description caption `dim`, trailing control). States: "Loading…", error banner
 Retry, partial save, "No settings found" (`ot3:ui/qml/T3Preferences.qml:130-143`).
 Scoped writes follow `ot3:docs/SCOPED_SETTINGS.md:5-15`.
 
+#### 4.9.1 Connections → OmaBridge (blocked on OMABRIDGE_REQUESTS)
+
+ot3's page with ot3's design, laid out as a phone settings page. Scheduled after
+[OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB1–OB3 exist; until then the row is not
+shown (rule 6), and OmaBridge reaches the phone only as a gateway route (4.2.2).
+
+- **ot3:** Preferences → Connections → section "OmaBridge" (icon `omabridge`):
+  per-environment routing (`T3ConnectionOmaBridge`), "Show OmaBridge in the bar", "Set up
+  a new host with your AI", then the device page `T3OmaBridgeManage`
+  (`ot3:ui/qml/T3Connections.qml:86-109`). States loading, missing, outdated, failed,
+  ready, unavailable (`ot3:ui/js/OmaBridgeModel.js:168-176`); every string in
+  `ot3:ui/js/OmaBridgeText.js:4-195`, almost all in ot3's catalog.
+- **What the phone shows**, top to bottom, in ot3's cards (radius 8, padding 8;
+  `ot3:ui/qml/T3OmaBridgeManage.qml:75-77`) and buttons (28 dp drawn in a 48 dp target,
+  radius 6; `:483-498`):
+  1. Intro and Refresh (`:547-566`); the state card for missing, outdated and failed
+     (`:569-580`).
+  2. **This device** (the phone's own OmaBridge identity, after OB1): name, "Device ID",
+     "Rename…", "Copy ID" (`:587-632`). The desktop's "Create identity…" becomes part of
+     pairing the phone.
+  3. **Pair this phone:** scanning an OmaBridge invitation QR (`omabridge://pair/…`,
+     `omab:src/main.rs:511-548`) with the existing QR scanner (4.2), then "Waiting for
+     {name} to approve this device · Expires …" with "Check again" and "Cancel…"
+     (`:728-756`). "Pair from invitation file…" (`:702-725`) also accepts a shared file.
+  4. **Managed hosts:** for each paired device that lets the phone manage it ("Let it
+     manage…", `:852-858`), a card with its state ("Published", "Published, but not
+     running.", "Not published"; `ot3:ui/js/OmaBridgeText.js:140-144`) and "Publish…",
+     "Publish again…", "Stop publishing…" (`:635-674`); "Waiting for your approval" cards
+     with an accent border and "Approve…" (`:759-791`); "Paired devices" or "No paired
+     devices yet." with "Revoke…" (`:793-869`); "Connection between networks" with
+     "Change…" (`:677-700`).
+  5. **Public access to T3 Code** (gateways) per host: rows "{name} · {url} · Running" or
+     "Could not start…", "Open T3 here…" with the host-name field and its warning
+     confirmation, "Check again" with ot3's three results, "Close…"
+     (`:1264-1345`; `ot3:ui/js/OmaBridgeText.js:81-85`). A ready gateway offers "Add as a
+     route" for the matching environment (4.2.1).
+- **Indicator:** ot3's bar mark (icon `omabridge` / `omabridge-off`, an 8 dp `failed`
+  dot when approvals wait, refreshed every 60 s; `ot3:ui/qml/BarWidget.qml:77-78`;
+  `ot3:ui/qml/T3OmaBridgeIndicator.qml:29`) becomes the same dot on the Settings tab
+  and on the Connections → OmaBridge row while approvals wait.
+- **Data:** the device client of OB1 (pairing, identity, `open`), and for a managed host
+  the daemon's existing remote `manage` request, limited to `read`, `rename`, `relay-set`,
+  `publish`, `unpublish`, `revoke`, `approve`, `relay-host` and `gateway-set`
+  (`omab:src/manage.rs:60-73`; handler `omab:src/network.rs:1181-1184`). OB2 adds what
+  the page needs beyond that list (gateway check, public-exposure grant, invitations);
+  OB3 a change feed for the badge.
+- **Desktop-only, not shown:** "Show OmaBridge in the bar", "Set up a new host with your
+  AI" (it opens an agent chat on a chosen host), relay hosting, admin grants for other
+  devices and the SSH command copy.
+
 ### 4.10 Subscription usage
 
-- **Quota strip** (optional under the thread and Home headers): "Provider usage", one
-  group per provider with account count, per window a segmented bar with an
-  expected-remaining marker (failed colour when under budget), remaining % and reset
-  time, "Accounts" expander (`ot3:ui/qml/QuotaStrip.qml:21-119`).
-- **Usage page** (Settings → Usage, T3 Mobile's place, `t3m:src/features/settings/SettingsRouteScreen.tsx:218`):
-  T3 Mobile's Usage | Limits tabs (`t3m:src/features/usage/UsageRouteScreen.tsx:61-77`)
-  holding ot3's content: period Day / Week / Month / Quarter, KPIs Cost, Tokens,
-  Sessions, Cache savings, per-day bars switchable Cost / Tokens, per-model list,
-  "Refresh prices" (`ot3:ui/qml/T3UsagePage.qml:31-76`); Limits = the quota strip,
-  full size. Pull to refresh.
-- Rules: automatic refresh at most every 5 minutes per environment; cached readings are
-  labelled possibly outdated after a disconnect (`ot3:docs/SUBSCRIPTIONS.md:28-33`).
-- Data: `server.getUsageSummary` and `server.refreshUsageRates` (typed API),
-  `usage_summary::request` and `aggregate` with the device's IANA time zone
-  (`lib:src/usage_summary.rs:23,40`), `quota_sources::limits`, `providers`, `sources`
-  (`lib:src/quota_sources.rs:23,75,86`), U14.
+Revised 2026-10-25 (Andrés): token availability is shown as ot3 shows it, a compact
+strip in Home (UI-1) and the full page in Settings → Usage (UI-6).
+
+#### 4.10.1 Data
+
+- **Live limits, a stream:** `server.subscribeServerConfig` with `usageLimitSources:
+  true` (`lib:bindings/android/describe.json:5710,6037`; Kotlin `T3Api.kt:378-379`), one
+  per connected environment, scope `orchestration:read`. The 5 h / weekly / monthly
+  windows arrive in three places: `snapshot.config.providers[].usageLimits`,
+  `providerStatuses.payload.providers[].usageLimits`, and, only with `usageLimitSources`,
+  hub accounts in `usageLimitSourcesUpdated.payload.sources[].accounts[].usageLimits`
+  (stream items at `lib:bindings/android/describe.json:6045`). `server.getConfig` alone
+  omits the hubs (`ot3:docs/SUBSCRIPTIONS.md:12-35`). This is what ot3 does
+  (`ot3:src/quota_sources.rs:21-42`) and what T3 Mobile does
+  (`t3m:src/state/server.ts:13-17`).
+- **Folding the stream:** each item goes to `quotaSources.apply {state?, event}` →
+  `{state{providers, usageLimitSources, connected}, changed}`
+  (`lib:bindings/android/describe.json:1267`; `lib:src/quota_sources.rs:118-135`); the
+  public projections are `quotaSources.providers` → `[{auth{email, status}, availability,
+  driver, enabled, installed, instanceId, usageLimits}]`, `quotaSources.sources` →
+  `[{id, label, error, accounts[{id, driver, plan, usageLimits, …}]}]` (credentials
+  dropped, errors replaced by "Could not read usage source.") and `quotaSources.limits
+  {usageLimits}` → `{checkedAt, windows[{id, kind, label, resetsAt, usedPercent,
+  windowDurationMins}]}` or `null` (`lib:bindings/android/describe.json:1226,1238,1250`;
+  key shapes from `lib:tests/domain_usage.rs:40-61` and `lib:tests/quota_sources.rs:10,34`).
+  `kind` is `session`, `weekly`, `monthly` or `other`.
+- **Refresh:** `server.refreshProviders {}` (`lib:bindings/android/describe.json:3750`)
+  at most every 5 minutes per environment, failures included, plus Refresh and pull to
+  refresh (ot3 `ot3:src/quotas.rs:189-215`; rule `ot3:docs/SUBSCRIPTIONS.md:28-33`); the
+  fresh probe comes back as `providerStatuses`. The countdowns re-render once a minute
+  while visible (`ot3:ui/qml/T3Backend.qml:248`).
+- **Presentation is not in the lib.** Pooling accounts of one provider across
+  environments, the segment per account, remaining percent, pace and the
+  expected-remaining marker, the earliest reset text and the notices are ot3's port of
+  T3's `packages/shared/src/usageLimits.ts` (`ot3:ui/js/UsageLimits.js:5-43`;
+  `ot3:ui/js/NativeUsageLimits.js:153-567`; provenance
+  `ot3:ui/js/NativeUsageLimits.sources.json:2`), and T3 Mobile uses the same helpers
+  (`t3m:src/features/usage/UsageLimitsPooled.tsx:302-309`). Kotlin must not port them:
+  request **U26** `quotaSources.present` (section 6). Until U26 the strip shows one
+  bar per window from `quotaSources.limits` of each provider, without pooling, pace or
+  marker, the reset as the lib's `resetsAt` formatted by the platform, and no notices
+  beyond the connection state (rule 6).
+- **Usage page:** `usageSummary.request {period, today, timeZone}` → `{sinceDay,
+  untilDay, payload}` (`lib:bindings/android/describe.json:1192`), the payload sent with
+  `server.getUsageSummary` (`:3693`), then `usageSummary.aggregate {summary, sinceDay,
+  untilDay}` (`:1214`) → `{cacheSavings, cost, days[{day, cost, tokens}], kinds{input,
+  cached, cacheWrite, output, reasoning}, models[{provider, model, cost, tokens,
+  records}], pricing, providers[{provider, cost, tokens}], readAt, sessions, sinceDay,
+  sources[{provider, status, message, refreshing}], tokens, unpricedRecords, untilDay}`
+  (`lib:tests/domain_usage.rs:16-35`). "Refresh prices" calls `server.refreshUsageRates`
+  (`:3705`) first, as ot3 does (`ot3:src/usage_summary.rs:21-38`). `timeZone` is the
+  device's IANA zone (`ZoneId.systemDefault()`); `today` the local date.
+- Data of the page: cost and tokens only. `getUsageSummary` carries no limits; the
+  Limits tab reads the stream above.
+
+#### 4.10.2 Quota strip (Home and thread)
+
+ot3's `QuotaStrip` (`ot3:ui/qml/QuotaStrip.qml:8-126`) as hosted by the panel, without
+its header (`showHeader: false`, `collapsed: false`; `ot3:ui/qml/T3Panel.qml:1520-1537`):
+
+- **Where:** in Home, the first item of the `LazyColumn` (T3 Mobile's list-header slot,
+  `t3m:src/features/home/HomeScreen.tsx:773-787,856`), so it scrolls away with the list;
+  in the thread, under the top bar (4.3.1), as in ot3. Shown with Show provider usage
+  (overflow, `ot3:ui/qml/T3Panel.qml:1153-1158`; Settings → Appearance,
+  `ot3:ui/qml/T3Preferences.qml:249`), remembered like ot3's `usageExpanded`
+  (`ot3:ui/qml/T3Panel.qml:216-217`); off by default. It appears and hides through
+  `Ot3Reveal` (3.4); the bars do not animate, as in ot3. Hidden when no provider has a
+  window and there is no notice (`ot3:ui/qml/QuotaStrip.qml:16-19`).
+- **Provider group** (`:49-60`): card fill fg @ 0.025, 1 dp border fg @ 0.09, radius 4;
+  the provider name in bold caption with " · {n}" when it pools several accounts
+  (`:63`); labels from ot3's driver map (Codex, Claude, OpenCode Go, Cursor, …;
+  `ot3:ui/js/UsageLimits.js:38-41`).
+- **Window row** (`:66-100`), on a phone one line in this order: window label (the
+  server's, e.g. "5 hours", "Weekly", 64 dp, `dim`), the bar (fills), the **remaining**
+  percent "62%" (36 dp, end-aligned) and the reset "resets in 2h 5m" (≤ 96 dp, `dim`,
+  ellipsis). ot3's columns are `Style.space(92)` / `(72)` / `(34)` / `(112)` (1 unit =
+  1 dp, 3.3) beside a 60-unit chevron column, too wide for a phone, so the phone moves the
+  provider name to its own line above the rows and keeps the rest. Windows ordered
+  session, weekly, monthly, other (`ot3:ui/js/NativeUsageLimits.js:340-345`).
+- **Bar** (`ot3:ui/qml/QuotaStrip.qml:74-97`): 6 dp high, one segment per account with a
+  gap of min(2 dp, width / (4n)); track fg @ 0.12 (fg @ 0.035 for an account without a
+  reading); fill radius 2, width = remaining %; fill `accent`, or `failed` when the
+  account is under its pace (remaining < expected); an expected-remaining tick 2 dp wide,
+  4 dp taller than the bar, in `foreground`, where (1 − elapsed share) × 100 puts it
+  (`ot3:ui/js/UsageLimits.js:43`; rule `ot3:docs/SUBSCRIPTIONS.md:106-112`). No amber
+  thresholds: T3 Mobile's 10 % / 30 % colours (`t3m:src/features/usage/UsageLimitsSection.tsx:62-74`)
+  lose to ot3's pace rule (rule 2).
+- **Accounts** (`ot3:ui/qml/QuotaStrip.qml:103-120`): a chevron per group (48 dp target)
+  expands one line per account, "label · plan", the hosts in `dim`, and "{window}:
+  {pct}% · {reset}" per window.
+- **Notices** (`:17,25,30-36`): when providers report problems, a `failed` "!" icon whose
+  tooltip lists them: "{environment}: Access denied", "Disconnected; readings may be
+  outdated", "Could not refresh limits", plus external usage links "{label} · {url}"
+  (`ot3:ui/js/UsageLimits.js:34-36`), and Refresh.
+- **Compact form in Home:** at most two windows per provider (session and weekly, the
+  pooled `shortWindow` and `weekly` of `ot3:ui/js/UsageLimits.js:32`), the rest behind
+  the group's chevron; tapping a group opens Settings → Usage → Limits. The thread strip
+  shows every window, as ot3's.
+- Height cap: ot3 scrolls the strip past 200 dp (`ot3:ui/qml/QuotaStrip.qml:37-46`); in
+  Home it is part of the list, in the thread it keeps the 200 dp cap.
+
+#### 4.10.3 Usage page (Settings → Usage)
+
+T3 Mobile's place and tabs (`t3m:src/features/settings/SettingsRouteScreen.tsx:218`;
+`t3m:src/features/usage/UsageRouteScreen.tsx:61-65,87-96,260-263`), opening on
+**Limits**, with ot3's content in each:
+
+- **Limits:** the quota strip of 4.10.2 at full size, every window and the Accounts
+  open; header row "Provider usage" with "!" and Refresh as in ot3's own header
+  (`ot3:ui/qml/QuotaStrip.qml:21-28`). Empty: "No provider on the selected environments
+  reports subscription limits." (mobile-only, from
+  `t3m:src/features/usage/UsageLimitsPooled.tsx:323-327`).
+- **Usage:** ot3's usage page (`ot3:ui/qml/T3UsagePage.qml:8-78`, opened by "Open usage" /
+  Ctrl+U, `ot3:ui/qml/T3Panel.qml:67,317`):
+  - Period **Day / Week / Month / Quarter** (default Week; `:11,29-34`), a segmented row.
+  - Four KPI tiles, 2 × 2 on phones: **Cost**, **Tokens** (k / M / B), **Sessions**,
+    **Cache savings** (`:37-44`; tiles 62 dp, radius 8, fill fg @ 0.04, value at body + 4
+    SemiBold).
+  - "Cost per day" / "Tokens per day" with a Cost / Tokens toggle (`:45-49`); bars 150 dp
+    high, one per day scaled to the peak day, 2 dp minimum for a non-zero day, radius
+    min(3 dp, w/2), `accent`; day numbers only up to 14 days; tap a bar for its tooltip
+    "{day} · ${cost} · {count} tokens" (`:51-63`).
+  - Models: rows 28 → 48 dp (touch) with provider icon, middle-elided model name, a
+    relative bar 6 dp in accent @ 0.6, and the value (`:64-74`; at most 12 models,
+    `lib:src/usage_summary.rs:76-79`).
+  - "Refresh prices" when `unpricedRecords > 0` or prices are not fresh, with
+    "{count} records have no price." / "Model prices are unavailable." (`:75-76`).
+  - States: spinner while loading (`:36`); the error in `failed` (`:35`); "Connect an
+    environment to see usage." (mobile-only, `t3m:src/features/usage/UsageRouteScreen.tsx:305-314`).
+- Environment scope: the Settings scope select (4.9); with several environments the page
+  shows the selected one, as ot3 asks one environment at a time
+  (`ot3:ui/qml/T3Backend.qml:641`).
+- Pull to refresh on both tabs (T3 Mobile); tab switch fades 160 ms.
+
+#### 4.10.4 Strings
+
+All of ot3's page and strip labels are in the catalog ("Provider usage", "Show provider
+usage", "Hide provider usage", "Toggle usage", "Accounts", "Usage", "Day", "Week",
+"Month", "Quarter", "Cost", "Tokens", "Sessions", "Cache savings", "Cost per day",
+"Tokens per day", "Refresh prices", "Limits"). ot3's JS-side texts are not ("Access
+denied", "Disconnected; readings may be outdated", "Could not refresh limits", "resets in
+{time}", "Resets momentarily"; `ot3:ui/js/UsageLimits.js:35`;
+`ot3:ui/js/NativeUsageLimits.js:561-567`): they come from U26's English output through
+`i18n.t`, and until then from the mobile-only list ([ui/strings.md](ui/strings.md)).
 
 ### 4.11 Command palette and search
 
@@ -1305,7 +1813,191 @@ Data: `orchestration.getArchivedShellSnapshot` (typed API), unarchive and delete
 | Provider install and sign-in flows | `ot3:ui/qml/T3ProviderInstances.qml:84-124` | Provider accounts | read-only status in v1 |
 | Multiselect, drag reorder, bulk actions | chat row 7 | — | later |
 | Row auras, FPS meter, bar widget | `ot3:ui/assets/shaders/threadaura.frag`, `T3FpsMeter.qml`, `BarWidget.qml` | — | desktop chrome |
-| T3 Connect, live notifications | `ot3:ui/qml/T3ConnectionCloud.qml` | `ConnectOnboarding`, agent awareness | phase 3 |
+| T3 Connect | `ot3:ui/qml/T3ConnectionCloud.qml` | `ConnectOnboarding` | phase 3 |
+| Push through FCM or a relay | — | agent awareness over T3 Connect's relay | no own relay; relay-free notifications are UI-N (4.14) |
+
+### 4.14 Notifications and Live Updates
+
+Added 2026-10-26 at Andrés's request: on a physical Android 16 phone the official T3 app
+shows a status bar chip, a lock-screen card and a notch/shade card while an agent works;
+ot3-Android must do the same, without FCM, a relay or any push server (`docs/ARCHITECTURE.md`
+layer 4). Delivered as tranche **UI-N** (section 5). This section decides behaviour; the
+presentation builders exist (`app/.../notifications/`), the runtime does not yet.
+Acceptance and the API matrix: [ui/compare/ui-n/README.md](ui/compare/ui-n/README.md).
+
+Sources (pins as section 0; `t3relay:` is `t3:infra/relay/src/agentActivity/`):
+
+- ot3's bar: `ot3:ui/qml/BarWidget.qml:20-22` (counts `working`, `done`, `waiting`,
+  `failed`; stale after 90 s), `ot3:ui/qml/T3BarIndicator.qml:117-120` (tone: failed, then
+  waiting, then working; moves only while working). Counts come from
+  `ot3:ui/js/SidebarModel.js:45-49`, now `lib:src/sidebar/view.rs:349-358` (`sidebar.view`
+  `counts`, v0.3.4). Tooltip "Working: {working} · Ready: {ready} · Waiting for input:
+  {waiting}" (`ot3:app/shell.qml:119`).
+- ot3's desktop alerts: `ot3:src/main.rs:54-144`. Per environment that is `ready`, a thread
+  alerts when `pending` turns on or its `revision` changes, never before the environment's
+  first observation (`@initialized`), and a failed delivery is retried; label Done for
+  `reason` `response`/`review`, Failed for `failed`, Waiting otherwise. `pending`, `reason`
+  and `revision` are already `sidebar.view` row fields (`lib:src/sidebar/view.rs:21-90`;
+  `revision` = SHA-256 of reason, run, request id and completion stamp, `:75-82`). The
+  seen-state diff itself is ot3-only.
+- T3's phases: `t3:packages/shared/src/agentAwareness.ts:59-135` (starting, running,
+  waiting_for_approval, waiting_for_input, completed, failed, stale; subagents excluded;
+  settled finished threads dropped). Transition selection `t3relay:agentActivityAlerts.ts:14-161`
+  (attention = newly approval/input; finished = newly completed/failed, fresh ≤ 2 min; no
+  baseline means replay, no alert). Lifetimes `t3relay:agentActivityPayloads.ts:18-35`
+  (running/starting 2 h, waiting 24 h), finished display 15 min
+  (`t3relay:agentActivityAggregate.ts:59`). Android presentation
+  `t3m:modules/t3-agent-notifications/android/.../AgentNotifications.kt:247-341`,
+  `AgentActivityPresentation.kt:19-163`; operations note
+  `t3:docs/operations/android-notifications.md:7-21,71-75`.
+- Android (official, read 2026-10-26): the live-update guide (eligibility, chip, user
+  control; updated 2026-10-23), Android 16 CDD 3.8.3.1 for API 36.1 devices, the API
+  reference (`setRequestPromotedOngoing` added in 36.1), FGS types and Android 15 behaviour
+  changes, background-start restrictions, notification permission, Doze. URLs in the
+  acceptance file.
+
+#### 4.14.1 Surfaces
+
+| Surface | When | Content | API |
+|---|---|---|---|
+| **Ongoing card** (one, tag `ot3-activity`) | something works or waits for you, while following | title (one thread: its title; several: the lib's summary), `status · project · host`, elapsed time from the phase's start when the lib gives a stable one, up to five rows expanded, one action | all; promoted only on 36.1+ |
+| **Status bar chip** | the card is promoted | `Working`, `N live` (2–9, then `9+ live`), `Approve`, `Answer` | 36.1+ |
+| **Finished card** | every followed run ended | same card, not ongoing, no chip, no promotion request; tap opens the priority thread; expires 15 min after the newest result | all (timeout API 26+) |
+| **Alerts** (`ot3-alerts`) | approval, question, done, failed transitions decided by the lib | thread title; `Status: project`; grouped `ot3-attention` / `ot3-finished` with a silent summary for several | all |
+
+The chip, card and alerts never show a thread on screen as new: the lib receives the
+thread on screen and consumes its alert (T3's rule, `AgentNotifications.kt:148-161`).
+
+#### 4.14.2 Data: one shell source, decided in Rust
+
+- **Single source.** Each environment has one `ConnectionSupervisor` and one shell stream
+  (DECISIONS 2026-10-25). The follow service never opens its own: it reads the same
+  `ShellState` per environment and passes all of them to the lib. Counts are
+  `sidebar.view` `counts`; phases, card, alerts, dedupe, expiry, chip kind and grouping
+  come from the proposed `awareness.view` (LIB_REQUESTS.md U28). **No Kotlin rule
+  computes a phase, a count, a transition, a deadline or a chip kind.** U28 shipped in lib v0.3.5. The UI-1 pre-release keeps its matched v0.3.4
+  artifacts; runtime wiring and the v0.3.5 pin follow that release (rule 6: no interim
+  reimplementation of notification semantics).
+- **Baseline.** The lib returns an opaque `baseline` the host persists per installation
+  (DataStore) and passes back. A missing baseline for an environment means "first
+  observation": no alerts (cold start, new environment, cleared data). Reconnecting
+  (`Unreachable` → `Connected`) passes the environment as not ready meanwhile, so its rows
+  are neither withdrawn nor replayed as transitions (ot3 `main.rs:75-77`).
+- **Authorisation.** Only environments with a saved credential and a supervisor that is
+  not `Unauthorized` are passed. A bridge-catalog entry that is discovered but not
+  authorised, withdrawn or revoked (`docs/bridge/CATALOG_SYNC.md`) never contributes a row,
+  a card or an alert; revocation removes its rows from the next view, which the lib
+  reports as withdrawal, not as Done.
+
+#### 4.14.3 Leasing: the app and the follow service share supervisors
+
+Today `ConnectionManager.setForeground(false)` stops every running supervisor on the
+process's `ON_STOP`. UI-N changes that to leases, without a second stream:
+
+1. `ConnectionManager.lease(environmentId, holder)` returns a handle; `holder` is `Ui`
+   (screens) or `Follow` (the service). A supervisor runs while it has at least one lease.
+2. `ON_STOP` releases only `Ui` leases. When **Follow threads** is on and the service
+   holds `Follow` leases, those supervisors keep running; the others stop as today.
+3. `ON_RESUME` and default-network changes keep calling `wakeAll()` (`wakeSubscriptions`),
+   for leased supervisors too. Reconnection keeps the supervisor's jittered `Backoff`
+   and stops on `unauthorized`; the service adds no retry loop.
+4. The service releases its leases on idle stop, on disconnect from the notification,
+   when the toggle goes off, on `onTimeout`, and when an environment is forgotten or its
+   grant is withdrawn.
+
+#### 4.14.4 Follow service
+
+- **Opt-in.** Settings → Notifications → **Follow active threads** (off by default),
+  with a sentence: it keeps a connection open while threads work so their state shows
+  in the status bar and lock screen; it uses battery and stops by itself.
+- **Start** only from a visible app (toggle on, or opening a thread / sending a message
+  while the toggle is on and something works): API 31+ forbids starting a foreground
+  service from the background. No start from `BOOT_COMPLETED`, no restart at boot, no alarms to resurrect it, no battery-optimisation exemption
+  request (Doze's FCM-first policy; this app has no FCM).
+- **Type: `specialUse`** with the subtype property
+  `android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE` = "Follows coding-agent runs the user
+  started on their own T3 server over its WebSocket and shows their live status; no push
+  service exists for self-hosted servers", and `FOREGROUND_SERVICE_SPECIAL_USE`. Rejected:
+  `dataSync`, whose description is transfer work and which, for targetSdk 35+, is capped
+  at 6 h per 24 h across the app, reset only when the user brings the app to the
+  foreground, with `ForegroundServiceStartNotAllowedException` once exhausted. Long or
+  repeated runs would hit it. The service still implements `onTimeout(int, int)` and stops
+  within seconds, so a later type change cannot crash it. Play's App content declaration
+  is needed only if the app ships on Play.
+- **Stop.** When nothing has worked or needed the user for **15 minutes** (default; 5, 15,
+  30 or 60 in Settings), the service demotes the card to a finished/waiting card with its
+  lib deadline (finished 15 min, waiting up to 24 h) and stops. 15 minutes equals T3's
+  finished-card lifetime, so the card and the service end together. Also on
+  **Disconnect** (notification action), toggle off, `onTimeout`, revoked or removed
+  environments, and notification permission revoked.
+- **Notification.** The foreground service's notification **is** the ongoing card
+  (`startForeground(ACTIVITY_ID, card)`), so there is never a second "ot3 is running"
+  notification.
+- **Battery.** No wakelocks, no exact alarms, no polling: the shell stream is push.
+  Doze suspends network for apps (the guide lists no FGS exception), so a dozing phone
+  may delay updates until a maintenance window or the user wakes it; the card says so
+  through the lib's `stale` phase rather than pretending.
+
+#### 4.14.5 Live Updates (API 36.1+) and older APIs
+
+- The card asks for promotion (`setRequestPromotedOngoing(true)`) only while active,
+  ongoing, uncolourised (`setColorized(false)`; `setColor` only tints the icon), with a
+  content title, BigText style, on a channel above `IMPORTANCE_MIN`, never a group
+  summary, no custom views: the guide's eligibility list. The manifest adds the normal
+  permission `android.permission.POST_PROMOTED_NOTIFICATIONS` (no runtime prompt).
+- The chip text is `setShortCriticalText`; the guide shows text of fewer than 7
+  characters whole, otherwise as much as fits a 96 dp chip, or only the icon when less
+  than half fits. ot3's English chips are at most 7 characters (tested; `Approve` and
+  `9+ live` are exactly 7, as in T3); their exact rendering and translations are checked
+  only on a device capture.
+- **Requested is not promoted.** Settings shows `LiveUpdates.support`: Unsupported
+  (below API 36.1), NotAllowed (`canPostPromotedNotifications()` false), Allowed. Only a
+  posted notification's `FLAG_PROMOTED_ONGOING` proves promotion; OEMs may add criteria
+  and users may demote a card. No screen or document may claim a chip from the request
+  flag or from a build.
+- On API 36+, **Live Update settings** opens `Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS`
+  with `EXTRA_APP_PACKAGE` (the constant in the API 36/37 SDK and T3's module; the guide
+  names `ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS`, which the SDK does not have), else
+  the app's notification settings (26+), else app details.
+- Below 36.1 the same card is a normal ongoing notification. API 24–25 have no channels
+  and no timeout: priority LOW/HIGH stand in for channels, and while the service runs it
+  cancels expired cards; T3's single inexact `setAndAllowWhileIdle` alarm for a stopped
+  process (`AgentNotifications.kt:280-290`) is adopted in the runtime tranche.
+
+#### 4.14.6 Channels, alerts and actions
+
+- Channels `ot3-activity` (LOW, no badge) and `ot3-alerts` (HIGH), names "Thread
+  activity" and "Thread alerts". Users own their importance afterwards.
+- Alert groups `ot3-attention` (approval, question; also a ready plan, ot3's `waiting`)
+  and `ot3-finished` (done, failed), as T3's "N agents need attention" / "N agents
+  finished". Alerts carry the lib's stable id as tag, so retries, reconnects and cold
+  starts cannot repeat or collide. Done and Failed alerts may carry the lib's deadline
+  (`setTimeoutAfter`); no foreground service lives for an alert.
+- **Open** (tap) always works: the thread deep link `ot3a://thread/{environmentId}/{threadId}`
+  through `MainActivity` (`ThreadDeepLink`). Approve and Answer open the same thread, where
+  UI-4's card asks for a visible confirmation and then sends through
+  `approvals.command` / `questions.command` and the outbox with a stable command id.
+  **No broadcast receiver or notification action ever approves or answers in one step.**
+- Permission: API 33+ asks `POST_NOTIFICATIONS` in context (turning the toggle on), with
+  the existing `mobile_notifications_permission` rationale; if denied, the toggle stays
+  off and links to the app's notification settings. The service never starts without it
+  (its notification would be hidden from the shade).
+
+#### 4.14.7 Lock screen and privacy
+
+Settings → Notifications → **Lock screen**: *Full* is the default requested by Andrés:
+the same thread title, project · host, state and elapsed time as the unlocked card.
+*Status only* supplies a public version “OT3 · Working” without thread or project titles;
+*Hidden* uses the system “contents hidden” placeholder. System notification privacy
+settings still apply. The Android application label is **OT3**; the short critical text
+contains only the state/count to fit the platform's chip budget. A complete rendered
+“OT3 · N live” chip is an acceptance target, not a result proved by the builder.
+
+#### 4.14.8 What this tranche does not do
+
+No FCM, no relay, no push server, no T3 Connect. No widget. No sound selection beyond
+the channel. No notification for a thread whose environment is not authorised. No claim
+about OEM chips or a physical lock screen without a capture of that device.
 
 ## 5. Delivery plan
 
@@ -1325,16 +2017,22 @@ Seven PRs, each mergeable alone, each ending with captures compared side by side
   taken from the lib's outputs; Compose UI tests (instrumented) for interactions, run
   when the emulator is back.
 - Strings only through the generator; no hard-coded text.
+- **Motion acceptance:** each tranche's motion part (the Motion column) is shown by
+  screen recordings next to its stills in `docs/ui/compare/<tranche>/`, recorded on the
+  reference emulator as 3.4.5 says (≤ 10 s each, WebM or GIF). The emulator works again
+  since 2026-10-25 (`docs/DECISIONS.md`, "The emulator is the reference device").
 
-| PR | Scope | Visual acceptance | Tests | Lib needed |
-|---|---|---|---|---|
-| **UI-1 Visual system and Home** | theme generator and JSON (22 themes), `Ot3Theme`, Fira Code, Lucide vectors, kit (3.9), sky header (AGSL + Canvas), strings generator, typed routes and the three tabs, merged Home with header, search, filter sheet, card and slim rows, shelves, swipe and long-press sheets (Copy and Filter only until builders), Environments under Settings restyled, Component catalog | Home vs `ot3-sidebar-and-thread.png` (left column) and `ot3-timeline-shelves-composer.png` (shelves, slim rows); sky in a dark and a light theme | generator goldens (tokens.md §1); status, time and shelf mapping; sky uniforms; navigation (row → thread, back order) | none blocking; U2 and U21 for full status, order and chips |
-| **UI-2 Thread timeline** | top bar, find, user and assistant messages, Markdown renderer, copy, fork, quote, activity blocks and inspector, Thinking rows, changed-files card, dividers, error cards, subagent cards and child threads, plan card, working pill, jump to latest, Load earlier, states (4.3) | thread vs `ot3-sidebar-and-thread.png` (right) and `ot3-timeline-shelves-composer.png` (Markdown) | row mapping per role; Markdown blocks; scroll policy with streaming | U0, U3, U4, U10 (blocking for activity, changes, dividers); U18 for history |
-| **UI-3 Composer** | frame, collapsed / card / expanded, completions, model picker, options, permission, Plan / Build, send / queue / steer / stop and Send options, queue strip and sheet, attachments with upload, drafts status, notices (4.4) | composer vs `ot3-sidebar-and-thread.png` (bottom) and `ot3-model-picker.png` | send state machine; queue mapping; IME insets | U5, U7, U8, request item 4 |
-| **UI-4 Approvals, questions and plans** | approval and question cards, secret card, ready-plan banner and follow-ups, tasks strip, Edit from here (4.5, 4.3.7) | cards vs ot3 card tokens; plan banner vs `ot3-plan-card.png` | decision gating; multi-question flow; replay rules after `rpc_outcome_unknown` | U6, U15, U24, request item 4 |
-| **UI-5 Changes, diff, Git and pull requests** | diff screen and file list, Git & changes sheet (status, Review; actions after U22), PR tab, PR detail and files, PR badge on rows, new thread flow and branch picker, Add project (4.6–4.8) | diff vs `ot3-changes-review.png` and `ot3-diff-split.png`; Git sheet vs `ot3-git-controls.png`; PR list vs `ot3-pull-requests.png` | hunk rendering; source switching; PR filters and actions | U9, U19, U20, U22 |
-| **UI-6 Settings, palette, usage, archive** | Settings root and pages, theme picker with previews, Add environment with QR and pairing link, Providers and favourites, Usage and quota strip, Archived threads, command palette, Licenses (4.2, 4.9–4.12) | Settings vs `ot3-preferences-*.png`; archive vs `ot3-archive.png` | theme switching; scope; palette ranking; usage aggregation via the lib | U7, U14, U17, U23 |
-| **UI-7 Tablets and foldables** | navigation rail, list / detail / inspector panes with T3 Mobile's breakpoints, hinge alignment, empty detail, inspector content, tablet minimap, hardware keyboard shortcuts and the shortcut helper (2.4, 4.3.8) | split layout at 1280 × 800 dp and 840 × 1200 dp against the phone goldens | breakpoint function at each threshold; back across panes; key handling | U12 |
+| PR | Scope | Motion (3.4.3; recordings 3.4.5) | Visual acceptance | Tests | Lib needed |
+|---|---|---|---|---|---|
+| **UI-1 Visual system and Home** | theme generator and JSON (22 themes), `Ot3Theme`, Fira Code, Lucide vectors, kit (3.9), sky header (AGSL + Canvas), strings generator, typed routes and the three tabs, merged Home with header, search, filter sheet, card and slim rows, shelves, swipe and long-press sheets (Copy and Filter only until builders), Environments under Settings restyled, route-in-use indicator (4.2.1, Home and thread top bar), compact quota strip in Home from the live `server.subscribeServerConfig` stream (4.10.2), Component catalog with a Motion page | `Ot3Motion`, `Ot3Easing`, `Ot3Durations`, `Ot3Ticker`, `Ot3Reveal` (all five styles, spring below API 33); rows arrive / depart / close gaps / fly between shelves; status icon pop, tint and spin; draft pen; shelves through `Ot3Reveal`; sky energy, drift, comets while working, frame pacing and Auto downgrade; connection-dot pulse; swipe spring; FAB; kit control timings; quota strip reveal; predictive back. Recordings: Home rows and shelves, sky idle → working → idle, swipe, Remove animations on | Home vs `ot3-sidebar-and-thread.png` (left column) and `ot3-timeline-shelves-composer.png` (shelves, slim rows); sky in a dark and a light theme | generator goldens (tokens.md §1); status, time and shelf mapping; sky uniforms; navigation (row → thread, back order) | none blocking; U2 and U21 for full status, order and chips; U14 (closed) and U26 for the strip's pooling and marker, U27 for route kinds (interim: user-chosen kind, preferred route only) |
+| **UI-2 Thread timeline** | top bar, find, user and assistant messages, Markdown renderer, copy, fork, quote, activity blocks and inspector, Thinking rows, changed-files card, dividers, error cards, subagent cards and child threads, plan card, working pill, jump to latest, Load earlier, states (4.3) | spinner and shimmer on activity rows and the working pill, minimap-free phone timeline, `Ot3Reveal` for the find bar; messages appear without animation, as ot3. Recordings: a streaming run with the working pill | thread vs `ot3-sidebar-and-thread.png` (right) and `ot3-timeline-shelves-composer.png` (Markdown) | row mapping per role; Markdown blocks; scroll policy with streaming | U0, U3, U4, U10 (blocking for activity, changes, dividers); U18 for history |
+| **UI-3 Composer** | frame, collapsed / card / expanded, completions, model picker, options, permission, Plan / Build, send / queue / steer / stop and Send options, queue strip and sheet, attachments with upload, drafts status, notices (4.4) | composer focus and send colour, draft saved / saving, queue strip through `Ot3Reveal`, sheet physics. Recordings: send, queue, draft status | composer vs `ot3-sidebar-and-thread.png` (bottom) and `ot3-model-picker.png` | send state machine; queue mapping; IME insets | U5, U7, U8, request item 4 |
+| **UI-4 Approvals, questions and plans** | approval and question cards, secret card, ready-plan banner and follow-ups, tasks strip, Edit from here (4.5, 4.3.7) | tasks strip and ready-plan banner through `Ot3Reveal`; question auto-advance after 200 ms; cards not animated, as ot3. Recordings: approval → answered, multi-question | cards vs ot3 card tokens; plan banner vs `ot3-plan-card.png` | decision gating; multi-question flow; replay rules after `rpc_outcome_unknown` | U6, U15, U24, request item 4 |
+| **UI-5 Changes, diff, Git and pull requests** | diff screen and file list, Git & changes sheet (status, Review; actions after U22), PR tab, PR detail and files, PR badge on rows, new thread flow and branch picker, Add project (4.6–4.8) | sheet physics, diff file switching without animation (ot3 has none). Recordings: Git sheet, PR detail tabs | diff vs `ot3-changes-review.png` and `ot3-diff-split.png`; Git sheet vs `ot3-git-controls.png`; PR list vs `ot3-pull-requests.png` | hunk rendering; source switching; PR filters and actions | U9, U19, U20, U22 |
+| **UI-6 Settings, palette, usage, archive** | Settings root and pages, theme picker with previews, Add environment with QR and pairing link, Providers and favourites, Usage page with Usage and Limits tabs and the full quota strip (4.10.3), route editing (4.2.1), Appearance → Animations (3.4.4), Archived threads, command palette, Licenses (4.2, 4.9–4.12) | Settings → Appearance → Animations wired to `Ot3Motion`; usage tabs 160 ms fade; quota strip and Limits without bar animation; route editor. Recordings: each Show and hide style at normal pace, usage tabs | Settings vs `ot3-preferences-*.png`; archive vs `ot3-archive.png` | theme switching; scope; palette ranking; usage aggregation via the lib | U7, U14, U17, U23; U26 for pooled limits, U27 for route kinds and fallback |
+| **UI-7 Tablets and foldables** | navigation rail, list / detail / inspector panes with T3 Mobile's breakpoints, hinge alignment, empty detail, inspector content, tablet minimap, hardware keyboard shortcuts and the shortcut helper (2.4, 4.3.8) | panes 260 ms InOutCubic, detail replacement not animated, tablet minimap marker 150 ms. Recordings: list → detail → inspector, fold posture | split layout at 1280 × 800 dp and 840 × 1200 dp against the phone goldens | breakpoint function at each threshold; back across panes; key handling | U12 |
+| **UI-OB OmaBridge page** (blocked) | Settings → Connections → OmaBridge (4.9.1): the phone's identity and pairing by OmaBridge QR, managed hosts (publish, approvals, paired devices, revoke), gateways with check and "Add as a route", the approvals dot; direct OmaBridge peer routes and ot3's per-environment plans (4.2.2) | ot3's cards and buttons, no extra motion; pending-approval dot appears without animation. Recordings: pair → approved | page vs ot3's `T3OmaBridgeManage` (a capture is added to `ui/reference/` when the work starts) | snapshot mapping; action gating by `REMOTE_ACTIONS`; route plan with a peer route | **blocked** on [OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB1–OB3; U27 |
+| **UI-N Notifications and Live Updates** (after UI-2a's timeline reader and the bridge catalog integration) | 4.14: preparation PR (this spec, presentation builders, channels, status icon, contract parser, Robolectric 24/26/33/36); then runtime: supervisor leases, `specialUse` follow service, Settings → Notifications, permission flow, alerts from `awareness.view`, thread-on-screen suppression, lock-screen modes, Live Update settings | none of its own: the card and chip are system UI; ot3's bar-indicator motion is desktop chrome (4.13) | captures on the API 36.1 emulator: status bar chip, lock screen (each lock-screen mode), shade expanded/collapsed, finished card, grouped alerts; a physical capture only when Andrés allows it | builders and channels per API level; contract fixtures from the lib; lease and service lifecycle on the JVM; no promotion claim from a request | **U28 delivered in v0.3.5**; Android pin/runtime follows UI-1 release; shells come from the existing supervisors (`ShellState`, U2 reducer half still open) |
 
 UI-1 also records the decisions of section 1 in `docs/DECISIONS.md` (the architecture
 line on themes already changes with this spec).
@@ -1350,6 +2048,10 @@ line on themes already changes with this spec).
 > `projection.apply` and `timeline.view`). The function names per row, their status and
 > the tests that exercise them are in [LIB_REQUESTS.md](LIB_REQUESTS.md), "2026-10-25:
 > v0.3.4". Still open there: the shell reducer half of U2 (v0.3.3 finding 1, `shell.apply`).
+>
+> U26 and U27 were added after v0.3.4 (motion, usage and OmaBridge requirements,
+> 2026-10-25) and are open: [LIB_REQUESTS.md](LIB_REQUESTS.md), "2026-10-25: usage limits
+> and routes".
 
 As of v0.3.2 no presentation module is reachable from Kotlin: the C ABI's operations are
 the transport ones plus `call` / `describe` (`lib:src/ffi.rs:30-37`), and `call` only
@@ -1388,10 +2090,15 @@ ot3's own crate, not in the lib, and would move into the lib first.
 | U23 | **new** `nativeSettings.snapshot` / `patch`, `scopedSettings.effective` / `projectPatch` | `lib:src/native_settings.rs:107,152`, `lib:src/scoped_settings.rs:38,56` | Settings pages (4.9) | read-only |
 | U24 | **new** `checkpointRevert.canPreview` / `reference` / `command` / `observation` / `recoveryMessage` | `lib:src/checkpoint_revert.rs:7,39,159,208,248` | Edit from here (4.5.4) | not offered |
 | U25 | **new** `toolInspector.scope` / `request` / `parse` | `lib:src/tool_inspector.rs:61,89,236` | Inspector (4.3.3) | not offered |
+| U26 | **new, 2026-10-25** `quotaSources.present`: ot3's pooled limits (accounts per provider across environments, segments, remaining %, pace, expected-remaining marker, earliest reset text, notices, external links) | **ot3 only** (JS port of T3's `usageLimits.ts`): `ot3:ui/js/UsageLimits.js:5-43`, `ot3:ui/js/NativeUsageLimits.js:153-567` | Quota strip, Limits tab (4.10) | one bar per window from `quotaSources.limits`, no pooling, pace or marker |
+| U27 | **new, 2026-10-25** routes: `connectionCatalog.routeKind` (address → public / LAN / Tailscale, with a link hint) and `connectionCatalog.routePlan` (ordered attempts and fallback); `pairingTarget` returning the route hint | grouping and ordering only, Rust-only: `lib:src/connection_catalog.rs:73-212`; classification **ot3 only**: `ot3:src/connection_network.rs:48-54` | Route indicator and editing (4.2.1, 4.2.2) | user-chosen kind, preferred route only |
+| U28 | **new, 2026-10-26** `awareness.view`: T3's awareness phases per thread, the ongoing card, attention / finished alerts deduplicated against an opaque host-held baseline (no alerts on first observation), on-screen suppression, absolute deadlines, chip kind and grouped titles | phases **T3 only** (`t3:packages/shared/src/agentAwareness.ts:59-135`, `t3:infra/relay/src/agentActivity/agentActivityAlerts.ts`); ot3's seen-state diff **ot3 only** (`ot3:src/main.rs:54-144`); counts, `pending`, `reason`, `revision` already in `sidebar.view` | Notifications (4.14) | runtime not started |
 
 Order of need: nothing blocks UI-1 (U2 and U21 complete it); U0, U3, U4 and U10 gate
 UI-2; U5, U7 and U8 gate UI-3; U6, U15 and U24 gate UI-4; U9, U19, U20 and U22 gate UI-5;
-U14, U17 and U23 gate UI-6; U12 gates UI-7. U11 gates nothing because the generator
+U14, U17 and U23 gate UI-6; U12 gates UI-7. Added 2026-10-25: U26 and U27 complete
+UI-1's strip and indicator and UI-6's Limits tab and route editing without blocking them;
+the OmaBridge page waits on OmaBridge itself ([OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md)), not on the lib. U11 gates nothing because the generator
 covers it, but it keeps ot3 and Android from drifting. When this spec is accepted, the **new** rows move into
 `LIB_REQUESTS.md` as a dated section.
 
@@ -1431,3 +2138,77 @@ covers it, but it keeps ot3 and Android from drifting. When this spec is accepte
 8. Approvals and questions sit above the composer as ot3 cards; questions stay paged; the composer is hidden while a question waits.
 9. Seven PRs: visual system and Home, timeline, composer, approvals, changes/diff/PRs, settings/palette/usage, tablets; each with JVM screenshot goldens compared to ot3 captures.
 10. The lib needs 26 exposures (U0–U25), 18 of them new, led by the timeline view, the multi-environment sidebar view, activity, changed files and Markdown blocks.
+11. Motion is ot3's: 88 animation uses on 61 QML lines plus one shared ticker, inventoried by surface; `T3Motion` is only the show/hide style and pace, every other duration is a literal kept in `Ot3Durations` with exact Penner easings; ot3's Animations preferences plus Android's Remove animations and battery saver; each tranche proves its motion with ≤ 10 s emulator recordings.
+12. Token availability: a compact quota strip in Home (UI-1) and the Usage | Limits page (UI-6), live from `server.subscribeServerConfig` folded by `quotaSources.apply`, cost and tokens from `usageSummary.*`; ot3's pooling and pace marker need `quotaSources.present` (U26).
+13. Each environment has ordered routes (public, local network, Tailscale, OmaBridge) with a route-in-use icon in Home and the thread (UI-1) and route editing (UI-6); kinds and fallback come from the lib (U27).
+14. A phone reaches OmaBridge today only through a gateway address; the OmaBridge page and direct peer routes wait for an Android OmaBridge client and remote management ([OMABRIDGE_REQUESTS.md](OMABRIDGE_REQUESTS.md) OB1–OB4).
+
+
+## UI1i acceptance addendum — vertical correction (2026-10-25)
+
+Andrés rejected the UI1h vertical capture for dead space and missing ot3 style/motion.
+UI1h remains navigation evidence, not visual sign-off. UI1i must be reviewed with
+[measures, original before/after captures and video](ui/compare/ui-1i/README.md).
+A fixture can prove reproducible state/layout; it does not grant aesthetic acceptance.
+
+- Home owns the top safe inset once. The sky covers the real brand/search composition;
+  no duplicate top padding or floating-action reservation. Keep 48 dp touch targets,
+  native font scaling, horizontal safeDrawing/cutout protection and real system bars.
+- Use SkyHeader/SkyBrandRow in production Home, real logo, count pills and existing
+  card/slim row roles. Working energy comes from the lib. Do not draw sky in chat.
+- Ship the source row aura (work comet, attention glints, 1300 ms change star), guarded
+  AGSL plus Canvas fallback, pressed/selected feedback and visible surface motion.
+  Decorative Off stops clocks/row reveals; attention stays static. System animator
+  scale 0 also disables native navigation through Android's own transition scaling.
+- Sidebar reveal keeps the child's natural 280 dp width and uses T3Reveal's default
+  nebula shader (560 ms InOutCubic, reach = min(1, extent / 0.6)); spring 520 ms OutBack
+  1.3 is only the declared fallback on older APIs, software rendering or shader failure.
+  Stack push/pop use Navigation Compose defaults and predictive back. 260 ms belongs
+  only to tablet panes. Arrival uses 83 ms pause + 333 ms OutCubic fade / OutBack 1.2
+  drift, departure opacity 312 ms, keyed shelf placement 520 ms InOutQuart. Full arc
+  flight/departure drift and the preference selectors remain explicit follow-ups.
+- A single requested-rate ticker now drives sky, spinner, shimmer, status icon and row
+  aura. T3Motion supplies only reveal style/pace; component durations stay independent.
+  Pills, approval cards, quota/usage/OmaBridge receive no invented animation.
+- Chat chrome is 56 dp below the safe area; timeline meets the minimal composer with
+  no app-footer gap, also with the real IME. User surface and assistant prose use ot3
+  roles, 6 dp corners and readable 14 sp body. This does **not** complete chat parity.
+- Only MainActivity is a launcher, including debug builds. Catalog/fixture launch is
+  explicit. Regression tests preserve one stream, draft and reading position through
+  rotation, collapse and recreation. AGSL/forced Canvas must draw nonuniform star
+  pixels; a successful shader constructor alone is insufficient.
+
+The next implementation is [UI2's full timeline view, followed by UI3's composer
+contracts](ui/compare/ui-1i/CONTINUITY.md). UI2 starts from the already retained
+`ThreadView.timeline`/`timeline.view`, with no protocol derivation in Kotlin. Review
+must keep live transport, physical Xiaomi, aesthetic approval and release build claims
+separate from emulator fixture checks.
+
+## UI2a implementation status — 2026-10-26
+
+The reader now draws Rust `ThreadView.timeline.timeline`, including neutral Markdown
+blocks, sender/time/copy, folding activity/reasoning with scoped inspector reads, and
+file-change summaries. Workspace-owned sidebar access exists in both orientations and
+survives unloaded/failed thread state. Selected rows retain touch pressed feedback.
+This is an incremental native renderer, **not** a completed parity claim. The exact
+implemented/pending comparison against OT3 7b5b1de is in
+[UI2a evidence](ui/compare/ui-2a/README.md). UI3 model/options/queue/attachments/steer,
+interactive approvals/questions, rich document previews, source controls and history
+transport/session integration remain pending. No new Kotlin protocol/projection layer.
+
+Source correction for UI2a: user message corners are 16 dp, as
+`ot3:ui/qml/T3Panel.qml:1704`; code containers retain 6 dp corners. This supersedes
+the earlier UI1i addendum's 6 dp message-corner statement. The workspace sidebar
+action shares the 56 dp chat toolbar; it does not add another 48 dp header row.
+
+### 2026-10-26 functional acceptance: bridge-distributed environments
+
+Pairing Android with a desktop bridge must discover and synchronize the client's
+authorized desktop environments (acceptance case VQ + NODE), including stable identity,
+portable routes, add/change/withdrawal, reconnection and private offline cache. Preserve
+independent local entries, selection/drafts/reading and per-host thread ownership.
+Discovery is distinct from permission; do not copy desktop private tokens or assume
+localhost/SSH forwards are reachable by a phone. A route indicator/settings page does
+not close this requirement. [CATALOG_SYNC](bridge/CATALOG_SYNC.md) tracks proven source,
+implementation and the remaining authenticated publisher/enrollment/Android integration.
+Physical VQ-only evidence is not proof of the phone's actual UUID, route or filter.

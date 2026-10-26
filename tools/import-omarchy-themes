@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Convert Omarchy's themes into app/src/main/assets/themes/omarchy-themes.json with the
+# lib's theme.tokens (docs/ui/omarchy-themes.md). Needs the host libt3_jni.so from
+# scripts/fetch-or-build-lib.sh --host-jni; no colour is computed here.
+#
+#   tools/import-omarchy-themes [THEMES_DIR] [--omarchy-version V] [--check]
+#
+# THEMES_DIR defaults to /usr/share/omarchy/themes; the version to THEMES_DIR/../version.
+# --check writes nothing and fails if the JSON would change.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+args=()
+while (($#)); do
+  case "$1" in
+    --check) args+=(-Pot3a.themesCheck=true) ;;
+    --omarchy-version) args+=("-Pot3a.omarchyVersion=$2"); shift ;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    *) args+=("-Pot3a.omarchyThemes=$(cd "$1" && pwd)") ;;
+  esac
+  shift
+done
+exec ./gradlew --no-daemon -q :core:importOmarchyThemes "${args[@]}"

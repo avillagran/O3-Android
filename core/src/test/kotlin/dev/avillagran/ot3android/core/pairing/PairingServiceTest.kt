@@ -9,16 +9,19 @@ import dev.avillagran.ot3android.core.data.InMemoryTokenStore
 import dev.avillagran.ot3android.core.security.TokenStore
 import dev.avillagran.ot3android.core.shell.ShellFixtures
 import dev.avillagran.ot3android.core.transport.ConnectRoute
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.PairedBearer
 import dev.avillagran.ot3android.core.transport.PairingClient
+import dev.avillagran.ot3android.core.transport.assumeHostJni
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -30,11 +33,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PairingServiceTest {
+
+    /** Links are read by the lib's `connectionCatalog.pairingTarget` (host JNI library). */
+    @Before
+    fun setUp() = assumeHostJni()
 
     private val dao = InMemoryEnvironmentDao()
     private val tokens = InMemoryTokenStore()
@@ -75,6 +83,7 @@ class PairingServiceTest {
         stopConnection = stopConnection,
         handOver = handOver,
         io = UnconfinedTestDispatcher(testScheduler),
+        domain = DomainEngine(UnconfinedTestDispatcher(testScheduler)),
     )
 
     @Test
@@ -363,7 +372,7 @@ class PairingServiceTest {
     }
 
     @Test
-    fun theOriginOfALinkIsReadOffline() {
+    fun theOriginOfALinkIsReadOffline() = runBlocking {
         assertEquals(ORIGIN, PairingService.originOf(LINK))
         assertEquals("https://box.example.ts.net", PairingService.originOf("wss://box.example.ts.net/pair#token=$CODE"))
         assertNull(PairingService.originOf("ftp://node/pair#token=$CODE"))
@@ -372,7 +381,7 @@ class PairingServiceTest {
     }
 
     @Test
-    fun onlyPairingLinksWithACodeAreTakenFromAQrCode() {
+    fun onlyPairingLinksWithACodeAreTakenFromAQrCode() = runBlocking {
         listOf(
             LINK,
             "$ORIGIN/pair?token=$CODE",

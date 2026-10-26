@@ -4,6 +4,8 @@ import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import dev.avillagran.ot3android.core.connection.ServerDescriptor
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.domain.Environment
+import dev.avillagran.ot3android.core.transport.DomainCalls
+import dev.avillagran.ot3android.core.transport.DomainEngine
 import dev.avillagran.ot3android.core.transport.PairingClient
 import dev.avillagran.ot3android.core.transport.T3Transport
 import dev.avillagran.ot3android.core.transport.T3TransportFactory
@@ -109,7 +111,7 @@ sealed interface PairingState {
 }
 
 /**
- * Pairs this device with a T3 server from a pairing link: parse ([PairingLink], offline) →
+ * Pairs this device with a T3 server from a pairing link: parse ([PairingTargets], offline) →
  * [inspect] reads the descriptor (label, version) → the user confirms → [confirm] exchanges the
  * one-time code with `pairBearer` (no connection), stores the environment (local row keyed by
  * the server's environment id, label from the descriptor) and the issued long-lived token, then
@@ -132,6 +134,7 @@ class PairingService(
     /** Starts the environment's connection with what was just saved. */
     private val handOver: suspend (environmentId: String) -> Unit,
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val domain: DomainCalls = DomainEngine.shared,
 ) {
     private val _state = MutableStateFlow<PairingState>(PairingState.Idle)
     val state: StateFlow<PairingState> = _state.asStateFlow()
@@ -149,7 +152,7 @@ class PairingService(
         target = null
         existing = null
         val parsed = try {
-            PairingLink.parse(link, code)
+            PairingTargets.parse(domain, link, code)
         } catch (error: T3Exception) {
             return@withLock fail(error.code, origin = null)
         }
@@ -211,6 +214,9 @@ class PairingService(
         }
     }
 
+    /** The server origin [link] points at, offline, or null when it is not a readable link. */
+    suspend fun origin(link: String): String? = originOf(link, domain)
+
     /** Back to [PairingState.Idle], forgetting a parsed link. */
     suspend fun reset() = lock.withLock {
         target = null
@@ -250,8 +256,8 @@ class PairingService(
         const val NO_CODE = "no_pairing_code"
 
         /** The server origin [link] points at, offline, or null when it is not a readable link. */
-        fun originOf(link: String): String? = try {
-            PairingLink.parse(link).httpBaseUrl
+        suspend fun originOf(link: String, domain: DomainCalls = DomainEngine.shared): String? = try {
+            PairingTargets.parse(domain, link).httpBaseUrl
         } catch (_: T3Exception) {
             null
         }
@@ -261,9 +267,9 @@ class PairingService(
          * pairing code and is a `/pair` link or a hosted link naming the server in `host`. Any
          * other QR code (a URL, Wi-Fi settings, text) is not taken for one.
          */
-        fun isPairingLink(text: String): Boolean {
+        suspend fun isPairingLink(text: String, domain: DomainCalls = DomainEngine.shared): Boolean {
             val parsed = try {
-                PairingLink.parse(text)
+                PairingTargets.parse(domain, text)
             } catch (_: T3Exception) {
                 return false
             }

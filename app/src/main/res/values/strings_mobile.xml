@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mobile-only strings: states T3 Mobile has and ot3 lacks (UI_SPEC rule 4). Each one is
+     listed with its T3 Mobile source in docs/ui/strings.md, "Mobile-only strings". ot3's
+     catalog has no translation for them, so every locale shows this English text. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="mobile_offline_cached">Offline · showing saved messages</string>
+    <string name="mobile_messages_not_cached">Messages not saved on this device</string>
+    <string name="mobile_opening_thread">Opening thread…</string>
+    <string name="mobile_reconnecting_env">Reconnecting to %1$s…</string>
+    <string name="mobile_decline_redirect_hint">Send a message to decline and redirect the agent</string>
+    <string name="mobile_camera_needed">Camera access needed to scan the code</string>
+    <string name="mobile_scan_pairing">Scan the code from t3 pair or desktop Connections settings</string>
+    <string name="mobile_select_thread">Select a thread</string>
+    <string name="mobile_show_more_settled">Show more (%1$s settled hidden)</string>
+    <string name="mobile_notifications_permission">Allow notifications to hear when a thread needs you</string>
+
+    <string name="mobile_tab_chats">Chats</string>
+    <string name="mobile_syncing_threads">Syncing threads…</string>
+    <string name="mobile_loading_threads">Loading threads…</string>
+    <string name="mobile_reconnecting_envs">Reconnecting %1$s environments…</string>
+    <string name="mobile_you_are_offline">You are offline</string>
+    <string name="mobile_thread_list_options">Thread list options</string>
+    <string name="mobile_filter_environment">Environment</string>
+    <string name="mobile_no_environments">No environments connected</string>
+    <string name="mobile_connecting_environment">Connecting to environment</string>
+    <string name="mobile_env_connecting">Connecting…</string>
+    <string name="mobile_env_connection_failed">Connection failed</string>
+    <string name="mobile_env_retrying_attempt">Retrying · attempt %1$s</string>
+    <string name="mobile_component_catalog">UI components</string>
+    <string name="mobile_snooze_until">Snooze until</string>
+
+    <!-- Notifications and Live Updates (UI_SPEC). Channel names, the Answer chip and the
+         "N live" chip; T3 Mobile's AgentNotifications.kt / AgentActivityPresentation.kt. -->
+    <string name="mobile_notif_channel_activity">Thread activity</string>
+    <string name="mobile_notif_channel_alerts">Thread alerts</string>
+    <string name="mobile_notif_answer">Answer</string>
+    <string name="mobile_notif_live">%1$s live</string>
+</resources>

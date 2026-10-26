@@ -168,7 +168,7 @@ T3 0.1.3-nightly.20261025.3669 (the same machine's server, on the LAN address th
 named) through lib-t3-rust v0.3.2, by one run of `core/.../pairing/LivePairingTest.kt`;
 **[lib]** is read from lib-t3-rust v0.3.2 (`src/pairing.rs`, `src/connection_catalog.rs`)
 or the T3 CLI bundled in that release, and checked against local fixtures
-(`NativePairingTest`, `PairingLinkTest`); **[inferred]** is what this app assumes.
+(`NativePairingTest`, `PairingTargetsTest`); **[inferred]** is what this app assumes.
 
 ### The link
 
@@ -191,8 +191,8 @@ or the T3 CLI bundled in that release, and checked against local fixtures
   at its `host` parameter, but only when there is a code; `ws`/`wss` map to `http`/`https`;
   a bare `host:port` gets `https`. Path, query and fragment are dropped from the origin;
   user info, port 0 and other schemes are `invalid_endpoint`, and a code with control
-  characters or over 16 KiB is `invalid_pairing_code`. `core/pairing/PairingLink.kt` ports
-  it until the lib exposes it (LIB_REQUESTS.md, phase 1 item 6).
+  characters or over 16 KiB is `invalid_pairing_code`. The app calls it as the domain
+  function `connectionCatalog.pairingTarget` (`core/pairing/PairingTargets.kt`).
 
 ### The exchange (`pairBearer`)
 
@@ -371,3 +371,38 @@ subagents), each with a `rev`; about 35 ms per `timeline.view` and 50 ms per
 `call("orchestration.dispatchCommand", {type: "run.interrupt", commandId, threadId,
 runId: the active run (above), holdQueue: true})` **[lib]**, offered while the thread is
 working. It is repeatable, so it is not persisted.
+
+## Live Omarchy theme (filesystem reads)
+
+Checked live on 2026-10-25 against T3 0.1.3 (`127.0.0.1:8643` on node, a session with
+`orchestration:read` + `filesystem:read`; for the no-scope case, one with
+`orchestration:read` only). Keys and codes only. Spec: UI_SPEC 3.1.3; code:
+`core/theme/EnvironmentThemeReader.kt`.
+
+- `filesystem.getMetadata({paths: ["~", "~/.local/state/omarchy/current/theme/colors.toml"]})`
+  → `{entries}`, one per path in order: `{kind: "directory" | "file"}` or `null` when
+  missing **[live]**. No path, size or time: it confirms existence, it cannot give HOME.
+- `filesystem.browse({partialPath: "~/.local/state/omarchy/current/theme"})` → `{parentPath,
+  entries[{name, fullPath}]}`; `parentPath` is absolute with `~` expanded and no trailing
+  slash **[live]**. It lists every entry of `parentPath` matching the last segment, so the
+  prefix is kept narrow. A missing directory is `rpc_rejected` ("Failed to browse
+  filesystem path …") **[live]**.
+- `projects.readFile({cwd: <HOME>, relativePath, allowMissing: true})` → `{relativePath,
+  contents, byteLength, truncated}` for a file, and `exists: false` (empty `contents`) when
+  it is missing **[live]**. `cwd` need not be a project: HOME works. `relativePath` may also
+  be absolute. `cwd: "~"` is `rpc_rejected` ("Failed to read workspace file '…' in '~'")
+  **[live]**. Reads are not cached by the server: a file rewritten on disk reads back new on
+  the next call (seen 2 s apart) **[live]**.
+- Without `filesystem:read`, all three fail with `write_not_authorized`, `reason` "The
+  authenticated token is missing required scope: filesystem:read.", and `requiredScope`
+  = `orchestration:read` (the token's scope, not the missing one) **[live]**.
+- An expired bearer session makes every call fail with `rpc_connection_failed`, not
+  `unauthorized` **[live]**.
+- `theme.tokens(colors, id)` (domain, offline) on the host's file → keys `appearance, base,
+  document, id, layers, luminance, mcpTheme, mode, name, projectFills, projectPalette,
+  roles, sky, statusColors` **[live]**. catppuccin-latte: `light`, `dim #9295a6`, `surface
+  #e8ebef`, `failed #d20f39`; tokyo-night: `dark`, `dim #6b718a`, `surface #21222e`,
+  `failed #f7768e`.
+- Following: with a 5 s poll, rewriting `colors.toml` then `theme.name` (Omarchy's order)
+  from catppuccin-latte to tokyo-night was picked up on the next poll (5 s; each `readFile`
+  3-5 ms) **[live]** (`LiveThemeTest`).

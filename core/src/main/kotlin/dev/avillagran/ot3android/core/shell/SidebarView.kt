@@ -66,6 +66,21 @@ data class SidebarRow(
     val time: RowTime,
     /** Nesting under a parent thread (sub-threads), 0 at the top level. */
     val depth: Int,
+    /** A run is active (the lib's `working`): the row ticks an elapsed time. */
+    val working: Boolean = false,
+    val projectId: String? = null,
+    /** The thread's worktree, when it runs in one. */
+    val worktreePath: String? = null,
+    /** The environment's name as passed to the view. */
+    val environmentName: String? = null,
+    /** A sub-thread (`relationshipToParent` `subagent`). */
+    val subagent: Boolean = false,
+    /** The lib's `metadata.canSnooze`. */
+    val canSnooze: Boolean = false,
+    /** `autoSettleDisabledAt` is set: the thread opted out of auto-settling. */
+    val autoSettleDisabled: Boolean = false,
+    /** `activeRunId` is set. */
+    val activeRun: Boolean = false,
     val raw: JSONObject,
 ) {
     val status: RowStatus
@@ -97,6 +112,19 @@ data class ProjectIdentity(
     val fill: Double?,
 )
 
+/** A project of the view (`projects`), keyed `<environmentId>/<projectId>`. */
+data class SidebarProject(
+    val key: String,
+    val id: String,
+    val environmentId: String,
+    /** The project's title, or its id when it has none. */
+    val title: String,
+    val workspaceRoot: String?,
+)
+
+/** Projects that filter together (`projectGroups`): one repository, or one project. */
+data class SidebarProjectGroup(val key: String, val title: String, val memberKeys: List<String>)
+
 /** An environment as the sidebar sees it: `ready`, the host's connection state, `malformed`, ... */
 data class SidebarEnvironmentState(val id: String, val name: String, val state: String)
 
@@ -122,7 +150,19 @@ data class Sidebar(
     val counts: Map<String, Int>,
     val identities: Map<String, ProjectIdentity>,
     val environments: List<SidebarEnvironmentState>,
-    /** The whole `sidebar.view` result (`filterCounts`, `projectGroups`, `returns`, ...). */
+    /** Top-level rows per section (`active`, `working`, `snoozed`, `settled`). */
+    val sectionCounts: Map<String, Int> = emptyMap(),
+    /** Rows per status filter (`all`, `working`, ...) in the project and environment scope, never the search. */
+    val filterCounts: Map<String, Int> = emptyMap(),
+    val projects: List<SidebarProject> = emptyList(),
+    val projectGroups: List<SidebarProjectGroup> = emptyList(),
+    /** The project keys the project filter covers; null when it covers every project. */
+    val projectScope: Set<String>? = null,
+    /** Every row of every environment (sub-threads included), presented, in the lib's order. */
+    val threads: List<SidebarRow> = emptyList(),
+    /** Pass back as `returns` on the next grouped view. */
+    val returns: JSONObject? = null,
+    /** The whole `sidebar.view` result. */
     val raw: JSONObject,
 ) {
     val isEmpty: Boolean get() = active.isEmpty() && working.isEmpty() && snoozed.isEmpty() && settled.isEmpty()
@@ -135,8 +175,10 @@ object SidebarView {
 
     /**
      * `sidebar.view` over [environments] at [now] (epoch ms), filtered to [environmentId] when
-     * not null. [returns] is the previous view's `returns` (`Sidebar.raw`), only read when
-     * [grouped]. Runs on [domain]'s worker; throws its `T3Exception` on invalid input.
+     * not null, to the status [filter] (`all`, `working`, `done`, `failed`, `pending`,
+     * `settled`), to [project] (a project or group key) and to the search [query]. [returns] is
+     * the previous view's [Sidebar.returns], only read when [grouped]. Runs on [domain]'s
+     * worker; throws its `T3Exception` on invalid input.
      */
     suspend fun build(
         domain: DomainCalls,
@@ -145,6 +187,9 @@ object SidebarView {
         environmentId: String? = null,
         grouped: Boolean = false,
         returns: JSONObject? = null,
+        filter: String? = null,
+        project: String? = null,
+        query: String? = null,
     ): Sidebar {
         val args = JSONObject()
             .put("environments", JSONArray().apply { environments.forEach { put(environment(it)) } })
@@ -152,6 +197,9 @@ object SidebarView {
             .put("grouped", grouped)
         environmentId?.let { args.put("environmentId", it) }
         returns?.let { args.put("returns", it) }
+        filter?.let { args.put("filter", it) }
+        project?.let { args.put("project", it) }
+        query?.takeIf { it.isNotEmpty() }?.let { args.put("query", it) }
         return parse(domain.domain("sidebar.view", args) as JSONObject)
     }
 
@@ -171,6 +219,32 @@ object SidebarView {
             environments = view.objects("environments").map {
                 SidebarEnvironmentState(it.optString("id"), it.optString("name"), it.optString("state"))
             },
+            sectionCounts = view.optJSONObject("sectionCounts").ints(),
+            filterCounts = view.optJSONObject("filterCounts").ints(),
+            projects = view.objects("projects").map {
+                SidebarProject(
+                    key = it.optString("key"),
+                    id = it.optString("id"),
+                    environmentId = it.optString("environmentId"),
+                    title = it.text("title") ?: it.optString("id"),
+                    workspaceRoot = it.text("workspaceRoot"),
+                )
+            },
+            projectGroups = view.objects("projectGroups").map { group ->
+                val members = group.objects("members")
+                SidebarProjectGroup(
+                    key = group.optString("key"),
+                    title = group.text("title") ?: members.firstOrNull()?.optString("id").orEmpty(),
+                    memberKeys = members.map { it.optString("key") },
+                )
+            },
+            projectScope = when (val scope = view.opt("projectScope")) {
+                is JSONArray -> (0 until scope.length()).map { scope.optString(it) }.toSet()
+                is String -> scope.takeIf { it.isNotEmpty() }?.let(::setOf)
+                else -> null
+            },
+            threads = view.objects("threads").map(::row),
+            returns = view.optJSONObject("returns"),
             raw = view,
         )
     }
@@ -209,7 +283,8 @@ object SidebarView {
             environmentId = json.optString("environmentId"),
             title = json.optString("title"),
             branch = json.text("branch"),
-            projectKey = json.text("projectKey"),
+            // The lib writes `<environmentId>/` for a thread without a project.
+            projectKey = json.text("projectKey")?.takeIf { json.text("projectId") != null },
             projectTitle = json.text("project"),
             pinned = json.optBoolean("pinned"),
             settled = json.optBoolean("settled"),
@@ -220,6 +295,14 @@ object SidebarView {
             statusRole = json.optString("statusRole"),
             time = RowTime(time?.optString("kind").orEmpty(), time?.optLong("at") ?: 0, time?.optString("label").orEmpty()),
             depth = json.optInt("depth"),
+            working = json.optBoolean("working"),
+            projectId = json.text("projectId"),
+            worktreePath = json.text("worktreePath"),
+            environmentName = json.text("environmentName"),
+            subagent = json.optString("relationshipToParent") == "subagent",
+            canSnooze = json.optBoolean("canSnooze"),
+            autoSettleDisabled = json.truthy("autoSettleDisabledAt"),
+            activeRun = json.truthy("activeRunId"),
             raw = json,
         )
     }
@@ -235,6 +318,16 @@ object SidebarView {
         color = json.text("color"),
         fill = if (json.isNull("fill")) null else json.optDouble("fill"),
     )
+
+    private fun JSONObject?.ints(): Map<String, Int> =
+        this?.keys()?.asSequence()?.associateWith { optInt(it) }.orEmpty()
+
+    /** Present and not null, false, 0 or "" (the lib's `truth`). */
+    private fun JSONObject.truthy(key: String): Boolean = when (val value = opt(key)) {
+        null, JSONObject.NULL, false, "" -> false
+        is Number -> value.toDouble() != 0.0
+        else -> true
+    }
 
     private fun JSONObject.text(key: String): String? = if (isNull(key)) null else optString(key).takeIf { it.isNotEmpty() }
 

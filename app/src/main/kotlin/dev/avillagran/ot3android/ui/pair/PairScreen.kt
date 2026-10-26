@@ -123,7 +123,9 @@ fun PairScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             val idle = !state.busy
+            if (!viewModel.bridgeSupported) Text(stringResource(R.string.bridge_sdk_unavailable))
             Text(stringResource(R.string.pair_help), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.bridge_pair_help), style = MaterialTheme.typography.bodyMedium)
             OutlinedTextField(
                 value = state.link,
                 onValueChange = viewModel::setLink,
@@ -173,7 +175,16 @@ fun PairScreen(
                 }
             }
 
-            when (val pairing = state.pairing) {
+            state.bridge?.let { bridge ->
+                Text(stringResource(when (bridge) {
+                    "pending" -> R.string.bridge_pending
+                    "approved" -> R.string.bridge_approved
+                    "sdk_unavailable" -> R.string.bridge_sdk_unavailable
+                    "connecting" -> R.string.bridge_connecting
+                    else -> R.string.bridge_failed
+                }), modifier = Modifier.testTag("bridge_pair_status"))
+            }
+            when (val pairing = state.pairing.takeIf { state.bridge == null }) {
                 is PairingState.Ready -> {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag(PairScreenTags.SERVER)) {
                         Text(

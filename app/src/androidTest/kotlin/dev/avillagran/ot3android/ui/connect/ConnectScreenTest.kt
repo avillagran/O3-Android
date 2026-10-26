@@ -1,5 +1,8 @@
 package dev.avillagran.ot3android.ui.connect
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasText
@@ -98,7 +101,11 @@ class ConnectScreenTest {
 
         val message = context.getString(R.string.connect_error_unauthorized)
         composeRule.waitUntil(5_000) { composeRule.onAllNodes(hasText(message)).fetchSemanticsNodes().isNotEmpty() }
-        assertTrue(composeRule.onAllNodes(hasText(secret, substring = true)).fetchSemanticsNodes().isEmpty())
+        // The token field itself holds the token, marked as a password so it is drawn and read
+        // out masked; no other node may contain it (the error message, a label, ...).
+        composeRule.onNodeWithTag(ConnectScreenTags.TOKEN).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Password))
+        val shown = hasText(secret, substring = true) and SemanticsMatcher.keyNotDefined(SemanticsProperties.Password)
+        assertTrue(composeRule.onAllNodes(shown).fetchSemanticsNodes().isEmpty())
         assertTrue("nothing saved", dao.rows.value.isEmpty() && tokens.tokens.isEmpty())
     }
 

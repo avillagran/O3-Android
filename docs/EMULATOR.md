@@ -131,12 +131,44 @@ that had been running for hours, during a large Rust + Gradle build.
 
 ## CI
 
-The `core-instrumented` job in `.github/workflows/android.yml` runs
-`:core:connectedDebugAndroidTest` on ubuntu-latest with
+The `instrumented` job in `.github/workflows/android.yml` runs
+`:core:connectedDebugAndroidTest` and `:app:connectedDebugAndroidTest` on ubuntu-latest with
 `reactivecircus/android-emulator-runner@v2`: same image (API 34, google_apis, x86_64,
 pixel_6, 2 GB), `-gpu swiftshader_indirect -no-snapshot`, animations off, KVM enabled
-through a udev rule. Only `:core` runs there: its tests (Room migrations,
-`CredentialStore`) use their own database and keys and do not depend on app state.
+through a udev rule. Until UI-1f only `:core` ran there; `:app` joined once all its
+instrumented tests passed on the reference emulator (2026-10-25: core 4/4, app 17/17). The
+CI emulator is fresh per run, so the app's data starts empty.
+
+### Window focus (2026-10-26)
+
+Before either module’s connected tests, the shared Gradle task
+`prepareInstrumentedEmulator` runs `scripts/emulator-ready.sh emulator-5554` on GitHub
+Actions only (`ANDROID_SERIAL` overrides the serial). It is skipped on developer hosts
+and never prepares a physical device. The existing workflow command is unchanged. It sets
+`settings put global hide_error_dialogs 1`, closes any system dialog already showing, and
+waits until no "Application Not Responding" or "keeps stopping" window has focus.
+
+The reason: on a slow first boot (2 vCPUs, swiftshader) Pixel Launcher can hit an ANR
+(`am_anr ... com.google.android.apps.nexuslauncher ... Input dispatching timed out
+(Application does not have a focused window)`). The system ANR dialog then keeps input
+focus while the activity under test is RESUMED. The app window never gets focus, which
+breaks every test that needs it:
+
+- the IME is never served (`ImeTracker ... onFailed at PHASE_CLIENT_REQUEST_IME_SHOW`, and
+  the server never logs a `startInput` for the app),
+- `Activity.hasWindowFocus()` stays false,
+- `ClipboardManager.getPrimaryClip()` returns null, because Android 10+ only lets the
+  focused app read the clipboard.
+
+PR #23 (791b471, run 40273773467) and PR #25 (e7e33db, 672758d) failed this way. To reproduce
+it locally, create a fresh AVD (`avdmanager create avd --force -n ot3a-ci ... --device
+pixel_6`, plus `hw.cpu.ncore=2` and `hw.ramSize=2048M`). Boot it with `-wipe-data` and the CI
+flags, with the emulator pinned to two host cores (`taskset -c 0,1`). Then send
+`input keyevent 82` and run the full suite. When it fails, `dumpsys window` shows
+`mCurrentFocus=Window{... Application Not Responding: com.google.android.apps.nexuslauncher}`.
+
+When dialogs are hidden, the ANR still happens, but the system handles it without a window.
+The tests' own assertions are unchanged.
 
 ## Evidence log (2026-10-25)
 

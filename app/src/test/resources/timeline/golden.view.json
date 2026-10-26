@@ -1,0 +1,164 @@
+{
+  "historyCursor": null,
+  "hasMoreHistory": false,
+  "activity": [],
+  "payloadBudgetExceeded": false,
+  "approvals": [],
+  "questions": [],
+  "threadState": {
+    "contextWindow": null,
+    "providerInstanceId": null,
+    "interactionMode": null,
+    "subagents": [],
+    "latestRunSettled": false,
+    "mergeBackTargetThreadId": null,
+    "startedAt": 0,
+    "working": false,
+    "mergeBackRunId": null,
+    "activeRunId": null,
+    "status": "idle"
+  },
+  "timeline": [
+    {
+      "fileReferences": [],
+      "rev": "ed70e34cfd62688b",
+      "attachments": [],
+      "role": "user",
+      "canRewindMessage": false,
+      "codeBlocks": [],
+      "createdAt": 1000,
+      "searchText": "Keep the native reader close to OT3.",
+      "streaming": false,
+      "tables": [],
+      "attribution": null,
+      "inputIntent": null,
+      "forkRunId": null,
+      "recallableText": "Keep the native reader close to OT3.",
+      "revertReference": null,
+      "id": "question",
+      "senderThreadId": null,
+      "text": "Keep the native reader close to OT3.",
+      "markdownImages": []
+    },
+    {
+      "fileReferences": [],
+      "rev": "e28cb5f2f368a686",
+      "attachments": [],
+      "role": "assistant",
+      "blocks": [
+        {
+          "spans": [{
+            "text": "Native reader",
+            "type": "text"
+          }],
+          "level": 1,
+          "type": "heading"
+        },
+        {
+          "spans": [
+            {
+              "strong": true,
+              "text": "Rust",
+              "type": "text"
+            },
+            {
+              "text": " supplies ",
+              "type": "text"
+            },
+            {
+              "emphasis": true,
+              "text": "every block",
+              "type": "text"
+            },
+            {
+              "text": ". ",
+              "type": "text"
+            },
+            {
+              "link": {
+                "kind": "web",
+                "href": "https://example.org"
+              },
+              "text": "Reference",
+              "type": "text"
+            }
+          ],
+          "type": "paragraph"
+        },
+        {
+          "ordered": false,
+          "start": null,
+          "type": "list",
+          "items": [
+            {"blocks": [{
+              "spans": [{
+                "text": "Select prose",
+                "type": "text"
+              }],
+              "type": "paragraph"
+            }]},
+            {"blocks": [{
+              "spans": [{
+                "text": "Copy code",
+                "type": "text"
+              }],
+              "type": "paragraph"
+            }]}
+          ]
+        },
+        {
+          "runnable": false,
+          "code": "val thread = session.view.value\nprintln(thread.title)\n",
+          "index": 0,
+          "language": "kotlin",
+          "type": "code",
+          "command": null
+        },
+        {
+          "spans": [{
+            "text": "Reading position stays anchored.",
+            "type": "text"
+          }],
+          "type": "paragraph"
+        }
+      ],
+      "canRewindMessage": false,
+      "codeBlocks": [{
+        "code": "val thread = session.view.value\nprintln(thread.title)\n",
+        "index": 0,
+        "language": "kotlin",
+        "command": null
+      }],
+      "createdAt": 2000,
+      "searchText": "Native reader\nRust supplies every block. Reference\nSelect prose\nCopy code\nval thread = session.view.value\nprintln(thread.title)\n\nReading position stays anchored.\n",
+      "streaming": false,
+      "tables": [],
+      "attribution": null,
+      "inputIntent": null,
+      "forkRunId": null,
+      "recallableText": null,
+      "revertReference": null,
+      "id": "answer",
+      "senderThreadId": null,
+      "text": "# Native reader\n\n**Rust** supplies *every block*. [Reference](https://example.org)\n\n- Select prose\n- Copy code\n\n```kotlin\nval thread = session.view.value\nprintln(thread.title)\n```\n\nReading position stays anchored.",
+      "markdownImages": []
+    }
+  ],
+  "queue": {
+    "hiddenMessageIds": [],
+    "held": false,
+    "acknowledgedMessageIds": [
+      "question",
+      "answer"
+    ],
+    "canReorder": false,
+    "canSteer": false,
+    "items": [],
+    "activeRunId": null
+  },
+  "tasks": null,
+  "planView": {
+    "plans": [],
+    "ready": null
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "device": {
+    "avd": "ot3a",
+    "api": 34,
+    "widthPx": 1080,
+    "heightPx": 2400,
+    "pxPerDp": 2.625
+  },
+  "home": {
+    "beforeFirstRowY": 572,
+    "afterFirstRowY": 460,
+    "afterBrandTop": 128,
+    "afterBrandBottom": 312,
+    "listBottom": 2127,
+    "rowHeightPx": 218
+  },
+  "chat": {
+    "timelineTop": 275,
+    "timelineBottom": 2157,
+    "composerBottom": 2337,
+    "imeTimelineBottom": 1337,
+    "imeComposerBottom": 1517,
+    "gapPx": 0
+  },
+  "sources": [
+    "baseline-rich accessibility hierarchy",
+    "VerticalWorkspaceLayoutTest UI1iMeasures",
+    "original before PNGs and source layout"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "source": "cffa6e4",
+  "device": "emulator-5580",
+  "avd": "ot3a",
+  "api": 34,
+  "server": "deterministic offline fixture",
+  "theme": [
+    "tokyo-night",
+    "catppuccin-latte"
+  ],
+  "bridgeSdk": {
+    "commit": "f7d93a9ea8600991a229cadb9d189306965d4195",
+    "flavor": "production",
+    "required": true
+  },
+  "appInstrumented": {
+    "tests": 29,
+    "failures": 0,
+    "skipped": 0
+  },
+  "coreInstrumented": {
+    "tests": 10,
+    "failures": 0,
+    "skipped": 2,
+    "skips": "explicit bridge lab native and real-T3 opt-ins"
+  },
+  "localChecks": [
+    "JVM app/core",
+    "lint app/core",
+    "Roborazzi verify",
+    "assembleDebug"
+  ],
+  "portrait": [
+    "drawer collapse/reopen",
+    "real IME",
+    "draft retained",
+    "footer absent in chat"
+  ],
+  "landscape": [
+    "280dp sidebar",
+    "collapse/reopen",
+    "real IME"
+  ],
+  "rotationAndOneStream": "instrumented ThreadWorkspaceDeviceTest",
+  "video": {
+    "portraitSeconds": 70.853089,
+    "landscapeSeconds": 14.411367
+  },
+  "notProven": [
+    "productive NODE/VQ discovery",
+    "fresh desktop exact-content capture",
+    "full reader/composer/workflow parity",
+    "physical touch",
+    "Live Update runtime"
+  ]
+}

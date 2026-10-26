@@ -14,6 +14,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -40,6 +44,7 @@ class ConnectionManager(
 
     /** Supervisors that were running when the app went to the background. */
     private val paused = mutableSetOf<String>()
+    private var foreground = true
 
     /** Serializes creating and forgetting supervisors, which both read the repository. */
     private val createLock = Mutex()
@@ -68,6 +73,24 @@ class ConnectionManager(
         }
     }
 
+    /** Foreground consumers follow replacement transports after pairing/route refresh. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun connectionFlow(environmentId: String): Flow<Connection?> = flow {
+        startIfCurrent(supervisor(environmentId))
+        emitAll(supervisors.map { it[environmentId] }.distinctUntilChanged().flatMapLatest { current ->
+            startIfCurrent(current)
+            current?.connection ?: flowOf(null)
+        })
+    }
+
+    /** Never revive an orphan after forget(), or open a new stream while backgrounded. */
+    fun startIfCurrent(supervisor: ConnectionSupervisor?) {
+        synchronized(this) {
+            if (supervisor == null || _supervisors.value[supervisor.environmentId] !== supervisor) return
+            if (foreground) supervisor.start() else paused.add(supervisor.environmentId)
+        }
+    }
+
     /**
      * Stops and forgets [environmentId]'s supervisor, e.g. after its URL or token changed or
      * before it is removed. Returns once its run has ended (transport closed, cursor
@@ -90,6 +113,7 @@ class ConnectionManager(
 
     fun setForeground(foreground: Boolean) {
         synchronized(this) {
+            this.foreground = foreground
             if (foreground) {
                 paused.mapNotNull { _supervisors.value[it] }.forEach { it.start() }
                 paused.clear()
