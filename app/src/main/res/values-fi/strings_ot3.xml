@@ -189,4 +189,25 @@
     <string name="ot3_diff_next_file">Seuraava tiedosto</string>
     <string name="ot3_diff_wrap">Rivitä</string>
     <string name="ot3_diff_no_wrap">Ei rivin vaihtoa</string>
+    <string name="ot3_pr_title">Vetopyynnöt</string>
+    <string name="ot3_pr_refresh">Päivitä</string>
+    <string name="ot3_pr_all_projects">Kaikki projektit</string>
+    <string name="ot3_pr_search">Hae vetopyyntöjä…</string>
+    <string name="ot3_pr_all">Kaikki</string>
+    <string name="ot3_pr_authored">Luomani</string>
+    <string name="ot3_pr_reviewing">Tarkistettavat</string>
+    <string name="ot3_pr_draft">Luonnos</string>
+    <string name="ot3_pr_empty">Ei vetopyyntöjä</string>
+    <string name="ot3_pr_more">Lataa lisää</string>
+    <string name="ot3_pr_overview">Yleiskatsaus</string>
+    <string name="ot3_pr_checks">Tarkistukset</string>
+    <string name="ot3_pr_conversation">Keskustelu</string>
+    <string name="ot3_pr_retry">Yritä uudelleen</string>
+    <string name="ot3_pr_approved">Hyväksytty</string>
+    <string name="ot3_pr_changes_requested">Muutoksia pyydetty</string>
+    <string name="ot3_pr_review_required">Tarkistus vaaditaan</string>
+    <string name="ot3_pr_pending">Odottaa</string>
+    <string name="ot3_pr_action_required">Toimenpide vaaditaan</string>
+    <string name="ot3_pr_skipped">Ohitettu</string>
+    <string name="ot3_pr_cancelled">Peruttu</string>
 </resources>

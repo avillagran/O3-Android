@@ -1110,3 +1110,32 @@ flag. Request `timeline` row `commentary` or `showMessageActions`, derived in Ru
 T3's terminal-assistant semantics. Android can then hide intermediate copy/time/actions
 and use the 8 dp commentary gap without repeating that scan. Streaming action hiding and
 message layout are presentation-only and already implemented independently.
+
+### U31. Shared PR page ordering/merge and authenticated diff read (2026-10-26)
+
+Pinned v0.3.5 provides `pullRequests.request`, `sidebarBadge`, `payload` and typed
+`pullRequests.list/detail/checks/activity`. The page recipe builds list filters and
+opaque cursors; typed LIST additionally supports `projectId`/`projectIds`/`filters`.
+Android consumes those documented inputs directly, with native typed validation.
+
+Still missing: a shared `pullRequests.listView {pages}` (or stateful reducer) defining
+cross-page duplicate precedence, updatedAt ordering and native row presentation. ot3
+`7b5b1de`, `T3PullRequests.qml:48` replaces matching host/repository/number entries and
+sorts newest first in QML. Android must not reproduce that domain rule. For now it
+appends the returned pages verbatim with page-position UI keys, preserving server
+order and possible repeated rows. Request fixtures for overlap/revision, multiple
+projects/hosts, invalid dates and refreshed/replaced cursor sequences.
+
+`pullRequests.request {action:"diff",reference,cursor?}` returns method `diff`, an
+HTTP recipe for `/api/pull-requests/diff`, not a typed RPC. Android's pinned AAR and
+`T3Transport` expose no authenticated PR diff read binding. Request a native
+`pullRequestDiff(reference,cursor?)` returning the existing patch envelope and opaque
+next cursor, with credentials/URL construction and bounds in Rust. Android can then
+feed patches to the existing native diff renderer and expose Code/file navigation.
+Until then Overview displays `changedFiles` and explicitly says patches unavailable;
+there is no nonfunctional Code tab or invented RPC/HTTP URL builder.
+
+This request does not block list, Overview, Checks or the available Conversation
+comments/review threads. Full activity timeline projection (commits/reviews ordering),
+relative dates and cross-page discussion pagination remain future common-view work.
+No write, review, merge, label or thread-link actions are exposed in this increment.

@@ -56,7 +56,7 @@ data object CommandPalette
 data object PullRequests
 
 @Serializable
-data class PullRequest(val environmentId: String, val projectId: String, val repository: String, val number: Int)
+data class PullRequest(val environmentId: String, val projectId: String, val repository: String, val number: Int, val host: String? = null)
 
 @Serializable
 data class PullRequestFile(val environmentId: String, val projectId: String, val repository: String, val number: Int, val path: String)

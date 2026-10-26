@@ -1,0 +1,1 @@
+{"state":"open","checks":[{"name":"Android build","status":"success","description":"APK and unit tests passed"},{"name":"Instrumented tests","status":"pending","description":"Waiting for an emulator"}]}

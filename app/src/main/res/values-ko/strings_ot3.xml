@@ -189,4 +189,25 @@
     <string name="ot3_diff_next_file">다음 파일</string>
     <string name="ot3_diff_wrap">줄 바꿈</string>
     <string name="ot3_diff_no_wrap">줄 바꿈 안 함</string>
+    <string name="ot3_pr_title">풀 리퀘스트</string>
+    <string name="ot3_pr_refresh">새로 고침</string>
+    <string name="ot3_pr_all_projects">모든 프로젝트</string>
+    <string name="ot3_pr_search">풀 리퀘스트 검색…</string>
+    <string name="ot3_pr_all">모두</string>
+    <string name="ot3_pr_authored">내가 작성함</string>
+    <string name="ot3_pr_reviewing">검토 중</string>
+    <string name="ot3_pr_draft">초안</string>
+    <string name="ot3_pr_empty">풀 리퀘스트 없음</string>
+    <string name="ot3_pr_more">더 불러오기</string>
+    <string name="ot3_pr_overview">개요</string>
+    <string name="ot3_pr_checks">검사</string>
+    <string name="ot3_pr_conversation">대화</string>
+    <string name="ot3_pr_retry">다시 시도</string>
+    <string name="ot3_pr_approved">승인됨</string>
+    <string name="ot3_pr_changes_requested">변경 요청됨</string>
+    <string name="ot3_pr_review_required">검토 필요</string>
+    <string name="ot3_pr_pending">대기 중</string>
+    <string name="ot3_pr_action_required">작업 필요</string>
+    <string name="ot3_pr_skipped">건너뜀</string>
+    <string name="ot3_pr_cancelled">취소됨</string>
 </resources>

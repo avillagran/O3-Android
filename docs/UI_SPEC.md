@@ -1567,6 +1567,21 @@ before sending. The Rust pieces still missing are the page rules of `pull_reques
 (a comment needs words, only the page's actions; `lib:README.md`, Typed API notes) and
 the row badge, both in U19.
 
+**Android read increment (2026-10-26):** list with saved environment/project scope,
+300 ms search, state/involvement filters, native badges and opaque cursor paging;
+Overview, Checks and Conversation use the typed reads above, with native Markdown.
+Home's badge opens the native-selected current PR. Enterprise host is preserved in
+the route. Loading/error/retry/offline and connection-generation cancellation are
+implemented. Back reloads page one; later-page reading position is not retained. Explicit missing project/environment metadata never broadens scope.
+
+Pages currently keep the server's returned order and repeated entries. Newest-first
+cross-page merge is pending shared Rust U31, rather than a Kotlin copy of QML's rule.
+Code/file patches await the native authenticated diff binding in U31; Overview shows
+only the available changed-file count. Write/review/merge/labels/watch/work-on-PR,
+full activity/commit timelines, row overflow and rich inline review state remain
+pending. This is a useful read-only increment, not completion of section 4.8. See
+`ui/compare/pull-requests/README.md` for exact evidence and limitations.
+
 ### 4.9 Settings
 
 - **ot3:** `ot3:ui/qml/T3Preferences.qml` (pages `:54`, search `:46,75-106`, environment

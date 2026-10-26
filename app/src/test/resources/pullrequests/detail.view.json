@@ -1,0 +1,84 @@
+{
+  "additions": 248,
+  "deletions": 12,
+  "author": {"login": "andres"},
+  "blocks": [
+    {
+      "spans": [{
+        "text": "Read-only review",
+        "type": "text"
+      }],
+      "level": 2,
+      "type": "heading"
+    },
+    {
+      "spans": [
+        {
+          "text": "Keep ",
+          "type": "text"
+        },
+        {
+          "strong": true,
+          "text": "project scope",
+          "type": "text"
+        },
+        {
+          "text": " and the selected environment when opening a pull request.",
+          "type": "text"
+        }
+      ],
+      "type": "paragraph"
+    },
+    {
+      "ordered": false,
+      "start": null,
+      "type": "list",
+      "items": [
+        {"blocks": [{
+          "spans": [{
+            "text": "Read the overview",
+            "type": "text"
+          }],
+          "type": "paragraph"
+        }]},
+        {"blocks": [{
+          "spans": [{
+            "text": "Inspect checks",
+            "type": "text"
+          }],
+          "type": "paragraph"
+        }]},
+        {"blocks": [{
+          "spans": [{
+            "text": "Follow the conversation",
+            "type": "text"
+          }],
+          "type": "paragraph"
+        }]}
+      ]
+    },
+    {
+      "spans": [
+        {
+          "text": "source-control:write",
+          "type": "code"
+        },
+        {
+          "text": " is not requested.",
+          "type": "text"
+        }
+      ],
+      "type": "paragraph"
+    }
+  ],
+  "isDraft": false,
+  "headBranch": "feat/pull-request-reader",
+  "baseBranch": "main",
+  "repository": "example/ot3",
+  "title": "Read pull requests across environments",
+  "body": "## Read-only review\n\nKeep **project scope** and the selected environment when opening a pull request.\n\n- Read the overview\n- Inspect checks\n- Follow the conversation\n\n`source-control:write` is not requested.",
+  "number": 42,
+  "changedFiles": 6,
+  "state": "open",
+  "projectId": "project"
+}

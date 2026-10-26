@@ -83,6 +83,7 @@ sealed interface HomeIntent {
     data class SetQuery(val text: String) : HomeIntent
     data object ClearSearch : HomeIntent
     data class OpenRow(val row: HomeRow) : HomeIntent
+    data class OpenPullRequest(val row: HomeRow) : HomeIntent
 
     /** Long press on a row: the Thread actions sheet. */
     data class RowActions(val row: HomeRow) : HomeIntent
@@ -324,9 +325,9 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
     // mutate, so no gesture is attached until the lib's command builders are reachable.
     val modifier = animatedModifier.graphicsLayer { translationX = drift.value * density * direction }.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
     if (row.slim) {
-        ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, modifier = modifier)
+        ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = modifier)
     } else {
-        ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, modifier = modifier)
+        ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = modifier)
     }
 }
 

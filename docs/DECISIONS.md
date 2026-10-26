@@ -1051,3 +1051,18 @@ Keep the open diff at reader scope, keyed by the selected thread, rather than in
 a virtualized Changes row. Device rotation can dispose that row while the modal is
 open. A real-workspace regression now checks both orientations and a single stream;
 standalone dialog restoration was insufficient to catch this failure.
+
+### 2026-10-26 — Read-only pull request navigation
+
+Replace the PR list/detail placeholders with typed native reads. Keep host in the
+route as an optional backward-compatible field; a list row and Home badge supply
+the native reference, including enterprise host. Never synthesize a provider URL.
+Rust builds recipes, validates typed inputs, derives badges and parses Markdown;
+Android owns scope selection, view lifetime, scroll and retry presentation.
+
+An explicit project is never broadened to All projects when shell metadata is
+missing. A removed selected environment is unavailable until another is selected.
+Environment/project changes are atomic; reconnect cancels the previous generation
+and clears its data/cursors. Server pages are appended verbatim until U31 supplies
+common merge/order semantics. Comments and review-thread bodies use the existing
+Markdown reader. PR patches and all mutations remain absent, visibly/documentedly.

@@ -1,0 +1,16 @@
+<!-- Android read states absent from the pinned ot3 catalog; en/es, English fallback elsewhere. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+  <string name="pr_environment">Environment</string>
+  <string name="pr_partial">Some projects could not be loaded. Refresh to retry.</string>
+  <string name="pr_changed_files">%1$d changed files</string>
+  <string name="pr_code_pending">File patches are not available in this version.</string>
+  <string name="pr_no_checks">No checks reported</string>
+  <string name="pr_no_comments">No conversation yet</string>
+  <string name="pr_truncated">More discussion is available on the provider.</string>
+  <string name="pr_connect">Connect an environment to read pull requests.</string>
+  <string name="pr_offline">Environment offline. Reconnect to load pull requests.</string>
+  <string name="pr_failed">Could not load pull requests.</string>
+  <string name="pr_passing">Passing</string>
+  <string name="pr_failing">Failing</string>
+  <string name="pr_neutral">Neutral</string>
+<string name="pr_environment_unavailable">Selected environment unavailable</string><string name="pr_project_unavailable">Selected project unavailable</string></resources>

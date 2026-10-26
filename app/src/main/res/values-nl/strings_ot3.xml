@@ -189,4 +189,25 @@
     <string name="ot3_diff_next_file">Volgend bestand</string>
     <string name="ot3_diff_wrap">Regels afbreken</string>
     <string name="ot3_diff_no_wrap">Geen regelafbreking</string>
+    <string name="ot3_pr_title">Pull requests</string>
+    <string name="ot3_pr_refresh">Vernieuwen</string>
+    <string name="ot3_pr_all_projects">Alle projecten</string>
+    <string name="ot3_pr_search">Pull requests zoeken…</string>
+    <string name="ot3_pr_all">Alle</string>
+    <string name="ot3_pr_authored">Door mij gemaakt</string>
+    <string name="ot3_pr_reviewing">Te beoordelen</string>
+    <string name="ot3_pr_draft">Concept</string>
+    <string name="ot3_pr_empty">Geen pull requests</string>
+    <string name="ot3_pr_more">Meer laden</string>
+    <string name="ot3_pr_overview">Overzicht</string>
+    <string name="ot3_pr_checks">Controles</string>
+    <string name="ot3_pr_conversation">Gesprek</string>
+    <string name="ot3_pr_retry">Opnieuw proberen</string>
+    <string name="ot3_pr_approved">Goedgekeurd</string>
+    <string name="ot3_pr_changes_requested">Wijzigingen gevraagd</string>
+    <string name="ot3_pr_review_required">Beoordeling vereist</string>
+    <string name="ot3_pr_pending">In afwachting</string>
+    <string name="ot3_pr_action_required">Actie vereist</string>
+    <string name="ot3_pr_skipped">Overgeslagen</string>
+    <string name="ot3_pr_cancelled">Geannuleerd</string>
 </resources>
