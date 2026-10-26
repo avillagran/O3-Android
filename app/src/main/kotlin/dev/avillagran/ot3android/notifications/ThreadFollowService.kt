@@ -31,7 +31,8 @@ class ThreadFollowService : Service() {
     })
     private val graph get() = (application as Ot3Application).graph
     private val snapshots = MutableStateFlow<JSONArray?>(null)
-    private val wakeups = Channel<Pair<JSONArray, ThreadRef?>>(Channel.CONFLATED)
+    private data class Input(val environments: JSONArray, val screen: ThreadRef?, val settings: dev.avillagran.ot3android.core.data.prefs.FollowSettings)
+    private val wakeups = Channel<Input>(Channel.CONFLATED)
     private var idleSince = SystemClock.elapsedRealtime()
     private val awareness = ThreadAwareness()
     @Volatile private var activeCard = false
@@ -74,18 +75,21 @@ class ThreadFollowService : Service() {
             }
         }
         scope.launch {
-            combine(snapshots.filterNotNull(), graph.followVisibility.onScreen) { envs, screen -> envs to screen }
+            combine(snapshots.filterNotNull(), graph.followVisibility.onScreen, graph.followPreferences.settings) { envs, screen, settings -> Input(envs, screen, settings) }
                 .collect { wakeups.send(it) }
         }
         scope.launch {
             var deadlineJob: Job? = null
+            var lastPrivacy: LockscreenDetail? = null
             // Input changes coalesce, but never cancel a native transition between baseline and posting.
-            for ((envs, screen) in wakeups) {
+            for ((envs, screen, settings) in wakeups) {
                 if (!allowed(this@ThreadFollowService)) { stopSelf(); break }
                 val now = System.currentTimeMillis()
                 val route = screen?.let { JSONObject().put("environmentId", it.environmentId).put("threadId", it.threadId) }
-                val result = awareness.evaluate(envs, now, onScreen = route, locale = Locale.getDefault().toLanguageTag())
+                val result = awareness.evaluate(envs, now, onScreen = route, preferences = settings.awarenessPreferences(), locale = Locale.getDefault().toLanguageTag())
                 currentCoroutineContext().ensureActive()
+                // Privacy may have changed while Rust processed a queued shell transition.
+                val privacy = graph.followPreferences.settings.first().lockscreen
                 val card = NotificationContract.card(result.optJSONObject("card"))
                 activeCard = card?.active == true
                 if (card?.active == true) idleSince = SystemClock.elapsedRealtime()
@@ -103,7 +107,7 @@ class ThreadFollowService : Service() {
                 val alerts = result.optJSONArray("alerts")
                 for (i in 0 until (alerts?.length() ?: 0)) {
                     val alert = NotificationContract.alert(alerts!!.optJSONObject(i)) ?: continue
-                    AwarenessAlertBuilder.build(this@ThreadFollowService, alert, now)?.let {
+                    AwarenessAlertBuilder.build(this@ThreadFollowService, alert, now, privacy)?.let {
                         manager.notify(Ot3NotificationIds.alertTag(alert), Ot3NotificationIds.ALERT_ID, it)
                     }
                 }
@@ -116,7 +120,7 @@ class ThreadFollowService : Service() {
                     manager.notify(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID,
                         AwarenessAlertBuilder.summary(this@ThreadFollowService, group, summary.optString("title"),
                             (0 until (lines?.length() ?: 0)).map { lines!!.getString(it) },
-                            ThreadRef(r.getString("environmentId"), r.getString("threadId")), summary.optString("body")))
+                            ThreadRef(r.getString("environmentId"), r.getString("threadId")), summary.optString("body"), privacy))
                 }
                 // Retire only Android group summaries whose posted children have all expired/dismissed.
                 for (group in AlertGroup.entries) {
@@ -124,13 +128,17 @@ class ThreadFollowService : Service() {
                         posted.tag?.startsWith("ot3-alert:") == true && posted.notification.group == Ot3NotificationIds.group(group)
                     }) manager.cancel(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID)
                 }
+                if (privacy != lastPrivacy) {
+                    refreshNotificationPrivacy(this@ThreadFollowService, privacy)
+                    lastPrivacy = privacy
+                }
                 val idleRemaining = IDLE_MS - (SystemClock.elapsedRealtime() - idleSince)
                 if (idleRemaining <= 0) { stopSelf(); break }
                 val deadline = result.optLong("nextDeadline", now + 30_000)
                 deadlineJob?.cancel()
                 deadlineJob = launch {
                     delay(minOf(30_000L, idleRemaining, (deadline - now).coerceAtLeast(1_000L)))
-                    snapshots.value?.let { wakeups.send(it to graph.followVisibility.onScreen.value) }
+                    snapshots.value?.let { wakeups.send(Input(it, graph.followVisibility.onScreen.value, graph.followPreferences.settings.first())) }
                 }
             }
         }

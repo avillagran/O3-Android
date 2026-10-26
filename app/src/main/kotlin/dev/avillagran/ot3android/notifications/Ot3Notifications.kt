@@ -51,16 +51,7 @@ object Ot3NotificationChannels {
 }
 
 /** How much of a thread the lock screen shows (Settings → Notifications). */
-enum class LockscreenDetail {
-    /** The system's "contents hidden" placeholder; no public version. */
-    Hidden,
-
-    /** Optional status-only public card: "OT3 · Working", without thread or project titles. */
-    State,
-
-    /** Default: the requested full card, as on the unlocked shade; system privacy settings still apply. */
-    Full,
-}
+typealias LockscreenDetail = dev.avillagran.ot3android.core.data.prefs.FollowLockscreen
 
 /** Tags and ids of posted notifications. Alerts use their lib id as tag, so ids never collide. */
 object Ot3NotificationIds {
@@ -121,7 +112,7 @@ object AwarenessCardBuilder {
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setContentIntent(open)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-        if (remaining != null) builder.setTimeoutAfter(remaining)
+        if (remaining != null) builder.setTimeoutAfter(remaining).addExtras(android.os.Bundle().apply { putLong("ot3.expiresAt", now + remaining) })
         if (onDismiss != null) builder.setDeleteIntent(onDismiss)
         tint(context, card.phase)?.let(builder::setColor)
         val since = card.since
@@ -180,17 +171,17 @@ object AwarenessAlertBuilder {
             .setGroup(Ot3NotificationIds.group(alert.group))
             .setCategory(if (alert.phase.needsUser) NotificationCompat.CATEGORY_REMINDER else NotificationCompat.CATEGORY_STATUS)
             .setContentIntent(NotificationRoutes.open(context, alert.route))
-        if (timeout != null) builder.setTimeoutAfter(timeout)
+        if (timeout != null) builder.setTimeoutAfter(timeout).addExtras(android.os.Bundle().apply { putLong("ot3.expiresAt", now + timeout) })
         tint(context, alert.phase)?.let(builder::setColor)
         lockscreen(context, builder, lockscreen, alert.status.ifBlank { statusLabel(context, alert.phase) }, Ot3NotificationChannels.ALERTS)
         return builder.build()
     }
 
     /** The group's silent summary; [lines] are the children's titles, newest first. */
-    fun summary(context: Context, group: AlertGroup, title: String, lines: List<String>, route: ThreadRef, body: String = ""): Notification {
+    fun summary(context: Context, group: AlertGroup, title: String, lines: List<String>, route: ThreadRef, body: String = "", lockscreen: LockscreenDetail = LockscreenDetail.Full): Notification {
         val style = NotificationCompat.InboxStyle()
         lines.take(5).forEach { style.addLine(it) }
-        return base(context, Ot3NotificationChannels.ALERTS)
+        val builder = base(context, Ot3NotificationChannels.ALERTS)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(style)
@@ -199,7 +190,8 @@ object AwarenessAlertBuilder {
             .setSilent(true)
             .setAutoCancel(true)
             .setContentIntent(NotificationRoutes.open(context, route, requestCode = 1))
-            .build()
+        lockscreen(context, builder, lockscreen, context.getString(R.string.follow_alerts), Ot3NotificationChannels.ALERTS)
+        return builder.build()
     }
 }
 
@@ -216,6 +208,7 @@ private fun lockscreen(
     status: String,
     channel: String,
 ) {
+    builder.addExtras(android.os.Bundle().apply { putString("ot3.publicStatus", status) })
     when (detail) {
         LockscreenDetail.Hidden -> builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
         LockscreenDetail.Full -> builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -249,3 +242,29 @@ private fun tint(context: Context, phase: AwarenessPhase): Int? = when (phase) {
     AwarenessPhase.Failed -> R.color.ot3_notif_failed
     AwarenessPhase.Stale -> null
 }?.let { ContextCompat.getColor(context, it) }
+
+/** Reapply privacy to already posted cards without replaying alert sounds or changing routes/timeouts. */
+fun refreshNotificationPrivacy(context: Context, detail: LockscreenDetail) {
+    if (!ThreadFollowService.allowed(context)) return
+    val manager = context.getSystemService(NotificationManager::class.java)
+    manager.activeNotifications.forEach { posted ->
+        val notification = posted.notification
+        val status = notification.extras.getString("ot3.publicStatus") ?: return@forEach
+        val expiry = notification.extras.getLong("ot3.expiresAt", 0)
+        val remaining = expiry - System.currentTimeMillis()
+        if (expiry > 0 && remaining <= 0) { manager.cancel(posted.tag, posted.id); return@forEach }
+        val builder = Notification.Builder.recoverBuilder(context, notification).setOnlyAlertOnce(true)
+        if (expiry > 0 && Build.VERSION.SDK_INT >= 26) builder.setTimeoutAfter(remaining)
+        when (detail) {
+            LockscreenDetail.Full -> builder.setVisibility(Notification.VISIBILITY_PUBLIC).setPublicVersion(null)
+            LockscreenDetail.Hidden -> builder.setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(null)
+            LockscreenDetail.State -> {
+                val channel = if (Build.VERSION.SDK_INT >= 26) notification.channelId else Ot3NotificationChannels.ACTIVITY
+                val public = NotificationCompat.Builder(context, channel).setSmallIcon(R.drawable.ic_stat_ot3)
+                    .setContentTitle(context.getString(R.string.app_name)).setContentText(status).setShowWhen(false).build()
+                builder.setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(public)
+            }
+        }
+        manager.notify(posted.tag, posted.id, builder.build())
+    }
+}

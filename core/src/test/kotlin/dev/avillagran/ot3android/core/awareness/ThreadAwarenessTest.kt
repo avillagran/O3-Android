@@ -44,4 +44,15 @@ class ThreadAwarenessTest {
         assertEquals(0, engine.evaluate(env("approval"), now, onScreen = route).getJSONArray("alerts").length())
         assertEquals(0, engine.evaluate(env("approval"), now + 1).getJSONArray("alerts").length())
     }
+    @Test fun disabledApprovalIsConsumedByRustWithoutReplayWhenEnabledAgain() = runTest {
+        assumeHostJni()
+        val engine = ThreadAwareness()
+        engine.evaluate(env("running"), now)
+        val muted = engine.evaluate(env("approval"), now,
+            preferences = JSONObject().put("approval", false))
+        assertEquals(0, muted.getJSONArray("alerts").length())
+        assertEquals("waiting_for_approval", muted.getJSONObject("card").getString("phase"))
+        assertEquals(0, engine.evaluate(env("approval"), now + 1,
+            preferences = JSONObject().put("approval", true)).getJSONArray("alerts").length())
+    }
 }
