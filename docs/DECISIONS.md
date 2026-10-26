@@ -612,7 +612,8 @@ API 34 google_apis x86_64, 2 GB), `-gpu swiftshader_indirect`, cold boot, consol
   that function relies on. `PairingLinkTest` ports the lib's own test case by case and
   compares 70 inputs with what the Rust function returned at v0.3.2 (captured by calling it
   from a small binary). Known differences are listed in the file's header. It is deleted
-  when the lib's `pairingTarget` lands.
+  when the lib's `pairingTarget` lands. (Deleted in UI-1f: `PairingTargets` calls
+  `connectionCatalog.pairingTarget`, and the table runs against it as `PairingTargetsTest`.)
 - **QR scanning: CameraX + ZXing core** (`camera-camera2`, `camera-lifecycle`,
   `camera-compose` 1.6.2; `com.google.zxing:core` 3.5.4), decoding the Y plane of
   `ImageAnalysis` frames in the app (`ui/pair/QrDecoder.kt`). The scanner only takes text

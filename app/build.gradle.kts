@@ -45,6 +45,20 @@ android {
     }
 }
 
+// The desktop libt3_jni.so (scripts/fetch-or-build-lib.sh) for JVM tests that call the lib's
+// domain functions (pairing links, Home), as in :core; skipped without it, failing instead with
+// OT3A_REQUIRE_HOST_JNI=1 (CI) or -Pot3a.requireHostJni=true.
+val hostJniDir = rootProject.file("libs/host/linux-x86_64")
+val requireHostJniProperty = providers.gradleProperty("ot3a.requireHostJni").orElse("false")
+tasks.withType<Test>().configureEach {
+    systemProperty("java.library.path", hostJniDir.absolutePath)
+    systemProperty("ot3a.requireHostJni", requireHostJniProperty.get())
+    inputs.files(fileTree(hostJniDir) { include("*.so") })
+        .withPropertyName("hostJni")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property("requireHostJni", providers.environmentVariable("OT3A_REQUIRE_HOST_JNI").orElse(""))
+}
+
 // Screenshot goldens (docs/UI_SPEC.md section 5): recordRoborazziDebug writes them,
 // verifyRoborazziDebug fails on any difference.
 roborazzi {

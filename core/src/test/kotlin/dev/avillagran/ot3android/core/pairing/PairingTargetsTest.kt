@@ -1,31 +1,51 @@
 package dev.avillagran.ot3android.core.pairing
 
+import dev.avillagran.ot3android.core.transport.DomainEngine
+import dev.avillagran.ot3android.core.transport.assumeHostJni
 import dev.avillagran.t3.T3Exception
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
 
 /**
- * [PairingLink] against lib-t3-rust v0.3.2's `connection_catalog::pairing_target`. The first
- * test is the lib's own `native_pairing_links_hide_code_from_backend_endpoint`
- * (src/connection_catalog.rs:265-290), ported case by case. [RUST_CASES] holds what the Rust
- * function returned for each input, captured by calling it from a small binary built against
- * the v0.3.2 tag (2026-10-25); a mismatch here is a difference from the lib, not a new rule.
+ * [PairingTargets] over the lib's `connectionCatalog.pairingTarget`, through the host JNI
+ * library. The first test is the lib's own `native_pairing_links_hide_code_from_backend_endpoint`
+ * (src/connection_catalog.rs:265-290), case by case. [RUST_CASES] holds what the Rust function
+ * returned for each input when Kotlin still had its own parser (captured from a binary built
+ * against the v0.3.2 tag, 2026-10-25); the table now checks that the domain operation returns
+ * the same, so a mismatch is a change in the lib.
  */
-class PairingLinkTest {
+class PairingTargetsTest {
+
+    private val domain = DomainEngine.shared
+
+    @Before
+    fun setUp() = assumeHostJni()
+
+    private fun parse(raw: String, code: String = ""): PairingTarget = runBlocking { PairingTargets.parse(domain, raw, code) }
+
+    private fun assertRejected(raw: String, code: String) {
+        try {
+            parse(raw, code)
+            fail("parse(\"$raw\") was accepted")
+        } catch (_: T3Exception) {
+        }
+    }
 
     @Test
     fun nativePairingLinksHideCodeFromBackendEndpoint() {
         assertEquals(
             PairingTarget("http://node:3773", "secret code"),
-            PairingLink.parse("https://t3.codes/connect?host=http%3A%2F%2Fnode%3A3773#token=secret%20code", ""),
+            parse("https://t3.codes/connect?host=http%3A%2F%2Fnode%3A3773#token=secret%20code", ""),
         )
-        assertEquals(PairingTarget("https://node:3773", "secret"), PairingLink.parse("wss://node:3773/path?token=secret", ""))
-        assertEquals(PairingTarget("https://node:3773", "code"), PairingLink.parse("node:3773", "code"))
-        assertThrows(T3Exception::class.java) { PairingLink.parse("file:///tmp", "code") }
-        assertThrows(T3Exception::class.java) { PairingLink.parse("https://user:password@node", "code") }
+        assertEquals(PairingTarget("https://node:3773", "secret"), parse("wss://node:3773/path?token=secret", ""))
+        assertEquals(PairingTarget("https://node:3773", "code"), parse("node:3773", "code"))
+        assertRejected("file:///tmp", "code")
+        assertRejected("https://user:password@node", "code")
     }
 
     @Test
@@ -33,7 +53,7 @@ class PairingLinkTest {
         // t3 0.1.3: new URL(origin), pathname "/pair", hash = URLSearchParams([["token", code]]).
         assertEquals(
             PairingTarget("http://192.168.1.20:3773", "AbC-123_x.y~z"),
-            PairingLink.parse("http://192.168.1.20:3773/pair#token=AbC-123_x.y~z"),
+            parse("http://192.168.1.20:3773/pair#token=AbC-123_x.y~z"),
         )
     }
 
@@ -42,7 +62,7 @@ class PairingLinkTest {
         RUST_CASES.forEach { case ->
             val label = "parse(${case.raw.quoted()}, ${case.code.quoted()})"
             val actual = try {
-                PairingLink.parse(case.raw, case.code).let { ok(it.httpBaseUrl, it.pairingCode) }
+                parse(case.raw, case.code).let { ok(it.httpBaseUrl, it.pairingCode) }
             } catch (rejected: T3Exception) {
                 failed(rejected.code)
             }
@@ -54,19 +74,24 @@ class PairingLinkTest {
     fun lengthLimits() {
         assertEquals("invalid_endpoint", failure("https://node/" + "a".repeat(16384), "code"))
         assertEquals("invalid_pairing_code", failure("https://node", "a".repeat(16385)))
-        assertEquals(16384, PairingLink.parse("https://node", "a".repeat(16384)).pairingCode.length)
+        assertEquals(16384, parse("https://node", "a".repeat(16384)).pairingCode.length)
     }
 
     @Test
     fun theCodeIsNeverInToString() {
-        val parsed = PairingLink.parse("https://node/pair#token=very-secret-code")
+        val parsed = parse("https://node/pair#token=very-secret-code")
 
         assertFalse(parsed.toString().contains("very-secret-code"))
         assertTrue(parsed.toString().contains("https://node"))
     }
 
-    private fun failure(raw: String, code: String) =
-        assertThrows(T3Exception::class.java) { PairingLink.parse(raw, code) }.code
+    private fun failure(raw: String, code: String): String = try {
+        parse(raw, code)
+        fail("parse(\"$raw\") was accepted")
+        ""
+    } catch (rejected: T3Exception) {
+        rejected.code
+    }
 
     private fun String.quoted() = "\"" + map { if (it.isISOControl()) "\\u%04x".format(it.code) else "$it" }.joinToString("") + "\""
 

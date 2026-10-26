@@ -55,6 +55,7 @@ import dev.avillagran.ot3android.core.pairing.PairingService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -84,7 +85,7 @@ fun QrScanScreen(
     onScanned: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    accept: (String) -> Boolean = PairingService::isPairingLink,
+    accept: suspend (String) -> Boolean = { PairingService.isPairingLink(it) },
 ) {
     SecureWindow()
     val context = LocalContext.current
@@ -191,7 +192,7 @@ fun QrScanScreen(
 @Composable
 private fun CameraPreview(
     onScanned: (String) -> Unit,
-    accept: (String) -> Boolean,
+    accept: suspend (String) -> Boolean,
     onRejected: () -> Unit,
     modifier: Modifier,
 ) {
@@ -217,7 +218,8 @@ private fun CameraPreview(
                     image.use {
                         if (done.get()) return@use
                         val text = reader.read(it) ?: return@use
-                        if (!currentAccept(text)) {
+                        // The lib reads the link (a JNI call) on this analysis thread.
+                        if (!runBlocking { currentAccept(text) }) {
                             val now = SystemClock.elapsedRealtime()
                             if (now - lastRejectedAt >= REJECT_REPEAT_MS) {
                                 lastRejectedAt = now

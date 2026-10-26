@@ -328,7 +328,7 @@ older history) at some cost in behaviour or bandwidth.
   Wakeup probing is already on the ABI (`wakeSubscriptions`, `T3Subscription.wake()`,
   `ThreadStream.wake()`), so no separate probe operation is requested.
 
-### 6. Pairing-link parser (blocking since 2026-10-25)
+### 6. Pairing-link parser (resolved 2026-10-25, v0.3.3; used since UI-1f)
 
 Also U17 in the UI specification's requests below, which gates UI-6. UI_SPEC section 4.2
 planned URL + token only until it lands; pairing shipped earlier on a temporary port, so
@@ -359,6 +359,11 @@ it now blocks removing that port rather than the screen.
   pairingCode?}` → `{httpBaseUrl, pairingCode}`, with a `T3Api` wrapper. The app still pins
   v0.3.2, so `PairingLink.kt` stays until it moves to v0.3.3; `PairingLinkTest`'s table
   can then check the wrapper instead.
+- Resolved 2026-10-25 (UI-1f): `PairingLink.kt` is deleted. `core/pairing/PairingTargets.kt`
+  calls `connectionCatalog.pairingTarget` through `DomainEngine` and returns the redacted
+  `PairingTarget`; neither the arguments nor the result are logged. `PairingTargetsTest` runs
+  the same 70-input table (and the lib's own test) against the domain operation through the
+  host JNI library: every case matches what the Rust function returned at v0.3.2.
 - In Rust today: `connection_catalog::pairing_target` (`src/connection_catalog.rs:5-58`,
   test at `:265-290`); the catalog functions `view`, `mutate` and `register` (`:73`, `:107`,
   `:213`) could follow, with storage staying in Kotlin.
@@ -794,7 +799,7 @@ function is listed in `describe().domain` with its args but no test here calls i
 | U14 | Usage and quotas | **Closed in v0.3.4** | `usageSummary.request`, `quotaSources.limits`; `usageSummary.window`, `aggregate`, `quotaSources.providers`, `sources`, `apply` | `u14UsageRequestAndQuotaLimits`; the rest describe only |
 | U15 | `planWorkflow.view` / `followUp` | **Closed in v0.3.4** | `planWorkflow.view` (plans with `markdown.blocks` blocks); `followUp`, `attachSourceRef`, `implementationTitle`, `mode` | `u15PlanWorkflowView`; the rest describe only |
 | U16 | ot3's string catalog in the lib or the AAR | **Closed in v0.3.4** | `i18n.t`, `i18n.resolve`, `i18n.catalog`; `i18n.languages`; AAR asset `lib-t3-rust/i18n.json` | `u16StringsInSpanishAndArabic` (`Close` → `Cerrar` / `إغلاق`, Arabic `rtl`, 1796 strings for `es`); `languages` describe only; the asset by `unzip -l` of the AAR and the APK |
-| U17 | Pairing-link parser (phase 1 item 6) | **Closed in v0.3.3** | `connectionCatalog.pairingTarget` | `u17PairingTarget`. The app does not use it yet: `core/pairing/PairingLink.kt` (merged with #9) still parses links in Kotlin and has to switch to it. |
+| U17 | Pairing-link parser (phase 1 item 6) | **Closed in v0.3.3** | `connectionCatalog.pairingTarget` | `u17PairingTarget`; used by `PairingTargets` since UI-1f, `PairingTargetsTest` runs the 70-input table against it. |
 | U18 | History paging (phase 1 item 7) | **Closed in v0.3.3** | `history.path`; `history.envelope` | `u18HistoryPath`; `envelope` describe only |
 | U19 | `pullRequests.sidebarBadge`, `payload` | **Closed in v0.3.4** | `pullRequests.sidebarBadge`; `request`, `payload`, `threadCommand` | `u19PullRequestBadge`; the rest describe only |
 | U20 | Branch picker | **Closed in v0.3.4** | `branchPicker.selectionTarget`; `dedupe`, `deriveLocal`, `sanitize`, `mismatch`, `temporaryBranch` | `u20BranchPickerSelectionTarget`; the rest describe only |
