@@ -5,6 +5,8 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
+import dev.avillagran.ot3android.ui.kit.Ot3Switch
 import dev.avillagran.ot3android.notifications.*
 import dev.avillagran.ot3android.core.data.prefs.FollowPreferences
 import kotlinx.coroutines.launch
@@ -31,10 +34,10 @@ fun NotificationsScreen(preferences: FollowPreferences, onBack: () -> Unit) {
     }
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.follow_title)) },
         navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) } }) }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.follow_explanation))
             ListItem(headlineContent = { Text(stringResource(R.string.follow_enabled)) }, trailingContent = {
-                Switch(enabled, { value ->
+                Ot3Switch(enabled, { value ->
                     if (value) {
                         if (ThreadFollowService.allowed(context)) enable()
                         else if (android.os.Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -42,7 +45,7 @@ fun NotificationsScreen(preferences: FollowPreferences, onBack: () -> Unit) {
                         preferences.setEnabled(false)
                         context.stopService(Intent(context, ThreadFollowService::class.java))
                     }
-                }, modifier = Modifier.testTag("follow_enabled"))
+                }, modifier = Modifier.testTag("follow_enabled"), contentDescription = stringResource(R.string.follow_enabled))
             })
             if (denied) Text(stringResource(R.string.follow_permission_denied))
             Text(stringResource(when (LiveUpdates.support(context)) {

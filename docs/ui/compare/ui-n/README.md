@@ -118,3 +118,15 @@ Documentation discrepancy found: the live-update guide names
 `Settings.ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS`; neither `android-36` nor
 `android-37.0` `android.jar` has it; both have `ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS`
 (value `android.settings.APP_NOTIFICATION_PROMOTION_SETTINGS`), which T3 Mobile uses.
+
+## Runtime checkpoint on API36.1 (2026-10-26)
+
+[Settings](runtime/settings-api361.png), [permission dialog](runtime/notification-permission-api361.png),
+[verification boundaries](runtime/verification.json). Navigation and real permission consent
+are checked on the new AVD; it has no saved environment, so this proves no activity card or
+promotion. The final settings screenshot uses the real ot3 switch and scrollable content.
+
+The initial AVD had android-0 metadata from command-line-tools12 and a SurfaceFlinger
+crash loop. Recreating only that new test AVD with tools22 produced android-36.1 metadata
+and stable system processes through repeated app operations. See EMULATOR.md for the
+local A/B evidence and the script guard; no phone or other AVD was changed.

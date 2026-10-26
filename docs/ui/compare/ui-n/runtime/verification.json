@@ -1,0 +1,36 @@
+{
+  "avd": "ot3a361",
+  "serial": "emulator-5580",
+  "image": "system-images;android-36.1;google_apis;x86_64 revision4",
+  "initialFailure": {
+    "tools": "12.0 (directory latest)",
+    "target": "android-0",
+    "renderers": [
+      "swiftshader_indirect",
+      "swiftshader"
+    ],
+    "signature": "SurfaceFlinger RegionSampling GoldfishMapper !hasReadColorBufferDma",
+    "bootCompleteWasInsufficient": true
+  },
+  "corrected": {
+    "tools": "22.0 alongside latest",
+    "target": "android-36.1",
+    "renderer": "swiftshader",
+    "systemServerPid": 623,
+    "surfaceFlingerPid": 767,
+    "stableAcross": "APK install, settings navigation, permission dialog acceptance, reinstall and second settings navigation",
+    "crashBufferEmpty": true,
+    "appInstall": "Success",
+    "followPreferenceUI": "on",
+    "liveUpdateSupportUI": "Allowed"
+  },
+  "notProven": [
+    "native live card posted",
+    "promoted ongoing flag",
+    "status bar chip",
+    "lock screen card",
+    "follow active shell lifecycle",
+    "revocation and Doze",
+    "productive NODE/VQ discovery"
+  ]
+}

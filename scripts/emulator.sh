@@ -29,6 +29,8 @@
 #   OT3A_EMU_PORT       console port, even, 5554-5682 (default 5580 -> emulator-5580)
 #   OT3A_EMU_STATE_DIR  where pid, serial and log live (default ~/.cache/ot3a-emulator)
 #   OT3A_EMU_IMAGE      system image for new AVDs
+#   OT3A_EMU_GPU        renderer override (default swiftshader_indirect for API34)
+#   OT3A_EMU_TOOLS      command-line tools directory (e.g. SDK/cmdline-tools/22.0)
 #                       (system-images;android-34;google_apis;x86_64)
 #   OT3A_EMU_RAM_MB     guest RAM for new AVDs (2048)
 #   OT3A_EMU_CORES      guest vCPUs for new AVDs (4)
@@ -48,13 +50,16 @@ export ANDROID_HOME=$SDK ANDROID_SDK_ROOT=$SDK
 
 ADB=$SDK/platform-tools/adb
 EMULATOR=$SDK/emulator/emulator
-SDKMANAGER=$SDK/cmdline-tools/latest/bin/sdkmanager
-AVDMANAGER=$SDK/cmdline-tools/latest/bin/avdmanager
+TOOLS=${OT3A_EMU_TOOLS:-$SDK/cmdline-tools/latest}
+SDKMANAGER=$TOOLS/bin/sdkmanager
+AVDMANAGER=$TOOLS/bin/avdmanager
 
 AVD=${OT3A_EMU_AVD:-ot3a}
 PORT=${OT3A_EMU_PORT:-5580}
 STATE_DIR=${OT3A_EMU_STATE_DIR:-$HOME/.cache/ot3a-emulator}
 IMAGE=${OT3A_EMU_IMAGE:-system-images;android-34;google_apis;x86_64}
+GPU=${OT3A_EMU_GPU:-swiftshader_indirect}
+case "$GPU" in swiftshader_indirect|swiftshader|software|lavapipe|swangle|host|auto) ;; *) die 2 "unsupported renderer $GPU" ;; esac
 RAM_MB=${OT3A_EMU_RAM_MB:-2048}
 CORES=${OT3A_EMU_CORES:-4}
 
@@ -89,9 +94,18 @@ booted() {
 
 clear_state() { rm -f "$PID_FILE" "$SERIAL_FILE" "$AVD_FILE"; }
 
+validate_avd_metadata() {
+  local avd_home=${ANDROID_AVD_HOME:-${ANDROID_USER_HOME:-$HOME/.android}/avd}
+  local ini=$avd_home/$1.ini
+  if [[ -f $ini ]] && grep -Eq '^target=android-0([[:space:]]*)$' "$ini"; then
+    die 7 "AVD $1 has target=android-0: recreate this test AVD with current command-line tools (OT3A_EMU_TOOLS); boot completion does not prove graphics stability"
+  fi
+}
+
 ensure_avd() {
   local name=$1
   if "$EMULATOR" -list-avds 2>/dev/null | grep -Fxq "$name"; then
+    validate_avd_metadata "$name"
     return 0
   fi
   [[ -x $AVDMANAGER ]] || die 7 "no avdmanager at $AVDMANAGER (install cmdline-tools;latest)"
@@ -105,12 +119,13 @@ ensure_avd() {
   echo no | "$AVDMANAGER" create avd -n "$name" -k "$IMAGE" -d pixel_6 >/dev/null ||
     die 7 "avdmanager could not create $name"
   local avd_home=${ANDROID_AVD_HOME:-${ANDROID_USER_HOME:-$HOME/.android}/avd}
+  validate_avd_metadata "$name"
   local config=$avd_home/$name.avd/config.ini
   [[ -f $config ]] || die 7 "AVD created but $config not found"
   set_config "$config" hw.ramSize "$RAM_MB"
   set_config "$config" hw.cpu.ncore "$CORES"
   set_config "$config" hw.gpu.enabled yes
-  set_config "$config" hw.gpu.mode swiftshader_indirect
+  set_config "$config" hw.gpu.mode "$GPU"
   set_config "$config" hw.keyboard yes
   set_config "$config" disk.dataPartition.size 6G
 }
@@ -156,7 +171,7 @@ cmd_start() {
     headless=1
   fi
   local args=(-avd "$avd" -port "$PORT" -no-audio -no-boot-anim -no-snapshot -no-metrics
-              -gpu swiftshader_indirect)
+              -gpu "$GPU")
   (( headless )) && args+=(-no-window)
 
   mkdir -p "$STATE_DIR"
