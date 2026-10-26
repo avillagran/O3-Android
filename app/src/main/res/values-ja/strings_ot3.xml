@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">次のファイル</string>
     <string name="ot3_diff_wrap">折り返す</string>
     <string name="ot3_diff_no_wrap">折り返さない</string>
+    <string name="ot3_copy_image">画像をコピー</string>
 </resources>

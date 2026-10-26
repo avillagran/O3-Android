@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">Następny plik</string>
     <string name="ot3_diff_wrap">Zawijaj wiersze</string>
     <string name="ot3_diff_no_wrap">Bez zawijania wierszy</string>
+    <string name="ot3_copy_image">Kopiuj obraz</string>
 </resources>

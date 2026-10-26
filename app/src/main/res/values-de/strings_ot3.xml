@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">Nächste Datei</string>
     <string name="ot3_diff_wrap">Zeilenumbruch</string>
     <string name="ot3_diff_no_wrap">Kein Zeilenumbruch</string>
+    <string name="ot3_copy_image">Bild kopieren</string>
 </resources>

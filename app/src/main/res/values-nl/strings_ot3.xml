@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">Volgend bestand</string>
     <string name="ot3_diff_wrap">Regels afbreken</string>
     <string name="ot3_diff_no_wrap">Geen regelafbreking</string>
+    <string name="ot3_copy_image">Afbeelding kopiëren</string>
 </resources>

@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">Sonraki dosya</string>
     <string name="ot3_diff_wrap">Satırları kaydır</string>
     <string name="ot3_diff_no_wrap">Satır kaydırma yok</string>
+    <string name="ot3_copy_image">Resmi kopyala</string>
 </resources>

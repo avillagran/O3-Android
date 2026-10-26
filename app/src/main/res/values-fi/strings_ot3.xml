@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">Seuraava tiedosto</string>
     <string name="ot3_diff_wrap">Rivitä</string>
     <string name="ot3_diff_no_wrap">Ei rivin vaihtoa</string>
+    <string name="ot3_copy_image">Kopioi kuva</string>
 </resources>

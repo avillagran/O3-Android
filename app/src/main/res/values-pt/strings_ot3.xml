@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">Próximo arquivo</string>
     <string name="ot3_diff_wrap">Quebrar linhas</string>
     <string name="ot3_diff_no_wrap">Sem quebra de linha</string>
+    <string name="ot3_copy_image">Copiar imagem</string>
 </resources>

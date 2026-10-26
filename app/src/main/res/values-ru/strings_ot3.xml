@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">Следующий файл</string>
     <string name="ot3_diff_wrap">Переносить строки</string>
     <string name="ot3_diff_no_wrap">Без переноса строк</string>
+    <string name="ot3_copy_image">Копировать изображение</string>
 </resources>

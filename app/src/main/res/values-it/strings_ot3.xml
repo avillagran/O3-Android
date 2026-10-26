@@ -189,4 +189,5 @@
     <string name="ot3_diff_next_file">File successivo</string>
     <string name="ot3_diff_wrap">A capo</string>
     <string name="ot3_diff_no_wrap">Non andare a capo</string>
+    <string name="ot3_copy_image">Copia immagine</string>
 </resources>
