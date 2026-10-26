@@ -185,4 +185,8 @@
     <string name="ot3_usage_refresh_prices">価格を更新</string>
     <string name="ot3_usage_limits">上限</string>
     <string name="ot3_usage_resets_at">%1$s にリセット</string>
+    <string name="ot3_diff_previous_file">前のファイル</string>
+    <string name="ot3_diff_next_file">次のファイル</string>
+    <string name="ot3_diff_wrap">折り返す</string>
+    <string name="ot3_diff_no_wrap">折り返さない</string>
 </resources>

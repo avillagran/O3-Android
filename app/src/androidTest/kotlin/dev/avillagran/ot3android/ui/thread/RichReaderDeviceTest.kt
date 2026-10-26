@@ -3,6 +3,8 @@ package dev.avillagran.ot3android.ui.thread
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -17,6 +19,38 @@ import org.junit.Test
 /** Real graph/VM/session/Rust view; only the server is deterministic and offline. */
 class RichReaderDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
+
+    @Test fun diffRemainsOpenWhenRotationMovesItsTimelineRowOffscreen() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
+            .putExtra("rich", true)).use { scenario ->
+            scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
+            rule.waitUntil(15_000) { context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT &&
+                rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
+            rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
+            rule.onNodeWithTag("thread_diff_changes/cp-reader").performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_diff_next").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("thread_diff_next").performClick()
+            rule.onNodeWithTag("thread_diff_wrap").performClick()
+            scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+            rule.waitUntil(10_000) { context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE }
+            rule.onNodeWithTag("thread_diff_file_picker").assertTextContains("ui/ThreadWorkspace.kt")
+            rule.onNodeWithTag("thread_diff_horizontal").assertExists()
+            scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
+            rule.waitUntil(10_000) { context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT }
+            rule.onNodeWithTag("thread_diff_file_picker").assertTextContains("ui/ThreadWorkspace.kt")
+            rule.onNodeWithTag("thread_diff_horizontal").assertExists()
+            rule.onNodeWithTag("thread_diff_close").performClick()
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).assertIsDisplayed()
+            scenario.onActivity { activity ->
+                assertEquals(1, activity.fixture.transport.streamOpens.count { it.threadId == "chat" })
+                assertTrue(activity.fixture.transport.calls.none { it.fn == "orchestration.dispatchCommand" })
+            }
+        }
+    }
 
     @Test fun markdownCodeScrollCopyAndScopedReasoningAndChanges() {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -62,8 +96,28 @@ class RichReaderDeviceTest {
             rule.onNodeWithTag("thread_diff_changes/cp-reader").performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithText("+MarkdownBlocks(nativeBlocks)").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("-Text(markdown)").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_previous").assertIsNotEnabled()
+            rule.onNodeWithTag("thread_diff_next").performClick()
+            rule.onNodeWithText("+rememberSelectedFile(", substring = true).assertIsDisplayed()
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertDoesNotExist()
+            rule.onNodeWithTag("thread_diff_next").assertIsNotEnabled()
+            rule.onNodeWithTag("thread_diff_previous").performClick()
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_file_picker").performClick()
+            rule.onNodeWithTag("thread_diff_file_1").performClick()
+            rule.onNodeWithText("+rememberSelectedFile(", substring = true).assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_wrap").performClick()
+            rule.onNodeWithTag("thread_diff_horizontal").assertExists()
+            val patch = rule.onNodeWithTag("thread_diff_horizontal")
+            assertTrue(patch.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].maxValue() > 0)
+            patch.performTouchInput { swipeLeft() }
+            rule.waitForIdle()
+            assertTrue(patch.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0)
+            rule.onNodeWithTag("thread_diff_wrap").performClick()
+            rule.onNodeWithTag("thread_diff_horizontal").assertDoesNotExist()
             rule.onNodeWithTag("thread_diff_whitespace").performClick()
-            rule.waitUntil(10_000) { rule.onAllNodesWithText("+MarkdownBlocks(nativeBlocks)").fetchSemanticsNodes().isNotEmpty() }
+            rule.waitUntil(10_000) { rule.onAllNodesWithText("+rememberSelectedFile(", substring = true).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("thread_diff_file_picker").assertTextContains("ui/ThreadWorkspace.kt")
             rule.onNodeWithTag("thread_diff_close").performClick()
             rule.onNodeWithText("ui/TimelineReader.kt", substring = true).assertExists()
             scenario.onActivity { activity ->

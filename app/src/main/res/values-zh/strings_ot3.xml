@@ -185,4 +185,8 @@
     <string name="ot3_usage_refresh_prices">刷新价格</string>
     <string name="ot3_usage_limits">限额</string>
     <string name="ot3_usage_resets_at">%1$s 重置</string>
+    <string name="ot3_diff_previous_file">上一个文件</string>
+    <string name="ot3_diff_next_file">下一个文件</string>
+    <string name="ot3_diff_wrap">自动换行</string>
+    <string name="ot3_diff_no_wrap">不换行</string>
 </resources>

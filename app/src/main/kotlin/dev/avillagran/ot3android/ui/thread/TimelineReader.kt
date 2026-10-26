@@ -32,6 +32,7 @@ import dev.avillagran.ot3android.core.thread.ThreadMessage
 import dev.avillagran.ot3android.ui.kit.Ot3Spinner
 import dev.avillagran.ot3android.ui.theme.FiraCode
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
+import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -43,6 +44,11 @@ internal fun JSONArray?.objects(): List<JSONObject> = this?.let { a -> (0 until 
 /** Draw Rust's complete ordered view. No grouping, Markdown parsing or eligibility rules here. */
 @Composable
 internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, onInspect: suspend (JSONObject) -> JSONObject? = { null }, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject? = { _, _ -> null }) {
+    val threadKey = LocalSelectedThreadKey.current
+    // The modal belongs to the reader, not a lazy row which may leave composition
+    // when rotation changes the viewport. Scope saved state to the selected thread.
+    var openedDiff by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
+    openedDiff?.let { summary -> ThreadDiffDialog(JSONObject(summary), onReadDiff) { openedDiff = null } }
     val rows = view?.optJSONArray("timeline").objects().ifEmpty {
         fallback.map { JSONObject().put("id", it.id).put("role", it.role).put("text", it.text)
             .put("createdAt", it.createdAt).put("streaming", it.streaming).put("rev", it.rev) }
@@ -55,7 +61,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
             verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
             items(rows, key = { it.getString("id") }) { row ->
                 // rev invalidates content, never the item's saveable expansion or reading anchor.
-                TimelineRow(row, onInspect, onReadDiff)
+                TimelineRow(row, onInspect) { openedDiff = it.toString() }
             }
             if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
                 Text("Earlier history is available on desktop", style = MaterialTheme.typography.labelSmall)
@@ -86,7 +92,7 @@ private fun readingAnchorSaver(rows: List<JSONObject>): Saver<LazyListState, *> 
 )
 
 @Composable
-private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject?) {
+private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onOpenDiff: (JSONObject) -> Unit) {
     val role = row.optString("role")
     val id = row.getString("id")
     if (role == "user") {
@@ -110,7 +116,7 @@ private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSON
                         row.optJSONArray("attachments").objects().forEach { Text("Attachment · ${it.optString("name", "Preview unavailable")}", color = colors.dim) }
                     }
                     "activity" -> ActivityBlock(row.getJSONObject("activity"), id, onInspect)
-                    "changes" -> ChangesBlock(row.getJSONObject("changes"), id, onReadDiff)
+                    "changes" -> ChangesBlock(row.getJSONObject("changes"), id, onOpenDiff)
                     "plan" -> Fold("Plan", id) { MarkdownBlocks(row.optJSONObject("plan")?.optJSONArray("blocks")) }
                     "error" -> Text(row.optJSONObject("error")?.optString("message").orEmpty(), color = MaterialTheme.colorScheme.error)
                     "context" -> Text("Context compacted", color = colors.dim)
@@ -181,11 +187,9 @@ private fun Inspector(reference: JSONObject, onInspect: suspend (JSONObject) -> 
 }
 
 @Composable
-private fun ChangesBlock(changes: JSONObject, id: String, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject?) {
-    var opened by rememberSaveable(id) { mutableStateOf(false) }
-    if (opened) ThreadDiffDialog(changes, onReadDiff) { opened = false }
+private fun ChangesBlock(changes: JSONObject, id: String, onOpenDiff: (JSONObject) -> Unit) {
     Fold("Changes +${changes.optInt("additions")} −${changes.optInt("deletions")}", id) {
-        TextButton(onClick = { opened = true }, modifier = Modifier.testTag("thread_diff_$id")) { Text(stringResource(R.string.ot3_open_diff)) }
+        TextButton(onClick = { onOpenDiff(changes) }, modifier = Modifier.testTag("thread_diff_$id")) { Text(stringResource(R.string.ot3_open_diff)) }
         changes.optJSONArray("files").objects().forEach { file ->
             SelectionContainer { Text("${file.optString("path")} · ${file.optString("kind")} +${file.optInt("additions")} −${file.optInt("deletions")}", fontFamily = FiraCode, style = MaterialTheme.typography.bodySmall) }
         }
