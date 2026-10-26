@@ -65,10 +65,17 @@ class EnvironmentRepository(
             createdAt = clock(),
             sortOrder = (all.maxOfOrNull { it.sortOrder } ?: -1) + 1,
         )
+        if (token == null && managed?.find(saved.id) != null) {
+            require(existing != null && existing.baseUrl == saved.baseUrl && existing.environmentId == saved.environmentId) {
+                "managed_environment_requires_new_credential"
+            }
+        }
         if (token != null) tokens().setToken(saved.id, token)
         if (existing != null && existing.baseUrl != saved.baseUrl) cursors.setCursor(saved.id, null)
-        managed?.delete(saved.id)
+        // A metadata edit without a new credential must not turn a withdrawn bridge
+        // session into an independent local credential and bypass the gate.
         dao.upsert(saved.toEntity())
+        if (token != null) managed?.delete(saved.id)
         return saved
     }
 
@@ -79,9 +86,11 @@ class EnvironmentRepository(
 
     /** Removes the row, its token and its shell cursor together. */
     suspend fun delete(id: String) {
-        managed?.delete(id)
         dao.deleteById(id)
         tokens().delete(id)
         cursors.setCursor(id, null)
+        // Keep the gate until the credential has actually been removed, including
+        // when Keystore/storage deletion fails part-way through.
+        managed?.delete(id)
     }
 }

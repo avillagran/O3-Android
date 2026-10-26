@@ -110,3 +110,7 @@ UI2/PR23 y UI1g no se modificaron. El Dev Vault queda exclusivamente a cargo de 
   baseline 0.3.4 coherente con su AAR; no se cambió su PR11.
 - Dev Vault / memoria compartida no se escriben desde el hijo; root incorpora este
   HANDOFF y sus PRs. No se hace watch desde este hilo hijo.
+
+## Root review follow-up
+
+Root retained managed ownership on metadata-only saves, requires a new credential for changing a managed route/identity, and keeps the gate until credential deletion finishes (including partial storage failure). Regression assertions cover rename after withdrawal, route reuse rejection, explicit independent credential adoption and failed credential deletion. Connection timestamp changes during stream shutdown no longer suppress a native withdrawal; the freshest host timestamps/order are preserved. Root repeated the full core JVM suite and lint successfully. This does not replace the pending single Android→authority→shells test or production authority review.

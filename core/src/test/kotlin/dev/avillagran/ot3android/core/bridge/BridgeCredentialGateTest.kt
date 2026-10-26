@@ -30,10 +30,13 @@ class BridgeCredentialGateTest {
             override suspend fun upsert(row: BridgeManagedEntity) { this.row = row }
             override suspend fun delete(id: String) { if (row?.id == id) row = null }
         }
+        var failCredentialDelete = false
         val tokens = object : TokenStore {
             override suspend fun token(environmentId: String) = "isolated-token"
             override suspend fun setToken(environmentId: String, token: String) = Unit
-            override suspend fun delete(environmentId: String) = Unit
+            override suspend fun delete(environmentId: String) {
+                if (failCredentialDelete) error("isolated-storage-failure")
+            }
         }
         val cursors = object : ShellCursorStore {
             override suspend fun cursor(environmentId: String): Long? = 7
@@ -52,5 +55,22 @@ class BridgeCredentialGateTest {
         assertNull(repository.token("node"))
         assertEquals("isolated-token", repository.token("independent"))
         assertEquals(7L, cursors.cursor("node"))
+        dao.upsert(EnvironmentEntity("node", "NODE", "https://node.example", "node", 1, null, 0))
+        managed.row = BridgeManagedEntity("node", "bridge:owner:client", "revoked", 300)
+        repository.save("node", "Renamed NODE", "https://node.example", "node", null)
+        assertNotNull("Renaming without a new credential must retain bridge ownership", managed.row)
+        assertNull("An edit must not restore the withdrawn credential", repository.token("node"))
+        try {
+            repository.save("node", "Changed route", "https://other.example", "node", null)
+            fail("A route edit cannot reuse a managed credential on a different host")
+        } catch (_: IllegalArgumentException) { }
+        assertEquals("https://node.example", repository.find("node")!!.baseUrl)
+        repository.save("node", "Independent NODE", "https://node.example", "node", "new-independent-token")
+        assertNull("An explicit new credential can take local ownership", managed.row)
+        managed.row = BridgeManagedEntity("node", "bridge:owner:client", "revoked", 300)
+        failCredentialDelete = true
+        try { repository.delete("node"); fail("Expected storage failure") } catch (_: IllegalStateException) { }
+        assertNotNull("Partial deletion keeps the gate until the credential is removed", managed.row)
+        assertNull(repository.token("node"))
     }
 }

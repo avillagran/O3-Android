@@ -87,14 +87,16 @@ class BridgeCatalogController(
                 val row = rows.getJSONObject(i)
                 val id = row.getString("id")
                 val old = previous.firstOrNull { it.id == id }
-                // A local edit/removal since the plan was made wins. Retry next poll.
-                if (dao.findById(id) != old || managed.find(id) != origins[id]) continue
+                val latest = dao.findById(id)
+                // Explicit ownership changes and removals win. Connection timestamps
+                // may change while streams stop; they must not suppress a withdrawal.
+                if (managed.find(id) != origins[id] || (old == null) != (latest == null)) continue
                 // The native plan chooses ownership and route. This adapter preserves
                 // all host-owned state, including local IDs, order, cursors and drafts.
                 dao.upsert(EnvironmentEntity(id, row.getString("label"),
                     if (row.isNull("baseUrl")) "" else row.getString("baseUrl"),
-                    row.getString("environmentId"), old?.createdAt ?: clock(),
-                    old?.lastConnectedAt, old?.sortOrder ?: nextOrder++))
+                    row.getString("environmentId"), latest?.createdAt ?: clock(),
+                    latest?.lastConnectedAt, latest?.sortOrder ?: nextOrder++))
                 managed.upsert(BridgeManagedEntity(id, row.getString("provenance"), row.getString("status"),
                     if (row.isNull("authorizationExpiresAt")) null else row.getLong("authorizationExpiresAt")))
             }
