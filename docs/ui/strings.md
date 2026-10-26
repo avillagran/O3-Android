@@ -96,6 +96,10 @@ ot3's sentence case and tone.
 | `mobile_animations_system_off` | Off while Android's Remove animations is on | ot3 has no OS animation setting (UI_SPEC 3.4.4) | `t3m:src/lib/designTokens.ts:8` (each animation follows the system setting) |
 | `mobile_limits_empty` | No provider on the selected environments reports subscription limits. | ot3 hides an empty strip | `t3m:src/features/usage/UsageLimitsPooled.tsx:323-327` |
 | `mobile_usage_connect` | Connect an environment to see usage. | ot3's page always has its local backend | `t3m:src/features/usage/UsageRouteScreen.tsx:305-314` |
+| `mobile_notif_channel_activity` | Thread activity | ot3 has no notification channels | `t3m:modules/t3-agent-notifications/android/src/main/java/expo/modules/t3agentnotifications/AgentNotifications.kt:315-319` ("Ongoing agent activity") |
+| `mobile_notif_channel_alerts` | Thread alerts | same | same file `:314` ("Agent alerts") |
+| `mobile_notif_answer` | Answer | ot3 answers in the panel; the phone needs a chip and action word | same module, `AgentActivityPresentation.kt:36-41` |
+| `mobile_notif_live` | {count} live | the desktop bar shows counts, not a chip | `AgentActivityPresentation.kt:131-132` |
 
 ## ot3 strings missing from ot3's catalog
 

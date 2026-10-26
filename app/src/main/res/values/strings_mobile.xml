@@ -28,4 +28,11 @@
     <string name="mobile_env_retrying_attempt">Retrying · attempt %1$s</string>
     <string name="mobile_component_catalog">UI components</string>
     <string name="mobile_snooze_until">Snooze until</string>
+
+    <!-- Notifications and Live Updates (UI_SPEC). Channel names, the Answer chip and the
+         "N live" chip; T3 Mobile's AgentNotifications.kt / AgentActivityPresentation.kt. -->
+    <string name="mobile_notif_channel_activity">Thread activity</string>
+    <string name="mobile_notif_channel_alerts">Thread alerts</string>
+    <string name="mobile_notif_answer">Answer</string>
+    <string name="mobile_notif_live">%1$s live</string>
 </resources>

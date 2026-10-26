@@ -137,4 +137,8 @@
     <string name="ot3_pr_open">Açık</string>
     <string name="ot3_pr_merged">Birleştirildi</string>
     <string name="ot3_pr_closed">Kapalı</string>
+    <string name="ot3_notif_approve">Onayla</string>
+    <string name="ot3_notif_open">Açık</string>
+    <string name="ot3_notif_approval_required">Onay gerekli</string>
+    <string name="ot3_notif_question">Soru</string>
 </resources>
