@@ -45,7 +45,10 @@ class BridgeCatalogNativeTest {
         }
         val repository = EnvironmentRepository(database.environmentDao(), { tokens }, cursors, managed = database.bridgeManagedDao())
         val connections = ConnectionManager(repository, cursors, NativeT3TransportFactory(), scope)
-        val controller = BridgeCatalogController(database, connections, scope, { tokens })
+        val controller = BridgeCatalogController(database, connections, scope, { tokens }, mutations = repository.mutations, native = { request ->
+            try { dev.avillagran.ot3android.core.bridge.NativeBridge.request(request) }
+            catch (error: Exception) { throw IllegalStateException("Native operation ${request.getString("op")}", error) }
+        })
         val directory = java.io.File(context.filesDir, "catalog-lab-${System.nanoTime()}")
         suspend fun lab(path: String): JSONObject = withContext(Dispatchers.IO) {
             val connection = URL("http://10.0.2.2:$port$path").openConnection() as HttpURLConnection
@@ -78,16 +81,19 @@ class BridgeCatalogNativeTest {
             cursors.setCursor(node.id, 7)
             database.draftDao().upsert(DraftEntity("${node.id}/thread", "node draft", 2))
             assertNull(repository.token(node.id))
+            stage = "catalog rename/recovery"
             lab("/change"); controller.refresh()
             val changed = repository.find(node.id)!!
             assertEquals("NODE renamed", changed.label)
             assertEquals("https://changed-node.fixture.invalid/", changed.baseUrl)
             assertEquals(7L, cursors.cursor(node.id))
+            stage = "catalog withdrawal"
             lab("/withdraw"); controller.refresh()
             assertEquals("revoked", database.bridgeManagedDao().find(node.id)!!.status)
             assertEquals("", repository.find(node.id)!!.baseUrl)
             assertEquals(3, repository.environments.first().size)
             assertEquals(vq.id, repository.environments.first().single { it.environmentId == VQ }.id)
+            stage = "catalog rename/recovery"
             lab("/change"); controller.refresh()
             assertEquals("discovered", database.bridgeManagedDao().find(node.id)!!.status)
             assertEquals(7L, cursors.cursor(node.id))

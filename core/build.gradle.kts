@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.security.MessageDigest
 
 plugins {
     alias(libs.plugins.android.library)
@@ -105,3 +106,40 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
 }
+
+// Native bridge distribution is opt-in. Verify the source and bytes actually
+// packaged; lab trust helpers can never enter a release artifact.
+fun bridgeSdkVerification(release: Boolean) = tasks.register(if (release) "verifyReleaseBridgeSdk" else "verifyDebugBridgeSdk") {
+    val pin = rootProject.file("libs/omabridge-native.lock")
+    val artifacts = listOf("x86_64", "arm64-v8a").map { file("src/main/jniLibs/$it") }
+    inputs.file(pin)
+    inputs.files(artifacts.map { fileTree(it) })
+    val required = providers.gradleProperty("ot3a.requireBridgeSdk").orElse("false").get().toBoolean()
+    val allowLab = providers.gradleProperty("ot3a.bridgeLab").orElse("false").get().toBoolean()
+    inputs.property("required", required)
+    inputs.property("lab", allowLab)
+    doLast {
+        val included = artifacts.any { it.resolve("libomabridge_jni.so").exists() }
+        if (!included) {
+            check(!required) { "Bridge SDK required: run scripts/build-bridge-sdk.sh" }
+            return@doLast
+        }
+        val expected = pin.readLines().single { it.startsWith("source=") }.substringAfter('=')
+        for (directory in artifacts) {
+            val library = directory.resolve("libomabridge_jni.so")
+            val metadata = directory.resolve("omabridge-native.properties")
+            check(library.isFile && metadata.isFile) { "Incomplete bridge SDK: $directory" }
+            val lines = metadata.readLines()
+            check("source=$expected" in lines && "abi=omabridge-mobile-1" in lines && "target=${directory.name}" in lines) { "Bridge SDK source/ABI/target mismatch" }
+            val lab = "flavor=lab-tls" in lines
+            check("flavor=production" in lines || lab) { "Missing bridge SDK flavor" }
+            check(!lab || (!release && allowLab)) { "Lab JNI requires explicit debug opt-in and is forbidden in release" }
+            val hash = MessageDigest.getInstance("SHA-256").digest(library.readBytes()).joinToString("") { "%02x".format(it) }
+            check(lines.any { it.startsWith("$hash  ") }) { "Bridge SDK checksum mismatch" }
+        }
+    }
+}
+val verifyDebugBridgeSdk = bridgeSdkVerification(false)
+val verifyReleaseBridgeSdk = bridgeSdkVerification(true)
+tasks.matching { it.name == "mergeDebugJniLibFolders" }.configureEach { dependsOn(verifyDebugBridgeSdk) }
+tasks.matching { it.name == "mergeReleaseJniLibFolders" }.configureEach { dependsOn(verifyReleaseBridgeSdk) }

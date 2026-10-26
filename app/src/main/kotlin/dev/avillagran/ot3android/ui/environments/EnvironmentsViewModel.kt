@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class EnvironmentItem(val environment: Environment, val state: ConnectionState?)
+data class EnvironmentItem(val environment: Environment, val state: ConnectionState?, val bridgeStatus: String? = null)
 
 /** Saved environments with the state of their supervisor (null until one is created). */
 class EnvironmentsViewModel(
@@ -21,8 +21,8 @@ class EnvironmentsViewModel(
 ) : ViewModel() {
 
     val items: StateFlow<List<EnvironmentItem>?> =
-        combine(repository.environments, connections.states) { environments, states ->
-            environments.map { EnvironmentItem(it, states[it.id]) }
+        combine(repository.environments, connections.states, repository.bridgeStates) { environments, states, origins ->
+            environments.map { environment -> EnvironmentItem(environment, states[environment.id], origins.find { it.id == environment.id }?.status) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun delete(environmentId: String) {

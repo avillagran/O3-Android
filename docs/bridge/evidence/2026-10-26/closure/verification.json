@@ -1,0 +1,201 @@
+{
+  "date": "2026-10-26",
+  "androidBase": "e7e33db76b77b798e8a17b8e2bbc9aaf28a267e6",
+  "sdkSource": "f7d93a9ea8600991a229cadb9d189306965d4195",
+  "bridgeSdkLibDependency": "027a025",
+  "t3AarAndJni": {
+    "version": "0.3.4",
+    "source": "e2ec5467389adf0885623480d7e2006a7ae3d019"
+  },
+  "labBuilds": {
+    "host": {
+      "source": "f7d93a9ea8600991a229cadb9d189306965d4195",
+      "abi": "omabridge-mobile-1",
+      "target": "host",
+      "flavor": "lab-tls",
+      "sha256": "b8065efbcd1798f6c7e6d9fdc7a0a82fbbe496f361113689ef50aa6405ab4664"
+    },
+    "x86_64": {
+      "source": "f7d93a9ea8600991a229cadb9d189306965d4195",
+      "abi": "omabridge-mobile-1",
+      "target": "x86_64",
+      "flavor": "lab-tls",
+      "sha256": "a2d6500aa321caa0be2c9848d6f1c3bbbc637f48f14a4382e7a81ba66719ec48"
+    },
+    "arm64-v8a": {
+      "source": "f7d93a9ea8600991a229cadb9d189306965d4195",
+      "abi": "omabridge-mobile-1",
+      "target": "arm64-v8a",
+      "flavor": "lab-tls",
+      "sha256": "8b2082ad7d03e38ee55a681ba61d60bb3a1e34eba02ccf1beb665abe8323567c"
+    }
+  },
+  "productionBuilds": {
+    "host": {
+      "source": "f7d93a9ea8600991a229cadb9d189306965d4195",
+      "abi": "omabridge-mobile-1",
+      "target": "host",
+      "flavor": "production",
+      "sha256": "46ce980d6f34c0b25ea67177a94ce3e4d7fecc134b843b4205d78073ddeba2cb"
+    },
+    "x86_64": {
+      "source": "f7d93a9ea8600991a229cadb9d189306965d4195",
+      "abi": "omabridge-mobile-1",
+      "target": "x86_64",
+      "flavor": "production",
+      "sha256": "7d9dea070af9197f9c9351cc918f1099161bfd61e604bb7f6a2d5bff88935036"
+    },
+    "arm64-v8a": {
+      "source": "f7d93a9ea8600991a229cadb9d189306965d4195",
+      "abi": "omabridge-mobile-1",
+      "target": "arm64-v8a",
+      "flavor": "production",
+      "sha256": "a72ae9e0cd0db676c8684722ab03b20ec2732292824ecbc7270090c3254f5519"
+    }
+  },
+  "productionBinaryLabHelpersAbsent": true,
+  "tests": {
+    "coreJvm": {
+      "total": 241,
+      "passed": 237,
+      "skipped": 4,
+      "failed": 0
+    },
+    "rust": {
+      "passed": 75,
+      "failed": 0
+    },
+    "coreInstrumented": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "appInstrumented": {
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "coreCases": [
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeCatalogNativeTest",
+        "name": "pairedBridgeProjectsTwoHostsWithoutTouchingLocalDraftsOrCursors",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+        "name": "withdrawalSurvivesConnectionTimestampButLocalCredentialAdoptionWins",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+        "name": "interruptedCredentialReplacementAndFailedDeleteStayDeniedAcrossRoomReopen",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+        "name": "localAdoptionDuringEnrollmentShutdownCannotBeOverwritten",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeT3EndToEndTest",
+        "name": "twoRealIsolatedServersEnforceReadScopeExpiryAndRevocation",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+        "name": "migration2To3KeepsLocalStateAndAddsManagedProvenance",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+        "name": "schema1AcceptsAnEnvironmentRow",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+        "name": "migration1To2KeepsEnvironmentsAndAddsTheOutboxAndDrafts",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.security.CredentialStoreTest",
+        "name": "tokenRoundTripAndDelete",
+        "failed": false,
+        "skipped": false
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.security.CredentialStoreTest",
+        "name": "unreadableFileIsWipedAndReported",
+        "failed": false,
+        "skipped": false
+      }
+    ]
+  },
+  "unifiedRealT3": {
+    "version": "v0.1.3-nightly.20261026.3710",
+    "backend": "two real isolated T3 servers; no fake OAuth/shell handlers",
+    "labels": [
+      "VQ",
+      "NODE"
+    ],
+    "identities": "distinct descriptor UUIDs and bridge authenticated endpoint key verified in memory; public IDs redacted",
+    "transport": "Android controller/JNI -> authenticated QUIC -> opt-in T3 CLI issuer -> descriptor-verified TLS -> real HTTP shells",
+    "labTrust": "explicit lab-tls feature; TLS verification enabled; does not change baseline production T3 transport trust",
+    "sessionScopes": [
+      "orchestration:read"
+    ],
+    "configuredSessionSeconds": 30,
+    "proofs": [
+      "distinct actual thread IDs in both shells",
+      "cross-host bearer denied with HTTP 401/403",
+      "cross-client invitation claim denied",
+      "read-only session cannot create pairing credential (HTTP 403)",
+      "same issued session cannot archive a thread through real orchestration RPC",
+      "actual T3 expiry rejects old bearer after natural deadline",
+      "T3 client revocation rejects renewed sessions",
+      "new accepted T3 credential can explicitly take local ownership and survive bridge withdrawal",
+      "remaining managed environment gated after bridge revocation"
+    ]
+  },
+  "separateEvidence": {
+    "catalogMobileFixture": "fake metadata only, no authority; separate from unified real T3 test",
+    "uiFixture": "Compose pending/approved/empty secret field and missing-SDK fallback; approved semantics attached; SecureWindow intentionally blocks OS screenshot",
+    "liveNode": "not operated or accepted by this increment",
+    "physicalVq": "not operated or accepted by this increment",
+    "xiaomi": "not operated",
+    "normalCI": "not counted as integration; SDK/lab omitted tests can skip",
+    "workflowDistribution": "pending; PAT lacks workflow scope; no workflow added"
+  },
+  "verificationObservations": [
+    "One earlier full app run timed out waiting for retained draft at ThreadWorkspaceDeviceTest.kt:44; later full runs 26/26 passed without changing that test. No claim CI focus/reader issue is resolved.",
+    "An earlier catalog fixture refresh and one earlier added adoption run returned a fixed generic native error. Fixed-vocabulary diagnostics were added; final source passed core 10/10. No root cause is claimed for those non-reproduced failures."
+  ],
+  "cleanup": {
+    "emulator": "stopped; device inventory reports ot3a not booted",
+    "privateLabs": "script closes/reaps servers and removes private lab state on success and failure",
+    "distribution": "final local candidates are production flavor, not lab-tls"
+  },
+  "upstream": {
+    "url": "https://github.com/pingdotgg/t3code/pull/25361",
+    "head": "630314b400cb5cd2f90be60274d443240a409524",
+    "branchBase": "171f8d880f2874f968ba1facc818f2d8b2074f6f",
+    "testedCleanMerge": "4e493b1492c295475e5c4d1b971677b1bd305960",
+    "prospectiveMergeMatchesTestedSourceByteForByte": true,
+    "testsPassed": 39,
+    "formatLintServerTypecheck": "passed",
+    "regressionBefore": "expires_in 2592000 instead of configured 120",
+    "behavior": "opt-in cap on new bootstrap cookie/bearer/DPoP sessions; defaults unchanged; actual expiry, revocation and read-only HTTP denial tested",
+    "workflowsChanged": false,
+    "checkChanged": "not runnable without Git merge base in source archive; focused checks run directly",
+    "mergeRequiredForCompanions": false
+  }
+}

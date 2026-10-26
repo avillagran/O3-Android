@@ -1,5 +1,9 @@
 # Bridge catalog integration handoff — 2026-10-26
 
+Continuación verificada: ver [CLOSURE_HANDOFF.md](CLOSURE_HANDOFF.md) para la prueba
+única Android→autoridad→shells de dos T3 reales aislados y el frontend de invitación.
+El resto de este archivo conserva la evidencia histórica del incremento anterior.
+
 Estado: incremento funcional aislado, NO aceptación de NODE productivo ni físico.
 No se inspeccionó/operó Xiaomi. No se modificaron configuraciones productivas,
 grants, servicios ni listeners existentes. Sin release/tag, merge ni watch.
