@@ -75,7 +75,7 @@ private fun LimitAccount(title: String, detail: String, limits: JSONObject?, tag
 }
 
 @Composable
-private fun formatLimitTime(value: String): String? {
+internal fun formatLimitTime(value: String): String? {
     val locale = LocalConfiguration.current.locales[0]
     return runCatching { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale).format(limitDate(value) ?: return null) }.getOrNull()
 }

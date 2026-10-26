@@ -2329,6 +2329,24 @@ U26 pooling/remaining/pace, compact Home/thread strips remain pending. The incom
 160 ms T3 Mobile entrance; see [usage evidence](ui/compare/usage/README.md).
 See [limits evidence](ui/compare/usage-limits/README.md).
 
+### Compact quota strip checkpoint — 2026-10-26
+
+§4.10.2 now has an opt-in, persisted Appearance/overflow control (default off), a
+stable first lazy-list item in Home including placeholder states, and a stable slot
+under the actual thread toolbar capped at 200 dp. Home reads all saved environments;
+thread reads its environment. Group taps open Limits, passing the thread environment.
+`AppGraph.quotaSource` shares visible consumers with the real Limits view model:
+one reducer/server-config stream per environment, canceled and joined on last release,
+connection replacement or disconnect. No stream remains without a visible consumer.
+The application five-minute ProviderRefreshGate still counts failures across screens.
+Until U26, native usedPercent is explicitly labelled “used”; resets retain Android's
+absolute formatter. Home takes at most two windows in native order; thread shows all.
+There is no Kotlin pooling, remaining, pace, marker or notice algorithm. Empty connected
+observations hide the strip; loading/offline/read failure shows connection state.
+Appearance and reveal obey Ot3Motion, without bar animation. Inline account expansion,
+U26 presentation and the Usage/Limits 160 ms fade remain pending. Evidence and exact
+limits: `docs/ui/compare/quota-strip/README.md`.
+
 ### Diff file navigation increment — 2026-10-26
 
 The real Changes modal now offers ot3's narrow previous/next and path selector,

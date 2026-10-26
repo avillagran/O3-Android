@@ -122,3 +122,6 @@ data object ThreadListOptionsSheet
 /** Snooze presets for a thread (from the swipe's secondary action or the thread menu). */
 @Serializable
 data class SnoozeUntilSheet(val environmentId: String, val threadId: String)
+
+@kotlinx.serialization.Serializable
+data class QuotaLimits(val environmentId: String? = null)

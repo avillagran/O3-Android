@@ -70,6 +70,8 @@ class AppearanceSettingsViewModel(
         preferences.setFollowEnvironment(false)
     }
 
+    fun setProviderUsage(shown: Boolean) = edit { preferences.appearance.setProviderUsage(shown) }
+
     fun refresh() = source.refresh()
 
     private fun edit(block: suspend () -> Unit) {

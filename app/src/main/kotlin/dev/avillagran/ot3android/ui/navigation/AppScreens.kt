@@ -57,7 +57,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     override fun Home(entry: NavBackStackEntry, isTop: Boolean) {
         val viewModel = homeViewModel(entry)
         val state by viewModel.state.collectAsStateWithLifecycle()
-        HomeScreen(state, isTop, onIntent = { intent -> onHomeIntent(intent, viewModel) })
+        HomeScreen(state, isTop, onIntent = { intent -> onHomeIntent(intent, viewModel) }, quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(onOpenLimits = { navigator.push(QuotaLimits()) }) })
     }
 
     private fun onHomeIntent(intent: HomeIntent, viewModel: HomeViewModel) {
@@ -109,6 +109,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 )
             },
             onBack = { navigator.back() },
+            quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, compact = false, onOpenLimits = { navigator.push(QuotaLimits(route.environmentId)) }) },
         )
     }
 
@@ -127,14 +128,15 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     }
 
     @Composable
-    override fun Usage() {
+    override fun Usage(initialTab: String, environmentId: String?) {
         val graph = LocalContext.current.appGraph
         val model = viewModel {
             dev.avillagran.ot3android.ui.usage.UsageViewModel(
                 graph.environmentRepository.environments,
                 graph.connectionManager::connectionFlow,
-                createSavedStateHandle(),
+                createSavedStateHandle().apply { if (!contains("tab")) set("tab", initialTab); if (!contains("environment")) set("environment", environmentId) },
                 refreshProviders = graph.providerRefreshGate::refresh,
+                quotaSource = graph.quotaSource,
             )
         }
         val state by model.state.collectAsStateWithLifecycle()

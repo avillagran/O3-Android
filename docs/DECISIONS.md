@@ -1021,6 +1021,21 @@ recreating pooling or pace rules. Screenshot inputs are frozen native outputs; a
 JNI stream/reducer behavior is tested separately to avoid Robolectric classloader
 collisions when the complete suite runs.
 
+### 2026-10-26 — Shared visible quota ownership and opt-in strip
+
+Home, thread and Limits acquire the application SharedQuotaSource by environment.
+The final release cancels and joins the stream/reducer entry; reconnect replaces it,
+without retaining a background subscription. An independent application refresh gate
+continues to count every attempted probe for five minutes. Keep reader/composer and
+shell lifetimes unchanged: Home owns a stable lazy-list header slot, and the thread
+owns a stable slot under its real toolbar. The shared Appearance DataStore preference
+is off by default and is also available in both overflows. Group taps use a typed
+Limits route with an optional environment, preserving the calling screen's Back path.
+Until U26, use native used percentages and platform absolute reset dates with static
+bars; do not implement desktop pooling, remaining/pace or notices in Kotlin. Details,
+validation and remaining differences: `ui/compare/quota-strip/README.md`. The Usage /
+Limits tab fade is deferred to a separate increment.
+
 ### 2026-10-26 — Local diff reading controls
 
 File navigation and wrap are presentation state, not protocol operations. Preserve
