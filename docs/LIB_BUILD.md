@@ -438,3 +438,14 @@ for example `T3Api$Domain$Theme` with `tokens(String, String?)` and `T3Api$Domai
 with `t`, `catalog`, `resolve` and `languages`); `T3Client` is unchanged. The AAR adds
 `assets/lib-t3-rust/i18n.json`; the four `jni/<abi>/libt3_jni.so` keep 16 KiB `LOAD`
 alignment. 21965936 bytes.
+
+## 2026-10-26: awareness runtime pin v0.3.5
+
+The Android release pin is v0.3.5, source d4bf6054b4480efdcd8a436cb66cb7f2e23664b1,
+ABI3, AAR SHA256 b72a5207eaf7c075c5a24e097e150214d36e0cbf4450087b6adf9d1ab2ff4f09.
+Host JNI is rebuilt from the same tag using the existing fetch/build script; the shared
+lib checkout is untouched. Native registry smoke verifies 116 calls, 13 streams and
+109 domain functions, including awareness.view. The i18n catalog has 1804 sources.
+Notification tests additionally consume captured real awareness.view outputs; the
+core tests exercise the native function for cold baseline, transition dedupe and
+on-screen suppression. Build-time string generation remains pinned to the AAR asset.

@@ -197,3 +197,26 @@ separately): `ConnectScreenTest.aRejectedTokenIsReportedAndNeverShown` (assertio
 status text is only in the unmerged semantics tree), and
 `SidebarScreenTest.anErrorThatIsNotRetriedOffersEdit` (the connection chip lacks the
 expected error text).
+
+## Android 36.1 Live Update image
+
+Use a separate AVD; API34 remains the regression reference. On node:
+
+```sh
+OT3A_EMU_TOOLS="$ANDROID_HOME/cmdline-tools/22.0" \
+OT3A_EMU_IMAGE='system-images;android-36.1;google_apis;x86_64' \
+OT3A_EMU_GPU=swiftshader scripts/emulator.sh start --avd ot3a361 --headless
+```
+
+The directory called cmdline-tools/latest on this host contained tools12.0. It created
+36.1 image rev4 metadata with target=android-0. Both swiftshader_indirect and swiftshader
+then reached boot_completed=1 but SurfaceFlinger repeatedly aborted in RegionSampling
+with `!rcEnc->featureInfo()->hasReadColorBufferDma`; package installation could also
+fail while system_server restarted. Changing the renderer alone did not fix it.
+Tools22.0 installed alongside latest recreated only this new QA AVD with target=android-36.1.
+The next run kept system_server623/surfaceflinger767 stable through APK install, native
+Settings navigation and notification permission flow, with an empty crash buffer.
+The script now rejects target=android-0 and exposes explicit tools/renderer overrides.
+This is a local A/B observation, not proof that every newer image is compatible.
+A [matching first-hand runner-images report](https://github.com/actions/runner-images/issues/14484)
+was used to select the metadata hypothesis; the verification above is local.

@@ -38,6 +38,9 @@ interface Ot3Screens {
     fun Appearance() { NotYetScreen("Appearance") }
 
     @Composable
+    fun Notifications() { NotYetScreen("Notifications") }
+
+    @Composable
     fun Environments()
 
     @Composable
@@ -95,6 +98,7 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
     }
     navigation<SettingsGraph>(startDestination = Settings) {
         composable<Appearance> { screens.Appearance() }
+        composable<Notifications> { screens.Notifications() }
         composable<Settings> { screens.Settings() }
         composable<Environments> { screens.Environments() }
         composable<AddEnvironment> { entry -> screens.AddEnvironment(entry.toRoute()) }

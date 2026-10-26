@@ -45,6 +45,7 @@ class ConnectionManager(
     /** Supervisors that were running when the app went to the background. */
     private val paused = mutableSetOf<String>()
     private var foreground = true
+    private val followLeases = mutableMapOf<String, Int>()
 
     /** Serializes creating and forgetting supervisors, which both read the repository. */
     private val createLock = Mutex()
@@ -87,7 +88,31 @@ class ConnectionManager(
     fun startIfCurrent(supervisor: ConnectionSupervisor?) {
         synchronized(this) {
             if (supervisor == null || _supervisors.value[supervisor.environmentId] !== supervisor) return
-            if (foreground) supervisor.start() else paused.add(supervisor.environmentId)
+            if (foreground || followLeases.getOrDefault(supervisor.environmentId, 0) > 0) supervisor.start() else paused.add(supervisor.environmentId)
+        }
+    }
+
+    /** A foreground follow service borrows the same supervisor; closing twice is harmless. */
+    suspend fun acquireFollowLease(environmentId: String): AutoCloseable? {
+        val supervisor = supervisor(environmentId) ?: return null
+        synchronized(this) {
+            followLeases[environmentId] = followLeases.getOrDefault(environmentId, 0) + 1
+            startIfCurrent(supervisor)
+        }
+        return object : AutoCloseable {
+            private var closed = false
+            override fun close() = synchronized(this@ConnectionManager) {
+                if (!closed) {
+                    closed = true
+                    val remaining = followLeases.getOrDefault(environmentId, 1) - 1
+                    if (remaining > 0) followLeases[environmentId] = remaining else {
+                        followLeases.remove(environmentId)
+                        if (!foreground) _supervisors.value[environmentId]?.let {
+                            if (it.isRunning) { paused.add(environmentId); it.stop() }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -118,7 +143,7 @@ class ConnectionManager(
                 paused.mapNotNull { _supervisors.value[it] }.forEach { it.start() }
                 paused.clear()
             } else {
-                _supervisors.value.values.filter { it.isRunning }.forEach { supervisor ->
+                _supervisors.value.values.filter { it.isRunning && followLeases.getOrDefault(it.environmentId, 0) == 0 }.forEach { supervisor ->
                     paused.add(supervisor.environmentId)
                     supervisor.stop()
                 }

@@ -1,0 +1,5 @@
+Result=oom-kill
+ExecMainStatus=15
+MemoryPeak=134217728
+
+The bounded host harness hit its 128 MiB limit while spawning the T3 revoke CLI. The Android acceptance test failed on the resulting HTTP EOF; no app crash was reported. A 512 MiB owned harness is used for the repeat.

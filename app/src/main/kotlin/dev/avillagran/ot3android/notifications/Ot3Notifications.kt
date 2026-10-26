@@ -94,9 +94,6 @@ object NotificationRoutes {
 
 /** The ongoing card. Returns null when [AwarenessCard.expiresAt] has passed: cancel instead. */
 object AwarenessCardBuilder {
-    /** The longest English chip (`Approve`, `9+ live`); the guide shows fewer than 7 characters whole and cuts or drops longer ones. */
-    const val CHIP_FULL_TEXT = 7
-
     fun build(
         context: Context,
         card: AwarenessCard,
@@ -104,8 +101,8 @@ object AwarenessCardBuilder {
         lockscreen: LockscreenDetail = LockscreenDetail.Full,
         onDismiss: PendingIntent? = null,
     ): Notification? {
-        val remaining = card.expiresAt - now
-        if (remaining <= 0) return null
+        val remaining = card.expiresAt?.minus(now)
+        if (remaining != null && remaining <= 0) return null
         val open = NotificationRoutes.open(context, card.route)
         val title = card.title.ifBlank { context.getString(R.string.app_name) }
         val body = body(card)
@@ -122,9 +119,9 @@ object AwarenessCardBuilder {
             .setContentTitle(title)
             .setContentText(listOf(card.status, card.subtitle).filter { it.isNotBlank() }.joinToString(" · "))
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-            .setTimeoutAfter(remaining)
             .setContentIntent(open)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+        if (remaining != null) builder.setTimeoutAfter(remaining)
         if (onDismiss != null) builder.setDeleteIntent(onDismiss)
         tint(context, card.phase)?.let(builder::setColor)
         val since = card.since
@@ -185,16 +182,17 @@ object AwarenessAlertBuilder {
             .setContentIntent(NotificationRoutes.open(context, alert.route))
         if (timeout != null) builder.setTimeoutAfter(timeout)
         tint(context, alert.phase)?.let(builder::setColor)
-        lockscreen(context, builder, lockscreen, statusLabel(context, alert.phase), Ot3NotificationChannels.ALERTS)
+        lockscreen(context, builder, lockscreen, alert.status.ifBlank { statusLabel(context, alert.phase) }, Ot3NotificationChannels.ALERTS)
         return builder.build()
     }
 
     /** The group's silent summary; [lines] are the children's titles, newest first. */
-    fun summary(context: Context, group: AlertGroup, title: String, lines: List<String>, route: ThreadRef): Notification {
+    fun summary(context: Context, group: AlertGroup, title: String, lines: List<String>, route: ThreadRef, body: String = ""): Notification {
         val style = NotificationCompat.InboxStyle()
         lines.take(5).forEach { style.addLine(it) }
         return base(context, Ot3NotificationChannels.ALERTS)
             .setContentTitle(title)
+            .setContentText(body)
             .setStyle(style)
             .setGroup(Ot3NotificationIds.group(group))
             .setGroupSummary(true)

@@ -14,7 +14,7 @@ import org.junit.Test
 /**
  * The real Rust core through the AAR's adapter and the host JNI library; no network.
  *
- * The exact pins (0.3.4, 116 functions, 13 streams, 108 domain functions) are intentional: bumping
+ * The exact pins (0.3.5, 116 functions, 13 streams, 109 domain functions) are intentional: bumping
  * libs/lib-t3-rust.lock must fail here until the lib's changes are read and the pins move
  * with them (docs/DECISIONS.md).
  */
@@ -38,9 +38,9 @@ class NativeSmokeTest {
         val capabilities = transport.capabilities()
 
         assertEquals(3, capabilities.getInt("abiVersion"))
-        assertEquals("0.3.4", capabilities.getString("libraryVersion"))
+        assertEquals("0.3.5", capabilities.getString("libraryVersion"))
         assertEquals(116, capabilities.getInt("functions"))
-        assertEquals(108, capabilities.getInt("domainFunctions"))
+        assertEquals(109, capabilities.getInt("domainFunctions"))
         val operations = capabilities.getJSONArray("operations").strings()
         assertEquals(operations.toString(), 19, operations.size)
         assertTrue(operations.toString(), operations.containsAll(listOf("call", "describe", "domain", "wakeSubscriptions")))
@@ -53,11 +53,11 @@ class NativeSmokeTest {
         assertEquals(116, api.getJSONArray("functions").length())
         assertEquals(13, api.getJSONArray("streams").length())
         val domain = api.getJSONArray("domain")
-        assertEquals(108, domain.length())
+        assertEquals(109, domain.length())
         val names = List(domain.length()) { domain.getJSONObject(it).getString("fn") }
-        assertTrue(names.toString(), names.containsAll(listOf("projection.apply", "timeline.view", "sidebar.view", "projects.identity")))
+        assertTrue(names.toString(), names.containsAll(listOf("projection.apply", "timeline.view", "sidebar.view", "projects.identity", "awareness.view")))
         val modules = names.groupingBy { it.substringBefore('.') }.eachCount()
-        assertEquals(modules.toString(), 29, modules.size)
+        assertEquals(modules.toString(), 30, modules.size)
         assertEquals(
             mapOf(
                 "diffReview" to 2, "toolInspector" to 4, "planWorkflow" to 5, "checkpointRevert" to 8, "usageSummary" to 3,

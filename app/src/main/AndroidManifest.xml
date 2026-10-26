@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- QR scanning only; asked for when the scanner opens. -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -21,6 +25,11 @@
         android:theme="@style/Theme.Ot3Android"
         android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
+        <!-- User-enabled local agent following is continuous monitoring, not a bounded data transfer. -->
+        <service android:name=".notifications.ThreadFollowService" android:exported="false" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-enabled local T3 agent activity monitoring over authenticated shell subscriptions; stops after 15 idle minutes or when disabled." />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true"

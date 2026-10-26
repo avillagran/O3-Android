@@ -153,3 +153,7 @@ routes").
 (`ot3:ui/qml/T3ConnectionOmaBridge.qml:39`). Every other text of the motion, usage and
 OmaBridge sections (Animations page, usage page and strip, OmaBridge page) is in the
 catalog.
+
+## Local follow runtime
+
+strings_follow.xml describes the Android-only local foreground service, permission explanation and system Live Update settings. These mobile-only strings follow the existing English fallback policy; state/count/alert texts still come from awareness.view in the pinned catalog. Localization of the new explanation remains open.

@@ -47,6 +47,7 @@ class AppGraph(
     val transportFactory: T3TransportFactory = NativeT3TransportFactory(),
 ) {
     private val appContext = context.applicationContext
+    val applicationContext: Context get() = appContext
 
     /**
      * Lives as long as the process; connection supervisors run here. A coroutine that fails
@@ -57,6 +58,9 @@ class AppGraph(
         SupervisorJob() + Dispatchers.Default +
             CoroutineExceptionHandler { _, error -> Log.e(TAG, "Uncaught ${error.javaClass.name} in appScope") },
     )
+
+    val followPreferences by lazy { dev.avillagran.ot3android.core.data.prefs.FollowPreferences(appContext) }
+    val followVisibility = dev.avillagran.ot3android.notifications.FollowVisibility()
 
     val database: Ot3Database by lazy { Ot3Database.create(appContext) }
 

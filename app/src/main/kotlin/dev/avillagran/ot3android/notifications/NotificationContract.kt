@@ -7,9 +7,7 @@ import org.json.JSONObject
  * The data a notification shows, as the lib will return it (LIB_REQUESTS.md, "UI-N: thread
  * awareness"; UI_SPEC "Notifications and Live Updates"). Kotlin reads these objects and
  * builds Android notifications from them. It never derives a phase, a count, a transition or
- * an expiry: every such value arrives here already decided. The current v0.3.4 pin has no
- * awareness runtime. U28 shipped in v0.3.5; pinning it and consuming its real outputs
- * follows the UI-1 release. The preparation builders are tested with fixtures.
+ * an expiry: every such value arrives here already decided by awareness.view in v0.3.5.
  */
 
 /** T3's agent awareness phase (`t3:packages/shared/src/agentAwareness.ts:11-18`). */
@@ -77,7 +75,7 @@ data class AwarenessCard(
     /** When the current phase began (epoch ms); null hides the timer. */
     val since: Long?,
     /** Absolute deadline (epoch ms); a replay never extends it. */
-    val expiresAt: Long,
+    val expiresAt: Long?,
     /** Where a tap goes: the priority thread. */
     val route: ThreadRef,
     val rows: List<AwarenessRow>,
@@ -105,6 +103,7 @@ data class AwarenessAlert(
     val route: ThreadRef,
     /** Optional absolute deadline for Done / Failed alerts. */
     val expiresAt: Long?,
+    val status: String = "",
 )
 
 /** Reads the lib's objects. Anything malformed is dropped, never guessed. */
@@ -116,7 +115,7 @@ object NotificationContract {
         json ?: return null
         val phase = AwarenessPhase.fromWire(json.optString("phase")) ?: return null
         val route = ref(json.optJSONObject("route")) ?: return null
-        val expiresAt = json.optLong("expiresAt", 0L).takeIf { it > 0 } ?: return null
+        val expiresAt = if (json.has("expiresAt")) json.optLong("expiresAt", 0L).takeIf { it > 0 } ?: return null else null
         val active = json.optBoolean("active", false)
         val chip = json.optJSONObject("chip")?.let { c ->
             ChipKind.fromWire(c.optString("kind"))?.let { Chip(it, c.optInt("count", 1).coerceAtLeast(1)) }
@@ -147,6 +146,7 @@ object NotificationContract {
             phase = phase,
             title = text(json, "title"),
             body = text(json, "body"),
+            status = text(json, "status"),
             route = route,
             expiresAt = json.optLong("expiresAt", 0L).takeIf { it > 0 },
         )

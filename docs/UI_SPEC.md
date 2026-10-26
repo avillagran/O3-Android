@@ -2246,3 +2246,28 @@ Portrait approval/question/permission screenshots and videos are in ui/compare/u
 They use a deterministic server through production screens/ViewModels/Rust and do not
 close live or exact desktop visual acceptance. Landscape, secret/plan workflows and
 remaining composer actions are still required.
+
+### 2026-10-26 — UI-N runtime implementation checkpoint
+
+The runtime branch pins lib 0.3.5, consumes actual awareness.view output and implements
+Follow leases on the existing supervisors. Settings → Notifications explains local
+following, requests POST_NOTIFICATIONS on opt-in and links system Live Update settings.
+The service is specialUse with a declared subtype, no relay/FCM, no wake lock, existing
+network wakeSubscriptions, native deadlines and 15 idle-minute stop. On-screen claims
+are suppressed only while the process is visible. Full lockscreen card remains default.
+A separate quiet service notice can be stopped and lets native Done/Failed cards be
+normal expiring notifications. This duplicate notice is an explicit open UX difference.
+Runtime device acceptance is still open: lifecycle/process/revocation/Doze checks,
+API36.1 actual promoted flag/chip, lockscreen/shade, settings and alert groups.
+Native output fixtures and lease/native baseline tests do not replace those gates.
+
+## 2026-10-26 — verified live follow presentation correction
+
+Supersedes the separate live-card/service-notice policy: while live, the native activity
+card is also the foreground-service notification; idle tracking uses a quiet service
+notice so finished cards can expire normally. API36.1 real NODE evidence confirms actual
+promotion, background continuity and removal after revoked reauthentication. The OT3
+monochrome mark supplies chip branding and short critical text supplies the state:
+a longer brand prefix hid that text in the observed system UI. Full lock-screen content
+remains the default; lock-screen capture and remaining lifecycle cases are not accepted
+yet. See docs/ui/compare/ui-n/runtime/live-node-verification.json.

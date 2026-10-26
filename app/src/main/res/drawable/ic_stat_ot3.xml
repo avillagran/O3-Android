@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status bar and Live Update chip icon (UI_SPEC "Notifications and Live Updates"). The
-     path is the T3 mark of src/main/svg/lucide/t3-logo.svg, unchanged, centred in a 120
-     unit square (translate = 60 minus the centre of the SVG's viewBox). Status bar icons
-     are alpha masks: one opaque white fill, no colour. NotificationIconTest keeps the path
-     equal to the SVG. Licence: docs/LICENSES.md, "T3 mark". -->
+<!-- OT3 notification alpha mark: O + the unchanged bundled T3 path. The O is a
+     native vector addition; T3 retains its MIT notice in docs/LICENSES.md. Keeping the
+     brand in the icon leaves Android's short critical text available for the state. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="120"
+    android:viewportWidth="174"
     android:viewportHeight="120">
+    <group android:translateY="-5.48">
+        <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+            android:pathData="M33.5,37 C18.7,37 10,47.7 10,65.5 C10,83.3 18.7,94 33.5,94 C48.3,94 57,83.3 57,65.5 C57,47.7 48.3,37 33.5,37 Z M33.5,48 C41,48 44,53.8 44,65.5 C44,77.2 41,83 33.5,83 C26,83 23,77.2 23,65.5 C23,53.8 26,48 33.5,48 Z" />
+    </group>
     <group
-        android:translateX="-2.7284"
+        android:translateX="52"
         android:translateY="-5.48">
         <path
             android:fillColor="#FFFFFFFF"
