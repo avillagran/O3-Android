@@ -80,3 +80,43 @@ pending; Robolectric exercises the software fallback and reduced-motion layout o
 The ready-plan implementation actions remain a real common-builder dependency, verified
 against v0.3.5 and recorded in LIB_REQUESTS §2. No read-only substitute is claimed as a
 completed follow-up workflow. Other UI work continues independently.
+
+## Integration and permissions (2026-10-26)
+
+UI-1 main `6eaf4fc` is integrated together with UI-3. The production composer now has
+a compact permission icon in the existing model/options row, using ot3's source
+lock/pen-line/sparkles/lock-open assets and catalog translations. It lists only the
+provider's native-advertised runtime modes. An explicit selection calls
+`models.runtimeModeCommand` through the durable outbox; unknown outcomes retry identical
+bytes. The selected state changes only with the authoritative thread projection.
+The empty supported-mode fallback needs the common U29 projection, documented in
+LIB_REQUESTS; no Kotlin eligibility fallback was added. Full source-style permission
+menu sizing and device evidence remain pending.
+
+Combined JVM, lint, golden verification and instrumented compilation passed before
+this final small concurrency guard. Emulator/live request and permission acceptance
+are not inferred from those checks.
+
+### Emulator proof added
+
+The debug fixture now advertises native model configuration and can return approval
+or question entities plus their matching turn items. It still uses the actual graph,
+ThreadViewModel, ThreadSession/Rust views and MessageSender/outbox; no productive server
+is touched. Two RequestWorkflowDeviceTest cases passed on API34: exactly one explicit
+native approval dispatch; question hides composer and sends the selected option's
+opaque value.
+
+- [Tokyo Night approval](integrated/approval-tokyo-night.png),
+  [additional-choice warning](integrated/approval-more-warning.png),
+  [permission choices](integrated/permissions-tokyo-night.png),
+  [approval/permission video](integrated/approval-permissions.mp4).
+- [Latte question](integrated/question-latte.png),
+  [answered state](integrated/question-answered.png),
+  [answer video](integrated/question-answer.mp4).
+
+These are portrait fixtures. Same-theme/content desktop comparison, landscape requests,
+real provider/transport acceptance, secret/plan workflows and source menu sizing are
+still pending. An Answered fixture stays visible because the scripted server intentionally
+does not emit a resolution event; it demonstrates dispatch acknowledgement, not live resolution.
+
+Final combined emulator run: **31/31 app instrumented passed**, including the two request workflows and the existing rotation/reading-anchor/single-stream/IME regressions. See [full run](integrated/all-device-validation.txt). Approval/permission video is 25.84 s; question/answer video is 7.29 s.

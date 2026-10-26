@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">オープン</string>
     <string name="ot3_notif_approval_required">承認が必要</string>
     <string name="ot3_notif_question">質問</string>
+    <string name="ot3_permission_permissions">チャットの権限</string>
+    <string name="ot3_permission_supervised">監督付き</string>
+    <string name="ot3_permission_supervised_detail">コマンドとファイル変更の前に確認します。</string>
+    <string name="ot3_permission_accept_edits">編集を自動承認</string>
+    <string name="ot3_permission_accept_edits_detail">編集を自動承認し、その他の操作は確認します。</string>
+    <string name="ot3_permission_auto">自動</string>
+    <string name="ot3_permission_auto_detail">対応プロバイダーは通常の操作を承認し、その他は確認します。</string>
+    <string name="ot3_permission_full_access">フルアクセス</string>
+    <string name="ot3_permission_full_access_detail">確認なしでコマンドと編集を許可します。</string>
 </resources>

@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Otwarte</string>
     <string name="ot3_notif_approval_required">Wymagane zatwierdzenie</string>
     <string name="ot3_notif_question">Pytanie</string>
+    <string name="ot3_permission_permissions">Uprawnienia czatu</string>
+    <string name="ot3_permission_supervised">Nadzorowany</string>
+    <string name="ot3_permission_supervised_detail">Pytaj przed poleceniami i zmianami plików.</string>
+    <string name="ot3_permission_accept_edits">Akceptuj zmiany</string>
+    <string name="ot3_permission_accept_edits_detail">Zatwierdzaj zmiany automatycznie, pytaj o inne działania.</string>
+    <string name="ot3_permission_auto">Automatyczny</string>
+    <string name="ot3_permission_auto_detail">Obsługiwani dostawcy zatwierdzają rutynowe działania; inni pytają.</string>
+    <string name="ot3_permission_full_access">Pełny dostęp</string>
+    <string name="ot3_permission_full_access_detail">Zezwalaj na polecenia i zmiany bez potwierdzenia.</string>
 </resources>

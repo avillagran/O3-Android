@@ -25,6 +25,7 @@ internal fun ComposerModels(
     catalogJson: String?, selectionJson: String?, loading: Boolean, enabled: Boolean,
     onRefresh: () -> Unit, onSelect: (JSONObject) -> Unit,
     onOption: (String, Any) -> Unit, onFavorite: (JSONObject, Boolean) -> Unit,
+    permissions: @Composable () -> Unit = {},
 ) {
     val catalog = remember(catalogJson) { catalogJson?.let(::JSONObject) ?: JSONObject() }
     val selection = remember(selectionJson) { selectionJson?.let(::JSONObject) ?: JSONObject() }
@@ -55,6 +56,7 @@ internal fun ComposerModels(
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
+        permissions()
         TextButton(onClick = { options = true; onRefresh() }, enabled = enabled && selection.has("model")) {
             Text(stringResource(R.string.composer_options))
         }

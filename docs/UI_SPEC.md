@@ -2233,3 +2233,16 @@ localhost/SSH forwards are reachable by a phone. A route indicator/settings page
 not close this requirement. [CATALOG_SYNC](bridge/CATALOG_SYNC.md) tracks proven source,
 implementation and the remaining authenticated publisher/enrollment/Android integration.
 Physical VQ-only evidence is not proof of the phone's actual UUID, route or filter.
+
+### 2026-10-26 — Request/composer integration acceptance update
+
+UI-3 queue/model/options and UI-4 approval/question/task increments are reconciled with
+the UI-1 release. A compact permission control shares the model/options row; labels,
+descriptions and lock/pen-line/sparkles icons come from T3PermissionPicker.qml and the
+pinned catalog. Choices use native provider supportedRuntimeModes, mutations use
+models.runtimeModeCommand and the durable outbox; current permission waits for the
+thread stream. Native fallback projection for providers without advertised modes is U29.
+Portrait approval/question/permission screenshots and videos are in ui/compare/ui-4/.
+They use a deterministic server through production screens/ViewModels/Rust and do not
+close live or exact desktop visual acceptance. Landscape, secret/plan workflows and
+remaining composer actions are still required.

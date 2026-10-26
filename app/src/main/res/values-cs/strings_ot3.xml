@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Otevřené</string>
     <string name="ot3_notif_approval_required">Vyžaduje schválení</string>
     <string name="ot3_notif_question">Otázka</string>
+    <string name="ot3_permission_permissions">Oprávnění chatu</string>
+    <string name="ot3_permission_supervised">Pod dohledem</string>
+    <string name="ot3_permission_supervised_detail">Ptát se před příkazy a změnami souborů.</string>
+    <string name="ot3_permission_accept_edits">Přijímat úpravy</string>
+    <string name="ot3_permission_accept_edits_detail">Automaticky schvalovat úpravy, ptát se na ostatní akce.</string>
+    <string name="ot3_permission_auto">Automaticky</string>
+    <string name="ot3_permission_auto_detail">Podporovaní poskytovatelé schvalují běžné akce; ostatní se ptají.</string>
+    <string name="ot3_permission_full_access">Úplný přístup</string>
+    <string name="ot3_permission_full_access_detail">Povolit příkazy a úpravy bez potvrzení.</string>
 </resources>

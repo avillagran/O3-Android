@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">열림</string>
     <string name="ot3_notif_approval_required">승인 필요</string>
     <string name="ot3_notif_question">질문</string>
+    <string name="ot3_permission_permissions">채팅 권한</string>
+    <string name="ot3_permission_supervised">감독 모드</string>
+    <string name="ot3_permission_supervised_detail">명령 실행과 파일 변경 전에 확인합니다.</string>
+    <string name="ot3_permission_accept_edits">편집 자동 승인</string>
+    <string name="ot3_permission_accept_edits_detail">편집은 자동 승인하고 다른 작업은 확인합니다.</string>
+    <string name="ot3_permission_auto">자동</string>
+    <string name="ot3_permission_auto_detail">지원하는 공급자는 일반 작업을 승인하고 나머지는 확인합니다.</string>
+    <string name="ot3_permission_full_access">전체 액세스</string>
+    <string name="ot3_permission_full_access_detail">확인 없이 명령과 편집을 허용합니다.</string>
 </resources>

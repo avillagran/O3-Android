@@ -71,6 +71,14 @@ class MessageSender(
         JSONObject().put("thread", threadId).put("runtimeRequestId", requestId)
             .put("action", action).put("answers", answers), domain)
 
+    /** The provider advertises choices; Rust validates/builds the wire command. */
+    suspend fun runtimeMode(
+        transport: T3Transport?, environmentId: String, threadId: String, mode: String,
+        domain: DomainCalls = DomainEngine.shared,
+    ): SendResult = nativeMutation(transport, environmentId, threadId, "models.runtimeModeCommand",
+        JSONObject().put("threadId", threadId).put("commandId", "ot3a-validation")
+            .put("runtimeMode", mode), domain)
+
     private suspend fun nativeMutation(
         transport: T3Transport?, environmentId: String, threadId: String,
         fn: String, arguments: JSONObject, domain: DomainCalls,

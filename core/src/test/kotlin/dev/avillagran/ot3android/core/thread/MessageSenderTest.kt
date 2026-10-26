@@ -17,6 +17,27 @@ import org.junit.Test
 class MessageSenderTest {
 
     @Test
+    fun runtimeModeUsesNativeValidationAndExactDurableRetry() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        val transport = connected()
+        assertEquals(SendResult.Failed("invalid_runtime_mode"), sender.runtimeMode(transport, "env-1", "t1", "unsupported"))
+        assertTrue(fake.calls.isEmpty())
+        var calls = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (calls++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 20)
+        }
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), sender.runtimeMode(transport, "env-1", "t1", "auto-accept-edits"))
+        val command = fake.calls.single().args
+        assertEquals("thread.runtime-mode.set", command.getString("type"))
+        assertEquals("auto-accept-edits", command.getString("runtimeMode"))
+        assertEquals("ot3a-1", command.getString("commandId"))
+        assertEquals(SendResult.Accepted("ot3a-1", 20), sender.retry(fake, "ot3a-1"))
+        assertEquals(command.toString(), fake.calls.last().args.toString())
+    }
+
+    @Test
     fun questionResponsesAndDismissalsUseRustCommandsAndStableUnknownRetry() = runTest {
         assumeHostJni()
         val sender = MessageSender(OutboxRepository(dao), this, ids)

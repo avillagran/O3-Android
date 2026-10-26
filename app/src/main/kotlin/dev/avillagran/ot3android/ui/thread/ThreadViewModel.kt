@@ -272,6 +272,17 @@ class ThreadViewModel(
         if (!local.value.queueBusy) local.update { it.copy(queueEdit = null) }
     }
 
+    fun selectRuntimeMode(mode: String) {
+        val current = state.value
+        if (!current.connected || current.view.stale || current.sending || local.value.queueBusy ||
+            local.value.respondingRequest != null || current.queueEdit != null || current.unconfirmed.isNotEmpty()) return
+        local.update { it.copy(queueBusy = true, notice = null) }
+        appScope.launch {
+            try { onResult(sender.runtimeMode(transport(), environmentId, threadId, mode)) }
+            finally { local.update { it.copy(queueBusy = false) } }
+        }
+    }
+
     fun respondApproval(requestId: String, decision: String) {
         val current = state.value
         if (!current.connected || current.view.stale || current.sending || current.unconfirmed.isNotEmpty() ||

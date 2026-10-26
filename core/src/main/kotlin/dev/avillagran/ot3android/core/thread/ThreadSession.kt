@@ -70,6 +70,7 @@ data class ThreadView(
     val timeline: JSONObject? = null,
     /** The thread's `modelSelection` as compact JSON, sent with each message. */
     val modelSelection: String? = null,
+    val runtimeMode: String? = null,
     val connectionState: ThreadConnection = ThreadConnection.Waiting,
     /** The stream ended in a way that may have lost events; a fresh snapshot is on its way. */
     val stale: Boolean = false,
@@ -350,6 +351,7 @@ class ThreadSession(
                 pendingRequests = timeline.pendingRequests,
                 timeline = timeline.raw,
                 modelSelection = thread?.optJSONObject("modelSelection")?.toString(),
+                runtimeMode = thread?.optString("runtimeMode")?.takeUnless { it.isBlank() || it == "null" },
                 stale = stale,
                 sequence = sequence,
             )

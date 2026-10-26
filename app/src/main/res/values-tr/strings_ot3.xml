@@ -141,4 +141,13 @@
     <string name="ot3_notif_open">Açık</string>
     <string name="ot3_notif_approval_required">Onay gerekli</string>
     <string name="ot3_notif_question">Soru</string>
+    <string name="ot3_permission_permissions">Sohbet izinleri</string>
+    <string name="ot3_permission_supervised">Denetimli</string>
+    <string name="ot3_permission_supervised_detail">Komutlardan ve dosya değişikliklerinden önce sor.</string>
+    <string name="ot3_permission_accept_edits">Düzenlemeleri kabul et</string>
+    <string name="ot3_permission_accept_edits_detail">Düzenlemeleri otomatik onayla, diğer işlemleri sor.</string>
+    <string name="ot3_permission_auto">Otomatik</string>
+    <string name="ot3_permission_auto_detail">Desteklenen sağlayıcılar rutin işlemleri onaylar; diğerleri sorar.</string>
+    <string name="ot3_permission_full_access">Tam erişim</string>
+    <string name="ot3_permission_full_access_detail">Komutlara ve düzenlemelere onaysız izin ver.</string>
 </resources>

@@ -81,3 +81,5 @@ Panel-left and panel-left-close: ot3 ui/assets/icons at 7b5b1de, Lucide ISC, str
 | `star.svg`, `star-filled.svg` | ot3 inline IconAssets.js at 7b5b1de, lines 18–19 | Lucide ISC |
 
 | `list-todo.svg`, `circle.svg`, `circle-dot.svg` | ot3 inline IconAssets.js at 7b5b1de, lines 11–13 | Lucide ISC |
+
+| `lock.svg`, `lock-open.svg`, `sparkles.svg`, `pen-line.svg` | ot3 inline IconAssets.js at 7b5b1de, lines 59–62 | Lucide ISC |

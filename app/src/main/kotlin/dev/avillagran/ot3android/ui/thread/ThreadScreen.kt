@@ -122,6 +122,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onFavoriteModel = viewModel::favoriteModel,
         onApprovalDecision = viewModel::respondApproval,
         onQuestionResponse = viewModel::respondQuestion,
+        onRuntimeMode = viewModel::selectRuntimeMode,
     )
 }
 
@@ -149,6 +150,7 @@ fun ThreadContent(
     onFavoriteModel: (org.json.JSONObject, Boolean) -> Unit = { _, _ -> },
     onApprovalDecision: (String, String) -> Unit = { _, _ -> },
     onQuestionResponse: (String, String, org.json.JSONObject) -> Unit = { _, _, _ -> },
+    onRuntimeMode: (String) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -249,7 +251,11 @@ fun ThreadContent(
                 toolbar = {
                     ComposerModels(state.modelCatalog, state.modelSelection, state.modelsLoading,
                         state.connected && !state.sending && state.queueEdit == null,
-                        onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel)
+                        onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel) {
+                        ComposerPermissions(state.modelCatalog, state.modelSelection, state.view.runtimeMode,
+                            state.connected && !state.view.stale && !state.sending && state.queueEdit == null && state.unconfirmed.isEmpty(),
+                            onRefreshModels, onRuntimeMode)
+                    }
                 },
             )
             }
