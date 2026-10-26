@@ -23,3 +23,23 @@ actual typed WebSocket subscription, cancellation and reducer sanitization.
 All emulator images/video here use synthetic accounts and real screens/ViewModels/
 Room/native projections. They do not prove productive provider data, NODE discovery
 or physical acceptance. The physical install is documented separately after success.
+
+## Verification and delivery
+
+- Final code f240491: app208/core286 JVM passed,5 core opt-ins skipped; lint,
+  assembly and screenshot verification passed. API36.1 UsageDeviceTest3/3 passed,
+  including rendered reset/check dates, rotation, tabs, stream cleanup and pacing.
+- `portrait.png` and `landscape.png`: real emulator, Catppuccin Latte, synthetic
+  provider/hub stream. `latte-before-date-fix.png` records the device-only omission
+  caught visually and corrected. Tokyo Night and Latte JVM goldens are in
+  app/src/test/snapshots/UsageScreenshotTest.
+- `tabs-rotation.mp4`:67.6s encoded coverage from74.7s recording; mostly static
+  limits plus portrait→landscape rotation. Decoded contact sheet inspected. It
+  does not establish tab-fade parity or live provider updates.
+- Xiaomi install-r of cec976c returned Success with matching signing certificate,
+  preserving data. The date correction f240491 could not install: WiFi ADB went
+  offline and the final inventory no longer listed the phone. No physical limits
+  acceptance is claimed. Emulator stopped and helper closed.
+- Final APK SHA256: efe6a66f64c50c2d511abbdc19a4b923752eefa79ffcabe42be0b0368d420d3a.
+  Bridge SDK remains production f7d93a9 and T3 remains0.3.5; the experimental
+  delegated-catalog candidate is not included.
