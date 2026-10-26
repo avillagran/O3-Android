@@ -73,7 +73,7 @@ fun ThreadWorkspace(sidebar: @Composable () -> Unit, chat: @Composable () -> Uni
             modifier = Modifier.align(Alignment.TopEnd).padding(top = 4.dp)
                 .size(48.dp).testTag("thread_sidebar_toggle"),
         ) {
-            Icon(painterResource(if (shown) R.drawable.ic_panel_left_close else R.drawable.ic_panel_left),
+            Icon(painterResource(if (shown) dev.avillagran.ot3android.ui.icons.Ot3Icons.PanelLeftClose else dev.avillagran.ot3android.ui.icons.Ot3Icons.PanelLeft),
                 stringResource(if (shown) R.string.mobile_hide_sidebar else R.string.mobile_show_sidebar))
         }
     }
