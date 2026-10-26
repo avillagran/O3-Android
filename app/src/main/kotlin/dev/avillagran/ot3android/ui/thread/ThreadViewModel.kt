@@ -375,6 +375,9 @@ class ThreadViewModel(
     val imageConnection = supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    fun isImageConnectionCurrent(expected: Connection?): Boolean =
+        expected != null && supervisor.value?.connection?.value === expected
+
     suspend fun readImage(attachment: org.json.JSONObject): ByteArray? {
         val owner = supervisor.value ?: return null
         val current = owner.connection.value ?: return null

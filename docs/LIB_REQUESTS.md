@@ -1163,3 +1163,24 @@ stale publication; an in-flight read may occupy its native thread until its nati
 30-second GET/RPC deadlines. Request a cancellable binary read handle if immediate
 network abortion is required. Android does not disconnect a shared transport to cancel
 one thumbnail.
+
+## 2026-10-26 — U32: Shared new-thread defaults and creation recipe
+
+Tracked in https://github.com/avillagran/lib-t3-rust/issues/17. This is not a missing
+launch transport: v0.3.5 exposes typed `orchestration.launchThread`, `thread.create`,
+`models.catalog` and branch helpers. The missing common policy remains in ot3
+`7b5b1de`: `T3SidebarActions.qml:84–89` resolves model/runtime defaults from source,
+project, sibling, catalog and draft; `T3Backend.qml:beginNewThread` resolves explicit
+root, automatic route and workspace preference/confirmation; `src/write.rs:228–235`
+chooses metadata creation versus workspace launch before typed validation/persistence.
+
+Request a shared creation view/defaults from authorized projects/environments,
+catalogs, source context, preferences and query, plus a request recipe from explicit
+choices and caller-persisted ids. It should expose missing choices/confirmation
+reasons and preserve durable retries, coordinating initial-message and plan follow-up
+with the existing composer builder request. Reuse existing typed operations rather
+than introduce another transport. Android owns editing, navigation, confirmation
+and durable storage; it must not port fallback/search/routing rules to Kotlin.
+
+UI_SPEC §4.7 and the NewThread route remain unimplemented; this request is not
+acceptance of that flow. No library checkout or production configuration was changed.

@@ -27,6 +27,8 @@ import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.ui.theme.FiraCode
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 private data class DiffRead(val complete: Boolean = false, val data: JSONObject? = null)
@@ -45,9 +47,11 @@ internal fun ThreadDiffDialog(
     val currentRead by rememberUpdatedState(read)
     val result by produceState(DiffRead(), summary.toString(), showWhitespace, retry) {
         value = DiffRead()
-        value = try { DiffRead(true, currentRead(JSONObject(summary.toString()), !showWhitespace)) }
+        val completed = try { DiffRead(true, currentRead(JSONObject(summary.toString()), !showWhitespace)) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { DiffRead(true) }
+        // JNI completes off-thread; publish the dialog state on the Android UI dispatcher.
+        withContext(Dispatchers.Main.immediate) { value = completed }
     }
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().safeDrawingPadding(), color = Ot3Theme.colors.background, contentColor = Ot3Theme.colors.foreground) {

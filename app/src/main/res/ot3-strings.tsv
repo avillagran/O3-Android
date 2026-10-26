@@ -221,6 +221,8 @@ ot3_diff_next_file	Next file
 ot3_diff_wrap	Wrap
 ot3_diff_no_wrap	No wrap
 
+ot3_copy_image	Copy image
+
 # Pull requests read-only page (4.8)
 ot3_pr_title	Pull requests
 ot3_pr_refresh	Refresh

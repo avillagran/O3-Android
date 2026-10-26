@@ -2390,4 +2390,19 @@ Decode bounds are read first off the UI thread; preview/viewer edge caps are 640
 and at most two image jobs run concurrently. Close/Retry use the shared catalog.
 Evidence: `ui/compare/reader-images/README.md` (Tokyo/Latte emulator, synthetic data;
 separate host-JNI signed-grant integration). Markdown media-file images require U30;
-zoom/pan, clipboard, video/file previews and production-grant acceptance remain open.
+zoom/pan, video/file previews and production-grant acceptance remain open.
+Explicit image clipboard support is described in the following increment.
+
+### Attachment image clipboard increment — 2026-10-26
+
+A visible Copy image icon overlays the thumbnail's top-right corner without adding
+height. The viewer has the same action beside Close and truncates long filenames.
+The touch target, tooltip, keyboard accessibility, busy/check/error states and reset
+use the shared kit CopyButton. Labels come from ot3's 20-locale catalog.
+
+Only an explicit button press requests clipboard bytes. The same Rust attachment API
+and two-job limit apply; the original payload and MIME are offered as a narrow,
+read-only Content URI. Connection changes or lifecycle disposal cancel/drop the action.
+No preview bitmap is copied. Cache offers are bounded to eight images/80 MiB and
+are removed at age ≥24 hours on the next startup/copy cleanup (no timer). Evidence and platform
+parity differences: `ui/compare/reader-image-copy/README.md`.

@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">下一个文件</string>
     <string name="ot3_diff_wrap">自动换行</string>
     <string name="ot3_diff_no_wrap">不换行</string>
+    <string name="ot3_copy_image">复制图片</string>
     <string name="ot3_pr_title">拉取请求</string>
     <string name="ot3_pr_refresh">刷新</string>
     <string name="ot3_pr_all_projects">所有项目</string>

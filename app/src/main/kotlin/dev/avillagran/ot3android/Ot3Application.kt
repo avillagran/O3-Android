@@ -21,6 +21,9 @@ class Ot3Application : Application() {
     override fun onCreate() {
         super.onCreate()
         graph = AppGraph(this)
+        graph.appScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { dev.avillagran.ot3android.ui.thread.ImageClipboard.cleanup(this@Ot3Application) }
+        }
         ProcessLifecycleOwner.get().lifecycle.addObserver(ConnectionLifecycle(graph))
         watchNetwork()
     }

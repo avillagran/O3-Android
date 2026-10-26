@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">다음 파일</string>
     <string name="ot3_diff_wrap">줄 바꿈</string>
     <string name="ot3_diff_no_wrap">줄 바꿈 안 함</string>
+    <string name="ot3_copy_image">이미지 복사</string>
     <string name="ot3_pr_title">풀 리퀘스트</string>
     <string name="ot3_pr_refresh">새로 고침</string>
     <string name="ot3_pr_all_projects">모든 프로젝트</string>

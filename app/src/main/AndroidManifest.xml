@@ -25,6 +25,13 @@
         android:theme="@style/Theme.Ot3Android"
         android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
+        <provider
+            android:name=".ui.thread.ImageClipboardProvider"
+            android:authorities="${applicationId}.clipboard-images"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/clipboard_image_paths" />
+        </provider>
         <!-- User-enabled local agent following is continuous monitoring, not a bounded data transfer. -->
         <service android:name=".notifications.ThreadFollowService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"

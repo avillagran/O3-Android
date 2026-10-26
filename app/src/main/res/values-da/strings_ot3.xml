@@ -189,6 +189,7 @@
     <string name="ot3_diff_next_file">Næste fil</string>
     <string name="ot3_diff_wrap">Ombryd linjer</string>
     <string name="ot3_diff_no_wrap">Ingen linjeombrydning</string>
+    <string name="ot3_copy_image">Kopiér billede</string>
     <string name="ot3_pr_title">Pull requests</string>
     <string name="ot3_pr_refresh">Opdater</string>
     <string name="ot3_pr_all_projects">Alle projekter</string>

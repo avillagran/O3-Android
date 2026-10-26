@@ -73,8 +73,49 @@ class MessageImagesTest {
         rule.onNodeWithText("Close").assertIsDisplayed()
         rule.runOnIdle { generation = "new" }
         rule.waitForIdle()
+        rule.waitForIdle()
         rule.waitUntil(5000) { cancelled.isCompleted }
         rule.onNodeWithText("Close").assertDoesNotExist()
         rule.onNodeWithText("Retry").assertIsDisplayed()
     }
+    @org.junit.Before fun resetClipboardProviderPaths() {
+        val field = androidx.core.content.FileProvider::class.java.getDeclaredField("sCache").apply { isAccessible = true }
+        (field.get(null) as MutableMap<*, *>).clear()
+    }
+
+    @Test fun copyIsExplicitBusyThenOriginalBytesAndGenerationCancelsPendingCopy() {
+        val clipboard = rule.activity.getSystemService(android.content.ClipboardManager::class.java)
+        val bytes = ByteArrayOutputStream().also { Bitmap.createBitmap(40, 20, Bitmap.Config.ARGB_8888)
+            .compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        var generation by mutableStateOf("old")
+        val copyStarted = CompletableDeferred<Unit>()
+        val cancelled = CompletableDeferred<Unit>()
+        var reads = 0
+        rule.runOnIdle { clipboard.setPrimaryClip(android.content.ClipData.newPlainText("fixture", "unchanged")) }
+        rule.setContent { Ot3Theme { CompositionLocalProvider(LocalReaderImages provides ReaderImages(generation) {
+            reads++
+            if (reads == 2) {
+                copyStarted.complete(Unit)
+                try { awaitCancellation() } finally { cancelled.complete(Unit) }
+            }
+            bytes
+        }) { TimelineReader(JSONObject().put("timeline", org.json.JSONArray().put(row)), emptyList()) } } }
+        rule.waitUntil(5000) { reads == 1 }
+        rule.runOnIdle { assertEquals("unchanged", clipboard.primaryClip!!.getItemAt(0).text.toString()) }
+        rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()
+        rule.waitUntil(5000) { copyStarted.isCompleted }
+        rule.onNodeWithTag("thread_image_copy_thumbnail").assertIsNotEnabled()
+        rule.runOnIdle { generation = "new" }
+        rule.waitForIdle()
+        rule.waitUntil(5000) { cancelled.isCompleted }
+        rule.runOnIdle { assertEquals("unchanged", clipboard.primaryClip!!.getItemAt(0).text.toString()) }
+        rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()
+        rule.waitUntil(5000) { rule.waitForIdle(); clipboard.primaryClip?.getItemAt(0)?.uri != null }
+        rule.onNodeWithContentDescription("Copied!").assertIsDisplayed()
+        rule.runOnIdle {
+            val uri = clipboard.primaryClip!!.getItemAt(0).uri!!
+            assertArrayEquals(bytes, rule.activity.contentResolver.openInputStream(uri)!!.use { it.readBytes() })
+        }
+    }
+
 }
