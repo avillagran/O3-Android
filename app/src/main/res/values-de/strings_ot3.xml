@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Unterstützte Anbieter genehmigen Routineaktionen; andere fragen nach.</string>
     <string name="ot3_permission_full_access">Voller Zugriff</string>
     <string name="ot3_permission_full_access_detail">Befehle und Änderungen ohne Rückfrage erlauben.</string>
+    <string name="ot3_copy_table_markdown">Als Markdown kopieren</string>
+    <string name="ot3_copy_table_csv">Als CSV kopieren</string>
 </resources>

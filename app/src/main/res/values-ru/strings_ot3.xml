@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Совместимые провайдеры одобряют обычные действия; остальные спрашивают.</string>
     <string name="ot3_permission_full_access">Полный доступ</string>
     <string name="ot3_permission_full_access_detail">Разрешать команды и правки без подтверждений.</string>
+    <string name="ot3_copy_table_markdown">Копировать как Markdown</string>
+    <string name="ot3_copy_table_csv">Копировать как CSV</string>
 </resources>

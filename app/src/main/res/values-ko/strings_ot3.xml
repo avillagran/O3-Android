@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">지원하는 공급자는 일반 작업을 승인하고 나머지는 확인합니다.</string>
     <string name="ot3_permission_full_access">전체 액세스</string>
     <string name="ot3_permission_full_access_detail">확인 없이 명령과 편집을 허용합니다.</string>
+    <string name="ot3_copy_table_markdown">Markdown으로 복사</string>
+    <string name="ot3_copy_table_csv">CSV로 복사</string>
 </resources>

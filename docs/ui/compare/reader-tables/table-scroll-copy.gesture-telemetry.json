@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-26T17:33:01.825Z",
+  "events": [
+    {
+      "kind": "swipe",
+      "tMs": 5695,
+      "x": 940,
+      "y": 1400,
+      "x2": 150,
+      "y2": 1400,
+      "referenceWidth": 1080,
+      "referenceHeight": 2338,
+      "durationMs": 100
+    },
+    {
+      "kind": "tap",
+      "tMs": 24139,
+      "x": 493,
+      "y": 1784,
+      "referenceWidth": 1080,
+      "referenceHeight": 2338
+    }
+  ]
+}

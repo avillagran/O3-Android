@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Desteklenen sağlayıcılar rutin işlemleri onaylar; diğerleri sorar.</string>
     <string name="ot3_permission_full_access">Tam erişim</string>
     <string name="ot3_permission_full_access_detail">Komutlara ve düzenlemelere onaysız izin ver.</string>
+    <string name="ot3_copy_table_markdown">Markdown olarak kopyala</string>
+    <string name="ot3_copy_table_csv">CSV olarak kopyala</string>
 </resources>

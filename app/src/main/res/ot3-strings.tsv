@@ -179,3 +179,6 @@ ot3_permission_auto	Auto
 ot3_permission_auto_detail	Supported providers approve routine actions; others still ask.
 ot3_permission_full_access	Full access
 ot3_permission_full_access_detail	Allow commands and edits without prompts.
+
+ot3_copy_table_markdown	Copy as Markdown
+ot3_copy_table_csv	Copy as CSV

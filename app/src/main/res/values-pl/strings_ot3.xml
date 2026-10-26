@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Obsługiwani dostawcy zatwierdzają rutynowe działania; inni pytają.</string>
     <string name="ot3_permission_full_access">Pełny dostęp</string>
     <string name="ot3_permission_full_access_detail">Zezwalaj na polecenia i zmiany bez potwierdzenia.</string>
+    <string name="ot3_copy_table_markdown">Kopiuj jako Markdown</string>
+    <string name="ot3_copy_table_csv">Kopiuj jako CSV</string>
 </resources>

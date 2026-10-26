@@ -150,4 +150,6 @@
     <string name="ot3_permission_auto_detail">Stödda leverantörer godkänner rutinåtgärder; andra frågar.</string>
     <string name="ot3_permission_full_access">Fullständig åtkomst</string>
     <string name="ot3_permission_full_access_detail">Tillåt kommandon och ändringar utan bekräftelse.</string>
+    <string name="ot3_copy_table_markdown">Kopiera som Markdown</string>
+    <string name="ot3_copy_table_csv">Kopiera som CSV</string>
 </resources>

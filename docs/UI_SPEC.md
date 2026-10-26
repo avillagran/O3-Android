@@ -1062,6 +1062,7 @@ says which one it is using.
   tables scroll horizontally, code blocks scroll horizontally with Copy code; Run in
   terminal and Mermaid / QML previews are out of v1. Link safety and classification come
   from the lib (U10); interim: only http(s) links are tappable.
+- **Implemented table increment (2026-10-26):** native `markdown.blocks` cells/alignments render as selectable, horizontally scrolling tables; copy Markdown/CSV uses native output unchanged. Reference and evidence: `docs/ui/compare/reader-tables/README.md`. This does not close the remaining reader items.
 - **Quote:** selecting text offers "Quote", inserting `> ` lines into the composer
   (`ot3:ui/qml/T3Panel.qml:32-36,1744-1750`).
 - **Empty thread:** ot3's "T3" mark in accent @ 0.55, "Your work, within reach."
