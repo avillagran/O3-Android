@@ -113,6 +113,13 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
         onBack = onBack,
         modifier = modifier,
         onInspect = viewModel::inspect,
+        onQueueCommand = viewModel::queueCommand,
+        onEditQueued = viewModel::editQueued,
+        onCancelQueueEdit = viewModel::cancelQueueEdit,
+        onRefreshModels = viewModel::refreshModels,
+        onSelectModel = viewModel::selectModel,
+        onSelectModelOption = viewModel::selectModelOption,
+        onFavoriteModel = viewModel::favoriteModel,
     )
 }
 
@@ -131,6 +138,13 @@ fun ThreadContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onInspect: suspend (org.json.JSONObject) -> org.json.JSONObject? = { null },
+    onQueueCommand: (org.json.JSONObject) -> Unit = {},
+    onEditQueued: (org.json.JSONObject) -> Unit = {},
+    onCancelQueueEdit: () -> Unit = {},
+    onRefreshModels: () -> Unit = {},
+    onSelectModel: (org.json.JSONObject) -> Unit = {},
+    onSelectModelOption: (String, Any) -> Unit = { _, _ -> },
+    onFavoriteModel: (org.json.JSONObject, Boolean) -> Unit = { _, _ -> },
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -199,14 +213,35 @@ fun ThreadContent(
             )
         },
         bottomBar = {
-            Composer(
+            Column(Modifier.navigationBarsPadding().imePadding()) {
+                ThreadQueue(
+                    state.view.timeline?.optJSONObject("queue"),
+                    state.connected && !state.queueBusy && state.unconfirmed.isEmpty(),
+                    onQueueCommand,
+                    onEditQueued,
+                    editingRunId = state.queueEdit?.let { org.json.JSONObject(it).optString("runId") },
+                )
+                if (state.queueEdit != null) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.queue_editing), Modifier.weight(1f), color = Ot3Theme.colors.dim)
+                        TextButton(onClick = onCancelQueueEdit, enabled = !state.queueBusy) {
+                            Text(stringResource(R.string.queue_cancel_edit))
+                        }
+                    }
+                }
+                Composer(
                 draft = state.draft,
                 canSend = state.canSend,
                 sending = state.sending,
                 onDraftChange = onDraftChange,
                 onSend = onSend,
-                modifier = Modifier.navigationBarsPadding().imePadding(),
+                toolbar = {
+                    ComposerModels(state.modelCatalog, state.modelSelection, state.modelsLoading,
+                        state.connected && !state.sending && state.queueEdit == null,
+                        onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel)
+                },
             )
+            }
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
@@ -342,6 +377,7 @@ private fun Composer(
     onDraftChange: (String) -> Unit,
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
+    toolbar: @Composable () -> Unit = {},
 ) {
     val colors = Ot3Theme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -349,11 +385,12 @@ private fun Composer(
     val border by animateColorAsState(if (focused) colors.composerFocus else colors.composerBorder,
         Ot3Theme.motion.colorChange(), label = "composerBorder")
     Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
+        Column {
         Row(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                .border(1.dp, border, RoundedCornerShape(10.dp))
-                .background(colors.surface, RoundedCornerShape(10.dp)).padding(4.dp),
+                .border(1.dp, border, RoundedCornerShape(17.dp))
+                .background(colors.surface, RoundedCornerShape(17.dp)).padding(4.dp),
         ) {
             BasicTextField(
                 value = draft,
@@ -378,6 +415,8 @@ private fun Composer(
                     modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = colors.accent)
             }
         }
+        toolbar()
+        }
     }
 }
 
@@ -396,6 +435,7 @@ private fun noticeText(notice: ThreadNotice): String = when (notice) {
             ?: stringResource(R.string.thread_notice_rejected_plain)
         "write_not_authorized" -> stringResource(R.string.thread_notice_scope, notice.requiredScope ?: "orchestration:operate")
         "not_connected" -> stringResource(R.string.thread_notice_not_connected)
+        "command_pending" -> stringResource(R.string.queue_command_pending)
         else -> errorText(notice.code)
     }
 }

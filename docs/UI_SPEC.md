@@ -1262,6 +1262,11 @@ focused, 12 dp margins (`ot3:ui/qml/T3Composer.qml:263-271`). Layout (T3 Mobile)
   with the next message. Interim: read-only label from the thread's `modelSelection`
   (`app/src/main/kotlin/dev/avillagran/ot3android/ui/thread/ThreadViewModel.kt:48`).
 
+Implementation progress (2026-10-26): model selection and select/boolean descriptors
+now consume the native model catalog; server favorites use native payload/preferences,
+and local per-thread model/options persist in DataStore. Provider icons, exact rail and
+fuzzy-search presentation plus emulator evidence remain open. UI-3 is not closed.
+
 #### 4.4.4 Options, permissions and Plan / Build
 
 - **Options** (`sliders-horizontal`): a sheet of the model's descriptors, label + select
@@ -1310,6 +1315,12 @@ item 4) through today's `MessageSender`.
   (`ot3:ui/qml/T3Queue.qml:37-80`); swipe to remove (T3 Mobile).
 - Data: `queue::derive` (items, `held`, `canSteer`, `canReorder`, hidden message ids;
   `lib:src/queue.rs:5`) and `queue::command` (`:31`), U5. Interim: hidden.
+
+Implementation progress (2026-10-26): the queue strip and sheet now consume the real
+`timeline.view.queue`, with Rust-built persisted Resume/Remove/Reorder/Steer/Edit commands.
+Editing leaves the unsent draft intact. Source drag reorder and reveal motion, plus
+emulator/live evidence, are pending; this does not close UI-3. See
+`docs/ui/compare/ui-3/README.md` for the remaining differences.
 
 #### 4.4.7 Attachments
 

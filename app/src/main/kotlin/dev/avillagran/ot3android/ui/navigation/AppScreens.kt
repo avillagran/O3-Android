@@ -100,6 +100,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                     graph.outboxRepository,
                     graph.messageSender,
                     graph.appScope,
+                    graph.composerPreferences,
                 )
             },
             onBack = { navigator.back() },

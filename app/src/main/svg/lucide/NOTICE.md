@@ -77,3 +77,5 @@ Lucide's licence. `stop-filled` is ot3's (MIT, Copyright (c) 2026 Andrés Villag
 these notices are collected in `docs/LICENSES.md` for Settings → About → Licenses.
 
 Panel-left and panel-left-close: ot3 ui/assets/icons at 7b5b1de, Lucide ISC, stroke 1.75.
+
+| `star.svg`, `star-filled.svg` | ot3 inline IconAssets.js at 7b5b1de, lines 18–19 | Lucide ISC |
