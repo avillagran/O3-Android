@@ -65,4 +65,28 @@ class ThreadWorkspaceTest {
         rule.onNodeWithTag("thread_sidebar_toggle").performClick()
         rule.onNodeWithTag("sidebar_content").assertIsDisplayed()
     }
+    @Test fun productionThreadChromeRetainsControlWhileLoadingAndAfterFatalError() {
+        var failed by mutableStateOf(false)
+        rule.setContent {
+            dev.avillagran.ot3android.ui.theme.Ot3Theme {
+                ThreadWorkspace(sidebar = { Text("Sidebar after error") }) {
+                    dev.avillagran.ot3android.ui.thread.ThreadContent(
+                        state = dev.avillagran.ot3android.ui.thread.ThreadUiState(
+                            dev.avillagran.ot3android.core.thread.ThreadView("test", connectionState =
+                                if (failed) dev.avillagran.ot3android.core.thread.ThreadConnection.Failed("not_found")
+                                else dev.avillagran.ot3android.core.thread.ThreadConnection.Loading)),
+                        onDraftChange = {}, onSend = {}, onInterrupt = {}, onResend = {}, onDiscard = {},
+                        onRetryStream = {}, onDismissNotice = {}, onBack = {},
+                    )
+                }
+            }
+        }
+        rule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed()
+        rule.runOnIdle { failed = true }
+        rule.onNodeWithTag("thread_sidebar_toggle").assertIsDisplayed().performClick()
+        rule.onNodeWithText("Sidebar after error").assertIsDisplayed()
+        rule.onNodeWithTag("thread_sidebar_toggle").performClick()
+        rule.onNodeWithTag(dev.avillagran.ot3android.ui.thread.ThreadScreenTags.STREAM_RETRY).assertIsDisplayed()
+    }
+
 }

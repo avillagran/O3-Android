@@ -28,6 +28,16 @@ class ThreadWorkspaceDeviceTest {
         rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToIndex(30)
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         val fixture = rule.activity.fixture
+        kotlinx.coroutines.runBlocking {
+            fixture.transport.emitThread("chat", dev.avillagran.ot3android.core.transport.ThreadUpdates.event(
+                org.json.JSONObject().put("kind", "event").put("event", org.json.JSONObject()
+                    .put("type", "message.updated").put("payload", org.json.JSONObject()
+                        .put("id", "m59").put("role", "assistant").put("text", "Streaming update while reading older history")
+                        .put("streaming", true))), cursor = 2))
+        }
+        rule.waitForIdle()
+        rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
+        rule.onNodeWithTag("thread_jump_latest").assertIsDisplayed()
         val streamCount = { fixture.transport.streamOpens.count { it.threadId == "chat" } }
         rule.runOnIdle {
             assertEquals(1, streamCount())

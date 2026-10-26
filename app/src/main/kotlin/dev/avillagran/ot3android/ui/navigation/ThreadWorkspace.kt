@@ -30,7 +30,7 @@ fun ThreadWorkspace(sidebar: @Composable () -> Unit, chat: @Composable () -> Uni
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))) {
         TextButton(
             onClick = { if (split) collapsed = !collapsed else drawerOpen = !drawerOpen },
-            modifier = Modifier.testTag("thread_sidebar_toggle"),
+            modifier = Modifier.heightIn(min = 48.dp).testTag("thread_sidebar_toggle"),
         ) {
             Text(stringResource(if (shown) R.string.mobile_hide_sidebar else R.string.mobile_show_sidebar))
         }
