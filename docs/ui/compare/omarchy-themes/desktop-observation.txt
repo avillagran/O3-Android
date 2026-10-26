@@ -1,0 +1,4 @@
+2026-10-26, read-only SSH to the existing Omarchy desktop:
+~/.local/state/omarchy/current/theme.name = retro-82
+The bundled Android theme catalog includes retro-82.
+This establishes the active desktop theme, not Android live synchronization or NODE/VQ catalog discovery.

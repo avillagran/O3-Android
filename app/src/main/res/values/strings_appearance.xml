@@ -26,5 +26,6 @@
     <string name="appearance_dark_theme">Dark theme</string>
     <string name="appearance_light_theme">Light theme</string>
     <string name="appearance_material_you">Material You</string>
-    <string name="appearance_manual_applies">Used when the environment\'s theme is off or not available.</string>
+    <string name="appearance_manual_applies">Choose a palette to apply it to this phone. Turn following back on to use your desktop theme.</string>
+    <string name="appearance_refresh">Refresh desktop theme</string>
 </resources>

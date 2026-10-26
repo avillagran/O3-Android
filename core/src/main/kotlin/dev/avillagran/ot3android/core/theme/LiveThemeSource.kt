@@ -31,8 +31,8 @@ import org.json.JSONObject
  * **When it reads** (each a full [EnvironmentThemeReader.read]): when that environment's
  * supervisor connects (every new [Connection], so after a reconnect too), when the app comes
  * back to the foreground ([setVisible]), when the environment changes, and on [refresh]. While
- * visible and connected it polls `theme.name` every [pollIntervalMs] (one call; T3 sends no
- * event for `omarchy-theme-set`) and reads the whole theme when the name changed. Nothing runs
+ * visible and connected it reads the small theme files every [pollIntervalMs] (T3 sends no
+ * event for `omarchy-theme-set`), including edits that keep the same theme name. Nothing runs
  * while the app is in the background.
  *
  * **Cache:** the last theme of each environment ([ThemeCache]) is shown at once
@@ -139,9 +139,6 @@ class LiveThemeSource(
         /** The live theme shown for this environment, from the cache or a read. */
         private var shown: ThemeSelection.Live? = null
 
-        /** `theme.name` as last read, what a poll compares with. */
-        private var name: String? = null
-
         /** The last read failed with an error (not "not Omarchy" or "no scope"): polls retry it. */
         private var failed = false
 
@@ -154,7 +151,6 @@ class LiveThemeSource(
                     )
                 }.getOrNull()
             }
-            name = shown?.themeName
             publish(shown ?: ThemeSelection.Fallback(FallbackReason.Waiting(environmentId, label)))
         }
 
@@ -163,7 +159,6 @@ class LiveThemeSource(
                 is ThemeRead.Live -> {
                     failed = false
                     locations[environmentId] = read.location
-                    name = read.nameFile
                     val live = ThemeSelection.Live(
                         environmentId, label, read.themeName, read.displayName, read.colors, read.tokens, fromCache = false,
                     )
@@ -187,7 +182,6 @@ class LiveThemeSource(
                     } else {
                         if (shown != null) cache.remove(environmentId)
                         shown = null
-                        name = null
                         publish(ThemeSelection.Fallback(FallbackReason.Unavailable(environmentId, label, reason)))
                     }
                 }
@@ -201,10 +195,9 @@ class LiveThemeSource(
                 if (failed) read(transport)
                 return
             }
-            when (val polled = reader.readName(transport, location)) {
-                is EnvironmentThemeReader.NameRead.Name -> if (polled.name != name) read(transport)
-                is EnvironmentThemeReader.NameRead.Failed -> Unit
-            }
+            // Custom theme edits can keep theme.name unchanged. Read the two small files,
+            // using the cached location and Rust tokens, rather than treating the name as a revision.
+            read(transport)
         }
     }
 
@@ -219,7 +212,7 @@ class LiveThemeSource(
     }
 
     companion object {
-        /** How often `theme.name` is polled while visible (UI_SPEC 3.1.3: every few minutes). */
+        /** How often theme files are checked while visible (UI_SPEC 3.1.3: every few minutes). */
         const val POLL_INTERVAL_MS = 3 * 60_000L
     }
 }
