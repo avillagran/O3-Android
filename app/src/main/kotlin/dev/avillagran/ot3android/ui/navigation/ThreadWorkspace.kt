@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -24,6 +26,8 @@ val LocalSelectedThreadKey = staticCompositionLocalOf<String?> { null }
 /** The chat stays at the same composition position when the sidebar changes size. */
 @Composable
 fun ThreadWorkspace(sidebar: @Composable () -> Unit, chat: @Composable () -> Unit) {
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val configuration = LocalConfiguration.current
     val split = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE || configuration.smallestScreenWidthDp >= 600
     val sidebarState = rememberSaveableStateHolder()
@@ -34,7 +38,11 @@ fun ThreadWorkspace(sidebar: @Composable () -> Unit, chat: @Composable () -> Uni
     androidx.activity.compose.BackHandler(enabled = !split && drawerOpen) { drawerOpen = false }
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))) {
         TextButton(
-            onClick = { if (split) collapsed = !collapsed else drawerOpen = !drawerOpen },
+            onClick = {
+                focus.clearFocus()
+                keyboard?.hide()
+                if (split) collapsed = !collapsed else drawerOpen = !drawerOpen
+            },
             modifier = Modifier.heightIn(min = 48.dp).testTag("thread_sidebar_toggle"),
         ) {
             Text(stringResource(if (shown) R.string.mobile_hide_sidebar else R.string.mobile_show_sidebar))

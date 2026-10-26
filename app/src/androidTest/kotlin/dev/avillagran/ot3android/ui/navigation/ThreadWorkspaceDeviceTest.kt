@@ -24,7 +24,11 @@ class ThreadWorkspaceDeviceTest {
         rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
         rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextInput("Borrador de rotación")
-        rule.activityRule.scenario.onActivity { it.currentFocus?.clearFocus() }
+        // Exercise the real drawer control: it dismisses the real IME/Compose focus,
+        // while the persisted draft and reader stay mounted before rotation.
+        rule.onNodeWithTag("thread_sidebar_toggle").performClick()
+        rule.onNodeWithTag("thread_sidebar_toggle").performClick()
+        rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador de rotación")
         rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToIndex(30)
         rule.onNodeWithTag(ThreadScreenTags.message("m29")).assertIsDisplayed()
         val fixture = rule.activity.fixture
