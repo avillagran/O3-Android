@@ -101,10 +101,9 @@ jobs:
             **/build/test-results/**/*.xml
             app/build/outputs/roborazzi/
 
-  # Instrumented tests of :core on an emulator (same image as scripts/emulator.sh, see
-  # docs/EMULATOR.md). Only :core: its tests use their own databases and keys, while the
-  # :app tests go through the app's data.
-  core-instrumented:
+  # Instrumented tests of :core and :app on an emulator (same image as scripts/emulator.sh,
+  # see docs/EMULATOR.md). The emulator is fresh per run, so the app's data starts empty.
+  instrumented:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -131,10 +130,10 @@ jobs:
         run: scripts/fetch-or-build-lib.sh --release --no-host-jni
 
       # Build outside the emulator step so its timeout only covers boot and tests.
-      - name: Build the core test APK
-        run: ./gradlew --no-daemon :core:assembleDebugAndroidTest
+      - name: Build the test APKs
+        run: ./gradlew --no-daemon :core:assembleDebugAndroidTest :app:assembleDebugAndroidTest
 
-      - name: Core instrumented tests
+      - name: Instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -144,13 +143,15 @@ jobs:
           ram-size: 2048M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics
           disable-animations: true
-          script: ./gradlew --no-daemon :core:connectedDebugAndroidTest
+          script: ./gradlew --no-daemon :core:connectedDebugAndroidTest :app:connectedDebugAndroidTest
 
       - name: Upload instrumented test reports
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: core-instrumented-reports
+          name: instrumented-reports
           path: |
             core/build/reports/androidTests/
             core/build/outputs/androidTest-results/
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
