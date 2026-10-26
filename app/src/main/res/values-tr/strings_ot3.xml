@@ -185,4 +185,8 @@
     <string name="ot3_usage_refresh_prices">Fiyatları yenile</string>
     <string name="ot3_usage_limits">Sınırlar</string>
     <string name="ot3_usage_resets_at">Sıfırlanma %1$s</string>
+    <string name="ot3_diff_previous_file">Önceki dosya</string>
+    <string name="ot3_diff_next_file">Sonraki dosya</string>
+    <string name="ot3_diff_wrap">Satırları kaydır</string>
+    <string name="ot3_diff_no_wrap">Satır kaydırma yok</string>
 </resources>

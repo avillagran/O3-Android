@@ -185,4 +185,8 @@
     <string name="ot3_usage_refresh_prices">Opdatér priser</string>
     <string name="ot3_usage_limits">Grænser</string>
     <string name="ot3_usage_resets_at">Nulstilles %1$s</string>
+    <string name="ot3_diff_previous_file">Forrige fil</string>
+    <string name="ot3_diff_next_file">Næste fil</string>
+    <string name="ot3_diff_wrap">Ombryd linjer</string>
+    <string name="ot3_diff_no_wrap">Ingen linjeombrydning</string>
 </resources>
