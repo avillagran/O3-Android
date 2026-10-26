@@ -5,7 +5,8 @@ servidores T3 **reales aislados**. No acredita NODE vivo, VQ físico ni Xiaomi.
 El trabajo anterior de dos mitades queda como evidencia histórica, no como límite
 actual de la prueba de laboratorio. Root conserva la responsabilidad del Dev Vault.
 
-Android usa la rama propia `bridge-catalog-e2e-frontend`, sobre
+Android companion: https://github.com/avillagran/ot3-android/pull/26 (draft),
+implementación `387481e`. Android usa la rama propia `bridge-catalog-e2e-frontend`, sobre
 `e7e33db76b77b798e8a17b8e2bbc9aaf28a267e6` de PR25. No se modificaron la rama de
 PR23, sus tests ni UI1g. No hubo release, tag, deployment, merge ni watch.
 

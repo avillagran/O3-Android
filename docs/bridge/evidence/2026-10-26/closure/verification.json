@@ -197,5 +197,11 @@
     "workflowsChanged": false,
     "checkChanged": "not runnable without Git merge base in source archive; focused checks run directly",
     "mergeRequiredForCompanions": false
+  },
+  "androidCompanion": {
+    "url": "https://github.com/avillagran/ot3-android/pull/26",
+    "implementationCommit": "387481e",
+    "basePr": 25,
+    "baseBranch": "bridge-catalog-integrated-sync"
   }
 }
