@@ -1997,3 +1997,15 @@ contracts](ui/compare/ui-1i/CONTINUITY.md). UI2 starts from the already retained
 `ThreadView.timeline`/`timeline.view`, with no protocol derivation in Kotlin. Review
 must keep live transport, physical Xiaomi, aesthetic approval and release build claims
 separate from emulator fixture checks.
+
+## UI2a implementation status — 2026-10-26
+
+The reader now draws Rust `ThreadView.timeline.timeline`, including neutral Markdown
+blocks, sender/time/copy, folding activity/reasoning with scoped inspector reads, and
+file-change summaries. Workspace-owned sidebar access exists in both orientations and
+survives unloaded/failed thread state. Selected rows retain touch pressed feedback.
+This is an incremental native renderer, **not** a completed parity claim. The exact
+implemented/pending comparison against OT3 7b5b1de is in
+[UI2a evidence](ui/compare/ui-2a/README.md). UI3 model/options/queue/attachments/steer,
+interactive approvals/questions, rich document previews, source controls and history
+transport/session integration remain pending. No new Kotlin protocol/projection layer.
