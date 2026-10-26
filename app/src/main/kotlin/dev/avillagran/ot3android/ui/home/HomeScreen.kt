@@ -110,7 +110,7 @@ sealed interface HomeIntent {
  * Home and the keyboard take back first (§2.3).
  */
 @Composable
-fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier) {
+fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}) {
     val focusManager = LocalFocusManager.current
     var searchFocused by remember { mutableStateOf(false) }
     val query = state?.query.orEmpty()
@@ -143,7 +143,12 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
                     SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                 }
             }
-            when (val content = state?.content ?: HomeContent.Connecting) {
+            val content = state?.content ?: HomeContent.Connecting
+            if (content == HomeContent.List && state != null) ThreadList(state, onIntent, quotaStrip)
+            else LazyColumn(Modifier.fillMaxSize()) {
+                item("provider_usage") { quotaStrip() }
+                item("home_message") { Box(Modifier.fillParentMaxHeight()) {
+                        when (content) {
                 HomeContent.NoEnvironments -> Message(stringResource(R.string.mobile_no_environments), HomeTags.NO_ENVIRONMENTS) {
                     Button(onClick = { onIntent(HomeIntent.AddEnvironment) }) { Text(stringResource(R.string.environments_add)) }
                 }
@@ -156,7 +161,9 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
                 }
                 HomeContent.Empty -> Message(stringResource(R.string.ot3_home_empty), HomeTags.EMPTY)
                 HomeContent.NoResults -> Message(stringResource(R.string.ot3_home_no_results), HomeTags.NO_RESULTS)
-                HomeContent.List -> ThreadList(state ?: return@Column, onIntent)
+                HomeContent.List -> Unit
+            }
+                } }
             }
         }
     }
@@ -191,8 +198,7 @@ private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit) {
                 modifier = Modifier.testTag(HomeTags.OVERFLOW))
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(text = { Text(stringResource(R.string.ot3_home_add_project)) }, onClick = { menuOpen = false; onIntent(HomeIntent.AddProject) })
-                // The quota strip needs usage data (U14): listed, not offered yet.
-                DropdownMenuItem(text = { Text(stringResource(R.string.ot3_home_show_provider_usage)) }, onClick = {}, enabled = false)
+                dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { menuOpen = false }
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.ot3_home_group_shelves)) },
                     trailingIcon = { Checkbox(checked = state?.shelves?.grouped == true, onCheckedChange = null) },
@@ -257,7 +263,7 @@ private fun Message(text: String, tag: String, action: (@Composable () -> Unit)?
 }
 
 @Composable
-private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit) {
+private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quotaStrip: @Composable () -> Unit) {
     val motion = Ot3Theme.motion
     Column {
         if (state.offline) {
@@ -269,6 +275,7 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit) {
             )
         }
         LazyColumn(Modifier.fillMaxSize().alpha(if (state.stale) 0.6f else 1f).testTag(HomeTags.LIST)) {
+            item("provider_usage") { quotaStrip() }
             items(state.items, key = { it.key }, contentType = { it::class }) { item ->
                 when (item) {
                     is HomeItem.Row -> ThreadRow(item.row, onIntent, Modifier.animateItem(

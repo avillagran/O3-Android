@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-26",
+  "base": "70485cff5aaf959bfc9eee018460c9e750b94d99",
+  "environment": "ot3a361 / API 36.1 / emulator-5580",
+  "provenance": "Synthetic transport/conversation; real navigation, components, connections and JNI quota reducer. No productive host or physical-device validation.",
+  "apk_sha256": "5287d9c9203091ffbe6daf8b9d58163f6fde7c2bcad8d4a4f85285565dc31775",
+  "jvm": {
+    "app": {
+      "tests": 218,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "core": {
+      "tests": 292,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 5
+    }
+  },
+  "checks": {
+    "build": "passed",
+    "lintDebug": "passed",
+    "all_goldens_TZ_UTC": "passed",
+    "instrumented": "6/6 passed (QuotaStripDeviceTest + UsageDeviceTest)"
+  },
+  "cleanup": "app/helper closed, panel detached, emulator stopped",
+  "pending": [
+    "U26 native pooling/remaining/pace/notices",
+    "Usage/Limits 160 ms tab fade",
+    "Productive provider/physical-device acceptance"
+  ]
+}

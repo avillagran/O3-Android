@@ -46,6 +46,15 @@ class AppearancePreferencesTest {
     }
 
     @Test
+    fun `provider usage is opt in and survives a new preferences reader`() = runBlocking {
+        assertEquals(false, preferences.settings.first().providerUsage)
+        preferences.setProviderUsage(true)
+        assertEquals(true, AppearancePreferences(dataStore).settings.first().providerUsage)
+        preferences.setProviderUsage(false)
+        assertEquals(false, AppearancePreferences(dataStore).settings.first().providerUsage)
+    }
+
+    @Test
     fun `unknown stored values read as the defaults`() = runBlocking {
         dataStore.edit {
             it[AppearancePreferences.Keys.MODE] = "SEPIA"

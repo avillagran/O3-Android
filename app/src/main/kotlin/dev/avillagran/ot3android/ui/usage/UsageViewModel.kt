@@ -38,12 +38,14 @@ class UsageViewModel(
     private val refreshRates: suspend (Connection) -> Unit = { it.transport.call("server.refreshUsageRates", JSONObject()); Unit },
     private val refreshProviders: suspend (String, Connection) -> Unit = ProviderRefreshGate()::refresh,
     private val readLimits: (Connection) -> Flow<QuotaUpdate> = { QuotaReader().stream(it.transport) },
+    private val quotaSource: SharedQuotaSource? = null,
     private val read: suspend (Connection, String) -> JSONObject = { current, period ->
         val zone = TimeZone.getDefault()
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).apply { timeZone = zone }.format(Date())
         UsageReader.read(current.transport, period, today, zone.id)
     },
 ) : ViewModel() {
+    private val quotas by lazy { quotaSource ?: SharedQuotaSource(viewModelScope, connection, refreshProviders, readLimits) }
     private val selected = saved.getStateFlow<String?>("environment", null)
     private val tab = saved.getStateFlow("tab", "usage")
     private val period = saved.getStateFlow("period", "week")
@@ -54,9 +56,10 @@ class UsageViewModel(
         UsageState(all, all.firstOrNull { it.id == id }?.id ?: all.firstOrNull()?.id, window, tab = page) to request
     }.flatMapLatest { (base, request) ->
         val id = base.environmentId
-        if (id == null) flowOf(base) else connection(id).flatMapLatest { current ->
+        if (id == null) flowOf(base)
+        else if (base.tab == "limits") quotas.observe(id).map { base.copy(limits = it.limits, busy = it.busy, offline = it.offline, failed = it.failed) }
+        else connection(id).flatMapLatest { current ->
             if (current == null) flowOf(base.copy(offline = true))
-            else if (base.tab == "limits") limits(base, current)
             else flow {
                 emit(base.copy(busy = true))
                 try {
@@ -72,38 +75,6 @@ class UsageViewModel(
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), UsageState())
-
-    private fun limits(base: UsageState, current: Connection): Flow<UsageState> = flow {
-        var attempt = 0
-        while (currentCoroutineContext().isActive) {
-            emit(base.copy(busy = true))
-            try {
-                coroutineScope {
-                    launch {
-                        while (isActive) {
-                            try { refreshProviders(requireNotNull(base.environmentId), current) }
-                            catch (cancelled: CancellationException) { throw cancelled }
-                            catch (_: Exception) { /* The stream still supplies its cached observations. */ }
-                            delay(300_000)
-                        }
-                    }
-                    readLimits(current).collect { update ->
-                        if (update.closed) error("quota_stream_closed")
-                        update.state?.let {
-                            attempt = 0
-                            emit(base.copy(limits = it))
-                        }
-                    }
-                    error("quota_stream_ended")
-                }
-            } catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) {
-                emit(base.copy(failed = true))
-                delay((1000L shl attempt.coerceAtMost(5)).coerceAtMost(30_000))
-                attempt++
-            }
-        }
-    }
 
     fun selectTab(value: String) { if (value in listOf("usage", "limits")) saved["tab"] = value }
     fun selectEnvironment(id: String) { saved["environment"] = id }

@@ -125,6 +125,10 @@ fun AppearanceSettingsScreen(
                 }
                 Choice(stringResource(label), settings.manual.mode == mode, AppearanceSettingsTags.mode(mode)) { viewModel.setMode(mode) }
             }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.ot3_home_show_provider_usage), Modifier.weight(1f))
+                Switch(checked = settings.manual.providerUsage, onCheckedChange = viewModel::setProviderUsage, modifier = Modifier.testTag("appearance_provider_usage"))
+            }
             Header(R.string.appearance_dark_theme)
             ThemeGrid(current.darkThemes, settings.manual.darkThemeId.takeUnless { settings.followEnvironment || settings.manual.mode == AppearanceMode.LIGHT }, AppearanceSettingsTags::dark, viewModel::setDarkTheme)
             Header(R.string.appearance_light_theme)
