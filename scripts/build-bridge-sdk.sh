@@ -2,7 +2,7 @@
 # Build the separately pinned, unreleased bridge SDK. Does not alter the T3 AAR.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-bridge_source=${OMABRIDGE_DIR:-$HOME/Work/omabridge-catalog}
+bridge_source=${OMABRIDGE_DIR:-$HOME/Work/omabridge}
 source_pin=$(sed -n 's/^source=//p' "$root/libs/omabridge-native.lock")
 [[ $(git -C "$bridge_source" rev-parse HEAD) == "$source_pin" ]] || { echo 'OmaBridge checkout does not match libs/omabridge-native.lock' >&2; exit 1; }
 export JAVA_HOME=${JAVA_HOME:-$HOME/.local/jdk}
