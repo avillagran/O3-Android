@@ -118,6 +118,9 @@ class UsageDeviceTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            // Home rows also exist in the landscape sidebar and before the nav bar
+            // settles after an IME-owning activity. Wait for the actual destination.
+            rule.waitUntil(15_000) { rule.onNodeWithTag("nav_tab_Settings").isDisplayed() }
             rule.onNodeWithTag("nav_tab_Settings").performClick()
             rule.onNodeWithTag("settings_Usage").performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }

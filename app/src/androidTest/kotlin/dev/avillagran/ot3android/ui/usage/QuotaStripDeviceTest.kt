@@ -134,6 +134,16 @@ class QuotaStripDeviceTest {
                 landscape && rule.onAllNodesWithTag("quota_group_node · Linux_Codex").fetchSemanticsNodes().size == 2 &&
                     rule.onNodeWithTag("thread_sidebar").isDisplayed()
             }
+            // Rotation can request the IME for the recreated composer asynchronously.
+            // CI recorded that restore/show arriving after Espresso's earlier hide.
+            // Focus the recreated field once, await its IME, then release focus
+            // before hiding it. A menu/rotation need not preserve semantic focus.
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus) { it() }
+            rule.waitUntil(15_000) {
+                rule.onAllNodes(hasTestTag(ThreadScreenTags.COMPOSER) and isFocused()).fetchSemanticsNodes().isNotEmpty()
+            }
+            awaitIme(scenario)
+            scenario.onActivity { it.currentFocus?.clearFocus() }
             closeSoftKeyboard()
             rule.waitUntil(15_000) {
                 var hidden = false
