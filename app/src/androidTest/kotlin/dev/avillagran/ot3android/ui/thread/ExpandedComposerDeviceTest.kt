@@ -78,21 +78,49 @@ class ExpandedComposerDeviceTest {
             assertEquals(0, commands(it).size)
         }
     }
-    @Test fun latteSoftEnterNeverSendsPhysicalKeysFollowTheExactMode() = launch(false) { scenario ->
+    @Test fun latteSoftEnterNeverSendsPhysicalKeysFollowTheExactMode() = keyboardMode(false)
+    @Test fun tokyoSoftEnterNeverSendsPhysicalKeysFollowTheExactMode() = keyboardMode(true)
+    private fun keyboardMode(dark: Boolean) = launch(dark) { scenario ->
         field().performTextReplacement(SAMPLE); field().performTextInputSelection(TextRange(SAMPLE.length))
         inject(KeyEvent.KEYCODE_ENTER, soft = true); rule.waitForIdle(); assertCount(scenario, 0)
         field().assertTextContains(SAMPLE + "\n")
         inject(KeyEvent.KEYCODE_ENTER, meta = KeyEvent.META_SHIFT_ON); assertCount(scenario, 0)
         inject(KeyEvent.KEYCODE_ENTER, repeat = 1); assertCount(scenario, 0)
+        // A recorded dispatch is not an acknowledged send. Hold its response to
+        // prove that boundary before starting the independent expanded scenario.
+        val compactResponse = kotlinx.coroutines.CompletableDeferred<Unit>()
+        scenario.onActivity { it.fixture.queueHold = compactResponse }
         inject(KeyEvent.KEYCODE_ENTER); waitCalls(scenario, 1)
+        var compactId = ""
+        try {
+            field().assertIsNotEnabled()
+            scenario.onActivity {
+                val command = commands(it).single()
+                compactId = command.getString("commandId")
+                assertEquals("message.dispatch", command.getString("type"))
+                assertEquals(SAMPLE + "\n\n", command.getString("text"))
+            }
+        } finally { compactResponse.complete(Unit) }
+        waitSendComplete()
         field().performTextReplacement(SAMPLE)
-        rule.onNodeWithTag("composer_expand").performClick(); field().performTextInputSelection(TextRange(SAMPLE.length))
-        waitIme(scenario, true); capture("latte", "expanded")
-        inject(KeyEvent.KEYCODE_ENTER); assertCount(scenario, 1) // Expanded physical Enter is newline.
+        rule.onNodeWithTag("composer_expand").performClick()
+        rule.waitUntil(15_000) { rule.onNodeWithTag("composer_expanded").isDisplayed() }
+        rule.onNodeWithTag("composer_expanded").assertIsDisplayed()
+        field().performTextInputSelection(TextRange(SAMPLE.length))
+        waitIme(scenario, true); capture(if (dark) "tokyo" else "latte", "expanded")
+        inject(KeyEvent.KEYCODE_ENTER); assertCount(scenario, 1, "expanded physical Enter") // Expanded physical Enter is newline.
         field().assertTextContains(SAMPLE + "\n")
-        inject(KeyEvent.KEYCODE_ENTER, meta = KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON); assertCount(scenario, 1)
+        inject(KeyEvent.KEYCODE_ENTER, meta = KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON); assertCount(scenario, 1, "expanded Ctrl+Shift+Enter")
+        scenario.onActivity { assertEquals(compactId, commands(it).single().getString("commandId")) }
         inject(KeyEvent.KEYCODE_ENTER, meta = KeyEvent.META_CTRL_ON); waitCalls(scenario, 2)
-        rule.waitUntil(15_000) { text().isEmpty() }
+        waitSendComplete()
+        scenario.onActivity {
+            val sent = commands(it)
+            assertEquals(listOf("message.dispatch", "message.dispatch"), sent.map { command -> command.getString("type") })
+            assertEquals(compactId, sent.first().getString("commandId"))
+            assertNotEquals(compactId, sent.last().getString("commandId"))
+            assertEquals(SAMPLE + "\n", sent.last().getString("text"))
+        }
     }
     @Test fun unknownRetryAndExpandedQueueEditPreserveOriginalDraftRangeAndAttachments() = launch(false, "queue") { scenario ->
         val original = "Keep this original draft"
@@ -137,8 +165,18 @@ class ExpandedComposerDeviceTest {
     private fun text() = field().fetchSemanticsNode().config[SemanticsProperties.EditableText].text
     private fun selection(start: Int, end: Int) { rule.waitUntil(15_000) { field().fetchSemanticsNode().config[SemanticsProperties.TextSelectionRange] == TextRange(start, end) } }
     private fun commands(activity: WorkspaceFixtureActivity) = activity.fixture.transport.calls.filter { it.fn == "orchestration.dispatchCommand" }.map { it.args }
-    private fun assertCount(scenario: ActivityScenario<WorkspaceFixtureActivity>, count: Int) { scenario.onActivity { assertEquals(count, commands(it).size) } }
+    private fun assertCount(scenario: ActivityScenario<WorkspaceFixtureActivity>, count: Int, phase: String = "key action") {
+        val expanded = rule.onAllNodesWithTag("composer_expanded").fetchSemanticsNodes().isNotEmpty()
+        scenario.onActivity { assertEquals("$phase expanded=$expanded commands=${commands(it)}", count, commands(it).size) }
+    }
     private fun waitCalls(scenario: ActivityScenario<WorkspaceFixtureActivity>, count: Int) { var size = 0; rule.waitUntil(15_000) { scenario.onActivity { size = commands(it).size }; size == count } }
+    private fun waitSendComplete() {
+        rule.waitUntil(15_000) {
+            val config = field().fetchSemanticsNode().config
+            !config.contains(SemanticsProperties.Disabled) && config[SemanticsProperties.EditableText].text.isEmpty()
+        }
+        field().assertIsEnabled()
+    }
     private fun inject(key: Int, meta: Int = 0, soft: Boolean = false, repeat: Int = 0) {
         val physical = InputDevice.getDeviceIds().map { InputDevice.getDevice(it) }.filterNotNull().firstOrNull { !it.isVirtual && it.supportsSource(InputDevice.SOURCE_KEYBOARD) }
         if (!soft) assertNotNull("Emulated physical keyboard required; SOURCE_KEYBOARD alone is insufficient", physical)
