@@ -94,3 +94,14 @@ Aclaración U18: history.path y history.envelope ya existen en0.3.5. Falta la
 integración común de páginas históricas con el estado vivo, no esos primitivos.
 El seguimiento específico quedó añadido en docs/LIB_REQUESTS.md; esta caché no
 implementa un merge histórico en Kotlin ni promete todo el historial offline.
+
+Corrección CI posterior: API34 detectó que el fixture podía reanudar la espera de
+Room fuera del hilo principal y navegar allí. 095e5e0 confina esa navegación a
+Dispatchers.Main.immediate; no cambia la caché ni el protocolo. ThreadCacheDeviceTest
+pasa de nuevo en API36.1 tras integrar main18f7575 (Ajustes e iconos incluidos)
+en833c5f8. Se mantiene la evidencia visual anterior: el cambio afecta al arranque
+automático del fixture bajo instrumentación. La confirmación API34 queda al CI.
+
+La ejecución adicional conjunta se interrumpió al quedar esperando tras la rotación
+de SettingsNavigationDeviceTest, después de completar la prueba de caché. No se
+cuenta como pase conjunto; se repite la verificación focal de esta corrección.
