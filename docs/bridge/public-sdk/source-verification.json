@@ -1,0 +1,65 @@
+{
+  "source": "6b7c04ce2d3d0b9072a6ee97d325adec21c9a3a7",
+  "artifacts": [
+    {
+      "target": "host-production",
+      "bytes": 41150200,
+      "sha256": "70992818e1fbed98076a0847de133a3d9ed2dd21158a432b143d3715bcf4615d",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": false
+    },
+    {
+      "target": "host-lab",
+      "bytes": 41214768,
+      "sha256": "73559d9e4ecad5d82c85ccca23b9c540b6762f4b434a6832c74e7c4c7ee70e14",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": false
+    },
+    {
+      "target": "x86_64-production",
+      "bytes": 23800504,
+      "sha256": "c5e7afa3d9b447f2c06735d7b708dfc22289684aa4541a5439eb38df2e1c3998",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": true
+    },
+    {
+      "target": "x86_64-lab",
+      "bytes": 23863848,
+      "sha256": "e542a258b990ddd545451ca106da82ca0343357054ff32840f84078b6e32979c",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": true
+    },
+    {
+      "target": "arm64-production",
+      "bytes": 22767616,
+      "sha256": "cafe1c85878f2378bc35e1ff3395312742ec0175434ac67692f0fff8d3db39bc",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": true
+    }
+  ],
+  "nativeTests": 126,
+  "nativeSuites": 23,
+  "nativeIgnored": 0,
+  "androidCoreJvm": {
+    "tests": 324,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5
+  },
+  "actualHostJniCases": 1,
+  "coreLint": "passed",
+  "androidDevice": "API34 exact-source unified run10/10; no skipped cases",
+  "ci": "Candidate workflow validated by actionlint but not installed: missing workflow credential scope",
+  "nativeBridgeTestCases": 2,
+  "fixedDiagnosticMappingCases": 1
+}
