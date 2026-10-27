@@ -213,4 +213,7 @@
     <string name="ot3_pr_cancelled">Zrušeno</string>
     <string name="ot3_queue_reorder">Změnit pořadí zprávy</string>
     <string name="ot3_queue_move_down">Posunout dolů</string>
+    <string name="ot3_image_zoom_in">Přiblížit</string>
+    <string name="ot3_image_zoom_out">Oddálit</string>
+    <string name="ot3_image_zoom_reset">Obnovit přiblížení</string>
 </resources>

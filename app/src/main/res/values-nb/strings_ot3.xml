@@ -213,4 +213,7 @@
     <string name="ot3_pr_cancelled">Avbrutt</string>
     <string name="ot3_queue_reorder">Endre meldingsrekkefølge</string>
     <string name="ot3_queue_move_down">Flytt ned</string>
+    <string name="ot3_image_zoom_in">Zoom inn</string>
+    <string name="ot3_image_zoom_out">Zoom ut</string>
+    <string name="ot3_image_zoom_reset">Tilbakestill zoom</string>
 </resources>

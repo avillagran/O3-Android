@@ -214,4 +214,7 @@
     <string name="ot3_pr_cancelled">ملغى</string>
     <string name="ot3_queue_reorder">إعادة ترتيب الرسالة</string>
     <string name="ot3_queue_move_down">انقل لأسفل</string>
+    <string name="ot3_image_zoom_in">تكبير</string>
+    <string name="ot3_image_zoom_out">تصغير</string>
+    <string name="ot3_image_zoom_reset">إعادة تعيين التكبير</string>
 </resources>

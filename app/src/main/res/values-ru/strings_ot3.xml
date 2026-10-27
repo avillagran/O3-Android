@@ -213,4 +213,7 @@
     <string name="ot3_pr_cancelled">Отменено</string>
     <string name="ot3_queue_reorder">Изменить порядок сообщения</string>
     <string name="ot3_queue_move_down">Переместить вниз</string>
+    <string name="ot3_image_zoom_in">Увеличить</string>
+    <string name="ot3_image_zoom_out">Уменьшить</string>
+    <string name="ot3_image_zoom_reset">Сбросить масштаб</string>
 </resources>

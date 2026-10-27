@@ -19,6 +19,9 @@ import dev.avillagran.ot3android.R
  * that folder's NOTICE.md and add the icon here.
  */
 object Ot3Icons {
+    @DrawableRes val ZoomIn: Int = R.drawable.ic_zoom_in
+    @DrawableRes val ZoomOut: Int = R.drawable.ic_zoom_out
+    @DrawableRes val RotateCcw: Int = R.drawable.ic_rotate_ccw
     @DrawableRes val GripVertical: Int = R.drawable.ic_grip_vertical
     @DrawableRes val Lock: Int = R.drawable.ic_lock
     @DrawableRes val LockOpen: Int = R.drawable.ic_lock_open
@@ -85,6 +88,9 @@ object Ot3Icons {
 
     /** Every icon, keyed by its ot3 / Lucide name (`"git-pull-request"`). */
     val byName: Map<String, Int> = mapOf(
+        "zoom-in" to ZoomIn,
+        "zoom-out" to ZoomOut,
+        "rotate-ccw" to RotateCcw,
         "alarm-clock" to AlarmClock,
         "arrow-up" to ArrowUp,
         "bot" to Bot,

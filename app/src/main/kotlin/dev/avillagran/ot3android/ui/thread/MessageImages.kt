@@ -3,6 +3,18 @@ package dev.avillagran.ot3android.ui.thread
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.semantics.*
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
+import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
 import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,7 +46,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.json.JSONObject
 
-internal data class ReaderImages(val generation: Any?, val isCurrent: () -> Boolean = { true }, val read: suspend (JSONObject) -> ByteArray?)
+internal data class ReaderImages(val generation: Any?, val isCurrent: () -> Boolean = { true }, val owner: String? = null, val read: suspend (JSONObject) -> ByteArray?)
 private val imageReads = Semaphore(2)
 internal val LocalReaderImages = compositionLocalOf { ReaderImages(null) { null } }
 
@@ -88,20 +100,29 @@ private fun AttachmentImage(attachment: JSONObject) {
 @Composable
 internal fun ReaderImageDialog(attachment: JSONObject, close: () -> Unit) {
     val source = LocalReaderImages.current
+    val owner = source.owner ?: LocalSelectedThreadKey.current
+    val savedIdentity = org.json.JSONArray().put(attachment.toString()).put(owner)
+        .put(source.generation.takeIf { it is String || it is Number }).toString()
+    val zoom = rememberSaveable(attachment.toString(), source.generation, owner, saver = ReaderImageZoom.scopedSaver(savedIdentity)) { ReaderImageZoom() }
     val lifecycle by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
     if (!lifecycle.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return
-    key(attachment.toString(), source.generation) {
+    key(attachment.toString(), source.generation, owner) {
         Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Surface(Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)) {
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(attachment.optString("name"), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         ImageCopyButton(attachment, source, "viewer")
-                        TextButton(onClick = close, modifier = Modifier.testTag("thread_image_close")) {
+                        TextButton(onClick = close, modifier = Modifier.heightIn(min = 48.dp).testTag("thread_image_close")) {
                             Text(stringResource(R.string.ot3_dialog_close))
                         }
                     }
-                    ImageRead(attachment, attachment.toString(), source, 2048, Modifier.fillMaxSize())
+                    ImageRead(attachment, attachment.toString(), source, 2048, Modifier.weight(1f).fillMaxWidth(), zoom)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                        Ot3IconButton("zoom-out", stringResource(R.string.ot3_image_zoom_out), { zoom.transform(zoom.center(), Offset.Zero, 0.5f) }, enabled = zoom.scale > 1f, modifier = Modifier.testTag("thread_image_zoom_out"))
+                        Ot3IconButton("rotate-ccw", stringResource(R.string.ot3_image_zoom_reset), zoom::reset, enabled = zoom.scale > 1f, modifier = Modifier.testTag("thread_image_zoom_reset"))
+                        Ot3IconButton("zoom-in", stringResource(R.string.ot3_image_zoom_in), { zoom.transform(zoom.center(), Offset.Zero, 2f) }, enabled = zoom.fitted.width > 0 && zoom.scale < ReaderImageZoom.MAX_SCALE, modifier = Modifier.testTag("thread_image_zoom_in"))
+                    }
                 }
             }
         }
@@ -109,22 +130,27 @@ internal fun ReaderImageDialog(attachment: JSONObject, close: () -> Unit) {
 }
 
 @Composable
-private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier) {
+private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null) {
     var retry by remember(identity, source.generation) { mutableIntStateOf(0) }
     var complete by remember(identity, source.generation, retry) { mutableStateOf(false) }
     val bitmap by produceState<Bitmap?>(null, identity, source.generation, retry) {
         try {
-            value = if (source.generation == null) null else imageReads.withPermit {
+            val decoded = if (source.generation == null) null else imageReads.withPermit {
                 val bytes = source.read(attachment)
                 if (bytes == null) null else withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge) }
             }
+            // Native callbacks may resume on a worker. Publish Compose/Bitmap state on Main.
+            withContext(Dispatchers.Main.immediate) { if (source.isCurrent()) value = decoded }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { /* Native validation/decode failure: an explicit retry starts a new read. */ }
-        finally { complete = true }
+        finally { withContext(Dispatchers.Main.immediate) { complete = true } }
     }
     Surface(shape = RoundedCornerShape(8.dp), modifier = modifier.testTag("thread_image_${attachment.optString("id")}_$maxEdge"), color = MaterialTheme.colorScheme.surfaceVariant) {
         val decoded = bitmap
-        if (decoded != null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        if (decoded != null) {
+            if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            else ZoomedReaderImage(decoded, attachment.optString("name"), zoom)
+        }
         else Column(Modifier.padding(12.dp)) {
             Text(attachment.optString("name"), style = MaterialTheme.typography.bodySmall)
             if (!complete) Ot3Spinner(size = 16.dp)
@@ -161,4 +187,37 @@ private fun ImageCopyButton(attachment: JSONObject, source: ReaderImages, locati
                 catch (_: Exception) { state = CopyState.ERROR }
             }
         })
+}
+
+private fun ReaderImageZoom.center() = Offset(viewport.width / 2, viewport.height / 2)
+
+@Composable
+private fun ZoomedReaderImage(bitmap: Bitmap, name: String, zoom: ReaderImageZoom) {
+    val zoomIn = stringResource(R.string.ot3_image_zoom_in)
+    val zoomOut = stringResource(R.string.ot3_image_zoom_out)
+    val reset = stringResource(R.string.ot3_image_zoom_reset)
+    Box(Modifier.fillMaxSize().clipToBounds().testTag("thread_image_zoom_viewport")
+        .onSizeChanged { zoom.resize(Size(it.width.toFloat(), it.height.toFloat()), Size(bitmap.width.toFloat(), bitmap.height.toFloat())) }
+        .semantics {
+            stateDescription = "${(zoom.scale * 100).toInt()}%"
+            horizontalScrollAxisRange = ScrollAxisRange({ zoom.panRange.x - zoom.translation.x }, { 2 * zoom.panRange.x })
+            verticalScrollAxisRange = ScrollAxisRange({ zoom.panRange.y - zoom.translation.y }, { 2 * zoom.panRange.y })
+            if (zoom.scale > 1f) scrollBy { x, y -> zoom.transform(zoom.center(), Offset(-x, -y), 1f); true }
+            customActions = buildList {
+                if (zoom.scale < ReaderImageZoom.MAX_SCALE) add(CustomAccessibilityAction(zoomIn) { zoom.transform(zoom.center(), Offset.Zero, 2f); true })
+                if (zoom.scale > 1f) {
+                    add(CustomAccessibilityAction(zoomOut) { zoom.transform(zoom.center(), Offset.Zero, 0.5f); true })
+                    add(CustomAccessibilityAction(reset) { zoom.reset(); true })
+                }
+            }
+        }
+        .pointerInput(zoom) { detectTapGestures(onDoubleTap = zoom::doubleTap) }
+        .pointerInput(zoom) { detectTransformGestures { centroid, pan, factor, _ -> zoom.transform(centroid, pan, factor) } }
+    ) {
+        Image(bitmap.asImageBitmap(), name, contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize().graphicsLayer {
+                scaleX = zoom.scale; scaleY = zoom.scale
+                translationX = zoom.translation.x; translationY = zoom.translation.y
+            })
+    }
 }

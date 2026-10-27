@@ -213,4 +213,7 @@
     <string name="ot3_pr_cancelled">Abgebrochen</string>
     <string name="ot3_queue_reorder">Nachricht umordnen</string>
     <string name="ot3_queue_move_down">Nach unten</string>
+    <string name="ot3_image_zoom_in">Vergrößern</string>
+    <string name="ot3_image_zoom_out">Verkleinern</string>
+    <string name="ot3_image_zoom_reset">Zoom zurücksetzen</string>
 </resources>

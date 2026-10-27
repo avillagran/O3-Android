@@ -213,4 +213,7 @@
     <string name="ot3_pr_cancelled">Peruttu</string>
     <string name="ot3_queue_reorder">Muuta viestin järjestystä</string>
     <string name="ot3_queue_move_down">Siirrä alas</string>
+    <string name="ot3_image_zoom_in">Lähennä</string>
+    <string name="ot3_image_zoom_out">Loitonna</string>
+    <string name="ot3_image_zoom_reset">Palauta zoomaus</string>
 </resources>

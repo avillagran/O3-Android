@@ -1124,3 +1124,15 @@ feedback inside the sheet. queue.derive supplies capabilities; queue.command val
 shape, not projection membership. Map projected queue-edit rows to documented native
 inputs before invoking that strict builder; preserve original attachments/context and
 unsent draft. JNI and a real queue-edit rotation test exposed the prior metadata bug.
+
+
+### 2026-10-26 — attachment image zoom is UI geometry
+
+Add touch pinch/pan and double-tap to the existing fullscreen attachment reader,
+following T3 Mobile's double-tap-enabled ImageViewing rather than claiming desktop
+QML has zoom. Keep a bounded1–4× immediate transform, Fit aspect ratio and clamped
+normalized translation; no new gesture animation or protocol. Save only transform
+floats plus validated UI ownership. A bounded current-Connection token in the VM
+keeps rotation coherent and prevents another environment/connection/process inheriting
+a saved transform. Closing resets. Existing binary read, decode limits/semaphore and
+original-byte copy remain authoritative. Markdown/video/live acceptance stays open.

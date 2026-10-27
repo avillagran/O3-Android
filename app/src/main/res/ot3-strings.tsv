@@ -249,3 +249,8 @@ ot3_pr_cancelled	Cancelled
 # Queue touch reorder
 ot3_queue_reorder	Reorder message
 ot3_queue_move_down	Move down
+
+# Image viewer touch/keyboard alternatives
+ot3_image_zoom_in	Zoom in
+ot3_image_zoom_out	Zoom out
+ot3_image_zoom_reset	Reset zoom

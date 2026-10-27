@@ -154,7 +154,9 @@ Confirmations (Rename, Archive, Delete, Remove connection, Merge) are `AlertDial
 ot3's dialog shape (radius 10, padding 18, accent border, failed border for destructive
 actions, `ot3:ui/qml/T3ThreadRow.qml:412-413`) and ot3's texts (4.1.5). Images open in a
 full-screen viewer with pinch zoom, like T3 Mobile's `FilePreviewModal`
-(`t3m:src/features/threads/ThreadFeed.tsx:460-533`).
+(`t3m:src/features/threads/ThreadFeed.tsx:460-533`). The Android attachment viewer
+uses bounded1–4× pinch/pan, double-tap zoom/reset and keyboard/accessibility controls
+(see attachment touch viewer increment below); QML itself remains aspect-fit.
 
 ### 2.3 Gestures
 
@@ -2410,3 +2412,17 @@ read-only Content URI. Connection changes or lifecycle disposal cancel/drop the 
 No preview bitmap is copied. Cache offers are bounded to eight images/80 MiB and
 are removed at age ≥24 hours on the next startup/copy cleanup (no timer). Evidence and platform
 parity differences: `ui/compare/reader-image-copy/README.md`.
+
+
+### Attachment touch viewer increment — 2026-10-26
+
+The actual fullscreen attachment viewer supports centroid-anchored pinch, pan only
+while enlarged, double-tap zoom/reset and48dp Zoom in/out/Reset controls. Fit respects
+aspect ratio and bounds follow the fitted image, with no swipe dismissal or new
+animation. The1–4× maximum is an Android adaptation of T3Mobile's zoom-capable
+ImageViewing (680152e27 MediaImagePreview.tsx:59–66); ot3 T3Panel.qml:922–954
+only specifies Fit/copy/close. Scope/Bundle validation includes attachment, canonical
+environment/thread and ephemeral Connection/VM identity. Rotation retains normalized
+position and clamps against the new viewport; close/reopen and connection change
+reset. No image bytes or bitmap are saved, and gestures do not reread/decode.
+See `ui/compare/reader-image-zoom/README.md` for evidence and remaining gaps.

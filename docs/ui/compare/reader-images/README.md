@@ -43,3 +43,5 @@ idle; the video is normal wall-clock UI evidence, not animation-duration measure
 `device_open` with renderer auto failed SIGSEGV; the project emulator script with
 software rendering booted successfully and was awaited. Emulator stopped afterward.
 Xiaomi was not operated. No live NODE/VQ grant or image clipboard claim.
+
+Zoom/pan was subsequently delivered as a touch adaptation in [reader-image-zoom](../reader-image-zoom/README.md); the initial fit-only evidence above remains historical.

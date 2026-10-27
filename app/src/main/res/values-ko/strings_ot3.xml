@@ -213,4 +213,7 @@
     <string name="ot3_pr_cancelled">취소됨</string>
     <string name="ot3_queue_reorder">메시지 순서 변경</string>
     <string name="ot3_queue_move_down">아래로 이동</string>
+    <string name="ot3_image_zoom_in">확대</string>
+    <string name="ot3_image_zoom_out">축소</string>
+    <string name="ot3_image_zoom_reset">확대/축소 초기화</string>
 </resources>

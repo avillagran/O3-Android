@@ -213,4 +213,7 @@
     <string name="ot3_pr_cancelled">İptal edildi</string>
     <string name="ot3_queue_reorder">İleti sırasını değiştir</string>
     <string name="ot3_queue_move_down">Aşağı taşı</string>
+    <string name="ot3_image_zoom_in">Yakınlaştır</string>
+    <string name="ot3_image_zoom_out">Uzaklaştır</string>
+    <string name="ot3_image_zoom_reset">Yakınlaştırmayı sıfırla</string>
 </resources>
