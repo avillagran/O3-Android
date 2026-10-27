@@ -19,6 +19,9 @@ interface OutboxDao {
     @Query("SELECT * FROM outbox WHERE environmentId = :environmentId AND threadId = :threadId ORDER BY createdAt")
     fun observeThread(environmentId: String, threadId: String): Flow<List<OutboxEntity>>
 
+    @Query("SELECT * FROM outbox WHERE environmentId = :environmentId ORDER BY createdAt")
+    fun observeEnvironment(environmentId: String): Flow<List<OutboxEntity>>
+
     @Query("UPDATE outbox SET state = :state WHERE id = :id")
     suspend fun setState(id: String, state: String)
 

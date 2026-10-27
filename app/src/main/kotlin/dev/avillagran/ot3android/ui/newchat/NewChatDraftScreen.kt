@@ -17,8 +17,14 @@ import org.json.JSONObject
 internal fun NewChatDraftScreen(state: NewChatDraftState, onBack: () -> Unit,
     onText: (String) -> Unit, onTitle: (String) -> Unit, onSelect: (JSONObject) -> Unit,
     onOption: (String, Any) -> Unit, onRuntime: (String) -> Unit, onRefresh: () -> Unit, onCreate: (String) -> Unit,
-    environmentLabel: String = "",
+    environmentLabel: String = "", onDiscard: () -> Unit = {},
 ) {
+    var confirmingDiscard by remember { mutableStateOf(false) }
+    if (confirmingDiscard) AlertDialog(onDismissRequest = { confirmingDiscard = false },
+        text = { Text(stringResource(R.string.thread_notice_unknown)) },
+        confirmButton = { TextButton(onClick = { confirmingDiscard = false; onDiscard() },
+            modifier = Modifier.testTag("new_chat_confirm_discard")) { Text(stringResource(R.string.thread_discard)) } },
+        dismissButton = { TextButton(onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.ot3_dialog_cancel)) } })
     val fallback = stringResource(R.string.ot3_row_untitled)
     val catalog = remember(state.catalog) { state.catalog?.let { JSONObject(it).put("favoritesReady", false).toString() } }
     val selection = remember(state.selection) { state.selection?.let(::JSONObject) }
@@ -37,7 +43,7 @@ internal fun NewChatDraftScreen(state: NewChatDraftState, onBack: () -> Unit,
             Text(state.projectTitle, style = MaterialTheme.typography.titleMedium)
             if (environmentLabel.isNotBlank()) Text(environmentLabel, style = MaterialTheme.typography.labelMedium)
             Text(stringResource(R.string.ot3_new_chat_current_checkout), style = MaterialTheme.typography.labelSmall)
-            if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.loading || state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (state.error) Text(stringResource(R.string.home_action_unconfirmed), color = MaterialTheme.colorScheme.error)
             if (!state.writable && !state.loading) Text(stringResource(R.string.thread_notice_rejected_plain))
             OutlinedTextField(state.title, onTitle, label = { Text(stringResource(R.string.ot3_new_chat_title)) },
@@ -53,6 +59,8 @@ internal fun NewChatDraftScreen(state: NewChatDraftState, onBack: () -> Unit,
                     onRefresh, onRuntime)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                if (state.pending != null) TextButton(onClick = { confirmingDiscard = true }, enabled = !state.busy,
+                    modifier = Modifier.testTag("new_chat_discard")) { Text(stringResource(R.string.thread_discard)) }
                 if (state.error && state.pending == null) TextButton(onClick = onRefresh, enabled = !state.busy) { Text(stringResource(R.string.ot3_dialog_retry)) }
                 Button(onClick = { onCreate(fallback) }, enabled = !state.busy && !state.loading && state.writable &&
                     (state.pending != null || (state.text.isNotBlank() && selectedModelAvailable)),

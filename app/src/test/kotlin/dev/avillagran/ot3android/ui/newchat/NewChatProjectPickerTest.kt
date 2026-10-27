@@ -63,4 +63,14 @@ class NewChatProjectPickerTest {
         rule.onNodeWithTag("new_chat_send").assertIsEnabled().performClick()
         assertEquals(1, submitted)
     }
+    @Test fun pendingLaunchRequiresExplicitConfirmationBeforeDiscard() {
+        var discarded = 0
+        val pending = dev.avillagran.ot3android.core.thread.PendingCommand("command", "env", "thread", "{}", 1, "unknown")
+        rule.setContent { Ot3Theme { NewChatDraftScreen(NewChatDraftState(loading = false, pending = pending),
+            {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, onDiscard = { discarded++ }) } }
+        rule.onNodeWithTag("new_chat_discard").performClick()
+        assertEquals(0, discarded)
+        rule.onNodeWithTag("new_chat_confirm_discard").performClick()
+        assertEquals(1, discarded)
+    }
 }

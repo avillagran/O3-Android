@@ -34,10 +34,20 @@ internal class NewChatDraftViewModel(
     private val outbox: OutboxRepository, private val saved: SavedStateHandle,
     private val domain: DomainCalls = DomainEngine.shared,
 ) : ViewModel() {
-    private val threadId = saved.get<String>("createdThreadId") ?: "ot3a-${UUID.randomUUID()}".also { saved["createdThreadId"] = it }
+    private var threadId = saved.get<String>("createdThreadId") ?: "ot3a-${UUID.randomUUID()}".also { saved["createdThreadId"] = it }
     private val local = MutableStateFlow(NewChatDraftState(text = saved["text"] ?: "", title = saved["title"] ?: "",
         selection = saved["selection"], runtimeMode = saved["runtime"] ?: "approval-required", createdThreadId = saved["acceptedThreadId"]))
-    val state = combine(local, outbox.observeThread(environmentId, threadId)) { value, pending -> value.copy(pending = pending.firstOrNull()) }
+    private val pendingLaunch = outbox.observeLaunch(environmentId, projectId)
+    val state = combine(local, pendingLaunch) { value, pending ->
+        val launch = pending?.let { JSONObject(it.commandJson).getJSONObject(MessageSender.LAUNCH_ENVELOPE) }
+        val inFlight = pending?.state == dev.avillagran.ot3android.core.data.local.OutboxEntity.STATE_SENDING
+        value.copy(pending = pending, busy = value.busy || inFlight,
+            error = value.error || (pending != null && !value.busy && !inFlight),
+            text = launch?.optJSONObject("initialMessage")?.optString("text") ?: value.text,
+            title = launch?.optString("title") ?: value.title,
+            selection = launch?.optJSONObject("modelSelection")?.toString() ?: value.selection,
+            runtimeMode = launch?.optString("runtimeMode") ?: value.runtimeMode)
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), local.value)
     private var live: T3Transport? = null
 
@@ -92,6 +102,31 @@ internal class NewChatDraftViewModel(
         updated.put(JSONObject().put("id", id).put("value", value))
         select(selection.put("options", updated))
     }
+    private fun recoverDraft(launch: JSONObject) {
+        val text = launch.optJSONObject("initialMessage")?.optString("text").orEmpty()
+        val title = if (launch.optBoolean("generateTitle")) "" else launch.optString("title")
+        val selection = launch.optJSONObject("modelSelection")?.toString()
+        val runtime = launch.optString("runtimeMode", "approval-required")
+        saved["text"] = text; saved["title"] = title; saved["selection"] = selection; saved["runtime"] = runtime
+        local.update { it.copy(text = text, title = title, selection = selection, runtimeMode = runtime) }
+    }
+    fun discard() {
+        if (local.value.busy) return
+        local.update { it.copy(busy = true) }
+        viewModelScope.launch {
+            try {
+                pendingLaunch.first()?.let { pending ->
+                    recoverDraft(JSONObject(pending.commandJson).getJSONObject(MessageSender.LAUNCH_ENVELOPE))
+                    sender.discard(pending.commandId)
+                    threadId = "ot3a-${UUID.randomUUID()}"
+                    saved["createdThreadId"] = threadId
+                }
+                local.update { it.copy(busy = false, error = false) }
+            } catch (error: CancellationException) { throw error }
+            catch (_: Exception) { local.update { it.copy(busy = false, error = true) } }
+        }
+    }
+
     fun create(fallbackTitle: String) {
         if (local.value.busy) return
         val current = local.value
@@ -102,8 +137,12 @@ internal class NewChatDraftViewModel(
             try {
                 val permission = ThreadManagement.access(JSONObject(), transport.authSession())
                 check(permission.canWrite && live === transport)
-                val existing = outbox.observeThread(environmentId, threadId).first().firstOrNull()
-                val result = if (existing != null) sender.retry(transport, existing.commandId) else {
+                val existing = pendingLaunch.first()
+                val targetId = existing?.threadId ?: threadId
+                val result = if (existing != null) {
+                    recoverDraft(JSONObject(existing.commandJson).getJSONObject(MessageSender.LAUNCH_ENVELOPE))
+                    sender.retry(transport, existing.commandId)
+                } else {
                     val selection = current.selection?.let(::JSONObject) ?: error("model_required")
                     val workspace = JSONObject().put("type", "root").apply { branch?.let { put("branch", it) } }
                     sender.launchThread(transport, environmentId, threadId, JSONObject().put("projectId", projectId)
@@ -114,8 +153,8 @@ internal class NewChatDraftViewModel(
                 }
                 when (result) {
                     is SendResult.Accepted -> {
-                        saved["acceptedThreadId"] = threadId
-                        local.update { it.copy(createdThreadId = threadId, busy = false) }
+                        saved["acceptedThreadId"] = targetId
+                        local.update { it.copy(createdThreadId = targetId, busy = false) }
                     }
                     else -> local.update { it.copy(busy = false, error = true) }
                 }

@@ -136,7 +136,8 @@ class MessageSender(
     ): SendResult = detached {
         if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
         val pending = outbox.observeThread(environmentId, threadId).first().firstOrNull()
-        if (pending != null) return@detached SendResult.Failed(COMMAND_PENDING)
+        val pendingLaunch = outbox.observeLaunch(environmentId, arguments.optString("projectId")).first()
+        if (pending != null || pendingLaunch != null) return@detached SendResult.Failed(COMMAND_PENDING)
         val commandId = newId()
         val args = JSONObject(arguments.toString()).put("commandId", commandId).put("threadId", threadId)
         val bytes = JSONObject().put(LAUNCH_ENVELOPE, args).toString()

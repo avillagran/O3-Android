@@ -106,7 +106,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         }
         dev.avillagran.ot3android.ui.newchat.NewChatDraftScreen(state, { navigator.back() }, model::text, model::title,
             model::select, model::option, model::runtime, model::refresh, model::create,
-            environmentLabel = environments.firstOrNull { it.id == route.environmentId }?.label.orEmpty())
+            environmentLabel = environments.firstOrNull { it.id == route.environmentId }?.label.orEmpty(), onDiscard = model::discard)
     }
 
     private fun onHomeIntent(intent: HomeIntent, viewModel: HomeViewModel) {

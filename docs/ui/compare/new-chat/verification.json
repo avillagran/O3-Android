@@ -3,7 +3,7 @@
   "base": "efd8778",
   "jvm": {
     "app": {
-      "tests": 355,
+      "tests": 356,
       "skipped": 1,
       "failures": 0,
       "errors": 0
@@ -16,7 +16,7 @@
     }
   },
   "newTests": {
-    "projectAndDraftCompose": 4,
+    "projectAndDraftCompose": 5,
     "navigation": 1,
     "launchPersistence": 4,
     "nativeLaunchWebSocket": 1,
@@ -28,10 +28,11 @@
   "verifyRoborazziDebug": "PASS",
   "assembleDebug": "PASS",
   "compileDebugAndroidTestKotlin": "PASS",
-  "apkSha256": "cc92b35f4721ed55533d720b6628553c0e0fe2c367445c1a028640e7c63f77fd",
+  "apkSha256": "e27597c3bb1ab0c42398fa9af69ee822f5a98cb80d6eb287250858781225ea99",
   "productionThreadCreatedForTest": false,
   "multiHostCatalogSynchronization": "Not complete; phone has no selected native bridge and only one manual environment. See missing-host evidence.",
-  "installation": {
+  "recoveryAfterClosingDraft": "Pending launch recovered by environment/project with original form values; fresh draft ids do not create a second pending launch; explicit discard requires confirmation.",
+  "previousInstallation": {
     "device": "known Xiaomi J75/23090RA98G",
     "sourceCommit": "be04775",
     "method": "install-r",

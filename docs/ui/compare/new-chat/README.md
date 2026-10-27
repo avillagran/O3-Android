@@ -11,6 +11,8 @@ state. Rust supplies project defaults/catalogs and validates the typed launch. T
 first message is included in the atomic launch request. An unknown outcome remains
 in the existing outbox as a typed envelope, so recovery uses the same function,
 command id and thread id; legacy message commands still use dispatchCommand.
+Pending launches are recovered by environment/project even after closing the draft;
+the restored form shows the original request instead of creating a second thread.
 
 Four Compose tests cover host scoping, disabled rows, search/empty states and send
 eligibility. Four persistence tests cover launch, exact recovery after sender

@@ -4,6 +4,7 @@ import dev.avillagran.ot3android.core.transport.ConnectRoute
 import dev.avillagran.ot3android.core.transport.FakeT3Transport
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.first
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -42,6 +43,10 @@ class NewThreadLaunchTest {
         val original = fake.calls.single().args.toString()
         val replacement = MessageSender(outbox, this) { "must-not-be-used" }
         assertEquals(SendResult.Failed(MessageSender.COMMAND_PENDING), replacement.launchThread(fake, "env", "new-thread", arguments()))
+        assertEquals(SendResult.Failed(MessageSender.COMMAND_PENDING), replacement.launchThread(fake, "env", "fresh-draft-thread", arguments()))
+        val recovered = outbox.observeLaunch("env", "project-other").first()!!
+        assertEquals("new-thread", recovered.threadId)
+        assertNull(outbox.observeLaunch("different-env", "project-other").first())
         fake.onCall("orchestration.launchThread") { JSONObject().put("threadId", "new-thread") }
         assertTrue(replacement.retry(fake, "new-command") is SendResult.Accepted)
         assertEquals(original, fake.calls.last().args.toString())
