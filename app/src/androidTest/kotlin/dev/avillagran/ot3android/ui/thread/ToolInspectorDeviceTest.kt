@@ -38,29 +38,32 @@ class ToolInspectorDeviceTest {
             timeline.performScrollToNode(hasTestTag("thread_inspect_work/think-reader_0"))
             rule.onNodeWithTag("thread_inspect_work/think-reader_0").performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_copy_inspector_reasoning").fetchSemanticsNodes().isNotEmpty() }
-            timeline.performScrollToNode(hasTestTag("thread_inspector_tab_details"))
+            rule.onNodeWithTag("thread_inspector_tab_details").performScrollTo()
             capture("$name-details-portrait")
             rule.onNodeWithTag("thread_inspector_tab_metadata").performClick()
             rule.onNodeWithTag("thread_inspector_section_metadata").assertExists()
-            timeline.performScrollToNode(hasTestTag("thread_inspector_tab_raw"))
+            rule.onNodeWithTag("thread_inspector_tab_raw").performScrollTo()
             rule.onNodeWithTag("thread_inspector_tab_raw").performClick()
             rule.onNodeWithTag("thread_inspector_section_raw").assertTextContains("think-reader", substring = true)
             capture("$name-raw-portrait")
             scenario.onActivity { assertEquals(1, it.fixture.transport.calls.count { call -> call.fn == "orchestration.getTurnItem" }) }
             scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
             rule.waitUntil(10_000) { context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE }
-            timeline.performScrollToNode(hasTestTag("thread_inspector_tab_raw"))
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_inspector_section_raw").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("thread_inspector_tab_raw").performScrollTo()
             rule.onNodeWithTag("thread_inspector_section_raw").assertExists()
             capture("$name-raw-landscape")
             var readsBeforeRetry = 0
             scenario.onActivity { readsBeforeRetry = it.fixture.transport.calls.count { call -> call.fn == "orchestration.getTurnItem" } }
-            timeline.performScrollToNode(hasTestTag("thread_inspector_retry"))
+            rule.onNodeWithTag("thread_inspector_retry").performScrollTo()
             rule.onNodeWithTag("thread_inspector_retry").performClick()
             rule.waitUntil(10_000) { rule.onAllNodes(hasTestTag("thread_inspector_retry") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("thread_inspector_section_raw").assertExists()
-            timeline.performScrollToNode(hasTestTag("thread_inspector_close"))
+            rule.onNodeWithTag("thread_inspector_close").performScrollTo()
             rule.onNodeWithTag("thread_inspector_close").performClick()
-            rule.onNodeWithTag("thread_inspector").assertDoesNotExist()
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_inspector").fetchSemanticsNodes().isEmpty() }
+            timeline.performScrollToNode(hasTestTag("thread_inspect_work/think-reader_0"))
+            rule.onNodeWithTag("thread_inspect_work/think-reader_0").assertIsDisplayed()
             scenario.onActivity { activity ->
                 assertEquals(readsBeforeRetry + 1, activity.fixture.transport.calls.count { it.fn == "orchestration.getTurnItem" })
                 assertEquals(1, activity.fixture.transport.streamOpens.count { it.threadId == "chat" })

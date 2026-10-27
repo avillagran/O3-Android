@@ -2537,3 +2537,14 @@ current inspector. Labels use the pinned035 AAR catalog in20 locales.
 This phone increment remains inline; desktop popup placement and Follow live
 output remain differences, not completed parity. No polling is invented. See
 [verification and reference](ui/compare/reader-inspector/README.md).
+
+### 2026-10-27 — Reader-owned inspector window
+
+The current inspector uses the sheet/popup ownership specified in4.3.3, replacing
+its initial inline placement. The timeline owns the saved reference by selected
+thread, outside lazy rows; only explicit selection reads an item. Recycling or
+replacing a source row does not close/refetch the window. Close/Back cancels its
+read and leaves the thread stream and reading anchor intact. Short content wraps;
+height is capped at90%, width at640dp, scrim50%, and controls retain48dp targets.
+Static labels use the common AAR catalog. Live output/common reduction and exact
+popup motion remain pending. See [current evidence](ui/compare/reader-inspector/README.md).

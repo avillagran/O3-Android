@@ -56,6 +56,8 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     val imageGeneration = LocalReaderImages.current.generation
     var openedImage by rememberSaveable(threadKey, imageGeneration) { mutableStateOf<String?>(null) }
     openedImage?.let { descriptor -> ReaderImageDialog(JSONObject(descriptor)) { openedImage = null } }
+    var openedInspector by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
+    openedInspector?.let { reference -> ToolInspectorDialog(JSONObject(reference), onInspect) { openedInspector = null } }
     var openedDiff by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
     openedDiff?.let { summary -> ThreadDiffDialog(JSONObject(summary), onReadDiff) { openedDiff = null } }
     val rows = view?.optJSONArray("timeline").objects().ifEmpty {
@@ -85,7 +87,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
                 verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
                 items(rows, key = { it.getString("id") }) { row ->
                     // rev invalidates content, never the item's saveable expansion or reading anchor.
-                    TimelineRow(row, onInspect) { openedDiff = it.toString() }
+                    TimelineRow(row, { openedInspector = it.toString() }) { openedDiff = it.toString() }
                 }
                 if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
                     Text("Earlier history is available on desktop", style = MaterialTheme.typography.labelSmall)
@@ -117,7 +119,7 @@ private fun readingAnchorSaver(rows: List<JSONObject>): Saver<LazyListState, *> 
 )
 
 @Composable
-private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onOpenDiff: (JSONObject) -> Unit) {
+private fun TimelineRow(row: JSONObject, onOpenInspector: (JSONObject) -> Unit, onOpenDiff: (JSONObject) -> Unit) {
     val role = row.optString("role")
     val id = row.getString("id")
     if (role == "user") {
@@ -140,7 +142,7 @@ private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSON
                         else SelectionContainer { Text(row.optString("text")) }
                         MessageAttachments(row)
                     }
-                    "activity" -> ActivityBlock(row.getJSONObject("activity"), id, onInspect)
+                    "activity" -> ActivityBlock(row.getJSONObject("activity"), id, onOpenInspector)
                     "changes" -> ChangesBlock(row.getJSONObject("changes"), id, onOpenDiff)
                     "plan" -> Fold("Plan", id) { MarkdownBlocks(row.optJSONObject("plan")?.optJSONArray("blocks")) }
                     "error" -> Text(row.optJSONObject("error")?.optString("message").orEmpty(), color = MaterialTheme.colorScheme.error)
@@ -171,23 +173,19 @@ private fun Fold(title: String, id: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-internal fun ActivityBlock(activity: JSONObject, id: String, onInspect: suspend (JSONObject) -> JSONObject?) {
+internal fun ActivityBlock(activity: JSONObject, id: String, onOpenInspector: (JSONObject) -> Unit) {
     val title = listOf(activity.optString("category"), activity.optString("title"), activity.optString("command"), activity.optString("status"))
         .filter { it.isNotBlank() && it != "null" }.joinToString(" · ")
-    var selected by rememberSaveable(id) { mutableStateOf<String?>(null) }
     Fold(title.ifBlank { "Activity" }, id) {
         val entries = activity.optJSONArray("entries").objects().ifEmpty { listOf(activity) }
-        val reference = entries.mapNotNull { it.optJSONObject("inspector") }.firstOrNull { it.toString() == selected }
-        if (reference != null) {
-            ToolInspectorSurface(reference, onInspect, onClose = { selected = null })
-        } else entries.forEachIndexed { index, entry ->
+        entries.forEachIndexed { index, entry ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(listOf(entry.optString("category"), entry.optString("title"), entry.optString("command"), entry.optString("status"))
                     .filter { it.isNotBlank() && it != "null" }.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
                 entry.optJSONObject("inspector")?.let { item ->
                     dev.avillagran.ot3android.ui.kit.Ot3Button(stringResource(R.string.ot3_inspector_details),
-                        { selected = item.toString() }, style = dev.avillagran.ot3android.ui.kit.Ot3ButtonStyle.SECONDARY,
+                        { onOpenInspector(JSONObject(item.toString())) }, style = dev.avillagran.ot3android.ui.kit.Ot3ButtonStyle.SECONDARY,
                         modifier = Modifier.testTag("thread_inspect_${id}_$index"))
                 }
             }

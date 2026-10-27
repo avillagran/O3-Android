@@ -26,4 +26,8 @@ class ToolInspectorScreenshotTest : ScreenshotTest() {
     @Test fun raw() = snapshot("raw") {
         Column(Modifier.padding(12.dp)) { ToolInspectorContent(view(), false, false, "raw", {}, {}, {}) }
     }
+    @Test fun dialog() = snapshot("dialog", screen = true) {
+        ToolInspectorDialog(JSONObject().put("revision", "capture"), { view() }, {})
+    }
+
 }

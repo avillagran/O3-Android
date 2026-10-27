@@ -33,6 +33,27 @@ import org.json.JSONObject
 
 private data class InspectorRead(val loading: Boolean = true, val failed: Boolean = false, val view: JSONObject? = null)
 
+/** Reader-owned window: lazy-row recycling cannot dispose its selected inspector. */
+@Composable
+internal fun ToolInspectorDialog(reference: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onClose: () -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onClose,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        val view = androidx.compose.ui.platform.LocalView.current
+        val dim = Ot3Theme.colors.scrim.alpha
+        SideEffect { (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window?.setDimAmount(dim) }
+        BoxWithConstraints(Modifier.widthIn(max = 640.dp).fillMaxWidth()) {
+        Surface(Modifier.heightIn(max = maxHeight * 0.9f).safeDrawingPadding().testTag("thread_inspector_window"),
+            color = Ot3Theme.colors.background, contentColor = Ot3Theme.colors.foreground,
+            shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Ot3Theme.colors.divider)) {
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(12.dp)
+                .testTag("thread_inspector_scroll")) {
+                ToolInspectorSurface(reference, onInspect, onClose)
+            }
+        }
+        }
+    }
+}
+
 /** Displays only native toolInspector.parse fields. Tabs and retry are local reading state. */
 @Composable
 internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onClose: (() -> Unit)? = null) {
@@ -81,13 +102,13 @@ internal fun ToolInspectorContent(
         }
         if (loading) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Ot3Spinner(size = 12.dp)
-            Text(stringResource(R.string.ot3_inspector_loading), color = colors.dim)
+            Text(stringResource(R.string.ot3_inspector_loading), color = colors.dim, style = MaterialTheme.typography.bodySmall)
         }
         when {
             loading && view == null -> Unit
-            failed -> Text(stringResource(R.string.ot3_inspector_unavailable_error), color = colors.failed)
-            view == null -> Text(stringResource(R.string.ot3_inspector_disconnected), color = colors.dim)
-            !available -> Text(stringResource(R.string.ot3_inspector_unavailable), color = colors.dim)
+            failed -> Text(stringResource(R.string.ot3_inspector_unavailable_error), color = colors.failed, style = MaterialTheme.typography.bodySmall)
+            view == null -> Text(stringResource(R.string.ot3_inspector_disconnected), color = colors.dim, style = MaterialTheme.typography.bodySmall)
+            !available -> Text(stringResource(R.string.ot3_inspector_unavailable), color = colors.dim, style = MaterialTheme.typography.bodySmall)
             else -> {
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("details" to stringResource(R.string.ot3_inspector_details),
@@ -101,9 +122,9 @@ internal fun ToolInspectorContent(
                 val status = view.optString("status")
                 if (status.isNotBlank() || !view.isNull("exitCode")) Text(
                     listOfNotNull(status.takeIf { it.isNotBlank() }, if (view.isNull("exitCode")) null else stringResource(R.string.ot3_inspector_exit_code) + ": " + view.get("exitCode")).joinToString(" · "),
-                    color = if (failure) colors.failed else colors.dim, modifier = Modifier.testTag("thread_inspector_status"))
-                if (mode == "details" && view.optBoolean("emptyOutput")) Text(stringResource(R.string.ot3_inspector_empty_output), color = colors.dim)
-                if (view.optBoolean("outputOmitted")) Text(stringResource(R.string.ot3_inspector_output_omitted), color = colors.dim)
+                    color = if (failure) colors.failed else colors.dim, modifier = Modifier.testTag("thread_inspector_status"), style = MaterialTheme.typography.bodySmall)
+                if (mode == "details" && view.optBoolean("emptyOutput")) Text(stringResource(R.string.ot3_inspector_empty_output), color = colors.dim, style = MaterialTheme.typography.bodySmall)
+                if (view.optBoolean("outputOmitted")) Text(stringResource(R.string.ot3_inspector_output_omitted), color = colors.dim, style = MaterialTheme.typography.bodySmall)
                 val sections = when (mode) {
                     "raw" -> listOf(JSONObject().put("key", "raw").put("label", stringResource(R.string.ot3_inspector_raw_item)).put("text", view.optString("raw")).put("truncated", view.optBoolean("rawTruncated")))
                     "metadata" -> listOf(JSONObject().put("key", "metadata").put("label", stringResource(R.string.ot3_inspector_metadata)).put("text", view.optString("metadata")).put("truncated", view.optBoolean("metadataTruncated")))

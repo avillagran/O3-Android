@@ -1,92 +1,68 @@
-# Tool inspector reader increment
+# Reader tool inspector
 
-2026-10-27. Reader implementation and seven focused JVM checks pass; device verification remains **pending**.
-No captures or server/physical-device parity claim accompany this change.
+2026-10-27. The real timeline opens one selected inspector in a reader-owned
+window, scoped to the selected thread. Recycling, scrolling or replacing its
+source row cannot dispose that window or start another read. Closing returns to
+the unchanged timeline. Rotation saves the selected reference and mode; native
+content may be read again after Activity recreation, without another thread stream.
 
 ## Reference and contract
 
-Desktop reference: `omarchy-t3-code-ref/ui/qml/T3ToolInspector.qml:28,87-108,118-164`.
-The Android inline inspector follows its title, failure/status/exit-code display,
-Details / Metadata / Raw item modes, retry, explicit empty/omitted/unavailable
-states, selectable bounded section bodies, copy and truncation notice. Android
-uses touch targets of at least 48dp and the existing theme, spinner and copy control.
+Desktop: `omarchy-t3-code-ref/ui/qml/T3ToolInspector.qml:28,87–165` and its parent
+popup placement. Details / Metadata / Raw item, native status/exit code, explicit
+loading/error/unavailable/empty/omitted states, selectable bounded sections,
+truncation notice, retry and copy follow that body. The phone window wraps short
+content, caps height at90% and width at640dp, uses the theme's50% scrim, existing
+OT3 buttons/icons and caption typography. Controls keep48dp touch targets.
 
-The checked-in AAR properties declare lib-t3-rust 0.3.5, source
-`d4bf6054b4480efdcd8a436cb66cb7f2e23664b1`. At that commit,
-`src/domain/review.rs:66-69` declares all displayed fields and
-`src/tool_inspector.rs:320-325` supplies them. No native response parsing,
-classification or protocol decisions are reproduced in Kotlin.
+The pinned035 AAR source is `d4bf6054b4480efdcd8a436cb66cb7f2e23664b1`.
+`src/domain/review.rs:66–69` declares the fields; `src/tool_inspector.rs:320–325`
+returns them. Kotlin renders these fields without reproducing classification,
+request validation or protocol rules. All static labels come from the AAR catalog
+in20 locales. Native section/status labels remain as returned by the projection.
 
-`ToolInspectorSurface` keys its state/effect by the full reference, cancels the
-previous effect on replacement/disposal, copies the reference before reading,
-and checks coroutine cancellation after the reader returns. Retry reuses the
-existing `onInspect` callback. Tabs do not request new data. No polling is added.
+One reference owns one cancellable read. A defensive reference copy and a
+post-read cancellation check reject non-cooperative stale completion. Tabs reuse
+the result. Retry retains the previous body until its replacement arrives;
+closing/dismissing cancels this read, not the shared thread subscription.
 
-## Verification
+## Verification and evidence
 
-`ToolInspectorSurfaceTest` covers native section/metadata/raw presentation and
-copy availability without extra reads; error then retry; omitted versus empty
-output; unavailable/disconnected states; and a deliberately non-cooperative old
-read returning after reference replacement without overwriting the new result.
-These are representative UI inputs, not evidence of a live T3 server response.
+Ten focused Robolectric checks cover modes/copy, availability and truncation,
+error/retry, stale completion, Spanish labels, explicit grouped selection,
+retained retry body, a136dp timeline viewport, short-window density and source-row
+replacement while the inspector remains open. App lint and both APK builds pass.
 
-Seven focused Robolectric cases and app lint pass. The grouped-activity case verifies
-that expansion does not read every tool: only an explicitly selected entry loads.
-The Spanish case verifies labels from the shared catalog. Next capture actual component rendering on the root-coordinated emulator in Tokyo
-and Latte, including a long output section, selected Raw mode, failure/exit code,
-and empty/omitted output. Add JNI-derived representative views and verify scroll
-bounds/copy and reference switching before claiming runtime validation.
+Six native-graphics JVM goldens under
+`app/src/test/snapshots/ToolInspectorScreenshotTest/` cover Details, Raw and the
+actual dialog in Tokyo Night and Catppuccin Latte. These are representative
+projection fixtures, not live-server or physical-device evidence.
 
-## Remaining differences
+Run the behavioral class with `:app:testDebugUnitTest --tests '*ToolInspectorSurfaceTest'`.
+Record goldens separately with `:app:recordRoborazziDebug --tests '*ToolInspectorScreenshotTest'`;
+combining task filters can select only the last filter.
 
-Follow live output (`T3ToolInspector.qml:109-117`) remains pending; this increment
-adds no command-output subscription or fabricated polling. Android keeps the
-existing inline activity placement rather than introducing a desktop popup or
-its separate close button. Labels are imported from the pinned AAR catalog into all20 supported locales.
-Native section labels remain as supplied by the projection; they are not
-reclassified by Kotlin. The inline inspector now has an explicit close control.
+`ToolInspectorDeviceTest` uses the actual graph, view model, session and Rust035
+scope/request/parse over a deterministic transport. It covers portrait/landscape,
+modes, retry, close, one shared thread stream and no dispatch. Device acceptance
+for the reader-owned window is still pending. Capture checks reject a foreign
+active window instead of accepting Compose semantics behind a system dialog.
 
-## JVM rendering evidence
+## Earlier failures and remaining differences
 
-Four golden images under `app/src/test/snapshots/ToolInspectorScreenshotTest/`
-show Details and Raw in Tokyo Night and Catppuccin Latte, using the actual reader
-surface with representative projection fields. These are Robolectric native
-graphics captures, not emulator, live-server or physical-device evidence.
-Details/Tokyo and Raw/Latte were visually inspected after recording.
+`device-verification.json` records the previous inline prototype's attempts.
+One initial assertion used exact rather than substring matching. A real retry
+collapse was fixed. API36.1 images were rejected because System UI ANR dialogs
+covered the app; a clipboard case also failed. No final emulator video from those
+attempts is certified. Private clones were removed and original AVD hashes kept.
 
-Reproduce: `:app:recordRoborazziDebug --tests '*ToolInspectorScreenshotTest'`.
-The seven behavioral checks run separately with
-`:app:testDebugUnitTest --tests '*ToolInspectorSurfaceTest'`; combining both
-task filters in one invocation can select only the last filter.
+API34 CI subsequently exposed close failure in the cramped inline landscape
+layout. The inspector now belongs to the reader outside the lazy row, matching
+the spec's sheet/popup ownership. Its exact prior touch/layout cause was not
+proven; the new device test also requires return to the specific Details entry.
 
-Remaining reference gaps include the header terminal/reasoning icon, translation
-of native section/status labels, live output subscription and desktop modal
-placement. This increment improves actual reader behavior without closing UI-2.
-
-## Device regression found during acceptance
-
-API36.1 tests initially exposed a real lazy-row retry defect: replacing the tall
-body with a spinner could move the inspector outside composition and cancel its
-read. Retry now retains the previous body while loading; the button stays disabled
-until the replacement completes. A deferred-read JVM regression verifies that Raw
-stays visible until the new native result arrives. A separate initial device-test
-assertion was corrected to use substring matching on the complete native Raw JSON.
-
-Live output is tracked as U36 / [lib issue22](https://github.com/avillagran/lib-t3-rust/issues/22).
-The typed subscription exists; the shared bounded ANSI/VT/overwrite presentation
-reducer is still missing. No equivalent Kotlin parser or fabricated polling was added.
-
-The first combined API36.1 rerun after the retry fix passed both new inspector
-cases and the diff-rotation case. The remaining existing reader case failed its
-clipboard read while a foreign system ANR dialog covered the application. Image
-review rejected those captures. The capture helper now asserts that the active
-window belongs to OT3, so semantic assertions alone cannot certify visual evidence.
-A clean-window rerun is required; failed images/video stay outside the repository.
-
-Final guarded API36.1 attempt rejected both captures because an Android System UI
-service ANR (before OT3 launch) covered the application. The existing clipboard
-case also failed; the diff-rotation case passed. See device-verification.json.
-No final emulator screenshots or video are certified. The owned guest stopped,
-its private disks were removed, and all seven original AVD files retained identical
-hashes. A recording exporter could not confirm the old screenrecord PID after
-reboot; that failed export is not evidence. No Xiaomi operation occurred.
+Follow live output remains U36 / [lib issue22](https://github.com/avillagran/lib-t3-rust/issues/22):
+the typed subscription exists but the common bounded ANSI/VT/overwrite reducer is
+missing. No Kotlin parser or fabricated polling was added. Header terminal/
+reasoning icon, native-label translation, exact desktop popup motion and wider
+inspector-pane placement remain differences. This increment does not close UI-2.

@@ -95,6 +95,8 @@ class RichReaderDeviceTest {
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_copy_inspector_reasoning").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("Reasoning").assertExists()
             rule.onNodeWithText("Compare the native reader with the reference", substring = true).assertExists()
+            rule.onNodeWithTag("thread_inspector_close").performScrollTo().performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_inspector").fetchSemanticsNodes().isEmpty() }
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
             rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
             rule.onNodeWithText("ui/TimelineReader.kt", substring = true).assertExists()
