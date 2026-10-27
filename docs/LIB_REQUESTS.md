@@ -1111,6 +1111,41 @@ T3's terminal-assistant semantics. Android can then hide intermediate copy/time/
 and use the 8 dp commentary gap without repeating that scan. Streaming action hiding and
 message layout are presentation-only and already implemented independently.
 
+### Bridge catalog clock skew (2026-10-26)
+
+`bridge_catalog::reconcile` rejects `issuedAt > now` with
+`bridge_catalog_expired`, with no tolerance. Two Android API36.1 runs against
+the committed OmaBridge `bdf01d4` reject both the existing catalog fixture and
+the real two-bridge lab at refresh. A streamed instrumentation clock marker
+arrived at host time 764 ms after its device timestamp (includes log transport
+latency); clocks are close but not identical. Native host→host smoke passes.
+
+Request a bounded, explicit common clock-skew policy for future `issuedAt`,
+with distinct diagnostics for future issue time versus expired catalog. Keep
+identity/revision/max TTL validation and the actual `expiresAt` deadline; do
+not extend authorization or rewrite device time in Kotlin. Cover subsecond
+and bounded future timestamps, excessive skew, expired and malformed windows,
+and replay/revision behavior. Audit enrollment receipt validation for the same
+clock boundary. Android integration is pending this diagnosis/common policy;
+no Kotlin timestamp adjustment or weakened acceptance has been added.
+
+Tracked in https://github.com/avillagran/lib-t3-rust/issues/14. A standalone Rust
+reproduction against the exact OmaBridge pin027a025 accepts issuedAt==now and
+rejects issuedAt==now+1ms with the same error as actual expiration. This module is
+consumed directly by OmaBridge; Android's v0.3.5 C ABI does not expose
+connectionCatalog.reconcileBridge (unknown_function). See the sanitized
+`docs/bridge/evidence/2026-10-26/delegated/clock-reconcile.json`. The764ms marker
+includes transport latency and is not an exact host/device clock-offset measurement.
+
+2026-10-27 implementation checkpoint: lib PR20 (`8c80c4d`, merged into the
+catalog branch) fixes this guard with a fixed 30-second future-issue allowance,
+distinct window/TTL/future/expiration errors, and no change to absolute expiration,
+identity or revision checks. All 356 native tests and x86/ARM/Kotlin CI pass.
+OmaBridge PR6 consumes it directly and audits enrollment receipt time independently;
+credential deadlines have no grace. The Android candidate now integrates current
+main and prepares this SDK pin, but JNI packaging and renewed delegated Android
+acceptance remain required. This does not close productive NODE/VQ acceptance or
+imply the function is present in Android's separate v0.3.5 AAR.
 ### U31. Shared PR page ordering/merge and authenticated diff read (2026-10-26)
 
 Pinned v0.3.5 provides `pullRequests.request`, `sidebarBadge`, `payload` and typed

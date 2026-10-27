@@ -1,0 +1,59 @@
+{
+  "source": "60bc03e839908a49412f3be9f185498143fe8417",
+  "artifacts": [
+    {
+      "target": "host-production",
+      "bytes": 39620480,
+      "sha256": "f4b27669ab348cf6aa5c3fe029c582c0afd3e144d6f7f1be0fd9ab0b2c6402f0",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": false
+    },
+    {
+      "target": "x86_64-production",
+      "bytes": 23689920,
+      "sha256": "688e1ba955cbec847cb1a45ded241b5eae1108abfdc5220f265cd05212042e78",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": true
+    },
+    {
+      "target": "arm64-production",
+      "bytes": 22645432,
+      "sha256": "7b35cd8ef6aff30001b3f500b378ffb08b4848c493ce119e926fa1472d37c5d4",
+      "exports": [
+        "Java_dev_avillagran_ot3android_core_bridge_NativeBridge_call"
+      ],
+      "android16KiB": true
+    }
+  ],
+  "nativeTests": 84,
+  "focalFinal": 4,
+  "clippyWorkspace": "passed",
+  "clippyLabTlsSdk": "passed",
+  "device": "pending",
+  "androidJvm": {
+    "app": {
+      "passed": 320,
+      "skipped": 1
+    },
+    "core": {
+      "passed": 319,
+      "skipped": 5
+    },
+    "failures": 0
+  },
+  "androidBuild": "assembleDebug passed; app/core lint passed",
+  "hostJniRuntime": "NativeBridgeTest actual JNI call rejects invalid handle; no identity/network created. Safe-error whitelist test passed.",
+  "androidDevice": "Not yet rerun with this SDK; previous catalog-freshness failure is not waived.",
+  "production": "No deployment, phone installation or NODE/VQ acceptance. Published60529bf keeps SDKf7d93a9.",
+  "ciCoverage": "Current Android workflow does not build/require the optional bridge SDK. Native host JNI evidence here is the local strict requireBridgeSdk run, not CI.",
+  "pending": [
+    "Delegated JNI/QUIC/real isolated T3 Android rerun",
+    "Application shell stream via the ordinary NativeT3TransportFactory, beyond SDK labRequest HTTP reads",
+    "Mandatory SDK build/runtime coverage in CI",
+    "Productive authorized NODE/VQ catalog and physical acceptance"
+  ]
+}

@@ -2365,6 +2365,20 @@ so remote NODE additionally needs OB6 delegated issuance. Android must keep one 
 pairing flow; do not substitute manual per-host setup as acceptance. See
 [remote authority](bridge/REMOTE_AUTHORITY.md) for identity, trust and test boundaries.
 
+Delegated issuer checkpoint: OmaBridge PR4 (`bdf01d4`) implements OB6 with
+explicit issuer consent. The native two-bridge/two-real-T3 smoke passes, including
+read-only scope and expiry. Android now requires distinct issuer identity and
+completed delegated issuance evidence. API36.1 acceptance remains red at catalog
+freshness (`bridge_catalog_expired`); the common clock-skew request is tracked in
+LIB_REQUESTS. No productive NODE discovery, Home capture, or physical acceptance
+is claimed. Lab TLS artifacts are replaced by production-flavor SDKs after tests.
+
+2026-10-27 continuation: native lib PR20 implements the bounded catalog clock
+policy with green x86/ARM/Kotlin CI. OmaBridge PR6 adds independent receipt-time
+credential checks. The integrated Android candidate must repeat its delegated
+JNI/QUIC/shell acceptance with the new source pin before this checkpoint can be
+declared green. Production NODE/VQ, Home evidence and physical acceptance remain
+open; a native fix or unit fixture alone does not establish them.
 ### Limits page checkpoint — 2026-10-26
 
 Settings → Usage → Limits subscribes only while visible, for the selected environment,

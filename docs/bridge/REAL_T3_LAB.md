@@ -39,9 +39,10 @@ not desktop credentials, and defaults to 120 seconds (explicit range 1–240 sec
 
 ## Reproduce
 
-1. Build the T3 AAR/JNI baseline from the same 0.3.4 source (`e2ec546`); the bridge
-   library has its own source lock and never changes that pair.
-2. Start the dedicated emulator using `scripts/emulator.sh start --headless`, then
+1. Keep T3 AAR and host JNI coherent with `libs/lib-t3-rust.lock` (currently 0.3.5);
+   the bridge library has its own source lock and never changes that pair.
+2. Start the dedicated emulator using `scripts/emulator.sh start --headless` and
+   await that command's successful completion (not just an ADB transport), then
    use T3 `device_list` / `device_open` for `emulator-5580`. No physical device.
 3. Run:
 
@@ -82,3 +83,27 @@ The script fails if the unified test is skipped, stops/reaps its labs, and remov
 private logs/state. Stop the emulator with `scripts/emulator.sh stop` afterwards.
 No GitHub workflow was added or claimed: the current PAT cannot write workflows.
 Normal CI that omits the lab/SDK is still not bridge integration evidence.
+
+
+## Delegated issuer acceptance
+
+The delegated lab must expose a distinct `issuerBridgeId` and the NODE
+`delegatedEnvironmentId` in its private loopback `/invitation` response. Android
+asserts that the issuer differs from its paired desktop bridge, that the resulting
+T3 session subject ends with the Android client id, and that the native delegated
+handler's `/delegation-status` counter records completed issuance. Neither receipt
+nor token is logged. These checks are additional to real shell identity, write
+rejection, natural expiry and T3 revocation.
+
+Both core and app Gradle invocations explicitly select `emulator-5580`, including
+`android.injected.device.serial`; a connected physical phone is not a test target.
+Do not interpret normal CI's opt-in skip as a passing delegated lab. The final
+candidate source must be committed and pinned before running this acceptance test.
+
+Current candidate `bdf01d4`: native real-T3 smoke passes; both Android lab runs
+fail at catalog refresh with `bridge_catalog_expired`. Instrumentation log timing
+measured host minus device at receipt as764ms, including transport latency.
+The common validator rejects any future issue timestamp. This is recorded in
+LIB_REQUESTS; no clock normalization or acceptance bypass is added here. Full UI
+lab execution did not start because core acceptance failed. SDK production flavor
+was restored for host, x86_64 and arm64 after the diagnostic runs.
