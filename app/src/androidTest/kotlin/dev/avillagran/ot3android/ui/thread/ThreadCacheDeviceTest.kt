@@ -37,8 +37,15 @@ class ThreadCacheDeviceTest {
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement("Borrador sin conexión")
             val beforeOffset = rule.onNodeWithTag(ThreadScreenTags.message(position.rowId)).fetchSemanticsNode().boundsInRoot.bottom -
                 rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot.bottom
-            rule.onNodeWithContentDescription("Back").performClick()
-            rule.waitUntil(5_000) { fixture.transport.collectors("chat").value == 0 }
+            val headerBack = rule.onNodeWithContentDescription("Back")
+            traceInputTransition(scenario, "cache headerBack", headerBack, surface = {
+                "timeline=${rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().size} " +
+                    "homeRow=${rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().size} " +
+                    "collectors=${fixture.transport.collectors("chat").value}"
+            }) { click ->
+                click()
+                rule.waitUntil(5_000) { fixture.transport.collectors("chat").value == 0 }
+            }
             fixture.setCacheOffline(true)
             rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
