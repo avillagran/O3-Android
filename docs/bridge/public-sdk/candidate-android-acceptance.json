@@ -1,0 +1,64 @@
+{
+  "source": "6b7c04ce2d3d0b9072a6ee97d325adec21c9a3a7",
+  "apiLevel": 34,
+  "t3Version": "0.1.3-nightly.20261027.3754",
+  "tests": 10,
+  "failures": 0,
+  "skipped": 0,
+  "cases": [
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.BridgeCatalogNativeTest",
+      "name": "pairedBridgeProjectsTwoHostsWithoutTouchingLocalDraftsOrCursors",
+      "seconds": "3.304"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+      "name": "withdrawalSurvivesConnectionTimestampButLocalCredentialAdoptionWins",
+      "seconds": "0.047"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+      "name": "interruptedCredentialReplacementAndFailedDeleteStayDeniedAcrossRoomReopen",
+      "seconds": "0.052"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+      "name": "localAdoptionDuringEnrollmentShutdownCannotBeOverwritten",
+      "seconds": "0.052"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.BridgeT3EndToEndTest",
+      "name": "twoRealIsolatedServersEnforceReadScopeExpiryAndRevocation",
+      "seconds": "38.689"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+      "name": "migration2To3KeepsLocalStateAndAddsManagedProvenance",
+      "seconds": "0.052"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+      "name": "schema1AcceptsAnEnvironmentRow",
+      "seconds": "0.0"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+      "name": "migration1To2KeepsEnvironmentsAndAddsTheOutboxAndDrafts",
+      "seconds": "0.026"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.security.CredentialStoreTest",
+      "name": "tokenRoundTripAndDelete",
+      "seconds": "0.076"
+    },
+    {
+      "class": "dev.avillagran.ot3android.core.security.CredentialStoreTest",
+      "name": "unreadableFileIsWipedAndReported",
+      "seconds": "0.077"
+    }
+  ],
+  "productionSdkRestored": true,
+  "originalAvdFilesCompared": 7,
+  "originalAvdUnchanged": true,
+  "scope": "Actual JNI/QUIC/Room and real isolated T3 shells through SDK labRequest; ordinary app stream, productive hosts and physical acceptance remain open"
+}

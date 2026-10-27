@@ -1,0 +1,23 @@
+{
+  "app": {
+    "tests": 334,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 333
+  },
+  "core": {
+    "tests": 323,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5,
+    "passed": 318
+  },
+  "checks": [
+    "both lints",
+    "full screenshot verification",
+    "assembleDebug",
+    "required real host JNI linkage"
+  ],
+  "sdkSource": "6b7c04ce2d3d0b9072a6ee97d325adec21c9a3a7"
+}
