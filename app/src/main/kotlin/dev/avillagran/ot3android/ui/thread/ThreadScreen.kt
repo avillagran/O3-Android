@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -185,6 +186,10 @@ fun ThreadContent(
     }
 
     var expanded by androidx.compose.runtime.saveable.rememberSaveable(editorIdentity) { mutableStateOf(false) }
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val availableEditorHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp -
+        with(density) { WindowInsets.ime.getBottom(this).toDp() }
+    val compactEditorToolbar = expanded && availableEditorHeight < 220.dp
     val editKey = state.queueEdit?.let { org.json.JSONObject(it).getString("runId") }
     val editors = androidx.compose.runtime.saveable.rememberSaveable(editorIdentity, saver = ComposerEditors.StateSaver) { ComposerEditors() }
     val editor = editors.editor(editKey, state.draft)
@@ -249,6 +254,7 @@ fun ThreadContent(
                     Box {
                         Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { quotaMenu = true }, modifier = Modifier.testTag("thread_overflow"))
                         androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
+                            if (expanded) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
                             dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { quotaMenu = false }
                         }
                     }
@@ -316,7 +322,7 @@ fun ThreadContent(
                         ApprovalCard(state.view.timeline?.optJSONArray("approvals"), state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(), state.respondingRequest, state.answeredRequests, onApprovalDecision)
                     }
                     ComposerEditor(editor, true, state.canSend, state.sending, edit, ::submit, ::toggleEditor,
-                        Modifier.weight(1f).testTag("composer_expanded"), toolbar = toolbar)
+                        Modifier.weight(1f).testTag("composer_expanded"), toolbar = { if (!compactEditorToolbar) toolbar() })
                 }
             } else {
                 quotaStrip()

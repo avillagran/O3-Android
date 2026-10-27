@@ -20,12 +20,29 @@ import dev.avillagran.ot3android.ui.home.HomeTags
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import java.io.File
 
 /** Real navigation/VM/Rust, synthetic provider; injected IME and emulated physical keyboard are distinct. */
 class ExpandedComposerDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
     private lateinit var activeScenario: ActivityScenario<WorkspaceFixtureActivity>
+    private var originalImeSetting: String? = null
+    @Before fun showImeWithEmulatedHardwareKeyboard() {
+        val original = shell("settings get secure show_ime_with_hard_keyboard")
+        check(original in setOf("0", "1", "null"))
+        originalImeSetting = original
+        shell("settings put secure show_ime_with_hard_keyboard 1")
+    }
+    @After fun restoreImeSetting() {
+        originalImeSetting?.let { original ->
+            shell(if (original == "null") "settings delete secure show_ime_with_hard_keyboard" else "settings put secure show_ime_with_hard_keyboard $original")
+        }
+    }
+    private fun shell(command: String): String = android.os.ParcelFileDescriptor.AutoCloseInputStream(
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command),
+    ).bufferedReader().use { it.readText().trim() }
     @Test fun rapidEditingExpandBackKeepsTheSameDraftAndSelection() = launch(true) { scenario ->
         field().performTextReplacement("Rapid edit"); field().performTextInput(" before expanding")
         field().performTextInputSelection(TextRange(2, 8)); capture("tokyo", "compact")
@@ -43,7 +60,13 @@ class ExpandedComposerDeviceTest {
         assertControlsAboveIme(scenario)
         scenario.recreate(); rule.waitUntil(15_000) { rule.onAllNodesWithTag("composer_expanded").fetchSemanticsNodes().isNotEmpty() }
         selection(4, 12); field().assertTextContains(SAMPLE)
-        rotate(scenario, true); field().assertTextContains(SAMPLE); selection(4, 12); assertControlsAboveIme(scenario)
+        rotate(scenario, true); field().assertTextContains(SAMPLE); selection(4, 12)
+        field().performClick(); field().performTextInputSelection(TextRange(4, 12))
+        waitIme(scenario, true)
+        capture("tokyo", "landscape")
+        assertControlsAboveIme(scenario)
+        rule.onNodeWithTag("thread_overflow").performClick()
+        rule.onNode(hasTestTag("composer_models") and hasAnyAncestor(hasTestTag("composer_overflow_options"))).assertIsDisplayed()
         rotate(scenario, false); selection(4, 12)
         field().performTextInputSelection(TextRange(SAMPLE.length)); capture("tokyo", "expanded")
         field().performTextInputSelection(TextRange(4, 12)); rule.onNodeWithTag("composer_back").performClick()
@@ -131,7 +154,15 @@ class ExpandedComposerDeviceTest {
     }
     private fun rotate(scenario: ActivityScenario<WorkspaceFixtureActivity>, landscape: Boolean) {
         scenario.onActivity { it.requestedOrientation = if (landscape) ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
-        rule.waitUntil(15_000) { rule.onNodeWithTag(ThreadScreenTags.ROOT).fetchSemanticsNode().boundsInRoot.let { if (landscape) it.width > it.height else it.height > it.width } }
+        // Wait for the recreated window before asking Espresso to idle the old root.
+        var laidOut = false
+        rule.waitUntil(15_000) {
+            scenario.onActivity { activity ->
+                val view = activity.window.decorView
+                laidOut = view.isLaidOut && if (landscape) view.width > view.height else view.height > view.width
+            }
+            laidOut
+        }
     }
     private fun waitIme(scenario: ActivityScenario<WorkspaceFixtureActivity>, expected: Boolean) {
         var visible = !expected
@@ -145,7 +176,7 @@ class ExpandedComposerDeviceTest {
             val ime = androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)!!.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom
             val bottom = it.window.decorView.height - ime
             assertTrue(send.bottom <= bottom); assertTrue(back.bottom <= bottom); assertTrue(editor.bottom <= bottom)
-            assertTrue("Readable editor viewport", editor.height >= 40f)
+            assertTrue("Readable editor viewport: editor=$editor availableBottom=$bottom ime=$ime windowHeight=${it.window.decorView.height}", editor.height >= 40f)
         }
     }
     private fun capture(theme: String, name: String) {

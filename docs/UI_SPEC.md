@@ -2418,3 +2418,10 @@ read-only Content URI. Connection changes or lifecycle disposal cancel/drop the 
 No preview bitmap is copied. Cache offers are bounded to eight images/80 MiB and
 are removed at age ≥24 hours on the next startup/copy cleanup (no timer). Evidence and platform
 parity differences: `ui/compare/reader-image-copy/README.md`.
+
+Expanded editor narrow-height adaptation (2026-10-26): when the window height left
+above IME is below 220 dp, the model/options row moves into the header overflow.
+Back and Send keep their 48 dp header targets; the text viewport no longer collapses
+to a few pixels in phone landscape. Model/options also remain available in overflow
+when IME closes. The regular toolbar receives finite width so its weighted model
+selector stays visible. This is a phone adaptation, not a desktop layout claim.

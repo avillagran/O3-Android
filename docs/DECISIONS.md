@@ -1139,3 +1139,15 @@ Back/Esc closes expanded mode and IME on phones. Soft/virtual Enter stays newlin
 physical compact Enter sends, expanded Ctrl+Enter sends. Repeat/composition do not
 send. Unsupported alternate delivery/new-thread shortcuts remain inactive. No new
 protocol, persistence payload, remote stream or animation is introduced.
+
+### 2026-10-26 — Expanded composer with a large landscape IME
+
+The explicit landscape+visible-IME test exposed a 4 px text viewport: header and
+options consumed the available 394 px window above IME. Below 220 dp remaining
+window height, options move to the header overflow, preserving text and touch
+targets. Finite toolbar width also restores the weighted model selector that an
+unbounded horizontal-scroll wrapper hid. Tests now set/restore the emulator's
+show-IME-with-hardware-keyboard preference themselves, assert visible IME in both
+orientations and verify the model control in overflow. Rotation waits for the new
+decor window bounds before querying Compose/Espresso; no arbitrary delay or wider
+assertion tolerance was added.

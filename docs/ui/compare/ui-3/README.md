@@ -173,7 +173,26 @@ case passed (7.024s) with recording. No production or phone dispatches.
 `expanded-editor/editor-{tokyo,latte}-expanded.png` show the same draft and IME,
 with controls above the keyboard; these are synthetic emulator screenshots.
 The short `expanded-editor/editor.mp4` demonstrates rapid editing, expansion and
-Back with no dispatch. An API36.1 MessageQueue.nextLegacy/Espresso idle hang was observed during
-concurrent screenrecord and rotation; its cause is unproven, and the hang did not
-reproduce without recording. Rotation verification ran
-without recording. This recording does not claim physical/OEM keyboard acceptance.
+Back with no dispatch. An API36.1 MessageQueue/Espresso idle hang was initially observed during
+concurrent recording and rotation, then reproduced without recording while rotating
+with IME open. A thread dump showed Espresso looping on the main thread while the
+test queried the old Compose root during recreation. The test now waits for actual
+new decor-window bounds before its Compose queries; the final sequence passes.
+This is an observed test synchronization fix, not a demonstrated platform root cause.
+The recording does not claim physical/OEM keyboard acceptance.
+
+Root integration follow-up: explicit visible-IME landscape coverage found the field
+collapsed to 4 px (1080 px window, 686 px IME). The final layout moves model/options
+into overflow below 220 dp available height and keeps a readable editor; normal
+finite-width toolbar also shows the model selector. `editor-tokyo-landscape.png`
+shows the final horizontal keyboard layout. The test opens overflow and verifies
+the model control is displayed. Its IME setting is self-contained and restored.
+Final real-graph suite: **5/5 passed in 26.320s**, including the new horizontal IME
+condition; the rapid-edit recording case passed separately (6.960s). Portrait
+Tokyo/Latte captures were refreshed on the same final APK; the video was replaced
+with its final-layout recording. No production dispatch or phone UI operation.
+
+Final integration verification after the narrow-height correction: app **268/268**
+JVM passed; core **297 passed, 5 opt-in tests skipped**; all screenshot verification
+and lint passed. The final video is 15.7s (includes fixture startup). The emulator
+and its device-panel helper were stopped after capture.
