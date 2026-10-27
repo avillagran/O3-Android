@@ -45,6 +45,9 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             val navigator = remember(nav) { Ot3Navigator(nav) }
             val screens = remember(navigator, fixture) {
                 object : Ot3Screens by AppScreens(navigator) {
+                    @Composable override fun SettingsPlaceholder(name: String, title: Int) {
+                        AppScreens(navigator).SettingsPlaceholder(name, title)
+                    }
                     @Composable override fun Home(entry: NavBackStackEntry, isTop: Boolean) {
                         val owner = remember(entry) { nav.getBackStackEntry(ChatsGraph) }
                         val vm: HomeViewModel = viewModel(viewModelStoreOwner = owner) {
@@ -215,7 +218,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
             }
             summary.put("buckets", JSONArray(buckets))
         }
-        onCall("server.getConfig") { JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
+        onCall("server.getConfig") { if (request == "providers") providerFixtureConfig() else JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
         onCall("orchestration.dispatchCommand") {
             if (request in listOf("queue", "editor")) {
                 queueDispatches++
@@ -264,6 +267,18 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
                     threads.put(row("settled", "Tipografía y roles").put("settledAt", "2026-10-25T08:00:00Z"))
                 }
             })
+    private fun providerFixtureConfig(): JSONObject {
+        val rows = JSONArray()
+        listOf("codex", "claudeAgent", "opencode", "cursor", "custom").forEachIndexed { index, driver ->
+            rows.put(JSONObject().put("enabled", true).put("instanceId", if (index == 0) "fixture-provider" else "provider-$index")
+                .put("displayName", if (index == 4) "Personalizado" else "Proveedor ${index + 1}")
+                .put("driver", driver).put("status", "ready")
+                .put("models", JSONArray().put(JSONObject().put("slug", "fixture-model")
+                    .put("name", "Mismo modelo").put("shortName", "Modelo"))))
+        }
+        return JSONObject().put("settings", JSONObject().put("favorites", JSONArray())).put("providers", rows)
+    }
+
     private fun bounded(): JSONObject {
         val messages = JSONArray()
         repeat(60) { i -> messages.put(JSONObject().put("id", "m$i").put("role", if (i % 2 == 0) "user" else "assistant")

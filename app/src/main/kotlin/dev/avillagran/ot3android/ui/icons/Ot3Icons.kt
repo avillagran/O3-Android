@@ -86,11 +86,22 @@ object Ot3Icons {
     @DrawableRes val Undo2: Int = R.drawable.ic_undo_2
     @DrawableRes val X: Int = R.drawable.ic_x
 
+    @DrawableRes val ProviderNativeA: Int = R.drawable.ic_provider_openai
+    @DrawableRes val ProviderNativeB: Int = R.drawable.ic_provider_claude
+    @DrawableRes val ProviderTerminal: Int = R.drawable.ic_provider_opencode
+    @DrawableRes val ProviderEditor: Int = R.drawable.ic_provider_cursor
+    @DrawableRes val ProviderAcp: Int = R.drawable.ic_provider_acp
+
     /** Every icon, keyed by its ot3 / Lucide name (`"git-pull-request"`). */
     val byName: Map<String, Int> = mapOf(
         "zoom-in" to ZoomIn,
         "zoom-out" to ZoomOut,
         "rotate-ccw" to RotateCcw,
+        "provider-openai" to ProviderNativeA,
+        "provider-claude" to ProviderNativeB,
+        "provider-opencode" to ProviderTerminal,
+        "provider-cursor" to ProviderEditor,
+        "provider-acp" to ProviderAcp,
         "alarm-clock" to AlarmClock,
         "arrow-up" to ArrowUp,
         "bot" to Bot,
