@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">Ampliar</string>
     <string name="ot3_image_zoom_out">Reduzir</string>
     <string name="ot3_image_zoom_reset">Redefinir zoom</string>
+    <string name="ot3_composer_edit">Editar</string>
+    <string name="ot3_composer_back">Voltar à conversa</string>
 </resources>

@@ -217,4 +217,6 @@
     <string name="ot3_image_zoom_in">تكبير</string>
     <string name="ot3_image_zoom_out">تصغير</string>
     <string name="ot3_image_zoom_reset">إعادة تعيين التكبير</string>
+    <string name="ot3_composer_edit">تعديل</string>
+    <string name="ot3_composer_back">العودة للمحادثة</string>
 </resources>

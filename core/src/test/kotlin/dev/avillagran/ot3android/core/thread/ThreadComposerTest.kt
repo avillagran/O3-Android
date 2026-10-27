@@ -44,6 +44,34 @@ class ThreadComposerTest {
     private fun dispatches() = fake.calls.count { it.fn == MessageSender.DISPATCH }
 
     @Test
+    fun typingAndClearingBeforeInitialLoadWinsAndPersistsForLegacyAndTaggedInputs() = runTest {
+        for (token in listOf(null, "ui-token")) {
+            drafts.save("env-1", "t1", "Previously saved")
+            val sender = MessageSender(outbox, backgroundScope)
+            val composer = ThreadComposer("env-1", "t1", drafts, outbox, sender, backgroundScope, backgroundScope, { fake })
+            composer.onDraftChange("Typed before load", token)
+            composer.onDraftChange("", token)
+            runCurrent()
+            assertEquals("", composer.state.value.draft)
+            assertEquals(token, composer.state.value.draftToken)
+            advanceTimeBy(ThreadComposer.DRAFT_DEBOUNCE_MS + 1); runCurrent()
+            assertNull(persistedDraft())
+        }
+    }
+    @Test
+    fun uiEchoTokenNeverPersistsOrEntersCommandAndSuccessIsAuthoritativeEmpty() = runTest {
+        fake.onCall(MessageSender.DISPATCH) { JSONObject().put("sequence", 2) }
+        val composer = composer()
+        composer.onDraftChange("Tagged text", "ui-only")
+        assertEquals("ui-only", composer.state.value.draftToken)
+        advanceTimeBy(ThreadComposer.DRAFT_DEBOUNCE_MS + 1); runCurrent()
+        assertEquals("Tagged text", persistedDraft())
+        assertTrue(composer.send(null)); runCurrent()
+        assertFalse(fake.calls.single().args.toString().contains("ui-only"))
+        assertEquals("", composer.state.value.draft); assertNull(composer.state.value.draftToken)
+    }
+
+    @Test
     fun theDraftIsLockedWhileSendingAndClearedOnAccept() = runTest {
         val answer = CompletableDeferred<Any?>()
         fake.onCall(MessageSender.DISPATCH) { answer.await() }

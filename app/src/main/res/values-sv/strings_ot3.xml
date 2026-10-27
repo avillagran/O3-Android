@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">Zooma in</string>
     <string name="ot3_image_zoom_out">Zooma ut</string>
     <string name="ot3_image_zoom_reset">Återställ zoom</string>
+    <string name="ot3_composer_edit">Redigera</string>
+    <string name="ot3_composer_back">Tillbaka till chatten</string>
 </resources>

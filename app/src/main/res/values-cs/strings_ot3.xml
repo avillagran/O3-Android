@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">Přiblížit</string>
     <string name="ot3_image_zoom_out">Oddálit</string>
     <string name="ot3_image_zoom_reset">Obnovit přiblížení</string>
+    <string name="ot3_composer_edit">Upravit</string>
+    <string name="ot3_composer_back">Zpět do chatu</string>
 </resources>

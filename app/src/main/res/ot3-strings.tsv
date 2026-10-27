@@ -254,3 +254,6 @@ ot3_queue_move_down	Move down
 ot3_image_zoom_in	Zoom in
 ot3_image_zoom_out	Zoom out
 ot3_image_zoom_reset	Reset zoom
+# Composer editor
+ot3_composer_edit	Edit
+ot3_composer_back	Back to chat

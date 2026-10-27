@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">拡大</string>
     <string name="ot3_image_zoom_out">縮小</string>
     <string name="ot3_image_zoom_reset">ズームをリセット</string>
+    <string name="ot3_composer_edit">編集</string>
+    <string name="ot3_composer_back">チャットに戻る</string>
 </resources>

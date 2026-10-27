@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">확대</string>
     <string name="ot3_image_zoom_out">축소</string>
     <string name="ot3_image_zoom_reset">확대/축소 초기화</string>
+    <string name="ot3_composer_edit">편집</string>
+    <string name="ot3_composer_back">채팅으로 돌아가기</string>
 </resources>

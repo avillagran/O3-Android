@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">Lähennä</string>
     <string name="ot3_image_zoom_out">Loitonna</string>
     <string name="ot3_image_zoom_reset">Palauta zoomaus</string>
+    <string name="ot3_composer_edit">Muokkaa</string>
+    <string name="ot3_composer_back">Takaisin keskusteluun</string>
 </resources>

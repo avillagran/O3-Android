@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">Ingrandisci</string>
     <string name="ot3_image_zoom_out">Riduci</string>
     <string name="ot3_image_zoom_reset">Reimposta zoom</string>
+    <string name="ot3_composer_edit">Modifica</string>
+    <string name="ot3_composer_back">Torna alla chat</string>
 </resources>

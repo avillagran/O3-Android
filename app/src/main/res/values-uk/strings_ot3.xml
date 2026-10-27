@@ -216,4 +216,6 @@
     <string name="ot3_image_zoom_in">Збільшити</string>
     <string name="ot3_image_zoom_out">Зменшити</string>
     <string name="ot3_image_zoom_reset">Скинути масштаб</string>
+    <string name="ot3_composer_edit">Редагувати</string>
+    <string name="ot3_composer_back">Повернутися до чату</string>
 </resources>

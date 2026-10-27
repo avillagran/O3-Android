@@ -127,3 +127,72 @@ Limits remain explicit: phone sheet/48dp compact rows, no touch edge autoscroll 
 source direct arrow-key grip binding, no productive-provider/physical acceptance.
 UI-3 is not closed. New-message common builder, attachment upload/picker, broader
 composer toolbar/editor/completions and other listed gaps remain outside this change.
+
+## Expanded editor increment (2026-10-26)
+
+The real ThreadContent square-pen opens the same composer in the thread surface.
+Reference: ot3 `7b5b1de` T3Composer.qml:218–239,263–271,385–429,701–709 and
+T3Panel.qml:225–236,2021–2031. The source toggle is always available; it does not
+require three lines. Android adapts desktop margins to a 48 dp Back/Send header,
+bounded scrollable notices and a model/options toolbar above IME. No modal hides
+send errors or byte-identical retry. Back/Esc returns to the preserved timeline and
+closes IME; this is a deliberate phone adaptation. Reduced-motion tokens govern
+the existing focus-border transition; no new expansion animation is introduced.
+
+Selection/focus are UI state scoped by canonical environment/thread identity;
+draft text remains in the existing VM/Room owner. Expansion, queue edit/cancel and
+rotation retain selection. Retired rendering/paused-Activity blur callbacks cannot
+collapse the saved range. Transient UI echo tokens prevent delayed combined-flow
+emissions overwriting typing, without adding text to the saved-instance bundle or
+RPC. External text changes clamp selection. Explicit edits to empty before initial
+Room load win and persist; accepted/unknown sends clear normally through the
+existing state machine. Queue edits retain original draft, attachments and context.
+
+Soft/virtual Enter is newline. For nonvirtual hardware events, compact Enter sends,
+Shift+Enter and expanded Enter insert newline; expanded Ctrl+Enter sends. Repeats,
+composition and unsupported alternate-delivery/new-thread shortcuts never send.
+Instrumented keyboard coverage distinguishes soft events injected through
+UiAutomation from nonvirtual-device events dispatched to Activity. This exercises
+the Android/Compose native event route, not an OEM IME or a physical Bluetooth
+keyboard. JVM policy tests cover composing/repeat/virtual-device guards.
+
+UI-3 remains open: project draft browsing, prompt recall/list continuation,
+completion chips, attachment upload/new-message builder and alternate-delivery
+shortcuts are outside this increment and await their common domain contracts.
+The full desktop composer/attachment layout is not claimed complete.
+
+Validation: full app JVM267/267 and ThreadComposer8/8 passed before the final
+selection-only lifecycle guard; final focused editor JVM10/10, lintDebug, app/test
+APK builds and eight affected Tokyo/Latte golden captures passed. API36.1 software
+emulator5580 passed the four real-graph/Rust/synthetic-transport cases (19.997s):
+mode/selection/rotation/IME, exact keyboard paths, queue-edit attachment/context
+retention, and unknown response with byte-identical retry. The final lifecycle guard
+also passed the rotation/IME case alone (5.355s), and the final rapid-edit/expand/Back
+case passed (7.024s) with recording. No production or phone dispatches.
+
+`expanded-editor/editor-{tokyo,latte}-expanded.png` show the same draft and IME,
+with controls above the keyboard; these are synthetic emulator screenshots.
+The short `expanded-editor/editor.mp4` demonstrates rapid editing, expansion and
+Back with no dispatch. An API36.1 MessageQueue/Espresso idle hang was initially observed during
+concurrent recording and rotation, then reproduced without recording while rotating
+with IME open. A thread dump showed Espresso looping on the main thread while the
+test queried the old Compose root during recreation. The test now waits for actual
+new decor-window bounds before its Compose queries; the final sequence passes.
+This is an observed test synchronization fix, not a demonstrated platform root cause.
+The recording does not claim physical/OEM keyboard acceptance.
+
+Root integration follow-up: explicit visible-IME landscape coverage found the field
+collapsed to 4 px (1080 px window, 686 px IME). The final layout moves model/options
+into overflow below 220 dp available height and keeps a readable editor; normal
+finite-width toolbar also shows the model selector. `editor-tokyo-landscape.png`
+shows the final horizontal keyboard layout. The test opens overflow and verifies
+the model control is displayed. Its IME setting is self-contained and restored.
+Final real-graph suite: **5/5 passed in 26.320s**, including the new horizontal IME
+condition; the rapid-edit recording case passed separately (6.960s). Portrait
+Tokyo/Latte captures were refreshed on the same final APK; the video was replaced
+with its final-layout recording. No production dispatch or phone UI operation.
+
+Final integration verification after the narrow-height correction: app **268/268**
+JVM passed; core **297 passed, 5 opt-in tests skipped**; all screenshot verification
+and lint passed. The final video is 15.7s (includes fixture startup). The emulator
+and its device-panel helper were stopped after capture.

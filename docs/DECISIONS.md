@@ -1136,3 +1136,29 @@ floats plus validated UI ownership. A bounded current-Connection token in the VM
 keeps rotation coherent and prevents another environment/connection/process inheriting
 a saved transform. Closing resets. Existing binary read, decode limits/semaphore and
 original-byte copy remain authoritative. Markdown/video/live acceptance stays open.
+### 2026-10-26 — one composer surface with UI selection ownership
+
+Expand the existing thread composer rather than opening a second route/VM or modal.
+Keep draft text in ThreadComposer/Room; save only cursor/selection/focus per canonical
+environment/thread identity. A transient UI edit token pairs local text with its echo
+so delayed combined-flow emissions cannot overwrite rapid typing. Null-token external
+updates remain authoritative. Queue edits retain their separate normal selection and
+existing attachment/context ownership. Explicit user edits, including clearing to
+empty before Room load, win over initial persisted draft loading.
+
+Back/Esc closes expanded mode and IME on phones. Soft/virtual Enter stays newline;
+physical compact Enter sends, expanded Ctrl+Enter sends. Repeat/composition do not
+send. Unsupported alternate delivery/new-thread shortcuts remain inactive. No new
+protocol, persistence payload, remote stream or animation is introduced.
+
+### 2026-10-26 — Expanded composer with a large landscape IME
+
+The explicit landscape+visible-IME test exposed a 4 px text viewport: header and
+options consumed the available 394 px window above IME. Below 220 dp remaining
+window height, options move to the header overflow, preserving text and touch
+targets. Finite toolbar width also restores the weighted model selector that an
+unbounded horizontal-scroll wrapper hid. Tests now set/restore the emulator's
+show-IME-with-hardware-keyboard preference themselves, assert visible IME in both
+orientations and verify the model control in overflow. Rotation waits for the new
+decor window bounds before querying Compose/Espresso; no arbitrary delay or wider
+assertion tolerance was added.
