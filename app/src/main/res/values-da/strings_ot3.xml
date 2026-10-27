@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Foldning</string>
     <string name="ot3_reveal_spring">Fjedrende</string>
     <string name="ot3_reveal_instant">Øjeblikkeligt</string>
+    <string name="ot3_inspector_activity_details">Aktivitetsdetaljer</string>
+    <string name="ot3_inspector_loading">Indlæser output…</string>
+    <string name="ot3_inspector_unavailable_error">Output kunne ikke indlæses</string>
+    <string name="ot3_inspector_disconnected">Offline</string>
+    <string name="ot3_inspector_unavailable">Output er ikke længere tilgængeligt.</string>
+    <string name="ot3_inspector_details">Detaljer</string>
+    <string name="ot3_inspector_metadata">Metadata</string>
+    <string name="ot3_inspector_raw_item">Rå element</string>
+    <string name="ot3_inspector_exit_code">Afslutningskode</string>
+    <string name="ot3_inspector_empty_output">Intet output.</string>
+    <string name="ot3_inspector_output_omitted">Serveren leverede ikke output. Prøv igen for at opdatere.</string>
+    <string name="ot3_inspector_truncated">Visningsgrænsen er nået. Kun den viste tekst kopieres.</string>
 </resources>

@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Bretting</string>
     <string name="ot3_reveal_spring">Fjærende</string>
     <string name="ot3_reveal_instant">Umiddelbart</string>
+    <string name="ot3_inspector_activity_details">Aktivitetsdetaljer</string>
+    <string name="ot3_inspector_loading">Laster inn utdata…</string>
+    <string name="ot3_inspector_unavailable_error">Kunne ikke laste inn utdata</string>
+    <string name="ot3_inspector_disconnected">Frakoblet</string>
+    <string name="ot3_inspector_unavailable">Utdata er ikke lenger tilgjengelig.</string>
+    <string name="ot3_inspector_details">Detaljer</string>
+    <string name="ot3_inspector_metadata">Metadata</string>
+    <string name="ot3_inspector_raw_item">Rått element</string>
+    <string name="ot3_inspector_exit_code">Avslutningskode</string>
+    <string name="ot3_inspector_empty_output">Ingen utdata.</string>
+    <string name="ot3_inspector_output_omitted">Serveren leverte ikke utdata. Prøv igjen for å oppdatere.</string>
+    <string name="ot3_inspector_truncated">Visningsgrensen er nådd. Bare vist tekst kopieres.</string>
 </resources>

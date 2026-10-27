@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">折りたたみ</string>
     <string name="ot3_reveal_spring">スプリング</string>
     <string name="ot3_reveal_instant">即時</string>
+    <string name="ot3_inspector_activity_details">アクティビティの詳細</string>
+    <string name="ot3_inspector_loading">出力を読み込み中…</string>
+    <string name="ot3_inspector_unavailable_error">出力を読み込めませんでした</string>
+    <string name="ot3_inspector_disconnected">オフライン</string>
+    <string name="ot3_inspector_unavailable">出力は利用できなくなりました。</string>
+    <string name="ot3_inspector_details">詳細</string>
+    <string name="ot3_inspector_metadata">メタデータ</string>
+    <string name="ot3_inspector_raw_item">生データ</string>
+    <string name="ot3_inspector_exit_code">終了コード</string>
+    <string name="ot3_inspector_empty_output">出力なし。</string>
+    <string name="ot3_inspector_output_omitted">サーバーが出力を提供しませんでした。再試行して更新してください。</string>
+    <string name="ot3_inspector_truncated">表示上限に達しました。コピーには表示中のテキストのみが含まれます。</string>
 </resources>

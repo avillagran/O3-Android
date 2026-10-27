@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Taitto</string>
     <string name="ot3_reveal_spring">Joustava</string>
     <string name="ot3_reveal_instant">Välitön</string>
+    <string name="ot3_inspector_activity_details">Toiminnon tiedot</string>
+    <string name="ot3_inspector_loading">Ladataan tulostetta…</string>
+    <string name="ot3_inspector_unavailable_error">Tulosteen lataaminen epäonnistui</string>
+    <string name="ot3_inspector_disconnected">Ei yhteyttä</string>
+    <string name="ot3_inspector_unavailable">Tuloste ei ole enää saatavilla.</string>
+    <string name="ot3_inspector_details">Tiedot</string>
+    <string name="ot3_inspector_metadata">Metatiedot</string>
+    <string name="ot3_inspector_raw_item">Raakakohde</string>
+    <string name="ot3_inspector_exit_code">Poistumiskoodi</string>
+    <string name="ot3_inspector_empty_output">Ei tulostetta.</string>
+    <string name="ot3_inspector_output_omitted">Palvelin ei toimittanut tulostetta. Päivitä yrittämällä uudelleen.</string>
+    <string name="ot3_inspector_truncated">Näyttöraja saavutettiin. Kopiointi sisältää vain näytetyn tekstin.</string>
 </resources>

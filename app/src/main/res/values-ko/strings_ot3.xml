@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">접기</string>
     <string name="ot3_reveal_spring">스프링</string>
     <string name="ot3_reveal_instant">즉시</string>
+    <string name="ot3_inspector_activity_details">활동 세부 정보</string>
+    <string name="ot3_inspector_loading">출력 불러오는 중…</string>
+    <string name="ot3_inspector_unavailable_error">출력을 불러오지 못했습니다</string>
+    <string name="ot3_inspector_disconnected">오프라인</string>
+    <string name="ot3_inspector_unavailable">출력을 더 이상 사용할 수 없습니다.</string>
+    <string name="ot3_inspector_details">세부 정보</string>
+    <string name="ot3_inspector_metadata">메타데이터</string>
+    <string name="ot3_inspector_raw_item">원본 항목</string>
+    <string name="ot3_inspector_exit_code">종료 코드</string>
+    <string name="ot3_inspector_empty_output">출력이 없습니다.</string>
+    <string name="ot3_inspector_output_omitted">서버가 출력을 제공하지 않았습니다. 새로고침하려면 다시 시도하세요.</string>
+    <string name="ot3_inspector_truncated">표시 한도에 도달했습니다. 복사하면 표시된 텍스트만 포함됩니다.</string>
 </resources>

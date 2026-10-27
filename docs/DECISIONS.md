@@ -1238,3 +1238,16 @@ GPU pixel regression demonstrated the failure and its correction on both axes.
 The capability probe may be cached; its effect must never be attached to a frame.
 The shader's artistic code remains unchanged and no effect stays attached at rest.
 See [source references, regression and capture limits](ui/compare/reveal-styles/README.md).
+
+### 2026-10-27 — Explicit tool inspection uses existing native views
+
+The reader renders toolInspector.parse fields from lib035 without classifying
+protocol events in Kotlin. Selecting one activity entry owns one cancellable
+read; expanding an activity group does not eagerly fetch all entries. Tabs reuse
+that result and retry performs a fresh explicit read. A post-read cancellation
+check protects against a non-cooperative old request completing after selection
+changes. Bounded selectable sections and copy preserve native truncation flags.
+
+The inspector uses existing OT3 buttons, icons, colors and shared AAR strings.
+Follow-live command output and desktop popup placement remain explicit gaps;
+this change adds neither fabricated polling nor a completion claim for UI-2.
