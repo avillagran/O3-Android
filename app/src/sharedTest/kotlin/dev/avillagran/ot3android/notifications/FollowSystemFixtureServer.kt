@@ -23,6 +23,14 @@ internal class FollowSystemFixtureServer(val label: String, val serverId: String
     val shellSubscriptions = AtomicInteger()
     val activeShellSubscriptions: Int get() = shellPeers.size
     val writes = AtomicInteger()
+    val shellPings = AtomicInteger()
+    val disconnectedPeers = AtomicInteger()
+    @Volatile private var available = true
+    fun setAvailable(value: Boolean) {
+        available = value
+        if (!value) sockets.toList().forEach { runCatching { it.close() } }
+    }
+    fun blackholeExistingShellPongs() { shellPeers.toList().forEach { it.respondToPings = false } }
     val requests = CopyOnWriteArrayList<String>()
     val failures = CopyOnWriteArrayList<String>()
     val url = "http://127.0.0.1:${server.localPort}"
@@ -33,7 +41,7 @@ internal class FollowSystemFixtureServer(val label: String, val serverId: String
             while (!server.isClosed) {
                 val socket = try { server.accept() } catch (_: Exception) { break }
                 sockets.add(socket)
-                workers.execute { try { handle(socket) } catch (error: Exception) { failures.add(error.javaClass.simpleName) } finally { sockets.remove(socket); socket.close() } }
+                workers.execute { try { handle(socket) } catch (error: Exception) { if (error is java.io.EOFException || error is java.net.SocketException) disconnectedPeers.incrementAndGet() else failures.add(error.javaClass.simpleName) } finally { sockets.remove(socket); socket.close() } }
             }
         }
     }
@@ -79,6 +87,7 @@ internal class FollowSystemFixtureServer(val label: String, val serverId: String
         JSONObject(rows.first { it.getString("id") == id }.toString()).put("messages", JSONArray().put(JSONObject()
             .put("id", "message-lab").put("role", "assistant").put("text", "Synthetic follow lab reader").put("createdAt", Instant.now().toString()))))
     private fun handle(socket: Socket) {
+        if (!available) return
         socket.soTimeout = 120_000
         val input = DataInputStream(socket.getInputStream().buffered())
         val head = StringBuilder()
@@ -96,6 +105,7 @@ internal class FollowSystemFixtureServer(val label: String, val serverId: String
             requests.add(tag)
             when (tag) {
                 "orchestration.subscribeShell" -> {
+                    peer.onPing = { shellPings.incrementAndGet() }
                     shellSubscriptions.incrementAndGet(); shellPeers.add(peer)
                     try { peer.chunk(JSONObject().put("kind", "snapshot").put("snapshot", shell()), JSONObject().put("kind", "synchronized")); peer.drain() }
                     finally { shellPeers.remove(peer) }
@@ -122,8 +132,10 @@ internal class FollowSystemFixtureServer(val label: String, val serverId: String
     }
     private class Peer(private val socket: Socket, private val input: DataInputStream) {
         var id: Any = "1"
+        var onPing: () -> Unit = {}
+        @Volatile var respondToPings = true
         fun chunk(vararg items: JSONObject) = send(JSONObject().put("_tag", "Chunk").put("requestId", id).put("values", JSONArray(items.toList())))
-        fun drain() { while (true) { val frame = read() ?: break; when (frame.optString("_tag")) { "Interrupt" -> return; "Ping" -> send(JSONObject().put("_tag", "Pong")) } } }
+        fun drain() { while (true) { val frame = read() ?: break; when (frame.optString("_tag")) { "Interrupt" -> return; "Ping" -> { onPing(); if (respondToPings) send(JSONObject().put("_tag", "Pong")) } } } }
         fun read(): JSONObject? {
             while (true) {
                 val first = input.readUnsignedByte(); val second = input.readUnsignedByte()

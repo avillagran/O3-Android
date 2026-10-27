@@ -39,6 +39,9 @@ android {
         compose = true
     }
 
+    sourceSets.getByName("test").java.srcDir("src/sharedTest/kotlin")
+    sourceSets.getByName("androidTest").java.srcDir("src/sharedTest/kotlin")
+
     // Robolectric reads the merged resources and assets (themes JSON, Fira Code).
     testOptions {
         unitTests.isIncludeAndroidResources = true
@@ -51,6 +54,11 @@ android {
 val hostJniDir = rootProject.file("libs/host/linux-x86_64")
 val requireHostJniProperty = providers.gradleProperty("ot3a.requireHostJni").orElse("false")
 tasks.withType<Test>().configureEach {
+    providers.gradleProperty("ot3a.followLabDir").orNull?.let {
+        systemProperty("ot3a.followLabDir", it)
+        maxHeapSize = "256m"
+        outputs.upToDateWhen { false } // Explicit external fixture, never a cached test result.
+    }
     systemProperty("java.library.path", hostJniDir.absolutePath)
     systemProperty("ot3a.requireHostJni", requireHostJniProperty.get())
     inputs.files(fileTree(hostJniDir) { include("*.so") })

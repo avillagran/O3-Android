@@ -1933,15 +1933,15 @@ thread on screen and consumes its alert (T3's rule, `AgentNotifications.kt:148-1
   (DECISIONS 2026-10-25). The follow service never opens its own: it reads the same
   `ShellState` per environment and passes all of them to the lib. Counts are
   `sidebar.view` `counts`; phases, card, alerts, dedupe, expiry, chip kind and grouping
-  come from the proposed `awareness.view` (LIB_REQUESTS.md U28). **No Kotlin rule
-  computes a phase, a count, a transition, a deadline or a chip kind.** U28 shipped in lib v0.3.5. The UI-1 pre-release keeps its matched v0.3.4
-  artifacts; runtime wiring and the v0.3.5 pin follow that release (rule 6: no interim
-  reimplementation of notification semantics).
-- **Baseline.** The lib returns an opaque `baseline` the host persists per installation
-  (DataStore) and passes back. A missing baseline for an environment means "first
-  observation": no alerts (cold start, new environment, cleared data). Reconnecting
-  (`Unreachable` → `Connected`) passes the environment as not ready meanwhile, so its rows
-  are neither withdrawn nor replayed as transitions (ot3 `main.rs:75-77`).
+  come from `awareness.view` in the pinned v0.3.5 lib (LIB_REQUESTS.md U28).
+  **No Kotlin rule computes a phase, a count, a transition, a deadline or a chip kind.**
+  The earlier UI-1 preparation used v0.3.4; that is historical, not the runtime pin.
+- **Baseline (implemented).** ThreadAwareness keeps the lib's opaque baseline only for
+  the service session, under a mutex. It is not persisted in DataStore. A cold process
+  seeds silently; a new environment also has no previous transition to replay. The
+  earlier per-installation persistence proposal is not implemented. Reconnection keeps
+  the current session's baseline while the environment is not ready; Rust chooses the
+  visible stale phase and transition suppression. See the process-recovery lab below.
 - **Authorisation.** Only environments with a saved credential and a supervisor that is
   not `Unauthorized` are passed. A bridge-catalog entry that is discovered but not
   authorised, withdrawn or revoked (`docs/bridge/CATALOG_SYNC.md`) never contributes a row,
@@ -1950,27 +1950,27 @@ thread on screen and consumes its alert (T3's rule, `AgentNotifications.kt:148-1
 
 #### 4.14.3 Leasing: the app and the follow service share supervisors
 
-Today `ConnectionManager.setForeground(false)` stops every running supervisor on the
-process's `ON_STOP`. UI-N changes that to leases, without a second stream:
+The implemented manager has a foreground flag plus counted `acquireFollowLease`
+handles per local environment (rather than the originally proposed Ui/Follow holder enum).
 
-1. `ConnectionManager.lease(environmentId, holder)` returns a handle; `holder` is `Ui`
-   (screens) or `Follow` (the service). A supervisor runs while it has at least one lease.
-2. `ON_STOP` releases only `Ui` leases. When **Follow threads** is on and the service
-   holds `Follow` leases, those supervisors keep running; the others stop as today.
-3. `ON_RESUME` and default-network changes keep calling `wakeAll()` (`wakeSubscriptions`),
-   for leased supervisors too. Reconnection keeps the supervisor's jittered `Backoff`
-   and stops on `unauthorized`; the service adds no retry loop.
-4. The service releases its leases on idle stop, on disconnect from the notification,
-   when the toggle goes off, on `onTimeout`, and when an environment is forgotten or its
-   grant is withdrawn.
+1. Foreground consumers and the follow service share the same supervisor and shell.
+2. ON_STOP stops supervisors without a follow lease. Closing the last follow lease
+   stops that supervisor when the app is backgrounded; closing twice is harmless.
+3. ON_RESUME and default-network callbacks call wakeAll()/wakeSubscriptions for
+   existing supervisors and skip a pending unreachable backoff. The existing supervisor
+   owns reconnect/backoff; the service adds no network retry loop.
+4. Service destruction releases its leases; removed environments release only their
+   own. Opt-out, permission loss and observed credential rejection stop following.
+   Natural idle expiry, platform timeout callbacks and automatic remote revocation
+   are not all accepted by the lab and must not be inferred from lease unit tests.
 
 #### 4.14.4 Follow service
 
 - **Opt-in.** Settings → Notifications → **Follow active threads** (off by default),
   with a sentence: it keeps a connection open while threads work so their state shows
   in the status bar and lock screen; it uses battery and stops by itself.
-- **Start** only from a visible app (toggle on, or opening a thread / sending a message
-  while the toggle is on and something works): API 31+ forbids starting a foreground
+- **Start** only from a visible app (explicit toggle/permission flow, or the visible
+  application lifecycle while opt-in is persisted and an environment is connected): API 31+ forbids starting a foreground
   service from the background. No start from `BOOT_COMPLETED`, no restart at boot, no alarms to resurrect it, no battery-optimisation exemption
   request (Doze's FCM-first policy; this app has no FCM).
 - **Type: `specialUse`** with the subtype property
@@ -1980,22 +1980,32 @@ process's `ON_STOP`. UI-N changes that to leases, without a second stream:
   `dataSync`, whose description is transfer work and which, for targetSdk 35+, is capped
   at 6 h per 24 h across the app, reset only when the user brings the app to the
   foreground, with `ForegroundServiceStartNotAllowedException` once exhausted. Long or
-  repeated runs would hit it. The service still implements `onTimeout(int, int)` and stops
-  within seconds, so a later type change cannot crash it. Play's App content declaration
-  is needed only if the app ships on Play.
-- **Stop.** When nothing has worked or needed the user for **15 minutes** (default; 5, 15,
-  30 or 60 in Settings), the service demotes the card to a finished/waiting card with its
-  lib deadline (finished 15 min, waiting up to 24 h) and stops. 15 minutes equals T3's
-  finished-card lifetime, so the card and the service end together. Also on
-  **Disconnect** (notification action), toggle off, `onTimeout`, revoked or removed
-  environments, and notification permission revoked.
-- **Notification.** The foreground service's notification **is** the ongoing card
-  (`startForeground(ACTIVITY_ID, card)`), so there is never a second "ot3 is running"
-  notification.
-- **Battery.** No wakelocks, no exact alarms, no polling: the shell stream is push.
-  Doze suspends network for apps (the guide lists no FGS exception), so a dozing phone
-  may delay updates until a maintenance window or the user wakes it; the card says so
-  through the lib's `stale` phase rather than pretending.
+  repeated runs would hit it. An explicit `onTimeout(int, int)` adaptation remains
+  pending; it is not present in the current specialUse service. Play's App content
+  declaration is needed only if the app ships on Play.
+- **Stop (current runtime).** IDLE_MS is a fixed 15-minute elapsed budget since the
+  last native active card. Settings does not offer the previously proposed 5/15/30/60
+  selector; that remains pending. Native card deadlines remain authoritative. Toggle
+  off, the notification's Stop action, forgotten/observed rejected environments and
+  permission loss stop following. Natural 15-minute idle/card expiry is not accepted
+  by short synthetic runs.
+- **Process lifetime.** onStartCommand returns START_NOT_STICKY; no automatic restart is promised
+  (Android may still deliver pending start intents). No boot receiver,
+  work job or alarm resurrects this service. Opt-in/privacy persist; a visible app
+  with permission and a connected environment starts following again. The lab
+  observed no restart in bounded 5-second windows after controlled SIGKILL, then
+  verified visible reopen with a cold silent baseline. This is not LMK/OEM acceptance.
+- **Notification.** A native active card is the FGS notification. A quiet service
+  notice is used when there is no active card, so a normal Done/Failed card can expire
+  separately; no second permanent tracking card is added.
+- **Battery.** No wakelocks, exact alarms or periodic HTTP shell refetch are added.
+  The native stream is push with its own liveness pings; the local card/deadline
+  scheduler caps requested delay at 30 s;
+  Android may defer its execution. Doze may defer CPU/network. It does not itself mark
+  a ready environment stale: the last Working presentation can remain until the
+  supervisor observes failure, after which Rust supplies Waiting/stale. The forced
+  Doze lab verifies that observed transition and recovery with a controlled outage,
+  not real network enforcement on loopback or natural maintenance windows.
 
 #### 4.14.5 Live Updates (API 36.1+) and older APIs
 
@@ -2021,7 +2031,7 @@ process's `ON_STOP`. UI-N changes that to leases, without a second stream:
 - Below 36.1 the same card is a normal ongoing notification. API 24–25 have no channels
   and no timeout: priority LOW/HIGH stand in for channels, and while the service runs it
   cancels expired cards; T3's single inexact `setAndAllowWhileIdle` alarm for a stopped
-  process (`AgentNotifications.kt:280-290`) is adopted in the runtime tranche.
+  process (`AgentNotifications.kt:280-290`) remains a pending older-API adaptation.
 
 #### 4.14.6 Channels, alerts and actions
 
