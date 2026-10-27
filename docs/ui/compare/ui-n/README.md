@@ -3,11 +3,15 @@
 Spec: [UI_SPEC 4.14](../../../UI_SPEC.md#414-notifications-and-live-updates). Decision:
 [DECISIONS 2026-10-26](../../../DECISIONS.md). Lib request: [LIB_REQUESTS U28](../../../LIB_REQUESTS.md).
 
-**Status: preparation only.** This branch ships documentation, a status bar icon, two
+**Current status:** runtime is implemented. Real NODE chip evidence is in [runtime](runtime/);
+secure lockscreen and synthetic grouped-alert service evidence is tracked in
+[system-lab](system-lab/README.md). Doze/process-death/physical acceptance remains open.
+
+**Original preparation scope (historical):** that tranche shipped documentation, a status bar icon, two
 channels, presentation builders and a parser for the proposed lib objects, with
-Robolectric tests. Nothing posts a notification, no service exists, the manifest is
-unchanged, and no screen or setting was added. No capture, video or device result exists
-for UI-N yet; none was produced from fixtures.
+Robolectric tests. Nothing posted a notification, no service existed, the manifest was
+unchanged, and no screen or setting was added in that preparation tranche. Runtime
+and subsequent system evidence below supersede that initial scope.
 
 ## What is in this PR
 

@@ -1171,3 +1171,14 @@ Loading/disabled until the preference arrives; launch persistence in AppGraph.ap
 and invert atomically inside DataStore. Preserve soft IME/draft in the graph regression.
 The precise cause of PR51's earlier CI timeout remains unproved; no timeout increase
 or keyboard dismissal masks that portrait path. See `ui/compare/quota-strip/api34-menu/`.
+
+### 2026-10-26 — follow owns leases, Rust owns awareness
+
+Keep one follow lease per saved environment across metadata updates. Switching
+observers to a replacement supervisor preserves that environment's lease; retired
+unauthorized callbacks cannot close its replacement. Current privacy is an input to
+every card build. Compare complete parsed card+privacy before Android publication,
+without skipping awareness evaluation or alerts. Recover missing/stale Android
+records only on the existing deadline wake, identified by a random UI-only extras
+stamp; Room ticks must not postpone that wake. Avoid duplicate cancels and privacy
+refreshes after actual NMS queue shedding was observed in the synthetic system lab.

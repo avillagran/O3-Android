@@ -2440,3 +2440,15 @@ Back and Send keep their 48 dp header targets; the text viewport no longer colla
 to a few pixels in phone landscape. Model/options also remain available in overflow
 when IME closes. The regular toolbar receives finite width so its weighted model
 selector stays visible. This is a phone adaptation, not a desktop layout claim.
+
+
+### UI-N lockscreen/system lab — 2026-10-26
+
+The service applies current Full/Status/Hidden privacy on every card publication,
+retains environment leases across lastConnectedAt/label updates, and releases only
+removed environments. Exact AwarenessCard+privacy presentation equality prevents
+identical updates flooding Android's enqueue queue. A UI-only platform-record stamp
+allows recovery on existing deadline ticks without new polling/throttle or filtering
+Rust transitions. Native group summaries are not cancelled while their child posts
+are still being enqueued. See `ui/compare/ui-n/system-lab/README.md` for real-service,
+loopback/JNI evidence and remaining Doze/process-death/physical limitations.
