@@ -70,6 +70,10 @@ class AppearanceSettingsViewModel(
         preferences.setFollowEnvironment(false)
     }
 
+    fun setFallbackMode(mode: AppearanceMode) = edit { preferences.setMode(mode) }
+    fun setFallbackDarkTheme(id: String) = edit { preferences.setDarkTheme(id); preferences.setMode(AppearanceMode.DARK) }
+    fun setFallbackLightTheme(id: String) = edit { preferences.setLightTheme(id); preferences.setMode(AppearanceMode.LIGHT) }
+
     fun setProviderUsage(shown: Boolean) = edit { preferences.appearance.setProviderUsage(shown) }
 
     fun refresh() = source.refresh()

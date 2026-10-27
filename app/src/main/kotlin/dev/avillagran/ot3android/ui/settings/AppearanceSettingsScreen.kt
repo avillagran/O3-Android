@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -80,18 +79,18 @@ fun AppearanceSettingsScreen(
         val current = state ?: return@Scaffold
         val settings = current.settings
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.appearance_follow_environment)) },
-                supportingContent = if (settings.followEnvironment) {
-                    { Text(status(current.selection), Modifier.testTag(AppearanceSettingsTags.STATUS)) }
-                } else {
-                    null
-                },
-                trailingContent = { Switch(checked = settings.followEnvironment, onCheckedChange = null) },
-                modifier = Modifier
-                    .toggleable(settings.followEnvironment, role = Role.Switch, onValueChange = viewModel::setFollowEnvironment)
-                    .testTag(AppearanceSettingsTags.FOLLOW),
-            )
+            Header(R.string.appearance_source)
+            Choice(stringResource(R.string.appearance_follow_environment), settings.followEnvironment,
+                AppearanceSettingsTags.FOLLOW) { viewModel.setFollowEnvironment(true) }
+            Choice(stringResource(R.string.appearance_phone_theme), !settings.followEnvironment,
+                "appearance_phone") { viewModel.setFollowEnvironment(false) }
+            if (settings.followEnvironment) {
+                Text(status(current.selection), Modifier.padding(horizontal = 16.dp).testTag(AppearanceSettingsTags.STATUS),
+                    style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(if (current.selection is ThemeSelection.Fallback)
+                    R.string.appearance_fallback_active else R.string.appearance_live_explanation),
+                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
+            }
             if (settings.followEnvironment) {
                 TextButton(onClick = viewModel::refresh, modifier = Modifier.padding(horizontal = 8.dp).testTag("appearance_refresh")) {
                     Text(stringResource(R.string.appearance_refresh))
@@ -112,27 +111,27 @@ fun AppearanceSettingsScreen(
             }
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             Text(
-                stringResource(R.string.appearance_manual_applies),
+                stringResource(if (settings.followEnvironment) R.string.appearance_fallback_explanation else R.string.appearance_manual_applies),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
-            Header(R.string.appearance_theme)
+            Header(if (settings.followEnvironment) R.string.appearance_fallback_title else R.string.appearance_theme)
             AppearanceMode.entries.forEach { mode ->
                 val label = when (mode) {
                     AppearanceMode.FOLLOW_SYSTEM -> R.string.appearance_mode_follow_system
                     AppearanceMode.DARK -> R.string.appearance_mode_dark
                     AppearanceMode.LIGHT -> R.string.appearance_mode_light
                 }
-                Choice(stringResource(label), settings.manual.mode == mode, AppearanceSettingsTags.mode(mode)) { viewModel.setMode(mode) }
+                Choice(stringResource(label), settings.manual.mode == mode, AppearanceSettingsTags.mode(mode)) { if (settings.followEnvironment) viewModel.setFallbackMode(mode) else viewModel.setMode(mode) }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.ot3_home_show_provider_usage), Modifier.weight(1f))
                 Switch(checked = settings.manual.providerUsage, onCheckedChange = viewModel::setProviderUsage, modifier = Modifier.testTag("appearance_provider_usage"))
             }
             Header(R.string.appearance_dark_theme)
-            ThemeGrid(current.darkThemes, settings.manual.darkThemeId.takeUnless { settings.followEnvironment || settings.manual.mode == AppearanceMode.LIGHT }, AppearanceSettingsTags::dark, viewModel::setDarkTheme)
+            ThemeGrid(current.darkThemes, settings.manual.darkThemeId.takeUnless { settings.manual.mode == AppearanceMode.LIGHT }, AppearanceSettingsTags::dark) { if (settings.followEnvironment) viewModel.setFallbackDarkTheme(it) else viewModel.setDarkTheme(it) }
             Header(R.string.appearance_light_theme)
-            ThemeGrid(current.lightThemes, settings.manual.lightThemeId.takeUnless { settings.followEnvironment || settings.manual.mode == AppearanceMode.DARK }, AppearanceSettingsTags::light, viewModel::setLightTheme)
+            ThemeGrid(current.lightThemes, settings.manual.lightThemeId.takeUnless { settings.manual.mode == AppearanceMode.DARK }, AppearanceSettingsTags::light) { if (settings.followEnvironment) viewModel.setFallbackLightTheme(it) else viewModel.setLightTheme(it) }
 
         }
     }
