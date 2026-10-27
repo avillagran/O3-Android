@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-27",
+  "serial": "emulator-5580",
+  "api": 34,
+  "fixture": "synthetic WorkspaceFixture; real AppGraph navigation/Room/VM/Rust sidebar projection",
+  "mainIntegrated": "4045127",
+  "deviceTests": {
+    "passed": 1,
+    "failed": 0,
+    "durationSeconds": 11.668
+  },
+  "jvmTests": {
+    "HomeListSectionsTest": 1,
+    "failed": 0
+  },
+  "debugAppAndTestApk": "PASS",
+  "lintDebug": "PASS",
+  "productionCodeChanged": false,
+  "samples": [
+    {
+      "phase": "empty-portrait",
+      "configurationOrientation": 1,
+      "decorWidthPx": 1080,
+      "decorHeightPx": 2400,
+      "actualTextLayoutFontScale": 1.0,
+      "bounds": "empty-portrait config=1 decor=1080x2400 root=Rect.fromLTRB(0.0, 0.0, 1080.0, 2127.0) main=Rect.fromLTRB(0.0, 460.0, 1080.0, 1875.0) snoozed=Rect.fromLTRB(0.0, 1875.0, 1080.0, 2001.0) settled=Rect.fromLTRB(0.0, 2001.0, 1080.0, 2127.0) fontScale=1.0"
+    },
+    {
+      "phase": "empty-landscape",
+      "configurationOrientation": 2,
+      "decorWidthPx": 2400,
+      "decorHeightPx": 1080,
+      "actualTextLayoutFontScale": 1.0,
+      "bounds": "empty-landscape config=2 decor=2400x1080 root=Rect.fromLTRB(0.0, 0.0, 2400.0, 807.0) main=Rect.fromLTRB(128.0, 247.0, 2400.0, 371.0) snoozed=Rect.fromLTRB(128.0, 371.0, 2400.0, 497.0) settled=Rect.fromLTRB(128.0, 589.0, 2400.0, 715.0) fontScale=1.0"
+    },
+    {
+      "phase": "empty-landscape-recreated",
+      "configurationOrientation": 2,
+      "decorWidthPx": 2400,
+      "decorHeightPx": 1080,
+      "actualTextLayoutFontScale": 1.0,
+      "bounds": "empty-landscape-recreated config=2 decor=2400x1080 root=Rect.fromLTRB(0.0, 0.0, 2400.0, 807.0) main=Rect.fromLTRB(128.0, 247.0, 2400.0, 371.0) snoozed=Rect.fromLTRB(128.0, 371.0, 2400.0, 497.0) settled=Rect.fromLTRB(128.0, 589.0, 2400.0, 715.0) fontScale=1.0"
+    },
+    {
+      "phase": "short-portrait",
+      "configurationOrientation": 1,
+      "decorWidthPx": 1080,
+      "decorHeightPx": 2400,
+      "actualTextLayoutFontScale": 1.6,
+      "bounds": "short-portrait config=1 decor=1080x2400 root=Rect.fromLTRB(0.0, 0.0, 1080.0, 2127.0) main=Rect.fromLTRB(0.0, 472.0, 1080.0, 1875.0) snoozed=Rect.fromLTRB(0.0, 1875.0, 1080.0, 2001.0) settled=Rect.fromLTRB(0.0, 2001.0, 1080.0, 2127.0) fontScale=1.6"
+    },
+    {
+      "phase": "short-landscape",
+      "configurationOrientation": 2,
+      "decorWidthPx": 2400,
+      "decorHeightPx": 1080,
+      "actualTextLayoutFontScale": 1.6,
+      "bounds": "short-landscape config=2 decor=2400x1080 root=Rect.fromLTRB(0.0, 0.0, 2400.0, 807.0) main=Rect.fromLTRB(128.0, 259.0, 2400.0, 377.0) snoozed=Rect.fromLTRB(128.0, 377.0, 2400.0, 503.0) settled=Rect.fromLTRB(128.0, 592.0, 2400.0, 718.0) fontScale=1.6"
+    },
+    {
+      "phase": "short-landscape-recreated",
+      "configurationOrientation": 2,
+      "decorWidthPx": 2400,
+      "decorHeightPx": 1080,
+      "actualTextLayoutFontScale": 1.6,
+      "bounds": "short-landscape-recreated config=2 decor=2400x1080 root=Rect.fromLTRB(0.0, 0.0, 2400.0, 807.0) main=Rect.fromLTRB(128.0, 259.0, 2400.0, 377.0) snoozed=Rect.fromLTRB(128.0, 377.0, 2400.0, 503.0) settled=Rect.fromLTRB(128.0, 592.0, 2400.0, 718.0) fontScale=1.6"
+    },
+    {
+      "phase": "long-portrait",
+      "configurationOrientation": 1,
+      "decorWidthPx": 1080,
+      "decorHeightPx": 2400,
+      "actualTextLayoutFontScale": 1.0,
+      "bounds": "long-portrait config=1 decor=1080x2400 root=Rect.fromLTRB(0.0, 0.0, 1080.0, 2127.0) main=Rect.fromLTRB(0.0, 460.0, 1080.0, 1875.0) snoozed=Rect.fromLTRB(0.0, 1875.0, 1080.0, 2001.0) settled=Rect.fromLTRB(0.0, 2001.0, 1080.0, 2127.0) fontScale=1.0"
+    },
+    {
+      "phase": "long-landscape",
+      "configurationOrientation": 2,
+      "decorWidthPx": 2400,
+      "decorHeightPx": 1080,
+      "actualTextLayoutFontScale": 1.0,
+      "bounds": "long-landscape config=2 decor=2400x1080 root=Rect.fromLTRB(0.0, 0.0, 2400.0, 807.0) main=Rect.fromLTRB(128.0, 247.0, 2400.0, 371.0) snoozed=Rect.fromLTRB(128.0, 371.0, 2400.0, 497.0) settled=Rect.fromLTRB(128.0, 589.0, 2400.0, 715.0) fontScale=1.0"
+    },
+    {
+      "phase": "long-landscape-recreated",
+      "configurationOrientation": 2,
+      "decorWidthPx": 2400,
+      "decorHeightPx": 1080,
+      "actualTextLayoutFontScale": 1.0,
+      "bounds": "long-landscape-recreated config=2 decor=2400x1080 root=Rect.fromLTRB(0.0, 0.0, 2400.0, 807.0) main=Rect.fromLTRB(128.0, 247.0, 2400.0, 371.0) snoozed=Rect.fromLTRB(128.0, 371.0, 2400.0, 497.0) settled=Rect.fromLTRB(128.0, 589.0, 2400.0, 715.0) fontScale=1.0"
+    }
+  ]
+}

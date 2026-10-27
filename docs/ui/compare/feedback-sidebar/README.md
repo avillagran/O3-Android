@@ -30,3 +30,27 @@ se desplazan individualmente para leer el contenido completo.
 
 Pendiente: aceptación física por el usuario; resize manual de estantes del
 escritorio fuera del pedido móvil. No se modifican estados ni datos del servidor.
+
+## Sincronización de rotación y recreación — 2026-10-27
+
+La prueba anterior pedía horizontal y sólo esperaba Compose idle: podía ejecutar
+sus aserciones antes de que Android cambiara la configuración. La captura horizontal
+original ya fue inspeccionada; esto corrige la garantía de la prueba, sin afirmar un
+fallo del layout de producción ni cambiar sus dimensiones.
+
+SidebarShelvesDeviceTest ahora fuerza retrato al iniciar cada caso (0/1/80 activos)
+y espera simultáneamente configuración, medidas reales de decorView y bounds de Home
+con el aspecto solicitado. En horizontal y después de recreation comprueba ambas
+cabeceras visibles y completas dentro de Home, lista principal antes de Pospuestos y
+cabeceras sin solaparse, con comparaciones estrictas. La escala160 % del caso corto se
+lee de TextLayoutResult.layoutInput.density; no se infiere sólo del extra del Intent.
+No se añadieron pausas ni tolerancias geométricas. No se modifican ajustes globales de
+fuente/orientación, ni protocolo, ni código de producción.
+
+Verificación final adicional: HomeListSectionsTest1/1, lintDebug y ambos APK debug
+PASS; SidebarShelvesDeviceTest1/1 API34/emulator-5580,11.668 s. Las nueve muestras de
+[configuración, bounds y escala real](rotation-api34.json) cubren retrato, horizontal
+y horizontal recreado de los tres tamaños. En todos los horizontales decorView mide
+2400×1080; el caso corto mantiene fontScale1.6 antes/después de recreation. Son datos
+del fixture sintético real, sin aceptación física ni una nueva afirmación de paridad.
+Se conservan las capturas/vídeo originales arriba; no se añadieron goldens ni pausas.
