@@ -2500,6 +2500,28 @@ Appearance exposes the persisted ot3 Transition speed choices Slow/Normal/Fast
 (1.6/1/0.6), applied only to existing SidebarReveal/VerticalReveal show/hide durations.
 Normal is unchanged; Off/system reduced motion and the power-save cap remain in
 force. Root theme/workspace wiring and real Appearance persistence are verified.
-Other reveal styles and complete motion aesthetics remain pending; this does not
-add a style selector. Scope, timings and emulator control captures:
+That increment did not add a style selector; the following styles increment
+supersedes that limitation. Complete motion aesthetics remain pending.
+Scope, timings and emulator control captures:
 `docs/ui/compare/reveal-pace/README.md`.
+
+### Reveal styles and uniform snapshot correction — 2026-10-27
+
+Appearance now persists Show and hide: Nebula, Hyperspace, Fold, Spring and Instant,
+using the AAR's labels. The choice reaches both SidebarReveal and VerticalReveal.
+Durations/curves follow T3Reveal.qml and the existing pace multiplier; other
+animations keep their independent timings. Unsupported shader paths use Spring,
+and Instant/system reduced motion snap even when enabled during an active reveal.
+
+Moving shader regions now create RenderEffect after setting each frame's uniforms.
+The previous cached effect retained its initial uniform snapshot and could hide
+all content until the transition settled. A device pixel regression fails on that
+baseline and passes for all three shaded styles on both axes after correction.
+RuntimeShader stays cached, artistic AGSL stays unchanged, and settled content
+uses no attached effect.
+
+MainActivity selection/recreation and workspace propagation are verified; Warp/Fold
+recordings are instrumented component scenarios, not a wall-clock smoothness or
+physical-device aesthetic acceptance. Interactive GUI capture remains limited by
+the unavailable Jev key; no Android Settings fallback was used. Sources, GPU proof,
+recordings and remaining boundaries: `docs/ui/compare/reveal-styles/README.md`.
