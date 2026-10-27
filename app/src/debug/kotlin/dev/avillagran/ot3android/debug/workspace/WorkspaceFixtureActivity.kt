@@ -45,6 +45,9 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             val navigator = remember(nav) { Ot3Navigator(nav) }
             val screens = remember(navigator, fixture) {
                 object : Ot3Screens by AppScreens(navigator) {
+                    @Composable override fun SettingsPlaceholder(name: String, title: Int) {
+                        AppScreens(navigator).SettingsPlaceholder(name, title)
+                    }
                     @Composable override fun Home(entry: NavBackStackEntry, isTop: Boolean) {
                         val owner = remember(entry) { nav.getBackStackEntry(ChatsGraph) }
                         val vm: HomeViewModel = viewModel(viewModelStoreOwner = owner) {

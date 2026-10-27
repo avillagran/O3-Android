@@ -55,6 +55,7 @@ fun EnvironmentsScreen(
     onAppearance: () -> Unit = {},
     bridgeStatus: String? = null,
     onRefreshBridge: (() -> Unit)? = null,
+    onBack: () -> Unit = {},
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
@@ -71,6 +72,10 @@ fun EnvironmentsScreen(
                     "available_requires_authority" -> R.string.bridge_needs_authority
                     else -> R.string.bridge_available
                 }), style = MaterialTheme.typography.bodySmall)
+            }
+        }, navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
             }
         }, actions = {
             TextButton(onClick = onAppearance, modifier = Modifier.testTag(EnvironmentsScreenTags.APPEARANCE)) {
