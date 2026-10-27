@@ -134,8 +134,10 @@ intended: `QuotaStripScreenshotTest/home-*` (Home now has the panel behind the l
 - Guest limits: pixel_6 1080 × 2400 @ 420 dpi, 2048 MB RAM, 4 vCPUs in the clone only
   (`ot3a` keeps its 2). The emulator process peaked around 5.0 GB RSS; host free space
   went from 2.7 GiB to 2.0 GiB with a 473 MB clone. The guest was stopped at the end
-  (`scripts/emulator.sh stop`), leaving no qemu or netsimd process; the clone is kept for
-  the next reproducible run and the animation settings are back to the AVD's 0.
+  (`scripts/emulator.sh stop`), leaving no qemu or netsimd process, and the animation
+  settings are back to the AVD's 0. The clone was removed afterwards to give the host back
+  its 723 MB; the recipe above and in [EMULATOR.md](../../../EMULATOR.md) recreates it in
+  about a minute.
 
 ## CI
 
@@ -148,6 +150,10 @@ established cause recorded in
 Four local runs of that test on the same head passed, with the CI's animation settings.
 The second attempt was cancelled by the job's 40-minute timeout after the suite had
 finished its tests and the instrumentation stopped reporting; nothing in the app hung.
+A rerun then failed before any test because the runner's API34 system image extracted
+corrupt (`Error reading Zip content from a SeekableByteChannel`, no emulator on 5554); the
+next attempt passed. **Both checks are green on 3a9b350**: `build` and `instrumented`, with
+the app's 99 tests (8 skipped) in the instrumented job.
 
 ## Pending and boundaries
 

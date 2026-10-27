@@ -55,7 +55,8 @@
     "baseline_apk": "debug APK built from main 106f692 before any edit (sha256 3f58c78d65f43470559291cee13729ede0dcf2842398ebcac0417c1203d7aeca)",
     "video": "screenrecord 720x1600, 6 Mbps, 7.6-8 fps in the guest (SwiftShader, no display), converted to VP9/CRF40 WebM",
     "code_caveat": "Device runs used the same sources as the commit; later edits are an import tidy-up, comments, the private composable name and a guard against redundant energy-map writes. The AVD could not be rebooted afterwards (host at 1.8 GiB free, below the emulator disk check).",
-    "rebase_note": "Stills and clips captured before rebasing onto origin/main 88692ce (PR69/PR70); that rebase only adds the reader's conversation follow. JVM suite, goldens, lint and both APKs re-run after it."
+    "rebase_note": "Stills and clips captured before rebasing onto origin/main 88692ce (PR69/PR70); that rebase only adds the reader's conversation follow. JVM suite, goldens, lint and both APKs re-run after it.",
+    "clone_removed": "ot3a-sky.avd removed after the session to free 723 MB; the documented recipe recreates it in about a minute"
   },
   "not_verified": [
     "physical Xiaomi 23090RA98G (Android 16 / Mali): no run in this tranche; the AGSL guard and the Canvas fallback are unchanged and covered by the device tests here",
@@ -66,6 +67,8 @@
   "ci": {
     "build": "success on 5dd318f",
     "instrumented": "failed twice at ThreadCacheDeviceTest's collector wait (race against WhileSubscribed(5_000), cause recorded in docs/ui/compare/ui-3/expanded-editor/input-transition-diagnostics.md); deadline widened to 15 s with the same assertion; second attempt then cancelled by the job's 40-minute timeout after the suite stopped reporting",
-    "sky_tests_in_ci": "SkyRegionsDeviceTest 3 cases 2.1/2.9/4.1 s, SkyRenderingTest 2 cases ~1.8 s: all passed"
+    "sky_tests_in_ci": "SkyRegionsDeviceTest 3 cases 2.1/2.9/4.1 s, SkyRenderingTest 2 cases ~1.8 s: all passed",
+    "final": "Both checks green on 3a9b350: build and instrumented (99 app tests, 8 skipped)",
+    "infra_failure": "A rerun failed before any test: the runner's API34 system image extracted corrupt ('Error reading Zip content from a SeekableByteChannel'), so no emulator was on 5554. The following attempt passed."
   }
 }
