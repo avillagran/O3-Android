@@ -40,5 +40,14 @@
     "installedBaseApkSha256": "cc92b35f4721ed55533d720b6628553c0e0fe2c367445c1a028640e7c63f77fd",
     "matchesBuild": true,
     "personalUiOperated": false
+  },
+  "installation": {
+    "device": "known Xiaomi J75/23090RA98G",
+    "sourceCommit": "92afbea",
+    "method": "install-r",
+    "result": "Success",
+    "installedBaseApkSha256": "e27597c3bb1ab0c42398fa9af69ee822f5a98cb80d6eb287250858781225ea99",
+    "matchesBuild": true,
+    "personalUiOperated": false
   }
 }
