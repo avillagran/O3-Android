@@ -83,6 +83,8 @@ maximum without a high limit, and no reboot was performed. This local resource
 observation does not establish any cause for CI. The full suite was not repeated.
 The original intermittent failures remain unresolved pending a failing run with
 these scoped traces; a passing diagnostic run is not proof of a fix.
+The observer and extra semantics snapshots can affect scheduling. The traces
+describe the instrumented run; they do not prove that an unobserved race disappeared.
 
 After validation, explicit `systemctl --user stop ot3-input-readiness-qa` released
 port 5580 (`MainPID=0`, no ADB transports). The emulator aborted during shutdown,
