@@ -105,3 +105,9 @@ automático del fixture bajo instrumentación. La confirmación API34 queda al C
 La ejecución adicional conjunta se interrumpió al quedar esperando tras la rotación
 de SettingsNavigationDeviceTest, después de completar la prueba de caché. No se
 cuenta como pase conjunto; se repite la verificación focal de esta corrección.
+
+Repetición focal posterior: ThreadCacheDeviceTest1/1 y12JVM de caché,
+elegibilidad nativa, sesiones, guardas e iconos pasaron. Un intento inmediatamente
+posterior a cancelar la suite se invalidó por cierre del proceso durante la limpieza
+de instrumentación; el pase focal citado corresponde a una ejecución nueva aislada.
+LintDebug también pasó en esa ejecución focal (BUILD SUCCESSFUL).
