@@ -36,6 +36,22 @@ class ReaderContractTest {
         assertEquals(9, rows.getJSONObject(6).getJSONObject("left").getInt("oldLine"))
     }
 
+    @Test fun nativeMarkdownLinksKeepOriginalHrefKindsAndRejectedDestinations() = runBlocking {
+        assumeHostJni()
+        val markdown = checkNotNull(javaClass.getResource("/timeline/links.md")).readText()
+        val expected = org.json.JSONArray(checkNotNull(javaClass.getResource("/timeline/links.blocks.json")).readText())
+        val actual = DomainEngine.shared.domain("markdown.blocks", JSONObject().put("markdown", markdown)) as org.json.JSONArray
+        assertEquals(canonical(expected), canonical(actual))
+        val web = actual.getJSONObject(0).getJSONArray("spans").getJSONObject(0).getJSONObject("link")
+        assertEquals("web", web.getString("kind"))
+        assertEquals("HtTpS://Example.COM/Path?Key=VaL#Frag", web.getString("href"))
+        assertEquals("github", actual.getJSONObject(1).getJSONArray("spans").getJSONObject(0).getJSONObject("link").getString("kind"))
+        for (index in 7..9) org.junit.Assert.assertFalse(actual.getJSONObject(index).getJSONArray("spans").getJSONObject(0).has("link"))
+        val cell = actual.getJSONObject(10).getJSONArray("rows").getJSONArray(0).getJSONArray(0).getJSONObject(0).getJSONObject("link")
+        assertEquals("web", cell.getString("kind"))
+        assertEquals("hTtP://Example.COM/Table?Case=Keep", cell.getString("href"))
+    }
+
     @Test fun committedTableMatchesPinnedRust() = runBlocking {
         assumeHostJni()
         val markdown = checkNotNull(javaClass.getResource("/timeline/table.md")).readText()
