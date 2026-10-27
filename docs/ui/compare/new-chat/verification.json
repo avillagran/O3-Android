@@ -30,5 +30,14 @@
   "compileDebugAndroidTestKotlin": "PASS",
   "apkSha256": "cc92b35f4721ed55533d720b6628553c0e0fe2c367445c1a028640e7c63f77fd",
   "productionThreadCreatedForTest": false,
-  "multiHostCatalogSynchronization": "Not complete; phone has no selected native bridge and only one manual environment. See missing-host evidence."
+  "multiHostCatalogSynchronization": "Not complete; phone has no selected native bridge and only one manual environment. See missing-host evidence.",
+  "installation": {
+    "device": "known Xiaomi J75/23090RA98G",
+    "sourceCommit": "be04775",
+    "method": "install-r",
+    "result": "Success",
+    "installedBaseApkSha256": "cc92b35f4721ed55533d720b6628553c0e0fe2c367445c1a028640e7c63f77fd",
+    "matchesBuild": true,
+    "personalUiOperated": false
+  }
 }
