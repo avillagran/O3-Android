@@ -82,6 +82,7 @@
                 <data android:path="/pair" />
             </intent-filter>
         </activity>
+        <receiver android:name=".notifications.LegacyNotificationExpiryReceiver" android:exported="false" />
     </application>
 
 </manifest>

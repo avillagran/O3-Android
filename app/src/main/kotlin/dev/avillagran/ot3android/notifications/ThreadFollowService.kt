@@ -123,7 +123,7 @@ class ThreadFollowService : Service() {
                 if (changed || deadlineTick && missingOrStale) {
                     notification?.extras?.putString(PRESENTATION_STAMP, presentationStamp)
                     if (card?.active == true && notification != null) {
-                        startForeground(Ot3NotificationIds.ACTIVITY_ID, notification)
+                        LegacyNotificationExpiry.publish(this@ThreadFollowService, null, Ot3NotificationIds.ACTIVITY_ID, notification) { startForeground(Ot3NotificationIds.ACTIVITY_ID, it) }
                         foregroundId = Ot3NotificationIds.ACTIVITY_ID
                         if (manager.activeNotifications.any { it.tag == null && it.id == SERVICE_ID }) manager.cancel(SERVICE_ID)
                     } else {
@@ -131,8 +131,8 @@ class ThreadFollowService : Service() {
                             startForeground(SERVICE_ID, followingNotice())
                             foregroundId = SERVICE_ID
                         }
-                        if (notification != null) manager.notify(Ot3NotificationIds.ACTIVITY_ID, notification)
-                        else if (manager.activeNotifications.any { it.tag == null && it.id == Ot3NotificationIds.ACTIVITY_ID }) manager.cancel(Ot3NotificationIds.ACTIVITY_ID)
+                        if (notification != null) LegacyNotificationExpiry.publish(this@ThreadFollowService, null, Ot3NotificationIds.ACTIVITY_ID, notification)
+                        else if (manager.activeNotifications.any { it.tag == null && it.id == Ot3NotificationIds.ACTIVITY_ID }) LegacyNotificationExpiry.cancel(this@ThreadFollowService, null, Ot3NotificationIds.ACTIVITY_ID)
                     }
                     lastCard = presentation // Desired data only; a missing/stale platform record is retried on the existing deadline wake.
                 }
@@ -140,7 +140,7 @@ class ThreadFollowService : Service() {
                 for (i in 0 until (alerts?.length() ?: 0)) {
                     val alert = NotificationContract.alert(alerts!!.optJSONObject(i)) ?: continue
                     AwarenessAlertBuilder.build(this@ThreadFollowService, alert, now, privacy)?.let {
-                        manager.notify(Ot3NotificationIds.alertTag(alert), Ot3NotificationIds.ALERT_ID, it)
+                        LegacyNotificationExpiry.publish(this@ThreadFollowService, Ot3NotificationIds.alertTag(alert), Ot3NotificationIds.ALERT_ID, it)
                     }
                 }
                 val summaries = result.optJSONArray("summaries")
@@ -151,7 +151,7 @@ class ThreadFollowService : Service() {
                     postedGroups.add(group)
                     val r = summary.getJSONObject("route")
                     val lines = summary.optJSONArray("lines")
-                    manager.notify(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID,
+                    LegacyNotificationExpiry.publish(this@ThreadFollowService, Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID,
                         AwarenessAlertBuilder.summary(this@ThreadFollowService, group, summary.optString("title"),
                             (0 until (lines?.length() ?: 0)).map { lines!!.getString(it) },
                             ThreadRef(r.getString("environmentId"), r.getString("threadId")), summary.optString("body"), privacy))
@@ -162,7 +162,7 @@ class ThreadFollowService : Service() {
                 for (group in AlertGroup.entries) {
                     if (group !in postedGroups && active.any { it.tag == Ot3NotificationIds.summaryTag(group) } &&
                         active.none { it.tag?.startsWith("ot3-alert:") == true && it.notification.group == Ot3NotificationIds.group(group) }) {
-                        manager.cancel(Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID)
+                        LegacyNotificationExpiry.cancel(this@ThreadFollowService, Ot3NotificationIds.summaryTag(group), Ot3NotificationIds.SUMMARY_ID)
                     }
                 }
                 if (privacy != lastPrivacy) {
@@ -194,7 +194,7 @@ class ThreadFollowService : Service() {
     override fun onDestroy() {
         scope.cancel() // finally releases leases, leaving foreground screens alone.
         stopForeground(STOP_FOREGROUND_REMOVE)
-        if (activeCard) manager.cancel(Ot3NotificationIds.ACTIVITY_ID)
+        if (activeCard) LegacyNotificationExpiry.cancel(this@ThreadFollowService, null, Ot3NotificationIds.ACTIVITY_ID)
         super.onDestroy()
     }
     private fun followingNotice() = NotificationCompat.Builder(this, Ot3NotificationChannels.ACTIVITY)
