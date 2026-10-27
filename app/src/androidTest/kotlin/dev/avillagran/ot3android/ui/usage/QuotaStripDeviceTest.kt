@@ -36,7 +36,7 @@ class QuotaStripDeviceTest {
             scenario.recreate()
             rule.onNodeWithTag("appearance_provider_usage").performScrollTo().assertIsOn()
             rule.onNodeWithContentDescription("Back").performClick()
-            rule.onNodeWithTag("nav_tab_Chats").performClick()
+            rule.onNodeWithTag(dev.avillagran.ot3android.ui.settings.SettingsTags.BACK).performClick()
             lateinit var fixture: dev.avillagran.ot3android.debug.workspace.WorkspaceFixture
             scenario.onActivity { fixture = it.fixture }
             rule.waitUntil(15_000) { fixture.transport.serverConfigCollectors().value == 1 }

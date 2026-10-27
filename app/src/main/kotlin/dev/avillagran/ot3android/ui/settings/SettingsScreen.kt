@@ -1,5 +1,10 @@
 package dev.avillagran.ot3android.ui.settings
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,12 +29,15 @@ enum class SettingsEntry { Environments, Appearance, Notifications, Usage, Archi
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onOpen: (SettingsEntry) -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(onOpen: (SettingsEntry) -> Unit, modifier: Modifier = Modifier, onBack: () -> Unit = {}) {
     Scaffold(
         modifier = modifier.testTag(SettingsTags.ROOT),
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.ot3_tab_settings)) }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.ot3_tab_settings)) },
+            navigationIcon = { IconButton(onClick = onBack, modifier = Modifier.testTag(SettingsTags.BACK)) {
+                Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
+            } }) },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             SettingsEntry.entries.forEach { entry ->
                 val label = when (entry) {
                     SettingsEntry.Environments -> R.string.ot3_env_title
@@ -50,6 +58,7 @@ fun SettingsScreen(onOpen: (SettingsEntry) -> Unit, modifier: Modifier = Modifie
 
 object SettingsTags {
     const val ROOT = "settings"
+    const val BACK = "settings_back"
 
     fun entry(entry: SettingsEntry) = "settings_${entry.name}"
 }
