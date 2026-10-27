@@ -32,6 +32,9 @@ interface T3Transport : DomainCalls, Closeable {
      */
     suspend fun disconnect()
 
+    /** Authenticated session permissions, read through Rust's connected request operation. */
+    suspend fun authSession(): JSONObject = throw UnsupportedOperationException("authSession")
+
     /** ABI and library versions, operations and limits. Offline. */
     suspend fun capabilities(): JSONObject
 

@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">Не удалось подтвердить действие. Проверьте состояние обсуждения, прежде чем повторить попытку.</string>
+</resources>

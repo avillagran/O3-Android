@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">Não foi possível confirmar a ação. Verifique o estado da thread antes de tentar novamente.</string>
+</resources>

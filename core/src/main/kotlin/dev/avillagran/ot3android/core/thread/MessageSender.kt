@@ -79,6 +79,14 @@ class MessageSender(
         JSONObject().put("threadId", threadId).put("commandId", "ot3a-validation")
             .put("runtimeMode", mode), domain)
 
+    /** Home lifecycle commands share the composer's durable command identity and recovery. */
+    suspend fun sidebar(transport: T3Transport?, environmentId: String, threadId: String,
+        fn: String, arguments: JSONObject, domain: DomainCalls = DomainEngine.shared,
+    ): SendResult {
+        require(fn == "sidebar.command" || fn == "sidebar.threadAction")
+        return nativeMutation(transport, environmentId, threadId, fn, arguments, domain)
+    }
+
     private suspend fun nativeMutation(
         transport: T3Transport?, environmentId: String, threadId: String,
         fn: String, arguments: JSONObject, domain: DomainCalls,

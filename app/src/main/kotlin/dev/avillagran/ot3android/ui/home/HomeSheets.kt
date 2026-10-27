@@ -32,8 +32,7 @@ import dev.avillagran.ot3android.core.home.ThreadAction
 
 /**
  * The Thread actions sheet: ot3's hover-card header, then the menu's usable items in ot3's
- * order (interim: Copy ▸ Path / Branch / Thread ID and Filter by project; ot3 also lists the
- * disabled ones, greyed out). A submenu is shown as "Copy ▸ Path".
+ * order. Visible unavailable items remain disabled, as on desktop. Submenus are flattened.
  */
 @Composable
 fun ThreadActionsContent(row: HomeRow, menu: List<MenuEntry>, onAction: (ThreadAction) -> Unit) {
@@ -45,15 +44,15 @@ fun ThreadActionsContent(row: HomeRow, menu: List<MenuEntry>, onAction: (ThreadA
         }
         HorizontalDivider()
         var group: Int? = null
-        menu.filter { it.available }.forEach { entry ->
+        menu.filter { it.visible }.forEach { entry ->
             if (group != null && entry.group != group) HorizontalDivider(Modifier.padding(vertical = 4.dp))
             group = entry.group
             if (entry.children.isEmpty()) {
-                SheetItem(threadActionText(entry.action, row), SheetTags.action(entry.action)) { onAction(entry.action) }
+                SheetItem(threadActionText(entry.action, row), SheetTags.action(entry.action), entry.enabled) { onAction(entry.action) }
             } else {
                 val parent = threadActionText(entry.action, row)
-                entry.children.filter { it.available }.forEach { child ->
-                    SheetItem("$parent ▸ ${threadActionText(child.action, row)}", SheetTags.action(child.action)) { onAction(child.action) }
+                entry.children.filter { it.visible }.forEach { child ->
+                    SheetItem("$parent ▸ ${if (child.checked == true) "✓ " else ""}${threadActionText(child.action, row)}", SheetTags.action(child.action), child.enabled) { onAction(child.action) }
                 }
             }
         }
@@ -103,7 +102,7 @@ fun ThreadListOptionsContent(
     }
 }
 
-/** Snooze until: ot3's presets. Snoozing mutates, so every choice is disabled until the builders exist. */
+/** Snooze until: ot3 presets, gated by the current environment permission. */
 @Composable
 fun SnoozeUntilContent(presets: List<SnoozePreset>, enabled: Boolean, onChoose: (SnoozePreset) -> Unit) {
     Column(Modifier.fillMaxWidth().testTag(SheetTags.SNOOZE)) {

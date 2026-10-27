@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">Toimintoa ei voitu vahvistaa. Tarkista keskustelun tila ennen kuin yrität uudelleen.</string>
+</resources>

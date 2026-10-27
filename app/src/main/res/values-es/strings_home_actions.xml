@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">No se pudo confirmar la acción. Revisa el estado del hilo antes de volver a intentarlo.</string>
+</resources>

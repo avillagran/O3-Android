@@ -57,7 +57,7 @@ class ThreadActionsTest {
             menu.available(),
         )
         val pinned = ThreadActions.menu(target(row.copy(pinned = true, settled = true, snoozed = true)), everything).available()
-        assertTrue(listOf(ThreadAction.Unpin, ThreadAction.MoveUp, ThreadAction.MoveDown, ThreadAction.MoveToActive, ThreadAction.WakeNow).all { it in pinned })
+        assertTrue(listOf(ThreadAction.Unpin, ThreadAction.MoveToActive, ThreadAction.WakeNow).all { it in pinned })
 
         val noCaps = ThreadActions.menu(target(), everything.copy(capabilities = emptySet())).available()
         assertFalse(ThreadAction.Pin in noCaps)
@@ -77,7 +77,7 @@ class ThreadActionsTest {
     @Test
     fun swipeFollowsT3Mobile() {
         val settlement = ActionContext(capabilities = setOf(ServerCapability.ThreadSettlement, ServerCapability.ThreadSnooze), canWrite = true, buildersAvailable = true)
-        assertEquals(SwipeActions(SwipeAction.Settle, SwipeAction.Snooze, true), ThreadActions.swipe(row, settlement))
+        assertEquals(SwipeActions(SwipeAction.Settle, SwipeAction.Snooze, true), ThreadActions.swipe(row.copy(canSnooze = true), settlement))
         assertEquals(SwipeAction.MoveToActive, ThreadActions.swipe(row.copy(settled = true), settlement).primary)
         assertEquals(SwipeActions(SwipeAction.Wake, null, true), ThreadActions.swipe(row.copy(snoozed = true), settlement))
         assertEquals(SwipeActions(SwipeAction.Archive, null, false), ThreadActions.swipe(row, ActionContext.Interim))

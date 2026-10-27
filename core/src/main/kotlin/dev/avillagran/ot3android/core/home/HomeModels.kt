@@ -12,6 +12,7 @@ data class HomeEnvironment(
     val connection: ConnectionState,
     /** Null until the first snapshot; kept while reconnecting. */
     val shell: ShellState?,
+    val actions: ActionContext = ActionContext.Interim,
 )
 
 /** ot3's Status filter (`ot3:ui/qml/T3Panel.qml:1079-1089`), in ot3's order; [libName] is `sidebar.view`'s `filter`. */
@@ -200,6 +201,7 @@ sealed interface HomeContent {
 }
 
 data class HomeUiState(
+    val actionContexts: Map<String, ActionContext> = emptyMap(),
     val content: HomeContent = HomeContent.Connecting,
     val header: HomeHeader = HomeHeader(),
     val query: String = "",

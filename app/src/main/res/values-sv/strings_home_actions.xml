@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">Det gick inte att bekräfta åtgärden. Kontrollera trådens status innan du försöker igen.</string>
+</resources>

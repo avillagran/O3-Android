@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">无法确认该操作。请检查会话状态后再试。</string>
+</resources>

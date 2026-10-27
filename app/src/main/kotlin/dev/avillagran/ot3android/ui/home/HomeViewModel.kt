@@ -7,6 +7,7 @@ import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.prefs.ShelfStore
 import dev.avillagran.ot3android.core.domain.Environment
+import dev.avillagran.ot3android.core.home.*
 import dev.avillagran.ot3android.core.home.HeaderStatus
 import dev.avillagran.ot3android.core.home.HeaderStatusDisplay
 import dev.avillagran.ot3android.core.home.HomeEnvironment
@@ -61,7 +62,33 @@ class HomeViewModel(
     private val shelfStore: ShelfStore,
     private val clock: () -> Long = System::currentTimeMillis,
     private val domain: DomainCalls = DomainEngine.shared,
+    private val sender: dev.avillagran.ot3android.core.thread.MessageSender? = null,
 ) : ViewModel() {
+
+    private val accessRefresh = MutableStateFlow(0)
+    private val actionBusy = MutableStateFlow<Set<String>>(emptySet())
+    val actionError = MutableStateFlow<String?>(null)
+
+    fun manage(row: HomeRow, action: ThreadAction, title: String? = null, until: String? = null, confirmed: Boolean = false) {
+        viewModelScope.launch {
+            if (row.environmentId in actionBusy.value) return@launch
+            val supervisor = supervisors.value.orEmpty().firstOrNull { it.first.id == row.environmentId }?.second ?: return@launch
+            val live = supervisor.connection.value ?: return@launch
+            val currentRow = state.value?.rows?.get(row.key) ?: return@launch
+            actionError.value = null
+            actionBusy.update { it + row.environmentId }
+            try {
+                val sender = sender ?: error("action_unavailable")
+                when (val result = ThreadManagement.execute(live.transport, currentRow, action, title, until, confirmed, sender)) {
+                    is dev.avillagran.ot3android.core.thread.SendResult.Accepted -> if (supervisor.connection.value === live) supervisor.refresh()
+                    is dev.avillagran.ot3android.core.thread.SendResult.OutcomeUnknown -> actionError.value = "rpc_outcome_unknown"
+                    is dev.avillagran.ot3android.core.thread.SendResult.Failed -> actionError.value = result.code
+                }
+            } catch (error: CancellationException) { throw error }
+            catch (error: Exception) { actionError.value = (error as? T3Exception)?.code ?: "action_unavailable" }
+            finally { actionBusy.update { it - row.environmentId } }
+        }
+    }
 
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(HomeFilter())
@@ -78,7 +105,15 @@ class HomeViewModel(
         } else {
             combine(
                 running.map { (env, supervisor) ->
-                    combine(supervisor.state, supervisor.shell) { state, shell -> HomeEnvironment(env.id, env.label, state, shell) }
+                    val access = combine(supervisor.connection, accessRefresh) { live, _ -> live }.flatMapLatest { live -> flow {
+                        emit(ActionContext.Interim)
+                        if (live != null) emit(try { ThreadManagement.access(live.transport) }
+                            catch (error: CancellationException) { throw error }
+                            catch (_: Exception) { ActionContext.Interim })
+                    } }.combine(actionBusy) { context, busy -> context.copy(busy = env.id in busy, buildersAvailable = sender != null && context.buildersAvailable) }
+                    combine(supervisor.state, supervisor.shell, access) { state, shell, context ->
+                        HomeEnvironment(env.id, env.label, state, shell, if (state is dev.avillagran.ot3android.core.connection.ConnectionState.Connected) context else ActionContext.Interim)
+                    }
                 },
             ) { it.toList() }
         }
@@ -122,6 +157,7 @@ class HomeViewModel(
                 messages = inputs.messages,
                 headerStatus = inputs.header,
                 now = now,
+                actions = { id -> inputs.environments.firstOrNull { it.id == id }?.actions ?: ActionContext.Interim },
                 returns = returns.takeIf { inputs.shelves.grouped },
             )
             val sidebar = try {
@@ -133,7 +169,7 @@ class HomeViewModel(
                 return@mapLatest state.value
             }
             returns = sidebar.returns
-            HomeStateBuilder.build(input, sidebar).also { state ->
+            HomeStateBuilder.build(input, sidebar).copy(actionContexts = inputs.environments.associate { it.id to it.actions }).also { state ->
                 ticking.value = state.rows.values.any { it.time.kind == "elapsed" || it.time.kind == "countdown" }
             }
         }
@@ -183,6 +219,7 @@ class HomeViewModel(
 
     /** Home's overflow Refresh: a fresh shell for every connected environment. */
     fun refresh() {
+        accessRefresh.update { it + 1 }
         supervisors.value.orEmpty().forEach { (_, supervisor) ->
             viewModelScope.launch {
                 try {

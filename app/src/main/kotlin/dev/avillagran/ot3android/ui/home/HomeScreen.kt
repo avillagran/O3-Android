@@ -89,6 +89,7 @@ sealed interface HomeIntent {
 
     /** Long press on a row: the Thread actions sheet. */
     data class RowActions(val row: HomeRow) : HomeIntent
+    data class Swipe(val row: HomeRow, val action: dev.avillagran.ot3android.core.home.SwipeAction) : HomeIntent
 
     /** Long press on the project chip or name: the Project actions sheet. */
     data class ProjectActions(val row: HomeRow) : HomeIntent
@@ -375,13 +376,13 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
     } else {
         null
     }
-    // Swipes (Settle, Move to active, Wake, Archive; Snooze) are modelled in row.swipe but all
-    // mutate, so no gesture is attached until the lib's command builders are reachable.
     val modifier = animatedModifier.graphicsLayer { translationX = drift.value * density * direction }.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
+    ThreadSwipeActions(row, { onIntent(HomeIntent.Swipe(row, it)) }, modifier) { contentModifier ->
     if (row.slim) {
-        ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = modifier)
+        ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
     } else {
-        ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = modifier)
+        ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
+    }
     }
 }
 

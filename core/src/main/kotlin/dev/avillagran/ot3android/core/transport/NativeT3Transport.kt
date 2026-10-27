@@ -46,6 +46,8 @@ class NativeT3Transport(
         native { client.execute(op("disconnect")) }
     }
 
+    override suspend fun authSession(): JSONObject = request("/api/auth/session", protocol = false) as JSONObject
+
     override suspend fun capabilities(): JSONObject = native { client.execute(op("capabilities")) as JSONObject }
 
     override suspend fun describe(): JSONObject = native { client.describe() }
