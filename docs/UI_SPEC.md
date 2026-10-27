@@ -2028,10 +2028,14 @@ handles per local environment (rather than the originally proposed Ui/Follow hol
   with `EXTRA_APP_PACKAGE` (the constant in the API 36/37 SDK and T3's module; the guide
   names `ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS`, which the SDK does not have), else
   the app's notification settings (26+), else app details.
-- Below 36.1 the same card is a normal ongoing notification. API 24–25 have no channels
-  and no timeout: priority LOW/HIGH stand in for channels, and while the service runs it
-  cancels expired cards; T3's single inexact `setAndAllowWhileIdle` alarm for a stopped
-  process (`AgentNotifications.kt:280-290`) remains a pending older-API adaptation.
+- Below 36.1 the same card is a normal ongoing notification. API24/25 have no
+  platform timeout. The compatibility presenter schedules each Rust-provided absolute
+  `expiresAt` with an inexact, non-wakeup RTC alarm and a non-exported receiver,
+  retaining only slot/generation/deadline metadata in preferences. Cleanup survives
+  service teardown; idle can delay it. No exact-alarm permission or periodic polling
+  is requested. API26+ keeps native timeout. This avoids T3's wake-during-idle alarm
+  (`AgentNotifications.kt:280–290`). Summary cleanup remains pending on all APIs.
+  [Verification and limits](ui/compare/ui-n/legacy-expiry.md).
 
 #### 4.14.6 Channels, alerts and actions
 

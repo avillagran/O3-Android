@@ -185,3 +185,7 @@ only orchestration:read authority and exposes configuration on loopback. Reverse
 only to emulator-5580, grant notifications visibly, and run FollowLiveDeviceTest with
 followLabPort. Capture while its /continue gate waits, return Home, call /release, then
 /finish. Never print /config or the private session file. The helper revokes on shutdown.
+
+Current legacy expiry status (2026-10-27): [API24/25 backport verification](legacy-expiry.md)
+covers service-independent absolute-deadline cleanup with Robolectric delivery, not
+legacy-device acceptance. Summary expiration remains pending on all APIs.

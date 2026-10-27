@@ -244,12 +244,13 @@ private fun tint(context: Context, phase: AwarenessPhase): Int? = when (phase) {
 }?.let { ContextCompat.getColor(context, it) }
 
 /** Reapply privacy to already posted cards without replaying alert sounds or changing routes/timeouts. */
-fun refreshNotificationPrivacy(context: Context, detail: LockscreenDetail, skipActivity: Boolean = false) {
+fun refreshNotificationPrivacy(context: Context, detail: LockscreenDetail, skipActivity: Boolean = false) = synchronized(LegacyNotificationExpiry) {
     if (!ThreadFollowService.allowed(context)) return
     val manager = context.getSystemService(NotificationManager::class.java)
     manager.activeNotifications.forEach { posted ->
         if (skipActivity && posted.tag == null && posted.id == Ot3NotificationIds.ACTIVITY_ID) return@forEach
         val notification = posted.notification
+        if (!LegacyNotificationExpiry.isCurrent(context, posted.tag, posted.id, notification)) return@forEach
         val status = notification.extras.getString("ot3.publicStatus") ?: return@forEach
         val public = notification.publicVersion
         val alreadyCorrect = when (detail) {
@@ -261,7 +262,7 @@ fun refreshNotificationPrivacy(context: Context, detail: LockscreenDetail, skipA
         }
         val expiry = notification.extras.getLong("ot3.expiresAt", 0)
         val remaining = expiry - System.currentTimeMillis()
-        if (expiry > 0 && remaining <= 0) { manager.cancel(posted.tag, posted.id); return@forEach }
+        if (expiry > 0 && remaining <= 0) { LegacyNotificationExpiry.cancel(context, posted.tag, posted.id); return@forEach }
         if (alreadyCorrect) return@forEach
         val builder = Notification.Builder.recoverBuilder(context, notification).setOnlyAlertOnce(true)
         if (expiry > 0 && Build.VERSION.SDK_INT >= 26) builder.setTimeoutAfter(remaining)
@@ -275,6 +276,6 @@ fun refreshNotificationPrivacy(context: Context, detail: LockscreenDetail, skipA
                 builder.setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(public)
             }
         }
-        manager.notify(posted.tag, posted.id, builder.build())
+        LegacyNotificationExpiry.publish(context, posted.tag, posted.id, builder.build())
     }
 }
