@@ -1222,3 +1222,19 @@ protect replacements and privacy refresh from stale callbacks/NMS snapshots. API
 keeps its native timeout. No exact alarm permission or wake-during-idle request is added;
 cleanup may be delayed. Summary lifecycle remains pending rather than risking removal
 of enqueued children. [Verification and limits](ui/compare/ui-n/legacy-expiry.md).
+
+### 2026-10-27 — Reveal choices are local UI preferences; effects snapshot uniforms
+
+Show/hide style and pace persist in Appearance and reach both reveal axes through
+the shared theme policy. They follow T3Motion/T3Reveal's five choices and timings;
+shader capability failure falls back to Spring and reduced motion remains immediate.
+Instant uses a direct target branch so it also interrupts an unchanged animation
+target. These presentation settings add no protocol behavior or server requests.
+
+RuntimeShader is cached per reveal, but the attached RenderEffect is created after
+the current frame's uniforms. Android/Skia copies the builder into the image filter;
+reusing an effect created before uniform updates left moving content empty. A real
+GPU pixel regression demonstrated the failure and its correction on both axes.
+The capability probe may be cached; its effect must never be attached to a frame.
+The shader's artistic code remains unchanged and no effect stays attached at rest.
+See [source references, regression and capture limits](ui/compare/reveal-styles/README.md).

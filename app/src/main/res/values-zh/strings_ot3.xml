@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">慢</string>
     <string name="ot3_pace_normal">正常</string>
     <string name="ot3_pace_fast">快速</string>
+    <string name="ot3_show_and_hide">显示与隐藏</string>
+    <string name="ot3_reveal_nebula">星云</string>
+    <string name="ot3_reveal_warp">超空间</string>
+    <string name="ot3_reveal_fold">折叠</string>
+    <string name="ot3_reveal_spring">弹性</string>
+    <string name="ot3_reveal_instant">即时</string>
 </resources>

@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">Långsam</string>
     <string name="ot3_pace_normal">Normal</string>
     <string name="ot3_pace_fast">Snabbt</string>
+    <string name="ot3_show_and_hide">Visa och dölj</string>
+    <string name="ot3_reveal_nebula">Nebulosa</string>
+    <string name="ot3_reveal_warp">Hyperrymd</string>
+    <string name="ot3_reveal_fold">Vikning</string>
+    <string name="ot3_reveal_spring">Fjädrande</string>
+    <string name="ot3_reveal_instant">Direkt</string>
 </resources>

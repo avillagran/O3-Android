@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">Langzaam</string>
     <string name="ot3_pace_normal">Normaal</string>
     <string name="ot3_pace_fast">Snel</string>
+    <string name="ot3_show_and_hide">Tonen en verbergen</string>
+    <string name="ot3_reveal_nebula">Nevel</string>
+    <string name="ot3_reveal_warp">Hyperruimte</string>
+    <string name="ot3_reveal_fold">Vouwen</string>
+    <string name="ot3_reveal_spring">Verend</string>
+    <string name="ot3_reveal_instant">Direct</string>
 </resources>

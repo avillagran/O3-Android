@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">Sakte</string>
     <string name="ot3_pace_normal">Normal</string>
     <string name="ot3_pace_fast">Rask</string>
+    <string name="ot3_show_and_hide">Vis og skjul</string>
+    <string name="ot3_reveal_nebula">Tåke</string>
+    <string name="ot3_reveal_warp">Hyperrom</string>
+    <string name="ot3_reveal_fold">Bretting</string>
+    <string name="ot3_reveal_spring">Fjærende</string>
+    <string name="ot3_reveal_instant">Umiddelbart</string>
 </resources>

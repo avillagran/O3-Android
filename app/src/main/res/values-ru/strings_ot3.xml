@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">Медленно</string>
     <string name="ot3_pace_normal">Обычно</string>
     <string name="ot3_pace_fast">Быстро</string>
+    <string name="ot3_show_and_hide">Показ и скрытие</string>
+    <string name="ot3_reveal_nebula">Туманность</string>
+    <string name="ot3_reveal_warp">Гиперпространство</string>
+    <string name="ot3_reveal_fold">Складывание</string>
+    <string name="ot3_reveal_spring">Пружина</string>
+    <string name="ot3_reveal_instant">Мгновенно</string>
 </resources>
