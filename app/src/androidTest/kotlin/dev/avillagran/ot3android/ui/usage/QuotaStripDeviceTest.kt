@@ -7,7 +7,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.closeSoftKeyboard
+import androidx.test.espresso.Espresso.pressBack
 import dev.avillagran.ot3android.appGraph
 import dev.avillagran.ot3android.debug.workspace.WorkspaceFixtureActivity
 import dev.avillagran.ot3android.ui.home.HomeTags
@@ -136,15 +136,18 @@ class QuotaStripDeviceTest {
             }
             // Rotation can request the IME for the recreated composer asynchronously.
             // CI recorded that restore/show arriving after Espresso's earlier hide.
-            // Focus the recreated field once, await its IME, then release focus
-            // before hiding it. A menu/rotation need not preserve semantic focus.
+            // Focus the recreated field once and await its IME. Dismiss it with
+            // one real Back action so Android owns the IME hide lifecycle instead
+            // of clearing AndroidComposeView focus during Compose restoration.
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus) { it() }
             rule.waitUntil(15_000) {
                 rule.onAllNodes(hasTestTag(ThreadScreenTags.COMPOSER) and isFocused()).fetchSemanticsNodes().isNotEmpty()
             }
             awaitIme(scenario)
-            scenario.onActivity { it.currentFocus?.clearFocus() }
-            closeSoftKeyboard()
+            pressBack()
+            // Back must be consumed by the IME, leaving the thread route intact.
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertExists().assertTextContains("Quota draft retained")
+            rule.onNodeWithTag("thread_sidebar").assertIsDisplayed()
             rule.waitUntil(15_000) {
                 var hidden = false
                 scenario.onActivity {
@@ -154,6 +157,8 @@ class QuotaStripDeviceTest {
                 hidden
             }
             rule.waitForIdle()
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertIsDisplayed().assertTextContains("Quota draft retained")
+            rule.onNodeWithTag("thread_sidebar").assertIsDisplayed()
             capture("thread-landscape.$theme")
             // Landscape has a live Home sidebar too, with the same shared quota owner.
             scenario.onActivity { assertEquals(1, it.fixture.transport.serverConfigCollectors().value) }
