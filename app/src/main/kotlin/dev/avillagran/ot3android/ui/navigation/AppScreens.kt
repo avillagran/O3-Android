@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android.ui.navigation
 
+import androidx.compose.foundation.layout.padding
 import android.content.ClipData
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -125,7 +126,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun Settings() {
-        SettingsScreen(onOpen = { entry ->
+        SettingsScreen(onBack = { navigator.home() }, onOpen = { entry ->
             when (entry) {
                 SettingsEntry.Environments -> navigator.push(Environments)
                 SettingsEntry.Appearance -> navigator.push(Appearance)
@@ -135,6 +136,27 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 SettingsEntry.Licenses -> navigator.push(Licenses)
             }
         })
+    }
+
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+    @Composable
+    override fun SettingsPlaceholder(name: String, title: Int) {
+        androidx.compose.material3.Scaffold(topBar = {
+            androidx.compose.material3.TopAppBar(
+                title = { androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(title)) },
+                navigationIcon = {
+                    androidx.compose.material3.IconButton(onClick = { navigator.back() }) {
+                        androidx.compose.material3.Icon(
+                            androidx.compose.ui.res.painterResource(dev.avillagran.ot3android.R.drawable.ic_arrow_back),
+                            androidx.compose.ui.res.stringResource(dev.avillagran.ot3android.R.string.action_back),
+                        )
+                    }
+                },
+            )
+        }) { padding ->
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier
+                .padding(padding)) { NotYetScreen(name) }
+        }
     }
 
     @Composable
@@ -212,6 +234,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val bridgeStatus by graph.bridgeCatalog.status.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
         EnvironmentsScreen(
+            onBack = { navigator.back() },
             viewModel = appViewModel { graph -> EnvironmentsViewModel(graph.environmentRepository, graph.connectionManager) },
             // Rows expand in place with UI-6; until then a tap edits, as the edit action does.
             onOpen = { id -> navigator.addEnvironment(id) },

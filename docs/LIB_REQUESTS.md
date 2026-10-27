@@ -1185,6 +1185,22 @@ and durable storage; it must not port fallback/search/routing rules to Kotlin.
 UI_SPEC §4.7 and the NewThread route remain unimplemented; this request is not
 acceptance of that flow. No library checkout or production configuration was changed.
 
+## 2026-10-26 — U34: Bounded provider registry icon bytes
+
+Checked against v0.3.5 `src/models.rs` and binary operations: `models.catalog`
+already validates and supplies `registryIcon`, `driverKind` and `instanceId`.
+Android can render bundled desktop provider marks from exact driver identity,
+with the desktop ACP mark for custom/unknown providers. It must not infer identity
+from model names or instance display names.
+
+Missing for complete registry parity: a native bounded/cancellable icon byte read,
+for example `models.registryIconBytes(catalogProvider) -> {mimeType,bytes}` via the
+binary ABI. Reuse catalog URL validation; allow only its official registry source,
+validate redirects/content/size, no bearer credentials, and expose cancellation.
+The Android consumer renders/caches returned bytes and retains the bundled fallback
+while loading or on error. The current attachment image API cannot fetch this URL.
+No Kotlin HTTP/protocol implementation or library checkout change is introduced.
+
 ## 2026-10-26 — U18 follow-up: Historical page integration into a live cached view
 
 U18's `history.path` and `history.envelope` are available in v0.3.5; this is not a

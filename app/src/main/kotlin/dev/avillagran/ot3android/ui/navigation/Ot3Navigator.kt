@@ -118,6 +118,12 @@ class Ot3Navigator(val navController: NavHostController) {
         navController.popBackStack(Home, inclusive = false)
     }
 
+    /** Returns from Settings to the Home list, including when Chats retained a thread. */
+    fun home() {
+        selectTab(TopTab.Chats)
+        navController.popBackStack(Home, inclusive = false)
+    }
+
     /** Pops the top entry (a sheet, then a detail). False at a tab root. */
     fun back(): Boolean = navController.popBackStack()
 }
