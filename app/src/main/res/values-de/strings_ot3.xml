@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Falten</string>
     <string name="ot3_reveal_spring">Federnd</string>
     <string name="ot3_reveal_instant">Sofort</string>
+    <string name="ot3_inspector_activity_details">Aktivitätsdetails</string>
+    <string name="ot3_inspector_loading">Ausgabe wird geladen…</string>
+    <string name="ot3_inspector_unavailable_error">Ausgabe konnte nicht geladen werden</string>
+    <string name="ot3_inspector_disconnected">Offline</string>
+    <string name="ot3_inspector_unavailable">Die Ausgabe ist nicht mehr verfügbar.</string>
+    <string name="ot3_inspector_details">Details</string>
+    <string name="ot3_inspector_metadata">Metadaten</string>
+    <string name="ot3_inspector_raw_item">Rohdaten des Elements</string>
+    <string name="ot3_inspector_exit_code">Exit-Code</string>
+    <string name="ot3_inspector_empty_output">Keine Ausgabe.</string>
+    <string name="ot3_inspector_output_omitted">Der Server hat die Ausgabe zurückgehalten. Erneut versuchen, um sie zu aktualisieren.</string>
+    <string name="ot3_inspector_truncated">Anzeigelimit erreicht. Beim Kopieren wird nur der sichtbare Text übernommen.</string>
 </resources>

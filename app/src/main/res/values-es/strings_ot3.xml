@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Plegado</string>
     <string name="ot3_reveal_spring">Elástico</string>
     <string name="ot3_reveal_instant">Instantáneo</string>
+    <string name="ot3_inspector_activity_details">Detalles de la actividad</string>
+    <string name="ot3_inspector_loading">Cargando salida…</string>
+    <string name="ot3_inspector_unavailable_error">No se pudo cargar la salida</string>
+    <string name="ot3_inspector_disconnected">Sin conexión</string>
+    <string name="ot3_inspector_unavailable">La salida ya no está disponible.</string>
+    <string name="ot3_inspector_details">Detalles</string>
+    <string name="ot3_inspector_metadata">Metadatos</string>
+    <string name="ot3_inspector_raw_item">Elemento sin procesar</string>
+    <string name="ot3_inspector_exit_code">Código de salida</string>
+    <string name="ot3_inspector_empty_output">Sin salida.</string>
+    <string name="ot3_inspector_output_omitted">El servidor no proporcionó la salida. Vuelve a intentarlo para actualizarla.</string>
+    <string name="ot3_inspector_truncated">Se alcanzó el límite de visualización. La copia solo incluye el texto mostrado.</string>
 </resources>

@@ -1,0 +1,39 @@
+{
+  "image": "android-36.1/google_apis/x86_64 revision4",
+  "candidate": "10939b1",
+  "jvmRetryRegression": "7 focused cases passed; app lint and both APK builds passed",
+  "attempts": [
+    {
+      "run": "initial",
+      "tests": 4,
+      "failures": 2,
+      "cause": "New test used exact comparison for a substring in complete Raw JSON; corrected."
+    },
+    {
+      "run": "retry-regression",
+      "tests": 4,
+      "failures": 2,
+      "cause": "Real inspector lazy-row retry lost body and could dispose its read; corrected by retaining previous body while loading."
+    },
+    {
+      "run": "after-fix",
+      "tests": 4,
+      "failures": 1,
+      "inspectorCasesPassed": 2,
+      "limitation": "System ANR dialog covered actual frames; existing reader clipboard case failed. Not visual acceptance."
+    },
+    {
+      "run": "foreign-window-guard",
+      "tests": 4,
+      "failures": 3,
+      "cause": "Guard rejected both inspector captures because System UI ANR covered app; existing clipboard case failed."
+    }
+  ],
+  "visualAcceptance": "pending; no failed/cross-window frame is certified",
+  "originalAvd": {
+    "filesCompared": 7,
+    "unchanged": true
+  },
+  "cleanup": "Owned units stopped, private clone removed; no phone operated. QEMU stopped with ABRT6 during teardown. One recording export failed ownership recovery after reboot; no final video is claimed.",
+  "liveOutput": "U36, lib issue22; subscription exists, shared presentation reducer missing"
+}

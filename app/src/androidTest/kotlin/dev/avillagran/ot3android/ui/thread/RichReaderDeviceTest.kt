@@ -90,9 +90,13 @@ class RichReaderDeviceTest {
             assertTrue("Horizontal swipe must move code", code.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0)
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_work/think-reader"))
             rule.onNodeWithTag("thread_fold_work/think-reader").performClick()
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_inspect_work/think-reader_0"))
+            rule.onNodeWithTag("thread_inspect_work/think-reader_0").performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_copy_inspector_reasoning").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("Reasoning").assertExists()
             rule.onNodeWithText("Compare the native reader with the reference", substring = true).assertExists()
+            rule.onNodeWithTag("thread_inspector_close").performScrollTo().performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_inspector").fetchSemanticsNodes().isEmpty() }
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
             rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
             rule.onNodeWithText("ui/TimelineReader.kt", substring = true).assertExists()
@@ -130,7 +134,7 @@ class RichReaderDeviceTest {
                 assertTrue(diffs.first().args.getBoolean("ignoreWhitespace"))
                 assertFalse(diffs.last().args.getBoolean("ignoreWhitespace"))
                 val reads = activity.fixture.transport.calls.filter { it.fn == "orchestration.getTurnItem" }
-                assertEquals(2, reads.size)
+                assertEquals(1, reads.size)
                 assertTrue("Reading tools must never dispatch a message", activity.fixture.transport.calls.none { it.fn == "orchestration.dispatchCommand" })
             }
         }

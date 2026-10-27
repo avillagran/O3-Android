@@ -1287,3 +1287,28 @@ relative/absolute/file paths, spaces/unicode/location suffixes, unsafe schemes,
 malformed encoding, read bounds and stale results after environment changes.
 No Kotlin reference parser or shared-library checkout change was made. This remains
 an open reader parity requirement, not acceptance of file/thread navigation.
+
+### U36. Shared live command-output projection (2026-10-27)
+
+Tracked in [lib issue22](https://github.com/avillagran/lib-t3-rust/issues/22).
+
+The pinned035 registry exposes `orchestration.subscribeCommandOutput {threadId,
+itemId}` and Rust stream handling recognizes replace frames. It does not expose
+the desktop command-output presentation reducer. Desktop currently implements
+append/replace, bounded tail, ANSI/VT removal, carriage-return overwrite, running
+and truncation in `omarchy-t3-code-ref/src/command_output.rs:13–112`. Android must
+not reproduce those protocol/presentation rules in Kotlin.
+
+Request `commandOutput.apply {state?, frames, closed?, error?}` returning opaque
+state plus `{text,running,truncated,error?}` (or equivalent typed helper), together
+with native request validation for the inspector reference. Preserve UTF-8
+boundaries at the64KiB displayed tail, including the final plain-text trim; reset
+on replace, preserve terminal overwrite semantics across frame boundaries, and
+cover escape sequences split across chunks, stale reference replacement,
+terminal close/error, empty output and oversized multibyte text. Desktop's
+`shown[shown.len()-LIMIT..]` final trim is byte-indexed and needs a boundary-safe
+contract rather than copying it. Android owns a single cancellable stream while
+Follow is enabled and closes it on Stop, inspector dismissal or owner change.
+
+No fabricated polling or Kotlin stream parser was introduced. Explicit inspector
+reads remain useful independently; live output remains an open acceptance item.

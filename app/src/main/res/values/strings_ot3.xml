@@ -229,4 +229,16 @@
     <string name="ot3_reveal_fold">Fold</string>
     <string name="ot3_reveal_spring">Spring</string>
     <string name="ot3_reveal_instant">Instant</string>
+    <string name="ot3_inspector_activity_details">Activity details</string>
+    <string name="ot3_inspector_loading">Loading output…</string>
+    <string name="ot3_inspector_unavailable_error">Couldn\'t load output</string>
+    <string name="ot3_inspector_disconnected">Offline</string>
+    <string name="ot3_inspector_unavailable">Output is no longer available.</string>
+    <string name="ot3_inspector_details">Details</string>
+    <string name="ot3_inspector_metadata">Metadata</string>
+    <string name="ot3_inspector_raw_item">Raw item</string>
+    <string name="ot3_inspector_exit_code">Exit code</string>
+    <string name="ot3_inspector_empty_output">No output.</string>
+    <string name="ot3_inspector_output_omitted">Output was withheld by the server. Retry to refresh.</string>
+    <string name="ot3_inspector_truncated">Display limit reached. Copy includes only the displayed text.</string>
 </resources>

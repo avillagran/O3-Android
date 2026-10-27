@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Składanie</string>
     <string name="ot3_reveal_spring">Sprężyście</string>
     <string name="ot3_reveal_instant">Natychmiast</string>
+    <string name="ot3_inspector_activity_details">Szczegóły aktywności</string>
+    <string name="ot3_inspector_loading">Wczytywanie danych wyjściowych…</string>
+    <string name="ot3_inspector_unavailable_error">Nie można wczytać danych wyjściowych</string>
+    <string name="ot3_inspector_disconnected">Offline</string>
+    <string name="ot3_inspector_unavailable">Dane wyjściowe nie są już dostępne.</string>
+    <string name="ot3_inspector_details">Szczegóły</string>
+    <string name="ot3_inspector_metadata">Metadane</string>
+    <string name="ot3_inspector_raw_item">Surowy element</string>
+    <string name="ot3_inspector_exit_code">Kod zakończenia</string>
+    <string name="ot3_inspector_empty_output">Brak danych wyjściowych.</string>
+    <string name="ot3_inspector_output_omitted">Serwer nie udostępnił danych wyjściowych. Spróbuj ponownie, aby je odświeżyć.</string>
+    <string name="ot3_inspector_truncated">Osiągnięto limit wyświetlania. Kopia obejmuje tylko widoczny tekst.</string>
 </resources>

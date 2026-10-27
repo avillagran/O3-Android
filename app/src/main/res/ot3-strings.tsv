@@ -270,3 +270,17 @@ ot3_reveal_warp	Hyperspace
 ot3_reveal_fold	Fold
 ot3_reveal_spring	Spring
 ot3_reveal_instant	Instant
+
+# Tool inspector: shared native catalog, all20locales.
+ot3_inspector_activity_details	Activity details
+ot3_inspector_loading	Loading output…
+ot3_inspector_unavailable_error	Couldn't load output
+ot3_inspector_disconnected	Offline
+ot3_inspector_unavailable	Output is no longer available.
+ot3_inspector_details	Details
+ot3_inspector_metadata	Metadata
+ot3_inspector_raw_item	Raw item
+ot3_inspector_exit_code	Exit code
+ot3_inspector_empty_output	No output.
+ot3_inspector_output_omitted	Output was withheld by the server. Retry to refresh.
+ot3_inspector_truncated	Display limit reached. Copy includes only the displayed text.

@@ -1,0 +1,90 @@
+{
+  "appCodeCommit": "533cd3f",
+  "testSourceBlob": "2bf4addf1be35be8ad9c4d5de1828232642a67f66f723c430d899cb023928e1f",
+  "apiLevel": 34,
+  "cases": [
+    {
+      "class": "dev.avillagran.ot3android.ui.thread.ToolInspectorDeviceTest",
+      "name": "tokyoInspector",
+      "seconds": "11.714"
+    },
+    {
+      "class": "dev.avillagran.ot3android.ui.thread.ToolInspectorDeviceTest",
+      "name": "latteInspector",
+      "seconds": "8.519"
+    },
+    {
+      "class": "dev.avillagran.ot3android.ui.thread.RichReaderDeviceTest",
+      "name": "diffRemainsOpenWhenRotationMovesItsTimelineRowOffscreen",
+      "seconds": "5.317"
+    },
+    {
+      "class": "dev.avillagran.ot3android.ui.thread.RichReaderDeviceTest",
+      "name": "markdownCodeScrollCopyAndScopedReasoningAndChanges",
+      "seconds": "11.009"
+    }
+  ],
+  "failures": 0,
+  "skipped": 0,
+  "transport": "deterministic fixture; actual graph, VM/session and Rust035 scope/request/parse",
+  "screenshots": [
+    {
+      "name": "latte-closed-landscape.png",
+      "width": 1600,
+      "height": 720,
+      "sha256": "eac3e854a547603145ed5471d37ac8276f70931de35741970ed63f2a127958f1"
+    },
+    {
+      "name": "latte-details-portrait.png",
+      "width": 720,
+      "height": 1600,
+      "sha256": "295271e26a6a44982fc960644a45f11f6704ed1f94e69d6869c69d6730aebe58"
+    },
+    {
+      "name": "latte-raw-landscape.png",
+      "width": 1600,
+      "height": 720,
+      "sha256": "7bc5d84d13937eaf64b453b949443ead308744b5a1688a953b98721920c36944"
+    },
+    {
+      "name": "latte-raw-portrait.png",
+      "width": 720,
+      "height": 1600,
+      "sha256": "143128ca15e76b86b947aebd9cbe9eab0486aa5e8f643641bca52b265d05fd5e"
+    },
+    {
+      "name": "tokyo-closed-landscape.png",
+      "width": 1600,
+      "height": 720,
+      "sha256": "6a783496e248d2b734c6945c6cf86bf59f174483f90383187245952a045fec8c"
+    },
+    {
+      "name": "tokyo-details-portrait.png",
+      "width": 720,
+      "height": 1600,
+      "sha256": "38b638831200692c63a893625239f3879155e6ac87952581441352a115aafce8"
+    },
+    {
+      "name": "tokyo-raw-landscape.png",
+      "width": 1600,
+      "height": 720,
+      "sha256": "df5539d429d1af8201fa67d190096b416b4332da5d4a3948f7d6b424d2d480c4"
+    },
+    {
+      "name": "tokyo-raw-portrait.png",
+      "width": 720,
+      "height": 1600,
+      "sha256": "4a61a92b9dcb5421a861275af6ac4a85f4b72b67bc87ae29d4ec3473f58dbf9c"
+    }
+  ],
+  "video": {
+    "name": "reader-window.mp4",
+    "sha256": "dac0e1a714f4f8608c77c7082bd823edf1b3dbbd4bc64e0e4d8a231ecd78c404",
+    "rawSourceSHA256": "f003adf0a45ecb4ba255b0d72946934fc40d73ad1c8e03359a0c11979f6f8794",
+    "sourceStartSeconds": 18,
+    "durationSeconds": 26,
+    "playbackSpeed": 1,
+    "captureHoldsMs": 800,
+    "scope": "functional fixture, not motion/performance/live/physical acceptance"
+  }
+}
