@@ -50,3 +50,20 @@ It changes no state and starts no bridge, listener, service or provider.
 5. Use the ordinary app `NativeT3TransportFactory` for shell snapshots and stream
    updates; prove NODE/VQ Home rows, route change, offline/recovery and no duplicate
    streams. The isolated `labRequest` proof remains a separate result.
+
+## Real NODE transport follow-up
+
+`LiveConnectionTest.supervisorConnectsAndFollowsTheShell` passed, one test and zero
+skips, using production host JNI and the ordinary `NativeT3TransportFactory`. The
+real NODE descriptor exactly matches the desktop catalog UUID above. It connected,
+read 16 projects/267 threads, persisted a cursor, and observed shell snapshot/event
+updates. The temporary five-minute `orchestration:read` session was revoked in a
+finally block and its credential files deleted. No message/provider was dispatched.
+See `node-native-transport.json`. This is JVM over explicit local loopback; neither
+Android, catalog discovery nor bridge enrollment is implied.
+
+The desktop's own real T3 descriptor was also read without authentication through
+its existing loopback listener: environment `1dc39036-dea5-45d6-9c4e-646082c94529`,
+label `omarchy`, server `0.0.46-nightly.20261013.3042`, protocol 2. The listener port
+was obtained from that process's sockets, not guessed from NODE's port. This does
+not prove the phone's displayed VQ alias maps to this environment.

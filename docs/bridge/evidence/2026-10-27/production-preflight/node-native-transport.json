@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "6f64082",
+  "test": "LiveConnectionTest.supervisorConnectsAndFollowsTheShell",
+  "platform": "JVM host JNI, not Android",
+  "tests": 1,
+  "failures": 0,
+  "skipped": 0,
+  "route": "explicit local loopback, not discovered through OmaBridge",
+  "environmentId": "8b55eaad-3149-443c-953f-afd6dd002666",
+  "descriptorLabel": "node",
+  "serverVersion": "0.1.3-nightly.20261027.3754",
+  "projects": 16,
+  "threads": 267,
+  "state": "Connected",
+  "cursorPersisted": true,
+  "scope": [
+    "orchestration:read"
+  ],
+  "temporarySessionRevoked": true,
+  "rawShellUpdatesObserved": true,
+  "androidBridgeCatalogAccepted": false
+}
