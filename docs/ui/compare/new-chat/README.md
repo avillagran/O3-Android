@@ -14,7 +14,7 @@ command id and thread id; legacy message commands still use dispatchCommand.
 Pending launches are recovered by environment/project even after closing the draft;
 the restored form shows the original request instead of creating a second thread.
 
-Four Compose tests cover host scoping, disabled rows, search/empty states and send
+Five Compose tests cover host scoping, disabled rows, search/empty states and send
 eligibility. Four persistence tests cover launch, exact recovery after sender
 recreation, rejection/offline and an unexpected returned identity. A real JNI /
 WebSocket fixture checks the selected project/model and atomic initial message.
