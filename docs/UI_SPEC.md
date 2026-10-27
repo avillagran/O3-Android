@@ -1212,14 +1212,22 @@ focused, 12 dp margins (`ot3:ui/qml/T3Composer.qml:263-271`). Layout (T3 Mobile)
   the toolbar: attach · model chip ▾ · permission · Plan/Build · options — spacer — draft
   status · send (`t3m:src/features/threads/ThreadComposer.tsx:1129-1218`; ot3 toolbar
   `ot3:ui/qml/T3Composer.qml:444-745`). Tapping the timeline collapses it.
-- **Expanded editor:** a maximize icon at three or more lines opens a full-screen editor
-  (ot3 `ot3:ui/qml/T3Composer.qml:385-389,701-709`).
+- **Expanded editor:** the always-available square-pen icon opens the same editor in
+  the thread surface; Back/Esc returns to the conversation (ot3
+  `ot3:ui/qml/T3Composer.qml:385-389,701-709`, `T3Panel.qml:2021-2031`).
+  Android keeps 48 dp controls, the model/options toolbar and bounded scrollable
+  notices visible above IME. Back closes IME as a phone adaptation. Compact editor
+  height is 56–130 dp; expanded editor fills available space. Selection survives
+  mode changes and rotation, scoped by environment and thread.
 - **Placeholder:** "Ask anything, @files/folders, $skills or /commands…"
   (`ot3:ui/qml/T3Composer.qml:407`); while an approval is pending, "Send a message to
   decline and redirect the agent" (mobile-only, from
   `t3m:src/features/threads/ThreadDetailScreen.tsx:1601-1603`).
 - **Keys:** the soft keyboard's Enter inserts a newline; a hardware Enter sends and
-  Shift+Enter inserts a newline, ot3's compact behaviour (`ot3:ui/qml/T3Composer.qml:218-237`).
+  Shift+Enter inserts a newline. Expanded hardware Enter inserts a newline and
+  Ctrl+Enter sends (`ot3:ui/qml/T3Composer.qml:218-237`). Repeat and composition
+  never trigger send; virtual/soft keyboard events are not classified as hardware.
+  Compact Ctrl+Enter and Ctrl+Shift+Enter actions await supported domain contracts.
   Up at the first line recalls earlier prompts; list continuation on Enter
   (`ot3:ui/qml/T3Composer.qml:194-217`); recall text from `prompt_recall::recall`
   (`lib:src/prompt_recall.rs:151`).

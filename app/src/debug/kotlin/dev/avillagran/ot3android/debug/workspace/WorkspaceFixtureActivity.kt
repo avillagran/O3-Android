@@ -217,7 +217,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         }
         onCall("server.getConfig") { JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
         onCall("orchestration.dispatchCommand") {
-            if (request == "queue") {
+            if (request in listOf("queue", "editor")) {
                 queueDispatches++
                 queueHold?.await()
                 if (queueRejectNext) { queueRejectNext = false; throw dev.avillagran.t3.T3Exception("rpc_rejected") }

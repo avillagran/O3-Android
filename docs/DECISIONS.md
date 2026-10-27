@@ -1124,3 +1124,18 @@ feedback inside the sheet. queue.derive supplies capabilities; queue.command val
 shape, not projection membership. Map projected queue-edit rows to documented native
 inputs before invoking that strict builder; preserve original attachments/context and
 unsent draft. JNI and a real queue-edit rotation test exposed the prior metadata bug.
+
+### 2026-10-26 — one composer surface with UI selection ownership
+
+Expand the existing thread composer rather than opening a second route/VM or modal.
+Keep draft text in ThreadComposer/Room; save only cursor/selection/focus per canonical
+environment/thread identity. A transient UI edit token pairs local text with its echo
+so delayed combined-flow emissions cannot overwrite rapid typing. Null-token external
+updates remain authoritative. Queue edits retain their separate normal selection and
+existing attachment/context ownership. Explicit user edits, including clearing to
+empty before Room load, win over initial persisted draft loading.
+
+Back/Esc closes expanded mode and IME on phones. Soft/virtual Enter stays newline;
+physical compact Enter sends, expanded Ctrl+Enter sends. Repeat/composition do not
+send. Unsupported alternate delivery/new-thread shortcuts remain inactive. No new
+protocol, persistence payload, remote stream or animation is introduced.
