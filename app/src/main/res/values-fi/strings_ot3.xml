@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">Hidas</string>
     <string name="ot3_pace_normal">Normaali</string>
     <string name="ot3_pace_fast">Nopea</string>
+    <string name="ot3_show_and_hide">Näytä ja piilota</string>
+    <string name="ot3_reveal_nebula">Sumu</string>
+    <string name="ot3_reveal_warp">Hyperavaruus</string>
+    <string name="ot3_reveal_fold">Taitto</string>
+    <string name="ot3_reveal_spring">Joustava</string>
+    <string name="ot3_reveal_instant">Välitön</string>
 </resources>

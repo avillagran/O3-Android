@@ -142,7 +142,7 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             val motionSettings by (application as dev.avillagran.ot3android.Ot3Application).graph.appearancePreferences.settings
                 .collectAsStateWithLifecycle(dev.avillagran.ot3android.core.data.prefs.AppearanceSettings())
             Ot3Theme(colors = fixtureColors, motion = dev.avillagran.ot3android.ui.theme.rememberOt3Motion(
-                motionSettings.animation, motionSettings.revealPace)) { Ot3NavHost(nav, screens) }
+                motionSettings.animation, motionSettings.revealPace, motionSettings.revealStyle)) { Ot3NavHost(nav, screens) }
             }
         }
     }

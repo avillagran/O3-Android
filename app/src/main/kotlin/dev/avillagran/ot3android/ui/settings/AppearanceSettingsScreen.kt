@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.data.prefs.RevealPace
+import dev.avillagran.ot3android.core.data.prefs.RevealStyle
 import dev.avillagran.ot3android.core.data.prefs.AppearanceMode
 import dev.avillagran.ot3android.core.theme.FallbackReason
 import dev.avillagran.ot3android.core.theme.ThemeSelection
@@ -128,6 +129,17 @@ fun AppearanceSettingsScreen(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.ot3_home_show_provider_usage), Modifier.weight(1f))
                 Switch(checked = settings.manual.providerUsage, onCheckedChange = viewModel::setProviderUsage, modifier = Modifier.testTag("appearance_provider_usage"))
+            }
+            Header(R.string.ot3_show_and_hide)
+            RevealStyle.entries.forEach { style ->
+                val label = when (style) {
+                    RevealStyle.NEBULA -> R.string.ot3_reveal_nebula
+                    RevealStyle.WARP -> R.string.ot3_reveal_warp
+                    RevealStyle.FOLD -> R.string.ot3_reveal_fold
+                    RevealStyle.SPRING -> R.string.ot3_reveal_spring
+                    RevealStyle.INSTANT -> R.string.ot3_reveal_instant
+                }
+                Choice(stringResource(label), settings.manual.revealStyle == style, "appearance_reveal_style_${style.name}") { viewModel.setRevealStyle(style) }
             }
             Header(R.string.ot3_transition_speed)
             RevealPace.entries.forEach { pace ->

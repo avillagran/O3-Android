@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-27",
+  "api": 34,
+  "renderer": "software GPU; hardware accelerated Android view",
+  "sourceReference": "ot3 7b5b1de6db5e24c6b2d77bc0497b361380fead81",
+  "clips": {
+    "warp": {
+      "file": "warp-frame-clock-api34.mp4",
+      "durationSeconds": 6.605756,
+      "bytes": 163176,
+      "sha256": "7db77724de7938ae7725c5c89e3e4e6d80da5d24464e82a059e8cda9f1a6fcc1",
+      "edit": "tail trim only; stream copy, no retiming",
+      "clock": "ComposeTestClock, 32 ms samples; variable wall-clock cadence",
+      "inspected": "RGB smear/streaks (warp), alternating folded panels/creases (fold); both axes close and open"
+    },
+    "fold": {
+      "file": "fold-frame-clock-api34.mp4",
+      "durationSeconds": 4.376456,
+      "bytes": 279105,
+      "sha256": "ad5701b3c0ee0ab29ed282a7b01aa5dba19b59c1707d8a59af4785b2a2db9409",
+      "edit": "tail trim only; stream copy, no retiming",
+      "clock": "ComposeTestClock, 32 ms samples; variable wall-clock cadence",
+      "inspected": "RGB smear/streaks (warp), alternating folded panels/creases (fold); both axes close and open"
+    }
+  },
+  "captureProof": {
+    "fold": {
+      "ready": "I/RevealStyleEvidence( 6341): captureReady token=probe-1793097930749591417 style=FOLD windowFocus=true topPackage=dev.avillagran.ot3android hardware=true shader=true clock=ComposeTestClock step=32ms",
+      "resumed": [
+        "topResumedActivity=ActivityRecord{beb7a3b u0 dev.avillagran.ot3android/androidx.activity.ComponentActivity t14}",
+        "ResumedActivity: ActivityRecord{beb7a3b u0 dev.avillagran.ot3android/androidx.activity.ComponentActivity t14}"
+      ],
+      "animationScales": {
+        "animator_duration_scale": "1.0",
+        "window_animation_scale": "1.0",
+        "transition_animation_scale": "1.0"
+      }
+    },
+    "warp": {
+      "ready": "I/RevealStyleEvidence( 6341): captureReady token=probe-1793097930749591417 style=WARP windowFocus=true topPackage=dev.avillagran.ot3android hardware=true shader=true clock=ComposeTestClock step=32ms",
+      "resumed": [
+        "topResumedActivity=ActivityRecord{751a2e0 u0 dev.avillagran.ot3android/androidx.activity.ComponentActivity t16}",
+        "ResumedActivity: ActivityRecord{751a2e0 u0 dev.avillagran.ot3android/androidx.activity.ComponentActivity t16}"
+      ],
+      "animationScales": {
+        "animator_duration_scale": "1.0",
+        "window_animation_scale": "1.0",
+        "transition_animation_scale": "1.0"
+      }
+    }
+  },
+  "physicalGpuParityAccepted": false,
+  "wallClockTimingAccepted": false,
+  "mainActivityAndWorkspaceTests": "3/3 passed before RenderEffect correction, 76.572 s",
+  "finalGpuAndEvidenceTests": "3/3 passed after correction, 49.93 s",
+  "baselineGpuRegression": "failed as expected: NEBULA horizontal progress0.5416444 coloredPixels0",
+  "shaderUniformRegressionAfterFix": {
+    "NEBULA": [
+      62174,
+      38418
+    ],
+    "WARP": [
+      71756,
+      44196
+    ],
+    "FOLD": [
+      24551,
+      24856
+    ]
+  },
+  "appApkSha256": "fcb3704d92d0e0c37b2432fd1a7e77150f4ce2def991a8333a36d688a5eb7f93",
+  "androidTestApkSha256": "eb798171c48d6a93ab5bed67a3df96a2e90da1665891b257ce718bfc43634097",
+  "uniformSnapshotFixPrimarySources": [
+    "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-14.0.0_r1/libs/hwui/jni/RenderEffect.cpp",
+    "https://android.googlesource.com/platform/external/skia/+/refs/tags/android-14.0.0_r1/src/effects/imagefilters/SkRuntimeImageFilter.cpp",
+    "https://android.googlesource.com/platform/external/skia/+/refs/tags/android-14.0.0_r1/include/effects/SkRuntimeEffect.h"
+  ],
+  "cleanup": {
+    "devicePanelClosed": true,
+    "adbTransports": 0,
+    "originalSourceHashesMatched": 7,
+    "restoredAnimationScales": {
+      "animator_duration_scale": "null",
+      "window_animation_scale": "1.0",
+      "transition_animation_scale": "1.0"
+    },
+    "emulatorTerminal": "explicit stop followed by Result=core-dump, status=6/ABRT; MainPID=0",
+    "memoryPeakBytes": 7254208512,
+    "memoryHighMaxOomEvents": 0,
+    "privateCloneAndMatchingTempOverlaysRemoved": true
+  }
+}

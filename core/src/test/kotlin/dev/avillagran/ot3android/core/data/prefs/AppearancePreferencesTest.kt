@@ -82,15 +82,32 @@ class AppearancePreferencesTest {
     }
 
     @Test
+    fun `reveal styles default to nebula and survive readers and disk reopen`() = runBlocking {
+        assertEquals(RevealStyle.NEBULA, preferences.settings.first().revealStyle)
+        for (style in RevealStyle.entries) {
+            preferences.setRevealStyle(style)
+            assertEquals(style, AppearancePreferences(dataStore).settings.first().revealStyle)
+        }
+        checkNotNull(scope.coroutineContext[kotlinx.coroutines.Job]).let { it.cancel(); it.join() }
+        val reopenedScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        try {
+            val reopened = PreferenceDataStoreFactory.create(scope = reopenedScope) { folder.root.resolve("appearance.preferences_pb") }
+            assertEquals(RevealStyle.INSTANT, AppearancePreferences(reopened).settings.first().revealStyle)
+        } finally { reopenedScope.cancel() }
+    }
+
+    @Test
     fun `unknown stored values read as the defaults`() = runBlocking {
         dataStore.edit {
             it[AppearancePreferences.Keys.MODE] = "SEPIA"
             it[AppearancePreferences.Keys.ANIMATION] = "SOMETIMES"
             it[AppearancePreferences.Keys.REVEAL_PACE] = "INSTANT"
+            it[AppearancePreferences.Keys.REVEAL_STYLE] = "UNKNOWN"
         }
         val settings = preferences.settings.first()
         assertEquals(AppearanceMode.FOLLOW_SYSTEM, settings.mode)
         assertEquals(AnimationPreference.AUTO, settings.animation)
         assertEquals(RevealPace.NORMAL, settings.revealPace)
+        assertEquals(RevealStyle.NEBULA, settings.revealStyle)
     }
 }

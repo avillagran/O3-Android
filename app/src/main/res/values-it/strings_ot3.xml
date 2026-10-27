@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">Lenta</string>
     <string name="ot3_pace_normal">Normale</string>
     <string name="ot3_pace_fast">Veloce</string>
+    <string name="ot3_show_and_hide">Mostra e nascondi</string>
+    <string name="ot3_reveal_nebula">Nebulosa</string>
+    <string name="ot3_reveal_warp">Iperspazio</string>
+    <string name="ot3_reveal_fold">Piega</string>
+    <string name="ot3_reveal_spring">Elastico</string>
+    <string name="ot3_reveal_instant">Istantaneo</string>
 </resources>

@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">Yavaş</string>
     <string name="ot3_pace_normal">Normal</string>
     <string name="ot3_pace_fast">Hızlı</string>
+    <string name="ot3_show_and_hide">Gösterme ve gizleme</string>
+    <string name="ot3_reveal_nebula">Bulutsu</string>
+    <string name="ot3_reveal_warp">Hiperuzay</string>
+    <string name="ot3_reveal_fold">Katlama</string>
+    <string name="ot3_reveal_spring">Yaylı</string>
+    <string name="ot3_reveal_instant">Anında</string>
 </resources>

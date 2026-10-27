@@ -263,3 +263,10 @@ ot3_transition_speed	Transition speed
 ot3_pace_slow	Slow
 ot3_pace_normal	Normal
 ot3_pace_fast	Fast
+
+ot3_show_and_hide	Show and hide
+ot3_reveal_nebula	Nebula
+ot3_reveal_warp	Hyperspace
+ot3_reveal_fold	Fold
+ot3_reveal_spring	Spring
+ot3_reveal_instant	Instant

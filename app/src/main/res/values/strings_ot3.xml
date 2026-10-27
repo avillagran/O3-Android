@@ -223,4 +223,10 @@
     <string name="ot3_pace_slow">Slow</string>
     <string name="ot3_pace_normal">Normal</string>
     <string name="ot3_pace_fast">Fast</string>
+    <string name="ot3_show_and_hide">Show and hide</string>
+    <string name="ot3_reveal_nebula">Nebula</string>
+    <string name="ot3_reveal_warp">Hyperspace</string>
+    <string name="ot3_reveal_fold">Fold</string>
+    <string name="ot3_reveal_spring">Spring</string>
+    <string name="ot3_reveal_instant">Instant</string>
 </resources>

@@ -74,6 +74,7 @@ class AppearanceSettingsViewModel(
     fun setFallbackDarkTheme(id: String) = edit { preferences.setDarkTheme(id); preferences.setMode(AppearanceMode.DARK) }
     fun setFallbackLightTheme(id: String) = edit { preferences.setLightTheme(id); preferences.setMode(AppearanceMode.LIGHT) }
 
+    fun setRevealStyle(style: dev.avillagran.ot3android.core.data.prefs.RevealStyle) = edit { preferences.appearance.setRevealStyle(style) }
     fun setRevealPace(pace: dev.avillagran.ot3android.core.data.prefs.RevealPace) = edit { preferences.appearance.setRevealPace(pace) }
 
     fun setProviderUsage(shown: Boolean) = edit { preferences.appearance.setProviderUsage(shown) }

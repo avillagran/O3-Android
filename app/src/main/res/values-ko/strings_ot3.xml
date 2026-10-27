@@ -224,4 +224,10 @@
     <string name="ot3_pace_slow">느리게</string>
     <string name="ot3_pace_normal">보통</string>
     <string name="ot3_pace_fast">빠름</string>
+    <string name="ot3_show_and_hide">표시 및 숨기기</string>
+    <string name="ot3_reveal_nebula">성운</string>
+    <string name="ot3_reveal_warp">초공간</string>
+    <string name="ot3_reveal_fold">접기</string>
+    <string name="ot3_reveal_spring">스프링</string>
+    <string name="ot3_reveal_instant">즉시</string>
 </resources>

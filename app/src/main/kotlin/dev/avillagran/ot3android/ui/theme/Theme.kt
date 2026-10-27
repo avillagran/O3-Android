@@ -124,7 +124,7 @@ fun Ot3AppTheme(
         activity?.enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
         onDispose { }
     }
-    Ot3Theme(colors = colors, motion = rememberOt3Motion(settings.animation, settings.revealPace), content = content)
+    Ot3Theme(colors = colors, motion = rememberOt3Motion(settings.animation, settings.revealPace, settings.revealStyle), content = content)
 }
 
 /**
