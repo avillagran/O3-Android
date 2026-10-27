@@ -55,10 +55,28 @@ fun QuotaStripHost(environmentId: String? = null, compact: Boolean = true,
 @Composable
 fun QuotaToggleMenuItem(onDismiss: () -> Unit = {}) {
     val graph = LocalContext.current.appGraph
-    val settings by graph.appearancePreferences.settings.collectAsStateWithLifecycle(AppearanceSettings())
-    val scope = rememberCoroutineScope()
-    DropdownMenuItem(text = { Text(stringResource(if (settings.providerUsage) R.string.ot3_home_hide_provider_usage else R.string.ot3_home_show_provider_usage)) },
-        onClick = { onDismiss(); scope.launch { graph.appearancePreferences.setProviderUsage(!settings.providerUsage) } }, modifier = Modifier.testTag("quota_toggle"))
+    QuotaToggleMenuItem(graph.appearancePreferences, graph.appScope, onDismiss)
+}
+
+@Composable
+internal fun QuotaToggleMenuItem(
+    preferences: dev.avillagran.ot3android.core.data.prefs.AppearancePreferences,
+    writeScope: kotlinx.coroutines.CoroutineScope,
+    onDismiss: () -> Unit,
+) {
+    val settings by preferences.settings.collectAsStateWithLifecycle<AppearanceSettings?>(null)
+    DropdownMenuItem(
+        text = { Text(stringResource(when (settings?.providerUsage) {
+            true -> R.string.ot3_home_hide_provider_usage
+            false -> R.string.ot3_home_show_provider_usage
+            null -> R.string.ot3_loading
+        })) },
+        enabled = settings != null,
+        onClick = {
+            // The popup is dismissed immediately; its composition cannot own persistence.
+            writeScope.launch { preferences.toggleProviderUsage() }
+            onDismiss()
+        }, modifier = Modifier.testTag("quota_toggle"))
 }
 
 @Composable

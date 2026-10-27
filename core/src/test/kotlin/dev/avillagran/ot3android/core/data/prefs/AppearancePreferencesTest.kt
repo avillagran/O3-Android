@@ -8,6 +8,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -52,6 +53,17 @@ class AppearancePreferencesTest {
         assertEquals(true, AppearancePreferences(dataStore).settings.first().providerUsage)
         preferences.setProviderUsage(false)
         assertEquals(false, AppearancePreferences(dataStore).settings.first().providerUsage)
+    }
+
+    @Test
+    fun `provider usage toggles atomically across readers`() = runBlocking {
+        preferences.setProviderUsage(true)
+        kotlinx.coroutines.coroutineScope {
+            repeat(20) { launch { AppearancePreferences(dataStore).toggleProviderUsage() } }
+        }
+        assertEquals(true, preferences.settings.first().providerUsage)
+        preferences.toggleProviderUsage()
+        assertEquals(false, preferences.settings.first().providerUsage)
     }
 
     @Test

@@ -55,6 +55,11 @@ class AppearancePreferences(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setProviderUsage(shown: Boolean) { dataStore.edit { it[Keys.PROVIDER_USAGE] = shown } }
 
+    /** Read and invert inside the transaction, independently of a menu's collected snapshot. */
+    suspend fun toggleProviderUsage() {
+        dataStore.edit { it[Keys.PROVIDER_USAGE] = !(it[Keys.PROVIDER_USAGE] ?: false) }
+    }
+
     suspend fun setMode(mode: AppearanceMode) {
         dataStore.edit { it[Keys.MODE] = mode.name }
     }
