@@ -213,4 +213,6 @@
     <string name="ot3_pr_cancelled">İptal edildi</string>
     <string name="ot3_queue_reorder">İleti sırasını değiştir</string>
     <string name="ot3_queue_move_down">Aşağı taşı</string>
+    <string name="ot3_composer_edit">Düzenle</string>
+    <string name="ot3_composer_back">Sohbete dön</string>
 </resources>

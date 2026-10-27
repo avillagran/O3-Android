@@ -213,4 +213,6 @@
     <string name="ot3_pr_cancelled">Geannuleerd</string>
     <string name="ot3_queue_reorder">Bericht herschikken</string>
     <string name="ot3_queue_move_down">Omlaag</string>
+    <string name="ot3_composer_edit">Bewerken</string>
+    <string name="ot3_composer_back">Terug naar chat</string>
 </resources>

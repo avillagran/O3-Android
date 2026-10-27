@@ -53,12 +53,15 @@ data class ThreadUiState(
     val notice: ThreadNotice? = null,
     val queueBusy: Boolean = false,
     val queueEdit: String? = null,
+    val queueEditToken: String? = null,
     val modelCatalog: String? = null,
     val modelsLoading: Boolean = false,
     val respondingRequest: String? = null,
     val answeredRequests: Set<String> = emptySet(),
 ) {
     val connected: Boolean get() = connection is ConnectionState.Connected
+
+    val draftToken: String? get() = if (queueEdit != null) queueEditToken else composer.draftToken
 
     val draft: String get() = queueEdit?.let { org.json.JSONObject(it).optString("text") } ?: composer.draft
 
@@ -78,6 +81,7 @@ private data class Local(
     val notice: ThreadNotice? = null,
     val queueBusy: Boolean = false,
     val queueEdit: String? = null,
+    val queueEditToken: String? = null,
     val modelCatalog: String? = null,
     val modelsLoading: Boolean = false,
     val selectedModel: String? = null,
@@ -101,6 +105,7 @@ class ThreadViewModel(
     private val appScope: CoroutineScope,
     private val preferences: dev.avillagran.ot3android.core.data.prefs.ComposerPreferences? = null,
 ) : ViewModel() {
+    val editorIdentity: String get() = org.json.JSONArray().put(environmentId).put(threadId).toString()
 
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
     private val local = MutableStateFlow(Local())
@@ -147,6 +152,7 @@ class ThreadViewModel(
             notice = local.notice,
             queueBusy = local.queueBusy,
             queueEdit = local.queueEdit,
+            queueEditToken = local.queueEditToken,
             modelCatalog = local.modelCatalog,
             modelsLoading = local.modelsLoading,
             respondingRequest = local.respondingRequest,
@@ -175,15 +181,17 @@ class ThreadViewModel(
         session.start()
     }
 
-    fun onDraftChange(text: String) {
+    fun onDraftChange(text: String) = onDraftChange(text, null)
+
+    fun onDraftChange(text: String, token: String?) {
         if (local.value.queueEdit != null) {
             local.update { current ->
                 if (current.queueBusy || current.queueEdit == null) current
-                else current.copy(queueEdit = org.json.JSONObject(current.queueEdit).put("text", text).toString())
+                else current.copy(queueEdit = org.json.JSONObject(current.queueEdit).put("text", text).toString(), queueEditToken = token)
             }
             return
         }
-        composer.onDraftChange(text)
+        composer.onDraftChange(text, token)
     }
 
     /** Native catalog projection hides disabled/hidden models and preserves provider identities. */
@@ -269,11 +277,11 @@ class ThreadViewModel(
 
     /** Editing never replaces the unsent Room draft. The server stream owns the queue row. */
     fun editQueued(row: org.json.JSONObject) {
-        if (!local.value.queueBusy) local.update { it.copy(queueEdit = row.toString()) }
+        if (!local.value.queueBusy) local.update { it.copy(queueEdit = row.toString(), queueEditToken = null) }
     }
 
     fun cancelQueueEdit() {
-        if (!local.value.queueBusy) local.update { it.copy(queueEdit = null) }
+        if (!local.value.queueBusy) local.update { it.copy(queueEdit = null, queueEditToken = null) }
     }
 
     fun selectRuntimeMode(mode: String) {
@@ -327,7 +335,7 @@ class ThreadViewModel(
                 val result = sender.queue(transport(), environmentId, threadId, arguments)
                 onResult(result)
                 if (arguments.optString("action") == "edit" && result !is SendResult.Failed) {
-                    local.update { it.copy(queueEdit = null) }
+                    local.update { it.copy(queueEdit = null, queueEditToken = null) }
                 }
             } finally {
                 local.update { it.copy(queueBusy = false) }
@@ -338,8 +346,9 @@ class ThreadViewModel(
     fun send() {
         val current = state.value
         if (!current.connected || local.value.queueBusy || local.value.respondingRequest != null) return
-        if (current.queueEdit != null) {
-            queueCommand(queueEditArguments(org.json.JSONObject(current.queueEdit)))
+        val queuedEdit = local.value.queueEdit
+        if (queuedEdit != null) {
+            queueCommand(queueEditArguments(org.json.JSONObject(queuedEdit)))
             return
         }
         if (composer.send(local.value.selectedModel ?: current.modelSelection)) local.update { it.copy(notice = null) }

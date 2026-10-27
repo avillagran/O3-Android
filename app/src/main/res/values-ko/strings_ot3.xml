@@ -213,4 +213,6 @@
     <string name="ot3_pr_cancelled">취소됨</string>
     <string name="ot3_queue_reorder">메시지 순서 변경</string>
     <string name="ot3_queue_move_down">아래로 이동</string>
+    <string name="ot3_composer_edit">편집</string>
+    <string name="ot3_composer_back">채팅으로 돌아가기</string>
 </resources>

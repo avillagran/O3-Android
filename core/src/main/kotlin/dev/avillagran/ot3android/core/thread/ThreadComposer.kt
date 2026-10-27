@@ -17,6 +17,8 @@ import kotlinx.coroutines.launch
 /** What the composer shows: the draft, whether it is being sent, and the commands left unconfirmed. */
 data class ComposerState(
     val draft: String = "",
+    /** Ephemeral UI echo identity; never persisted or included in a command. */
+    val draftToken: String? = null,
     /** A send is in flight: the field is locked and holds the text being sent. */
     val sending: Boolean = false,
     /**
@@ -61,6 +63,8 @@ class ThreadComposer(
     private val _state = MutableStateFlow(ComposerState())
     val state: StateFlow<ComposerState> = _state.asStateFlow()
 
+    @Volatile private var editedSinceInit = false
+    private val saveRequests = MutableStateFlow(0L)
     @Volatile private var draftLoaded = false
     @Volatile private var savedDraft = ""
 
@@ -69,12 +73,15 @@ class ThreadComposer(
             val saved = drafts.load(environmentId, threadId)
             savedDraft = saved
             // Text typed before the draft loaded wins.
-            _state.update { if (it.draft.isEmpty() && !it.sending) it.copy(draft = saved) else it }
+            _state.update { if (!editedSinceInit && it.draft.isEmpty() && !it.sending) it.copy(draft = saved, draftToken = null) else it }
             draftLoaded = true
+            if (editedSinceInit) saveRequests.update { it + 1 }
         }
         scope.launch {
-            _state.map { it.draft to it.sending }.distinctUntilChanged().drop(1).debounce(DRAFT_DEBOUNCE_MS)
-                .collect { (draft, sending) -> if (!sending) saveDraft(draft) }
+            saveRequests.debounce(DRAFT_DEBOUNCE_MS).collect {
+                val current = _state.value
+                if (!current.sending) saveDraft(current.draft)
+            }
         }
         scope.launch {
             outbox.observeThread(environmentId, threadId).collect { rows ->
@@ -84,8 +91,11 @@ class ThreadComposer(
         }
     }
 
-    fun onDraftChange(text: String) {
-        _state.update { if (it.sending) it else it.copy(draft = text) }
+    fun onDraftChange(text: String, token: String? = null) {
+        if (_state.value.sending) return
+        editedSinceInit = true
+        _state.update { if (it.sending) it else it.copy(draft = text, draftToken = token) }
+        saveRequests.update { it + 1 }
     }
 
     /**
@@ -110,7 +120,7 @@ class ThreadComposer(
                 }
             } finally {
                 val keep = result is SendResult.Failed
-                _state.update { it.copy(draft = if (keep) sent else "", sending = false) }
+                _state.update { it.copy(draft = if (keep) sent else "", draftToken = null, sending = false) }
                 if (keep) saveDraft(sent)
             }
             onResult(result)

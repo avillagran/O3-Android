@@ -249,3 +249,7 @@ ot3_pr_cancelled	Cancelled
 # Queue touch reorder
 ot3_queue_reorder	Reorder message
 ot3_queue_move_down	Move down
+
+# Composer editor
+ot3_composer_edit	Edit
+ot3_composer_back	Back to chat

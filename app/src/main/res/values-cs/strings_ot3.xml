@@ -213,4 +213,6 @@
     <string name="ot3_pr_cancelled">Zrušeno</string>
     <string name="ot3_queue_reorder">Změnit pořadí zprávy</string>
     <string name="ot3_queue_move_down">Posunout dolů</string>
+    <string name="ot3_composer_edit">Upravit</string>
+    <string name="ot3_composer_back">Zpět do chatu</string>
 </resources>

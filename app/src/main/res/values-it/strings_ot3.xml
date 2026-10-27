@@ -213,4 +213,6 @@
     <string name="ot3_pr_cancelled">Annullata</string>
     <string name="ot3_queue_reorder">Riordina messaggio</string>
     <string name="ot3_queue_move_down">Sposta giù</string>
+    <string name="ot3_composer_edit">Modifica</string>
+    <string name="ot3_composer_back">Torna alla chat</string>
 </resources>
