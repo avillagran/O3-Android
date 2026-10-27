@@ -58,6 +58,8 @@ data class ThreadUiState(
     val modelsLoading: Boolean = false,
     val respondingRequest: String? = null,
     val answeredRequests: Set<String> = emptySet(),
+    val readingPosition: dev.avillagran.ot3android.core.data.prefs.ReadingPosition? = null,
+    val readingPositionLoaded: Boolean = true,
 ) {
     val connected: Boolean get() = connection is ConnectionState.Connected
 
@@ -70,9 +72,9 @@ data class ThreadUiState(
     /** Commands whose outcome is unknown, each with Resend and Discard. */
     val unconfirmed: List<PendingCommand> get() = composer.unconfirmed
 
-    val canSend: Boolean get() = connected && !sending && if (queueEdit != null) unconfirmed.isEmpty() else composer.canSend
+    val canSend: Boolean get() = connected && !view.stale && !sending && if (queueEdit != null) unconfirmed.isEmpty() else composer.canSend
 
-    val canInterrupt: Boolean get() = view.working && view.activeRunId != null && connected && !interrupting
+    val canInterrupt: Boolean get() = view.working && view.activeRunId != null && connected && !view.stale && !interrupting
 }
 
 /** The screen's local state; the rest comes from the session, the supervisor and the composer. */
@@ -87,6 +89,8 @@ private data class Local(
     val selectedModel: String? = null,
     val respondingRequest: String? = null,
     val answeredRequests: Set<String> = emptySet(),
+    val readingPosition: dev.avillagran.ot3android.core.data.prefs.ReadingPosition? = null,
+    val readingPositionLoaded: Boolean = true,
 )
 
 /**
@@ -104,17 +108,23 @@ class ThreadViewModel(
     private val sender: MessageSender,
     private val appScope: CoroutineScope,
     private val preferences: dev.avillagran.ot3android.core.data.prefs.ComposerPreferences? = null,
+    threadCache: dev.avillagran.ot3android.core.thread.ThreadCache? = null,
+    cacheAuthority: suspend () -> String? = { environmentId },
+    cacheAuthorityUpdates: Flow<String?>? = null,
 ) : ViewModel() {
     val editorIdentity: String get() = org.json.JSONArray().put(environmentId).put(threadId).toString()
 
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
-    private val local = MutableStateFlow(Local())
+    private val local = MutableStateFlow(Local(readingPositionLoaded = preferences == null))
     private var modelSave: kotlinx.coroutines.Job? = null
+    private val readingPositions = kotlinx.coroutines.channels.Channel<dev.avillagran.ot3android.core.data.prefs.ReadingPosition>(kotlinx.coroutines.channels.Channel.CONFLATED)
 
     private val session = ThreadSession(
         threadId,
         supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) },
         viewModelScope,
+        cache = threadCache, cacheEnvironment = environmentId, cacheAuthority = cacheAuthority,
+        cacheAuthorityUpdates = cacheAuthorityUpdates,
     )
 
     private val composer = ThreadComposer(
@@ -157,10 +167,21 @@ class ThreadViewModel(
             modelsLoading = local.modelsLoading,
             respondingRequest = local.respondingRequest,
             answeredRequests = local.answeredRequests,
+            readingPosition = local.readingPosition, readingPositionLoaded = local.readingPositionLoaded,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId)))
 
     init {
+        if (preferences != null) appScope.launch {
+            for (position in readingPositions) {
+                try { preferences.saveReadingPosition(environmentId, threadId, position) }
+                catch (_: java.io.IOException) { /* Reading metadata is best effort. */ }
+            }
+        }
+        viewModelScope.launch {
+            val position = try { preferences?.readingPosition(environmentId, threadId) } catch (_: java.io.IOException) { null }
+            local.update { it.copy(readingPosition = position, readingPositionLoaded = true) }
+        }
         viewModelScope.launch {
             try {
                 val saved = preferences?.model(environmentId, threadId)
@@ -179,6 +200,11 @@ class ThreadViewModel(
             }
         }
         session.start()
+    }
+
+    fun saveReadingPosition(position: dev.avillagran.ot3android.core.data.prefs.ReadingPosition) {
+        // Tiny local metadata survives leaving the reader; message-cache eviction never erases it.
+        if (preferences != null) readingPositions.trySend(position)
     }
 
     fun onDraftChange(text: String) = onDraftChange(text, null)
@@ -345,7 +371,7 @@ class ThreadViewModel(
 
     fun send() {
         val current = state.value
-        if (!current.connected || local.value.queueBusy || local.value.respondingRequest != null) return
+        if (!current.connected || current.view.stale || local.value.queueBusy || local.value.respondingRequest != null) return
         val queuedEdit = local.value.queueEdit
         if (queuedEdit != null) {
             queueCommand(queueEditArguments(org.json.JSONObject(queuedEdit)))
@@ -365,6 +391,7 @@ class ThreadViewModel(
     }
 
     fun interrupt() {
+        if (!state.value.canInterrupt || local.value.interrupting) return
         val runId = state.value.view.activeRunId ?: return
         local.update { it.copy(interrupting = true, notice = null) }
         appScope.launch {
@@ -428,6 +455,7 @@ class ThreadViewModel(
     private fun failed(result: SendResult.Failed) = ThreadNotice.Failed(result.code, result.reason, result.requiredScope)
 
     override fun onCleared() {
+        readingPositions.close()
         composer.flush()
         session.close()
     }

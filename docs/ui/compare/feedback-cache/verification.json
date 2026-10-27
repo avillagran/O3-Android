@@ -1,0 +1,17 @@
+{
+  "implementation": "1d0e601",
+  "library": "v0.3.5",
+  "source": "synthetic workspace transport; real native domain, screens, Room and DataStore",
+  "device": "ot3-feedback361 / emulator-5584 / API36.1",
+  "fullJvm": {"appPassed": 268, "corePassed": 303, "coreOptInSkipped": 5},
+  "additionalFocused": ["native cache closure/archive eligibility PASS", "cached action gating PASS", "position writer and composer scope PASS"],
+  "lint": "app and core PASS",
+  "goldens": "all verifyRoborazziDebug PASS",
+  "deviceTest": "ThreadCacheDeviceTest 1/1 PASS; row id and relative offset within 1px",
+  "offlineFreshInstanceSnapshotReads": 0,
+  "offlineThreadStreams": 0,
+  "manualEvidence": "actual process relaunch with cacheOffline=true; persisted messages and Room draft visible",
+  "videoSeconds": 15.543389,
+  "productiveServerMutations": false,
+  "physicalDeviceAccess": false
+}

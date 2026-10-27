@@ -25,6 +25,7 @@ import dev.avillagran.ot3android.ui.home.*
 import dev.avillagran.ot3android.ui.navigation.*
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import dev.avillagran.ot3android.ui.thread.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -40,9 +41,17 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             android.graphics.Color.TRANSPARENT) { intent.getBooleanExtra("dark", false) }
         enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         setContent {
-            fixture = viewModel { WorkspaceFixture(application, intent.getBooleanExtra("rich", false), intent.getStringExtra("request").orEmpty()) }
+            fixture = viewModel { WorkspaceFixture(application, intent.getBooleanExtra("rich", false), intent.getStringExtra("request").orEmpty(), intent.getBooleanExtra("cacheOffline", false)) }
             val nav = rememberOt3NavController()
             val navigator = remember(nav) { Ot3Navigator(nav) }
+            if (fixture.caching && intent.getBooleanExtra("cacheThread", false)) LaunchedEffect(nav) {
+                fixture.repository.environments.first { list -> list.any { it.id == "node" } }
+                nav.currentBackStackEntryFlow.first()
+                // Navigation must use Android Main even when the test interceptor resumes a Room wait on a worker.
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main.immediate) {
+                    navigator.openThread("node", "chat")
+                }
+            }
             val screens = remember(navigator, fixture) {
                 object : Ot3Screens by AppScreens(navigator) {
                     @Composable override fun SettingsPlaceholder(name: String, title: Int) {
@@ -113,7 +122,10 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                     @Composable override fun Thread(route: Thread) {
                         val vm: ThreadViewModel = viewModel {
                             ThreadViewModel(route.environmentId, route.threadId, fixture.connections,
-                                fixture.drafts, fixture.outbox, fixture.sender, fixture.viewModelScope)
+                                fixture.drafts, fixture.outbox, fixture.sender, fixture.viewModelScope,
+                                preferences = if (fixture.caching) (application as dev.avillagran.ot3android.Ot3Application).graph.composerPreferences else null,
+                                threadCache = fixture.cache,
+                                cacheAuthority = { "fixture-server" })
                         }
                         ThreadScreen(vm, { navigator.back() }, quotaStrip = {
                             dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, false, fixture.quotas, fixture.repository.environments,
@@ -130,7 +142,17 @@ class WorkspaceFixtureActivity : ComponentActivity() {
     }
 }
 
-class WorkspaceFixture(application: Application, private val rich: Boolean = false, private val request: String = "") : AndroidViewModel(application) {
+class WorkspaceFixture(application: Application, private val rich: Boolean = false, private val request: String = "", initialOffline: Boolean = false) : AndroidViewModel(application) {
+    val caching = request == "cache"
+    val cacheDirectory = java.io.File(application.noBackupFilesDir, "fixture-thread-cache")
+    val cache = if (caching) ThreadCache(cacheDirectory) else null
+    @Volatile var cacheOffline = initialOffline
+    val snapshotReads = java.util.concurrent.atomic.AtomicInteger()
+    suspend fun setCacheOffline(offline: Boolean) {
+        cacheOffline = offline
+        if (offline) connections.supervisor("node")?.stopAndJoin()
+        else connections.startIfCurrent(connections.supervisor("node"))
+    }
     var queueHold: kotlinx.coroutines.CompletableDeferred<Unit>? = null
     var queueUnknownFirst = false
     var queueRejectNext = false
@@ -157,7 +179,8 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         projection.put("runs", runs)
     }
     var prListState: androidx.compose.foundation.lazy.LazyListState? = null
-    private val database = Room.inMemoryDatabaseBuilder(application, Ot3Database::class.java).build()
+    private val database = if (caching) Room.databaseBuilder(application, Ot3Database::class.java, "cache-fixture.db").build()
+        else Room.inMemoryDatabaseBuilder(application, Ot3Database::class.java).build()
     private val cursors = object : ShellCursorStore {
         override suspend fun cursor(environmentId: String): Long? = null
         override suspend fun setCursor(environmentId: String, cursor: Long?) = Unit
@@ -177,7 +200,10 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
     private var pricesFresh = request != "prices"
     val transport = FakeT3Transport().apply {
         onImage = { _, _, _ -> application.assets.open("reader/preview.png").use { it.readBytes() } }
-        onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
+        onFetchDescriptor("http://fixture.invalid") {
+            if (cacheOffline) throw dev.avillagran.t3.T3Exception("network_error")
+            JSONObject().put("environmentId", "node")
+        }
         onShell { fixtureShell() }
         listOf("list", "detail", "checks", "activity").forEach { action -> onCall("pullRequests.$action") { args ->
             val data = JSONObject(application.assets.open("pullrequests/$action.json").bufferedReader().use { it.readText() })
@@ -228,7 +254,11 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
             }
             JSONObject().put("sequence", 2)
         }
-        onBoundedThread("chat") { bounded() }
+        onBoundedThread("chat") { snapshotReads.incrementAndGet(); bounded() }
+        if (caching) onThreadStream { _, after -> kotlinx.coroutines.flow.flow {
+            if (after != null) emit(ThreadUpdates.batch(JSONObject().put("kind", "event").put("event",
+                JSONObject().put("type", "thread.visited").put("payload", JSONObject().put("threadId", "chat"))), cursor = after, start = "resume"))
+        } }
         onDomain("timeline.view") { DomainEngine.shared.domain("timeline.view", it) }
         onDomain("projection.apply") { DomainEngine.shared.domain("projection.apply", it) }
         onCall("orchestration.getTurnDiff") { args ->

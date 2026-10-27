@@ -1210,3 +1210,20 @@ validate redirects/content/size, no bearer credentials, and expose cancellation.
 The Android consumer renders/caches returned bytes and retains the bundled fallback
 while loading or on error. The current attachment image API cannot fetch this URL.
 No Kotlin HTTP/protocol implementation or library checkout change is introduced.
+
+## 2026-10-26 — U18 follow-up: Historical page integration into a live cached view
+
+U18's `history.path` and `history.envelope` are available in v0.3.5; this is not a
+request to reintroduce those primitives. Checked `src/history.rs` and
+`src/domain/mod.rs` at the tag: the envelope converts page presentation rows,
+while `projection.apply` consumes orchestration events. There is no shared
+history-page merge operation for the live projection/view.
+
+The thread cache therefore persists the exact current bounded projection and its
+opaque cursor/history fields. Older history remains explicitly outside that window;
+Android does not fabricate events from historical rows or merge/order/dedupe them
+in Kotlin. Request a native `history.merge(projection, pageEnvelope, historyState)`
+(or a separate common paged-view state) returning the presentation state and next
+cursor/boundary metadata. Preserve current live controls, validate source thread ids,
+and cover overlapping/replayed pages, concurrent streaming revisions and missing
+ranges with shared fixtures. No protocol or library checkout was changed here.

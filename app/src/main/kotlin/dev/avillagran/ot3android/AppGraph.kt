@@ -31,6 +31,9 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -68,6 +71,8 @@ class AppGraph(
     val database: Ot3Database by lazy { Ot3Database.create(appContext) }
 
     val selectionPreferences: SelectionPreferences by lazy { SelectionPreferences(appContext) }
+
+    val threadCache by lazy { dev.avillagran.ot3android.core.thread.ThreadCache(appContext.noBackupFilesDir.resolve("thread-cache-v1")) }
 
     val composerPreferences by lazy { dev.avillagran.ot3android.core.data.prefs.ComposerPreferences(appContext) }
 
@@ -170,6 +175,25 @@ class AppGraph(
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
         appScope.launch { themeCatalog() }
+        appScope.launch { threadCache.trim() }
+        appScope.launch {
+            // Observe already-owned shell state; never open background thread subscriptions.
+            connectionManager.supervisors.collectLatest { supervisors ->
+                coroutineScope {
+                    supervisors.forEach { (id, supervisor) -> launch {
+                        supervisor.shell.filterNotNull().collect { shell ->
+                            try {
+                                val sidebar = dev.avillagran.ot3android.core.shell.SidebarView.build(
+                                    DomainEngine.shared, listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment(id, shell = shell)),
+                                    System.currentTimeMillis())
+                                threadCache.reconcile(id, sidebar.threads.filterNot { it.settled }.map { it.threadId }.toSet())
+                            } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                            catch (_: Exception) { /* An unavailable view must not erase cached content. */ }
+                        }
+                    } }
+                }
+            }
+        }
         appScope.launch(Dispatchers.IO) {
             val state = java.io.File(appContext.noBackupFilesDir, "omabridge")
             if (java.io.File(state, "mobile-selected-bridge.json").exists() &&

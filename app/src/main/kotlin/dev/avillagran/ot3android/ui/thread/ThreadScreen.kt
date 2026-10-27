@@ -114,6 +114,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             quotaStrip = quotaStrip,
             onDraftChange = viewModel::onDraftChange,
             onDraftChangeTagged = { text, token -> viewModel.onDraftChange(text, token) },
+            onReadingPosition = viewModel::saveReadingPosition,
             onSend = viewModel::send,
             onInterrupt = viewModel::interrupt,
             onResend = viewModel::retry,
@@ -167,6 +168,7 @@ fun ThreadContent(
     quotaStrip: @Composable () -> Unit = {},
     editorIdentity: String = state.view.threadId,
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
+    onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -334,7 +336,9 @@ fun ThreadContent(
                     when {
                         !state.view.loaded -> Ot3Spinner(Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp)
                         (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(stringResource(R.string.thread_empty), modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY))
-                        else -> timelineState.SaveableStateProvider(editorIdentity) { TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff) }
+                        else -> if (state.readingPositionLoaded) timelineState.SaveableStateProvider(editorIdentity) {
+                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition)
+                        }
                     }
                 }
             }
@@ -372,7 +376,7 @@ private fun StreamState(connection: ThreadConnection, stale: Boolean, onRetry: (
     ) {
         if (stale) {
             StatusLabel(
-                stringResource(R.string.thread_stale),
+                stringResource(if (connection == ThreadConnection.Waiting) R.string.thread_cache_offline else R.string.thread_stale),
                 colors.secondaryContainer,
                 colors.onSecondaryContainer,
                 Modifier.testTag(ThreadScreenTags.STALE),

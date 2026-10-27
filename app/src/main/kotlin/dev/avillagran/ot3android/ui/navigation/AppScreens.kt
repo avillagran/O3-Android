@@ -113,6 +113,9 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                     graph.messageSender,
                     graph.appScope,
                     graph.composerPreferences,
+                    graph.threadCache,
+                    cacheAuthority = { graph.environmentRepository.cacheAuthority(route.environmentId) },
+                    cacheAuthorityUpdates = graph.environmentRepository.cacheAuthorities(route.environmentId),
                 )
             },
             onBack = { navigator.back() },
