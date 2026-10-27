@@ -56,8 +56,10 @@
     "errors": 0,
     "skipped": 5
   },
-  "actualHostJniCases": 2,
+  "actualHostJniCases": 1,
   "coreLint": "passed",
   "androidDevice": "Exact-source rerun pending",
-  "ci": "Candidate workflow validated by actionlint but not installed: missing workflow credential scope"
+  "ci": "Candidate workflow validated by actionlint but not installed: missing workflow credential scope",
+  "nativeBridgeTestCases": 2,
+  "fixedDiagnosticMappingCases": 1
 }

@@ -15,8 +15,8 @@ out at the lock source, set OMABRIDGE_DIR to that clone, then run
 `scripts/build-bridge-sdk.sh`. The default clone path is ~/Work/omabridge. The
 separate T3 AAR and host JNI remain pinned coherently to lib v0.3.5.
 
-Strict core JVM tests passed (319 passed,5 opt-in skips), including two actual
-host-JNI/diagnostic cases; core lint passed. Delegated emulator acceptance for
+Strict core JVM tests passed (319 passed,5 opt-in skips), including one actual
+host-JNI call and one fixed-diagnostic mapping case; core lint passed. Delegated emulator acceptance for
 this exact source is still pending. Earlier10/10 delegated acceptance used sourceDD628
 and is historical evidence, not substituted for a rerun. Ordinary application
 transport streams, productive hosts and physical acceptance remain open.
