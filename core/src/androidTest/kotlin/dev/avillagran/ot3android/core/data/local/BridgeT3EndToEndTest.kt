@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.avillagran.ot3android.core.bridge.BridgeCatalogController
 import dev.avillagran.ot3android.core.bridge.NativeBridge
+import dev.avillagran.ot3android.core.bridge.bridgeErrorCode
 import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.connection.ShellCursorStore
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
@@ -54,10 +55,22 @@ class BridgeT3EndToEndTest {
         }
         val repository = EnvironmentRepository(database.environmentDao(), { tokens }, cursors, managed = database.bridgeManagedDao())
         val connections = ConnectionManager(repository, cursors, NativeT3TransportFactory(), scope)
+        val enrollmentDiagnostics = java.util.concurrent.ConcurrentHashMap<String, String>()
         var handle = 0L
         val controller = BridgeCatalogController(database, connections, scope, { tokens }, native = { request ->
+            val started = android.os.SystemClock.elapsedRealtime()
             if (request.getString("op") == "open") request.put("labCaPem", configuration.getString("labCaPem"))
-            NativeBridge.request(request).also { if (request.getString("op") == "open") handle = it.getLong("handle") }
+            try {
+                NativeBridge.request(request).also {
+                    if (request.getString("op") == "open") handle = it.getLong("handle")
+                    if (request.getString("op") == "enroll") enrollmentDiagnostics[request.getString("environmentId")] = "ok (${android.os.SystemClock.elapsedRealtime() - started} ms)"
+                }
+            } catch (error: Exception) {
+                if (request.getString("op") == "enroll") enrollmentDiagnostics[request.getString("environmentId")] =
+                    (if (error is IllegalStateException) bridgeErrorCode(error.message.orEmpty()) else "bridge_operation_failed") +
+                        " (${android.os.SystemClock.elapsedRealtime() - started} ms)"
+                throw error
+            }
         }, mutations = repository.mutations)
         val directory = java.io.File(context.filesDir, "real-t3-lab-${System.nanoTime()}")
         suspend fun request(url: String, token: String, method: String = "GET", path: String = "/api/orchestration/shell"): JSONObject =
@@ -89,12 +102,13 @@ class BridgeT3EndToEndTest {
             val environments = repository.environments.first()
             assertEquals(2, environments.size)
             val rows = configuration.getJSONArray("environments")
+            val delegatedIssuances = lab("/delegation-status").getLong("issuedCount")
             stage = "shells and denied requests"
             val sessions = (0 until rows.length()).map { index ->
                 val expected = rows.getJSONObject(index)
                 val row = environments.single { it.environmentId == expected.getString("id") }
                 val origin = database.bridgeManagedDao().find(row.id)!!
-                assertEquals("authorized", origin.status)
+                assertEquals("Automatic enrollment ${expected.getString("name")}: ${enrollmentDiagnostics[row.environmentId] ?: "not attempted"}; delegatedIssuances=$delegatedIssuances; controller=${controller.status.value}", "authorized", origin.status)
                 assertTrue(origin.authorizationExpiresAt!! in (System.currentTimeMillis() + 1)..(System.currentTimeMillis() + 300_000))
                 val token = repository.token(row.id)
                 assertTrue("Real T3 issued a credential", token != null)
@@ -107,7 +121,8 @@ class BridgeT3EndToEndTest {
                 assertEquals("[\"orchestration:read\"]", session.getJSONArray("scopes").toString())
                 if (row.environmentId == delegatedEnvironment) {
                     assertTrue("T3 subject must preserve the Android client, not the desktop caller",
-                        session.getString("subject").endsWith(":$client"))
+                        lab("/verify-subject/$index", JSONObject().put("token", token))
+                            .getBoolean("subjectBoundToClient"))
                     assertTrue("Delegated sessions must expire within two minutes",
                         origin.authorizationExpiresAt <= System.currentTimeMillis() + 120_000)
                 }
@@ -124,6 +139,12 @@ class BridgeT3EndToEndTest {
                 delegation.getLong("issuedCount") >= 1)
             denied(sessions[0].first, sessions[1].second)
             denied(sessions[1].first, sessions[0].second)
+            val delegatedIndex = (0 until rows.length()).single {
+                rows.getJSONObject(it).getString("id") == delegatedEnvironment
+            }
+            assertFalse("A different host's bearer must not satisfy the subject witness",
+                lab("/verify-subject/$delegatedIndex", JSONObject().put("token", sessions[1 - delegatedIndex].second))
+                    .getBoolean("subjectBoundToClient"))
             // Natural expiry is enforced by T3 itself, independently of Android's gate.
             delay((sessions.maxOf { it.third } - System.currentTimeMillis() + 1200).coerceAtLeast(1))
             sessions.forEach { denied(it.first, it.second) }

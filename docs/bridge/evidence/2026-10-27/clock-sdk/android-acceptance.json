@@ -1,0 +1,95 @@
+{
+  "acceptance": {
+    "tests": 10,
+    "failures": 0,
+    "skipped": 0,
+    "sdkSource": "dd628443cd43937b0e8f8e7b1e025be73eefa205",
+    "t3Version": "0.1.3-nightly.20261027.3754",
+    "image": "android-36.1/google_apis/x86_64 revision4",
+    "sdkInt": 36,
+    "privateGuest": "720x1600,2048MiB,1core,software",
+    "cases": [
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeCatalogNativeTest",
+        "test": "pairedBridgeProjectsTwoHostsWithoutTouchingLocalDraftsOrCursors",
+        "seconds": "0.755"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+        "test": "withdrawalSurvivesConnectionTimestampButLocalCredentialAdoptionWins",
+        "seconds": "0.046"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+        "test": "interruptedCredentialReplacementAndFailedDeleteStayDeniedAcrossRoomReopen",
+        "seconds": "0.027"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeOwnershipRaceTest",
+        "test": "localAdoptionDuringEnrollmentShutdownCannotBeOverwritten",
+        "seconds": "0.026"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.BridgeT3EndToEndTest",
+        "test": "twoRealIsolatedServersEnforceReadScopeExpiryAndRevocation",
+        "seconds": "38.063"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+        "test": "migration2To3KeepsLocalStateAndAddsManagedProvenance",
+        "seconds": "0.052"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+        "test": "schema1AcceptsAnEnvironmentRow",
+        "seconds": "0.052"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.data.local.Ot3DatabaseMigrationTest",
+        "test": "migration1To2KeepsEnvironmentsAndAddsTheOutboxAndDrafts",
+        "seconds": "0.052"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.security.CredentialStoreTest",
+        "test": "tokenRoundTripAndDelete",
+        "seconds": "0.077"
+      },
+      {
+        "class": "dev.avillagran.ot3android.core.security.CredentialStoreTest",
+        "test": "unreadableFileIsWipedAndReported",
+        "seconds": "0.052"
+      }
+    ],
+    "scope": "JNI/QUIC/Room + real isolated T3 shells via SDKlabRequest; not ordinary app stream/production/physical"
+  },
+  "sdk": {
+    "source": "dd628443cd43937b0e8f8e7b1e025be73eefa205",
+    "artifacts": [
+      {
+        "target": "host-production",
+        "sha256": "f4b27669ab348cf6aa5c3fe029c582c0afd3e144d6f7f1be0fd9ab0b2c6402f0",
+        "bytes": 39620480
+      },
+      {
+        "target": "x86_64-production",
+        "sha256": "74fd30ae65b6f876a95260b835256db4bccf48161d303efcc17946dc36322308",
+        "bytes": 23689920
+      },
+      {
+        "target": "arm64-production",
+        "sha256": "d1300035b9928efde3ed538f8a2c3b689ee4ee1614ce11c0c5398c9f86e5b5a2",
+        "bytes": 22645432
+      },
+      {
+        "target": "host-lab",
+        "sha256": "b2d8049e08e92012daaa0409132623f9ca8fa4638abe5dcd3e40459df523ea4b",
+        "bytes": 39685008
+      },
+      {
+        "target": "x86_64-lab",
+        "sha256": "dcf19fa56b91aa5cfec2255cdcd614ce2c3bf20fed2123e4b6783c32c6cb0db9",
+        "bytes": 23758120
+      }
+    ]
+  }
+}
