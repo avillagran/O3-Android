@@ -152,10 +152,14 @@ class LiveThemeSourceTest {
         assertEquals("tokyo-night", cache.themes.getValue("a").themeName)
         assertEquals(1, host.reads("colors.toml"))
 
-        // A reconnect (new epoch) reads again.
+        connection("a").value = null
+        runCurrent()
+        assertTrue((source.selection.value as ThemeSelection.Live).fromCache)
+        // A reconnect (new epoch) reads again and removes the saved label.
         connection("a").value = Connection(host.transport, epoch = 2)
         runCurrent()
         assertEquals(2, host.reads("colors.toml"))
+        assertFalse((source.selection.value as ThemeSelection.Live).fromCache)
     }
 
     @Test
@@ -256,7 +260,7 @@ class LiveThemeSourceTest {
         host.failure = T3Exception("disconnected")
         source.refresh()
         runCurrent()
-        assertEquals(shown, source.selection.value)
+        assertEquals(shown.copy(fromCache = true), source.selection.value)
 
         host.failure = T3Exception("write_not_authorized", null, "orchestration:read")
         source.refresh()
