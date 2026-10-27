@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-27",
+  "scope": "Read-only metadata; no native bridge selected and no productive policy changes",
+  "phone": {
+    "device": "known Xiaomi 23090RA98G J75",
+    "method": "dedicated read-only runner, reporting method only",
+    "tests": 1,
+    "failures": 0,
+    "selectedBridgeOnDisk": false,
+    "bridgeManagedCount": 0,
+    "environments": [{"label": "VQ", "environmentId": "8b55eaad-3149-443c-953f-afd6dd002666", "bridgeManaged": false}],
+    "applicationGraphStarted": false
+  },
+  "nodeDescriptor": {"port": 8643, "environmentId": "8b55eaad-3149-443c-953f-afd6dd002666", "label": "node", "protocol": 2},
+  "distinctNodeBridgeInstances": [
+    {"unit": "omabridge-node-serve.service", "state": "omabridge-route", "version": "0.2.1", "services": ["t3", "ssh"], "t3RuntimeTracking": true, "peers": ["omarchy", "vq"]},
+    {"unit": "omabridge-serve.service", "state": "omabridge-ui-test/state", "version": "0.1.0", "services": ["ssh"], "peers": ["mbp-m2", "vq"]}
+  ],
+  "conclusion": "Phone has one independently saved NODE environment, not a selected native bridge catalog. Equal NODE display names do not identify the same endpoint.",
+  "remaining": "Identify intended bridge with operator; prepare compatible catalog publisher and explicit per-client environment authorization. No identity merge, token copy or productive deployment performed."
+}

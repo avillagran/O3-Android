@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">bekliyor</string>
     <string name="ot3_inspector_label_cancelled">iptal edildi</string>
     <string name="ot3_inspector_label_interrupted">kesintiye uğradı</string>
+    <string name="ot3_new_chat_title">İleti dizisi başlığı</string>
+    <string name="ot3_new_chat_no_projects">Proje bulunamadı</string>
+    <string name="ot3_new_chat_current_checkout">Geçerli çalışma kopyası</string>
 </resources>

@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">ожидает</string>
     <string name="ot3_inspector_label_cancelled">отменено</string>
     <string name="ot3_inspector_label_interrupted">прервано</string>
+    <string name="ot3_new_chat_title">Название ветки</string>
+    <string name="ot3_new_chat_no_projects">Проекты не найдены</string>
+    <string name="ot3_new_chat_current_checkout">Текущая рабочая копия</string>
 </resources>

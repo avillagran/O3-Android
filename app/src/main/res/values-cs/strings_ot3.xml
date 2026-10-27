@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">čeká</string>
     <string name="ot3_inspector_label_cancelled">zrušeno</string>
     <string name="ot3_inspector_label_interrupted">přerušeno</string>
+    <string name="ot3_new_chat_title">Název vlákna</string>
+    <string name="ot3_new_chat_no_projects">Nenalezeny žádné projekty</string>
+    <string name="ot3_new_chat_current_checkout">Aktuální pracovní kopie</string>
 </resources>

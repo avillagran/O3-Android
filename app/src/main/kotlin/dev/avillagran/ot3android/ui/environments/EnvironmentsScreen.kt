@@ -56,6 +56,7 @@ fun EnvironmentsScreen(
     bridgeStatus: String? = null,
     onRefreshBridge: (() -> Unit)? = null,
     onBack: () -> Unit = {},
+    onPairBridge: (() -> Unit)? = null,
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
@@ -91,16 +92,19 @@ fun EnvironmentsScreen(
         },
     ) { padding ->
         val list = items
+        androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().padding(padding)) {
+        if (bridgeStatus == "not_loaded" && onPairBridge != null) TextButton(onClick = onPairBridge,
+            modifier = Modifier.testTag("environments_pair_bridge")) { Text(stringResource(R.string.bridge_pair_help)) }
         when {
             list == null -> Unit
-            list.isEmpty() -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            list.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     stringResource(R.string.environments_empty),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.testTag(EnvironmentsScreenTags.EMPTY),
                 )
             }
-            else -> LazyColumn(Modifier.fillMaxSize().padding(padding).testTag(EnvironmentsScreenTags.LIST)) {
+            else -> LazyColumn(Modifier.fillMaxSize().testTag(EnvironmentsScreenTags.LIST)) {
                 items(list, key = { it.environment.id }) { item ->
                     val id = item.environment.id
                     ListItem(
@@ -132,6 +136,8 @@ fun EnvironmentsScreen(
                 }
             }
         }
+    }
+
     }
 
     val target = deleting?.let { id -> items?.firstOrNull { it.environment.id == id } }

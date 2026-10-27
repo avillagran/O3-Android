@@ -305,3 +305,8 @@ ot3_inspector_label_running	running
 ot3_inspector_label_pending	pending
 ot3_inspector_label_cancelled	cancelled
 ot3_inspector_label_interrupted	interrupted
+
+# New chat project selection and draft.
+ot3_new_chat_title	Thread title
+ot3_new_chat_no_projects	No projects found
+ot3_new_chat_current_checkout	Current checkout

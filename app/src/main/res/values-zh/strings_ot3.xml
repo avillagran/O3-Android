@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">待处理</string>
     <string name="ot3_inspector_label_cancelled">已取消</string>
     <string name="ot3_inspector_label_interrupted">已中断</string>
+    <string name="ot3_new_chat_title">会话标题</string>
+    <string name="ot3_new_chat_no_projects">未找到项目</string>
+    <string name="ot3_new_chat_current_checkout">当前工作副本</string>
 </resources>

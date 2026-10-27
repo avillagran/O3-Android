@@ -71,6 +71,44 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         HomeScreen(state, isTop, onIntent = { intent -> onHomeIntent(intent, viewModel) }, quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(onOpenLimits = { navigator.push(QuotaLimits()) }) })
     }
 
+    @Composable
+    override fun NewChat(entry: NavBackStackEntry) {
+        val home = homeViewModel(entry)
+        val state by home.state.collectAsStateWithLifecycle()
+        val graph = LocalContext.current.appGraph
+        val environments by graph.environmentRepository.environments.collectAsStateWithLifecycle(initialValue = emptyList())
+        val connectionStates by graph.connectionManager.states.collectAsStateWithLifecycle(initialValue = emptyMap())
+        val current = state
+        val options = current?.projects?.values.orEmpty().map { project ->
+            val environmentId = project.key.substringBefore('/')
+            dev.avillagran.ot3android.ui.newchat.NewChatProjectOption(environmentId,
+                environments.firstOrNull { it.id == environmentId }?.label ?: environmentId,
+                project.key.substringAfter('/'), project.title,
+                project.workspaceRoot, connectionStates[environmentId] is dev.avillagran.ot3android.core.connection.ConnectionState.Connected,
+                current?.actionContexts?.get(environmentId)?.canOperate == true)
+        }
+        dev.avillagran.ot3android.ui.newchat.NewChatProjectPicker(options, current == null,
+            onSelect = { navigator.push(NewThreadDraft(it.environmentId, it.projectId)) },
+            onBack = { navigator.back() }, onRetry = home::refresh)
+    }
+
+    @Composable
+    override fun NewChatDraft(entry: NavBackStackEntry, route: NewThreadDraft) {
+        val graph = LocalContext.current.appGraph
+        val model: dev.avillagran.ot3android.ui.newchat.NewChatDraftViewModel = viewModel(viewModelStoreOwner = entry) {
+            dev.avillagran.ot3android.ui.newchat.NewChatDraftViewModel(route.environmentId, route.projectId, route.branch,
+                graph.connectionManager, graph.messageSender, graph.outboxRepository, createSavedStateHandle())
+        }
+        val state by model.state.collectAsStateWithLifecycle()
+        val environments by graph.environmentRepository.environments.collectAsStateWithLifecycle(initialValue = emptyList())
+        androidx.compose.runtime.LaunchedEffect(state.createdThreadId) {
+            state.createdThreadId?.let { navigator.openThread(route.environmentId, it) }
+        }
+        dev.avillagran.ot3android.ui.newchat.NewChatDraftScreen(state, { navigator.back() }, model::text, model::title,
+            model::select, model::option, model::runtime, model::refresh, model::create,
+            environmentLabel = environments.firstOrNull { it.id == route.environmentId }?.label.orEmpty(), onDiscard = model::discard)
+    }
+
     private fun onHomeIntent(intent: HomeIntent, viewModel: HomeViewModel) {
         when (intent) {
             is HomeIntent.SetQuery -> viewModel.setQuery(intent.text)
@@ -261,6 +299,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             onAppearance = { navigator.push(Appearance) },
             bridgeStatus = bridgeStatus,
             onRefreshBridge = { scope.launch { graph.bridgeCatalog.reconnect() } },
+            onPairBridge = { navigator.push(PairEnvironment) },
         )
     }
 

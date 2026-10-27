@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">in afwachting</string>
     <string name="ot3_inspector_label_cancelled">geannuleerd</string>
     <string name="ot3_inspector_label_interrupted">onderbroken</string>
+    <string name="ot3_new_chat_title">Titel van gesprek</string>
+    <string name="ot3_new_chat_no_projects">Geen projecten gevonden</string>
+    <string name="ot3_new_chat_current_checkout">Huidige werkmap</string>
 </resources>

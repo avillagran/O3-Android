@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">очікує</string>
     <string name="ot3_inspector_label_cancelled">скасовано</string>
     <string name="ot3_inspector_label_interrupted">перервано</string>
+    <string name="ot3_new_chat_title">Назва гілки</string>
+    <string name="ot3_new_chat_no_projects">Проєкти не знайдено</string>
+    <string name="ot3_new_chat_current_checkout">Поточна робоча копія</string>
 </resources>

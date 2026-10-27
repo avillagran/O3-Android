@@ -45,6 +45,13 @@ class OutboxRepository(private val dao: OutboxDao, private val clock: () -> Long
      */
     suspend fun recoverInterrupted(startedAt: Long): Int = dao.markInterrupted(startedAt)
 
+    /** Recover an uncertain creation even after its draft/back-stack entry was closed. */
+    fun observeLaunch(environmentId: String, projectId: String): Flow<PendingCommand?> =
+        dao.observeEnvironment(environmentId).map { rows -> rows.firstOrNull { row ->
+            runCatching { JSONObject(row.commandJson).optJSONObject(MessageSender.LAUNCH_ENVELOPE)
+                ?.optString("projectId") == projectId }.getOrDefault(false)
+        }?.toPending() }
+
     fun observeThread(environmentId: String, threadId: String): Flow<List<PendingCommand>> =
         dao.observeThread(environmentId, threadId).map { rows -> rows.map { it.toPending() } }
 }

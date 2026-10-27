@@ -25,6 +25,9 @@ class MemoryOutboxDao : OutboxDao {
             all.values.filter { it.environmentId == environmentId && it.threadId == threadId }.sortedBy { it.createdAt }
         }
 
+    override fun observeEnvironment(environmentId: String): Flow<List<OutboxEntity>> =
+        rows.map { all -> all.values.filter { it.environmentId == environmentId }.sortedBy { it.createdAt } }
+
     override suspend fun setState(id: String, state: String) =
         rows.update { all -> all[id]?.let { all + (id to it.copy(state = state)) } ?: all }
 

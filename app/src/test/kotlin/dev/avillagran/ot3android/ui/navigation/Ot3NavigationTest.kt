@@ -75,6 +75,15 @@ class Ot3NavigationTest {
     private fun NavBackStackEntry.thread(): Thread? = if (destination.hasRoute(Thread::class)) toRoute<Thread>() else null
 
     @Test
+    fun newChatRoutesInvokeTheirScreensWithTheExactEnvironmentAndProject() {
+        launch()
+        onUi { navigator.push(NewThread) }
+        composeRule.onNodeWithTag("fake_new_chat_projects").assertIsDisplayed()
+        onUi { navigator.push(NewThreadDraft("env-other", "project-other")) }
+        composeRule.onNodeWithTag("fake_new_chat_draft_env-other_project-other").assertIsDisplayed()
+    }
+
+    @Test
     fun startsOnHomeInTheChatsTabWithTheBarShown() {
         launch()
         assertEquals(listOf("Home"), stack())
@@ -318,8 +327,6 @@ class Ot3NavigationTest {
         launch()
         listOf(
             ThreadChanges("e1", "t1", "turn") to "ThreadChanges",
-            NewThread to "NewThread",
-            NewThreadDraft("e1", "p1") to "NewThreadDraft",
             AddProject() to "AddProject",
             CommandPalette to "CommandPalette",
         ).forEach { (route, name) ->
@@ -363,6 +370,13 @@ private class FakeScreens : Ot3Screens {
             },
         )
     }
+
+    @Composable
+    override fun NewChat(entry: NavBackStackEntry) = Tagged("fake_new_chat_projects")
+
+    @Composable
+    override fun NewChatDraft(entry: NavBackStackEntry, route: NewThreadDraft) =
+        Tagged("fake_new_chat_draft_${route.environmentId}_${route.projectId}")
 
     @Composable
     override fun Thread(route: Thread) = Tagged("fake_thread_${route.environmentId}_${route.threadId}")
