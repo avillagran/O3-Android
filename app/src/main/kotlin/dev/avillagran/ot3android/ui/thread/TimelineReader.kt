@@ -266,9 +266,11 @@ internal fun inlineSpans(spans: JSONArray?): AnnotatedString = buildAnnotatedStr
             fontStyle = if (span.optBoolean("emphasis")) FontStyle.Italic else null,
             fontFamily = if (span.optString("type") == "code") FiraCode else null,
             textDecoration = if (span.optBoolean("strikethrough")) TextDecoration.LineThrough else null)
-        val href = span.optJSONObject("link")?.optString("href")
-        // Only external web destinations are opened by Android; file/thread links need native routing.
-        val web = href?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+        val link = span.optJSONObject("link")
+        // Rust owns destination classification. Android requires a normalized scheme
+        // for intent matching; file/thread/anchor destinations still need native routing.
+        val web = link?.takeIf { it.optString("kind") in setOf("web", "github") }
+            ?.getString("href")?.let { android.net.Uri.parse(it).normalizeScheme().toString() }
         if (web != null) pushLink(LinkAnnotation.Url(web))
         withStyle(style) { append(if (span.optString("type") == "break") "\n" else span.optString("text")) }
         if (web != null) pop()
