@@ -34,5 +34,15 @@
   "assembleDebug": "PASS",
   "apkSha256": "6461dc438e3b970da82ab2960d3907165d726669844dd9622d282ee31d21519b",
   "signerSha256": "42d98c51c52b69bba86db1c4510b895c100968ad3c3911762182698f74927417",
-  "physicalAcceptance": "Not yet established; installation recorded separately."
+  "physicalAcceptance": "Not yet established; installation recorded separately.",
+  "installation": {
+    "device": "Xiaomi 23090RA98G Android16 (known J75)",
+    "method": "adb install -r",
+    "result": "Success",
+    "installedBaseApkSha256": "6461dc438e3b970da82ab2960d3907165d726669844dd9622d282ee31d21519b",
+    "matchesBuiltApk": true,
+    "productSourceCommit": "d1eb5cc",
+    "uiOperated": false,
+    "liveScrollAcceptance": "Pending user observation"
+  }
 }
