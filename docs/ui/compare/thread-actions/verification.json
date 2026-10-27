@@ -30,5 +30,14 @@
   "assembleDebug": "PASS",
   "nativeCommandDurability": "persist-before-send; same-commandId explicit retry verified for unknown outcome",
   "apkSha256": "d6893cb26282d0f17143c1365747676cdad6f986beb1b9603bee057cc265b175",
-  "physicalAcceptance": "Not yet verified; no real pin/archive/delete action was dispatched as a test."
+  "physicalAcceptance": "Not yet verified; no real pin/archive/delete action was dispatched as a test.",
+  "installation": {
+    "device": "Known Xiaomi J75/23090RA98G",
+    "method": "install-r",
+    "result": "Success",
+    "source": "eb6c595",
+    "sha256MatchesBuiltApk": true,
+    "installedBaseApkSha256": "d6893cb26282d0f17143c1365747676cdad6f986beb1b9603bee057cc265b175",
+    "personalUiOperated": false
+  }
 }
