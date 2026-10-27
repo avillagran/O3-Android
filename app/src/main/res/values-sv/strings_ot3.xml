@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">väntar</string>
     <string name="ot3_inspector_label_cancelled">avbruten</string>
     <string name="ot3_inspector_label_interrupted">avbruten</string>
+    <string name="ot3_new_chat_title">Trådtitel</string>
+    <string name="ot3_new_chat_no_projects">Inga projekt hittades</string>
+    <string name="ot3_new_chat_current_checkout">Aktuell arbetskopia</string>
 </resources>

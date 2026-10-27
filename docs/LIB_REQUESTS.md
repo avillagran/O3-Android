@@ -1182,7 +1182,11 @@ with the existing composer builder request. Reuse existing typed operations rath
 than introduce another transport. Android owns editing, navigation, confirmation
 and durable storage; it must not port fallback/search/routing rules to Kotlin.
 
-UI_SPEC §4.7 and the NewThread route remain unimplemented; this request is not
+Update 2026-10-27: Android now implements a bounded explicit project/model/current-checkout
+flow through typed launch and durable retries. Full source/sibling defaults and shared
+search/routing/worktree recipes remain open; no policy was copied as a fallback.
+
+The remaining UI_SPEC §4.7 policy is still incomplete; this request is not
 acceptance of that flow. No library checkout or production configuration was changed.
 
 ### U33 — common composer edit transforms (does not block UI-N)

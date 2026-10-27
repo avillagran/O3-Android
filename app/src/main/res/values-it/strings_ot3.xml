@@ -261,4 +261,7 @@
     <string name="ot3_inspector_label_pending">in attesa</string>
     <string name="ot3_inspector_label_cancelled">annullato</string>
     <string name="ot3_inspector_label_interrupted">interrotto</string>
+    <string name="ot3_new_chat_title">Titolo del thread</string>
+    <string name="ot3_new_chat_no_projects">Nessun progetto trovato</string>
+    <string name="ot3_new_chat_current_checkout">Copia di lavoro attuale</string>
 </resources>

@@ -260,4 +260,7 @@
     <string name="ot3_inspector_label_pending">pending</string>
     <string name="ot3_inspector_label_cancelled">cancelled</string>
     <string name="ot3_inspector_label_interrupted">interrupted</string>
+    <string name="ot3_new_chat_title">Thread title</string>
+    <string name="ot3_new_chat_no_projects">No projects found</string>
+    <string name="ot3_new_chat_current_checkout">Current checkout</string>
 </resources>

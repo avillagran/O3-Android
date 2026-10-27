@@ -1576,6 +1576,25 @@ required" (`ot3:ui/qml/T3AddProject.qml:105-126`). Data: `filesystem.browse`,
 `projects.createNew`, `projects.mutate` (typed API), `projects::folders`
 (`lib:src/projects.rs:7`).
 
+
+Implementation update (2026-10-27): `NewThread` now opens an environment-scoped
+project picker over all authorized shell projects, including projects with no
+threads. Rows name the environment and preserve offline/read-only entries without
+allowing creation. `NewThreadDraft` offers a title, first message, native model
+catalog/options and advertised permission choices in the current checkout. Project
+model defaults come from `nativeSettings.threadDefaults`; choosing another model
+is explicit. The typed `orchestration.launchThread` operation creates the thread and
+first message atomically. The existing outbox stores a typed launch envelope with
+stable command/thread ids and retries the same launch RPC after an unknown outcome;
+legacy dispatch entries retain their old format. No database migration is needed.
+
+This is a bounded creation flow, not full UI-5 parity: shared source/sibling/model
+fallback and search/routing recipe U32, branch/worktree selection, automatic
+environment routing, Add Project and favorite mutation remain open. It does not
+repair an unpaired bridge or publish missing remote host catalogs. See
+[creation evidence](ui/compare/new-chat/README.md) and
+[missing-host metadata](bridge/evidence/2026-10-27/missing-hosts/verification.json).
+
 ### 4.8 Pull requests
 
 - **ot3:** `ot3:ui/qml/T3PullRequests.qml` (list `:48-94`, detail `:99-153`, actions

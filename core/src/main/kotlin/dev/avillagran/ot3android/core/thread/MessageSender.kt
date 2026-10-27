@@ -130,6 +130,20 @@ class MessageSender(
         dispatch(transport, commandId, args)
     }
 
+    /** Atomic creation + first message. The envelope records which typed RPC owns retries. */
+    suspend fun launchThread(transport: T3Transport?, environmentId: String, threadId: String,
+        arguments: JSONObject,
+    ): SendResult = detached {
+        if (transport == null) return@detached SendResult.Failed(NOT_CONNECTED)
+        val pending = outbox.observeThread(environmentId, threadId).first().firstOrNull()
+        if (pending != null) return@detached SendResult.Failed(COMMAND_PENDING)
+        val commandId = newId()
+        val args = JSONObject(arguments.toString()).put("commandId", commandId).put("threadId", threadId)
+        val bytes = JSONObject().put(LAUNCH_ENVELOPE, args).toString()
+        outbox.add(environmentId, threadId, commandId, bytes)
+        dispatch(transport, commandId, bytes)
+    }
+
     /** Resends a stored command byte-identical; only for an entry still in the outbox. */
     suspend fun retry(transport: T3Transport?, commandId: String): SendResult = detached {
         val entry = outbox.find(commandId) ?: return@detached SendResult.Failed(NOT_IN_OUTBOX)
@@ -158,7 +172,13 @@ class MessageSender(
     }
 
     private suspend fun dispatch(transport: T3Transport, commandId: String, commandJson: String): SendResult = try {
-        val response = transport.call(DISPATCH, JSONObject(commandJson))
+        val stored = JSONObject(commandJson)
+        val launch = stored.optJSONObject(LAUNCH_ENVELOPE)
+        val response = if (launch == null) transport.call(DISPATCH, stored)
+            else transport.call("orchestration.launchThread", launch)
+        if (launch != null) {
+            check((response as? JSONObject)?.optString("threadId") == launch.getString("threadId")) { "launch_identity_mismatch" }
+        }
         outbox.remove(commandId)
         SendResult.Accepted(commandId, sequenceOf(response))
     } catch (error: T3Exception) {
@@ -181,6 +201,7 @@ class MessageSender(
     private suspend fun <T> detached(block: suspend () -> T): T = scope.async(NonCancellable) { block() }.await()
 
     companion object {
+        const val LAUNCH_ENVELOPE = "_ot3aLaunchThread"
         const val DISPATCH = "orchestration.dispatchCommand"
         const val ID_PREFIX = "ot3a-"
 

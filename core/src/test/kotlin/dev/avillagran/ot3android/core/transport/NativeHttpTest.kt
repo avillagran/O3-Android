@@ -27,6 +27,11 @@ class NativeHttpTest {
                 "/fixture" ->
                     if (headers["authorization"] == "Bearer $TOKEN") FakeHttpServer.Response(200, "{\"text\":\"á 🦀\"}")
                     else FakeHttpServer.Response(401)
+                "/api/auth/session" -> {
+                    if (headers["authorization"] == "Bearer $TOKEN" && headers["x-t3-orchestration-protocol"] == null)
+                        FakeHttpServer.Response(200, "{\"authenticated\":true,\"permissions\":[\"orchestration:operate\"]}")
+                    else FakeHttpServer.Response(401)
+                }
                 "/api/orchestration/shell" -> {
                     shellProtocol.set(headers["x-t3-orchestration-protocol"])
                     if (headers["authorization"] == "Bearer $TOKEN") {
@@ -75,6 +80,14 @@ class NativeHttpTest {
         val body = transport.request("/fixture") as JSONObject
 
         assertEquals("á 🦀", body.getString("text"))
+    }
+
+    @Test
+    fun authSessionUsesBearerWithoutTheOrchestrationProtocolHeader() = runBlocking {
+        transport.connect(ConnectRoute.Bearer(server.baseUrl, TOKEN))
+        val session = transport.authSession()
+        assertEquals(true, session.getBoolean("authenticated"))
+        assertEquals("orchestration:operate", session.getJSONArray("permissions").getString(0))
     }
 
     @Test

@@ -15,7 +15,7 @@ data class OutboxEntity(
     /** The local environment id (`Environment.id`). */
     val environmentId: String,
     val threadId: String,
-    /** The exact `orchestration.dispatchCommand` arguments, as sent. */
+    /** Exact dispatch arguments, or MessageSender's typed launch envelope for stable retries. */
     val commandJson: String,
     val createdAt: Long,
     /** [STATE_SENDING] or [STATE_UNKNOWN]. */

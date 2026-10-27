@@ -262,4 +262,7 @@
     <string name="ot3_inspector_label_pending">قيد الانتظار</string>
     <string name="ot3_inspector_label_cancelled">أُلغي</string>
     <string name="ot3_inspector_label_interrupted">توقّف</string>
+    <string name="ot3_new_chat_title">عنوان الموضوع</string>
+    <string name="ot3_new_chat_no_projects">لم يتم العثور على مشاريع</string>
+    <string name="ot3_new_chat_current_checkout">نسخة العمل الحالية</string>
 </resources>
