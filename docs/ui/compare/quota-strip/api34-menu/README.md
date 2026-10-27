@@ -60,3 +60,7 @@ adb -s emulator-5580 shell am instrument -w \
 Do not interpret the passing suite as a reproduced diagnosis of the original CI
 failure or physical-keyboard/OEM acceptance. No native/protocol or image-viewer
 behavior was changed in this follow-up.
+
+
+[API34 CI readiness follow-up](ci-readiness.md) records PR60's IME/Settings
+failures, the unchanged baseline result and the focused test-only verification.
