@@ -44,7 +44,11 @@ class ThreadCacheDeviceTest {
                     "collectors=${fixture.transport.collectors("chat").value}"
             }) { click ->
                 click()
-                rule.waitUntil(5_000) { fixture.transport.collectors("chat").value == 0 }
+                // ThreadViewModel keeps its upstream for WhileSubscribed(5_000) after the last
+                // UI subscriber leaves, so the count cannot reach 0 within 5 s of the click.
+                // Waiting exactly that long raced the production timeout; the assertion is the
+                // same, only the deadline now includes the stop timeout it was measuring.
+                rule.waitUntil(15_000) { fixture.transport.collectors("chat").value == 0 }
             }
             fixture.setCacheOffline(true)
             rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()

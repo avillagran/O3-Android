@@ -137,6 +137,18 @@ intended: `QuotaStripScreenshotTest/home-*` (Home now has the panel behind the l
   (`scripts/emulator.sh stop`), leaving no qemu or netsimd process; the clone is kept for
   the next reproducible run and the animation settings are back to the AVD's 0.
 
+## CI
+
+`build` passed on the first run. `instrumented` failed twice at
+`ThreadCacheDeviceTest`'s collector wait, not on any sky test (the three
+`SkyRegionsDeviceTest` cases take 2–4 s each there). That wait raced the app's own
+`WhileSubscribed(5_000)` stop timeout; it now waits 15 s for the same assertion, with the
+established cause recorded in
+[the input-transition diagnostics](../ui-3/expanded-editor/input-transition-diagnostics.md).
+Four local runs of that test on the same head passed, with the CI's animation settings.
+The second attempt was cancelled by the job's 40-minute timeout after the suite had
+finished its tests and the instrumentation stopped reporting; nothing in the app hung.
+
 ## Pending and boundaries
 
 - Physical Xiaomi 23090RA98G (Android 16 / Mali) was not run in this tranche. The Canvas

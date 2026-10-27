@@ -92,3 +92,18 @@ with terminal `Result=core-dump`, `ExecMainCode=3`, `ExecMainStatus=6/ABRT`;
 the journal records stop/snapshot-disabled messages before ABRT. This was after
 the completed tests, not a clean emulator exit. Terminal evidence is preserved
 in `/tmp/input-readiness-emulator-stop-journal.txt`; the failed unit was not reset.
+
+## 2026-10-27 — the collector deadline, established
+
+PR72 (sky behind the chat and the whole sidebar) failed this same test twice in CI, both
+times at the collector wait after the header Back click, and passed four times in a row on
+the same head on the reference emulator with the CI's animation settings. The cause is in
+the test, not in the app: `ThreadViewModel` keeps its upstream for
+`SharingStarted.WhileSubscribed(5_000)` after the last UI subscriber leaves
+(`app/.../ui/thread/ThreadViewModel.kt:172`), so the fake transport's collector count
+cannot reach 0 until about five seconds **after** the click, which is exactly how long the
+test waited. The wait could only pass when its poll landed on the boundary.
+
+The deadline is now 15 s; the assertion is unchanged (no collector left before reopening
+offline). No production code, retry or tolerance changed. This supersedes the earlier
+"no timeouts" note for this specific wait only, now that the five-second source is known.

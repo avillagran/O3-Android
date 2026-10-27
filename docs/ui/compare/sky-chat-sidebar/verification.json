@@ -62,5 +62,10 @@
     "real server transport or a live desktop environment",
     "scroll parallax, Star speed and Shooting stars preferences, FPS meter (not ported)",
     "aesthetic acceptance: the stills and clips are reproducible evidence, not sign-off"
-  ]
+  ],
+  "ci": {
+    "build": "success on 5dd318f",
+    "instrumented": "failed twice at ThreadCacheDeviceTest's collector wait (race against WhileSubscribed(5_000), cause recorded in docs/ui/compare/ui-3/expanded-editor/input-transition-diagnostics.md); deadline widened to 15 s with the same assertion; second attempt then cancelled by the job's 40-minute timeout after the suite stopped reporting",
+    "sky_tests_in_ci": "SkyRegionsDeviceTest 3 cases 2.1/2.9/4.1 s, SkyRenderingTest 2 cases ~1.8 s: all passed"
+  }
 }
