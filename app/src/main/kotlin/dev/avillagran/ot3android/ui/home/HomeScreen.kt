@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,6 +45,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.animation.core.Animatable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -139,7 +141,14 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
                 onAutoDegrade = if (motion.preference == dev.avillagran.ot3android.core.data.prefs.AnimationPreference.AUTO) ({}) else null,
                 modifier = Modifier.fillMaxWidth().testTag("home_sky"),
             ) {
-                Column(Modifier.statusBarsPadding()) {
+                if (LocalConfiguration.current.screenHeightDp < 480) {
+                    Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) { Header(state, onIntent) }
+                        Box(Modifier.weight(1f)) {
+                            SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
+                        }
+                    }
+                } else Column(Modifier.statusBarsPadding()) {
                     Header(state, onIntent)
                     SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                 }
@@ -263,10 +272,34 @@ private fun Message(text: String, tag: String, action: (@Composable () -> Unit)?
     }
 }
 
+/** Only presentation sections: membership and ordering remain those of sidebar.view. */
+internal data class HomeListSections(val main: List<HomeItem>, val bottom: List<Pair<HomeItem.ShelfHeader, List<HomeItem>>>)
+
+internal fun homeListSections(items: List<HomeItem>): HomeListSections {
+    val main = mutableListOf<HomeItem>()
+    val bottom = mutableListOf<Pair<HomeItem.ShelfHeader, MutableList<HomeItem>>>()
+    var target: MutableList<HomeItem> = main
+    items.forEach { item ->
+        when {
+            item is HomeItem.ShelfHeader && item.shelf != Shelf.Working -> {
+                target = mutableListOf()
+                bottom += item to target
+            }
+            item is HomeItem.ShelfHeader || item is HomeItem.MessagesHeader -> {
+                target = main
+                target += item
+            }
+            else -> target += item
+        }
+    }
+    return HomeListSections(main, bottom)
+}
+
 @Composable
 private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quotaStrip: @Composable () -> Unit) {
     val motion = Ot3Theme.motion
-    Column {
+    val sections = remember(state.items) { homeListSections(state.items) }
+    Column(Modifier.fillMaxSize().alpha(if (state.stale) 0.6f else 1f)) {
         if (state.offline) {
             Text(
                 stringResource(R.string.ot3_home_t3_offline),
@@ -275,26 +308,47 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag(HomeTags.OFFLINE),
             )
         }
-        LazyColumn(Modifier.fillMaxSize().alpha(if (state.stale) 0.6f else 1f).testTag(HomeTags.LIST)) {
-            item("provider_usage") { quotaStrip() }
-            items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-                when (item) {
-                    is HomeItem.Row -> ThreadRow(item.row, onIntent, Modifier.animateItem(
-                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()))
-                    is HomeItem.ShelfHeader -> ShelfHeader(item, onIntent)
-                    is HomeItem.ShowMoreSettled -> TextButton(
-                        onClick = { onIntent(HomeIntent.ShowMoreSettled) },
-                        modifier = Modifier.padding(horizontal = 8.dp).testTag(HomeTags.SHOW_MORE),
-                    ) { Text(stringResource(R.string.mobile_show_more_settled, item.hidden)) }
-                    is HomeItem.MessagesHeader -> Text(
-                        stringResource(R.string.ot3_search_messages),
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).testTag(HomeTags.MESSAGES),
-                    )
-                    is HomeItem.Message -> MessageRow(item, onIntent)
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            // Keep headers outside every scrolling list. Each expanded body is independently
+            // bounded; the main list owns all remaining space even with no active rows.
+            val bodyLimit = ((maxHeight - 48.dp * sections.bottom.size).coerceAtLeast(0.dp) * .3f)
+            Column(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag(HomeTags.LIST)) {
+                    item("provider_usage") { quotaStrip() }
+                    items(sections.main, key = { it.key }, contentType = { it::class }) { HomeListItem(it, onIntent, Modifier.animateItem(
+                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                }
+                sections.bottom.forEach { (header, members) ->
+                    androidx.compose.runtime.key(header.shelf) {
+                        ShelfHeader(header, onIntent)
+                        if (header.expanded && members.isNotEmpty()) {
+                            LazyColumn(Modifier.fillMaxWidth().heightIn(max = bodyLimit)
+                                .testTag("home_shelf_list_${header.shelf.name}")) {
+                                items(members, key = { it.key }, contentType = { it::class }) { HomeListItem(it, onIntent, Modifier.animateItem(
+                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HomeListItem(item: HomeItem, onIntent: (HomeIntent) -> Unit, rowModifier: Modifier = Modifier) {
+    when (item) {
+        is HomeItem.Row -> ThreadRow(item.row, onIntent, rowModifier)
+        is HomeItem.ShelfHeader -> ShelfHeader(item, onIntent)
+        is HomeItem.ShowMoreSettled -> TextButton(
+            onClick = { onIntent(HomeIntent.ShowMoreSettled) },
+            modifier = Modifier.padding(horizontal = 8.dp).testTag(HomeTags.SHOW_MORE),
+        ) { Text(stringResource(R.string.mobile_show_more_settled, item.hidden)) }
+        is HomeItem.MessagesHeader -> Text(
+            stringResource(R.string.ot3_search_messages), style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).testTag(HomeTags.MESSAGES),
+        )
+        is HomeItem.Message -> MessageRow(item, onIntent)
     }
 }
 
@@ -334,7 +388,7 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
 @Composable
 private fun ShelfHeader(item: HomeItem.ShelfHeader, onIntent: (HomeIntent) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 40.dp).clickable { onIntent(HomeIntent.ToggleShelf(item.shelf)) }
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onIntent(HomeIntent.ToggleShelf(item.shelf)) }
             .padding(horizontal = 16.dp).testTag(HomeTags.shelf(item.shelf)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
