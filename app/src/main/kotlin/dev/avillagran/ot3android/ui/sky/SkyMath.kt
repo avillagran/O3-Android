@@ -93,6 +93,16 @@ internal object SkyMath {
     /** ot3's header brand row height (`T3Panel.qml:1135`). */
     const val BRAND_HEIGHT = 62f
 
+    /**
+     * The panel sky that fills the whole card behind the chat and the sidebar
+     * (`T3Panel.qml:842-856`): brightness 0.5, meteor rate 0.3, no nebula, no fade
+     * (`T3Starfield.qml:35,49-52`), and a transparent base over the theme surface, so
+     * stars are drawn over `Color.popups.background` rather than repainting it.
+     */
+    const val PANEL_BRIGHTNESS = 0.5f
+    const val PANEL_NEBULA = 0f
+    const val PANEL_METEOR_RATE = 0.3f
+
     fun fract(x: Float): Float = x - floor(x)
     fun mix(a: Float, b: Float, t: Float): Float = a + (b - a) * t
     fun clamp(x: Float, lo: Float, hi: Float): Float = if (x < lo) lo else if (x > hi) hi else x
@@ -270,6 +280,14 @@ internal object SkyMath {
             SkyRgba(background.r / 2.4f, background.g / 2.4f, background.b / 2.4f, background.a)
         }
 
+    /**
+     * The panel's base: transparent, so the theme's own surface shows through
+     * (`T3Starfield.qml:49`, the panel instance leaves `base` unset), or the opaque theme
+     * background where the sky has to cover what is behind it (the phone's sidebar drawer).
+     */
+    fun panelBase(background: SkyRgba, opaque: Boolean): SkyRgba =
+        if (opaque) background else SkyRgba(background.r, background.g, background.b, 0f)
+
     /** Meteor ink: foreground on light skies, white on dark ones. */
     fun meteorInk(foreground: SkyRgba, lightSky: Boolean): SkyRgba = if (lightSky) foreground else SkyRgba.White
 
@@ -291,6 +309,7 @@ internal object SkyMath {
         pixelDensity: Float,
         brandHeightDp: Float = BRAND_HEIGHT,
         header: Boolean = true,
+        fade: Float = fade(heightDp, brandHeightDp),
     ): SkyUniforms {
         val bg = palette.background.toSkyRgba()
         val fg = palette.foreground.toSkyRgba()
@@ -303,7 +322,7 @@ internal object SkyMath {
             brightness = palette.brightness,
             nebula = palette.nebula,
             scroll = 0f,
-            fade = fade(heightDp, brandHeightDp),
+            fade = fade,
             width = widthDp,
             height = heightDp,
             originX = 0f,

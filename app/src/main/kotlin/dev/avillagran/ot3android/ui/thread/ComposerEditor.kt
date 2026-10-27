@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.testTag
@@ -145,7 +146,7 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
         val start = current.selection.min
         update(TextFieldValue(current.text.replaceRange(start, current.selection.max, "\n"), TextRange(start + 1)))
     }
-    Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
+    Surface(color = Color.Transparent, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
         Column {
             Row(Modifier.then(if (expanded) Modifier.weight(1f) else Modifier).padding(horizontal = 12.dp, vertical = 6.dp)
                 .border(1.dp, border, RoundedCornerShape(17.dp)).background(colors.surface, RoundedCornerShape(17.dp)).padding(4.dp), verticalAlignment = Alignment.Bottom) {

@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android.ui.thread
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -159,7 +160,8 @@ private fun TimelineRow(row: JSONObject, onOpenInspector: (JSONObject) -> Unit, 
     val colors = Ot3Theme.colors
     val typing = stringResource(R.string.thread_message_typing)
     Row(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id)).semantics { if (row.optBoolean("streaming")) stateDescription = typing }, horizontalArrangement = Arrangement.Start) {
-        Surface(color = colors.background, shape = RoundedCornerShape(16.dp),
+        // Transparent, so the panel sky behind the chat reads as one field (UI_SPEC 3.5).
+        Surface(color = Color.Transparent, shape = RoundedCornerShape(16.dp),
             modifier = Modifier.widthIn(max = 760.dp).fillMaxWidth()) {
             Column(Modifier.padding(horizontal = 4.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 val time = row.optLong("createdAt")

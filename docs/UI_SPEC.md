@@ -561,17 +561,24 @@ Stills cannot show motion, so each tranche adds, next to its comparison stills i
   showing that everything snaps.
 - The motion part of each tranche is listed in the "Motion" column of section 5.
 
-### 3.5 The sky header
+### 3.5 The sky
 
-ot3's header is a procedural starfield shader behind the wordmark and the search row,
-fading out towards the list (`ot3:ui/qml/T3Panel.qml:1121-1128`;
-`ot3:ui/assets/shaders/starfield.frag`). Android draws the same:
+ot3 draws **two skies from one field**: a dim starfield that fills the whole panel behind
+the chat and the sidebar, and a brighter band behind the sidebar header that dissolves
+into it (`ot3:ui/qml/T3Panel.qml:842-856` and `:1121-1128`;
+`ot3:ui/assets/shaders/starfield.frag`). One instance owns the clock and the others follow
+it (`ot3:ui/qml/T3Starfield.qml:8-19`), so stars never double at the seam. Android draws
+the same: `SkyField` owns the clock, `SkyBackdrop` draws the panel and `SkyHeader` the
+band, in a single `LocalSkyField`.
 
-| Element | ot3 rule | Source |
+| Region | ot3 rule | Source |
 |---|---|---|
-| Size | header height = search row bottom + 12; brand row 62; fades over its lower part, `fade = 1 − brand.height × 0.85 / height` | `ot3:ui/qml/T3Panel.qml:1121-1127,1135` |
-| Base | light sky: surface tinted with fg @ 0.06; dark sky: surface darkened 2.4× | `ot3:ui/qml/T3Panel.qml:1125` |
-| Brightness, nebula, meteor rate | 0.9 light / 1.25 dark; nebula 0.55 (accent up to 35 % towards the top-left); meteor rate 0.85 | `ot3:ui/qml/T3Panel.qml:1126`; `ot3:ui/assets/shaders/starfield.frag:104-106` |
+| Panel: extent | the whole panel, behind chat and sidebar, `anchors.fill: parent; z: -1`; no fade | `ot3:ui/qml/T3Panel.qml:842-856` |
+| Panel: base | transparent over `Color.popups.background`, so the theme surface shows through (the phone's drawer draws the same field with an opaque base) | `ot3:ui/qml/T3Panel.qml:845`; `ot3:ui/qml/T3Starfield.qml:49` |
+| Panel: brightness, nebula, meteor rate | 0.5 · no nebula · 0.3 (the header's are 0.9/1.25 · 0.55 · 0.85) | `ot3:ui/qml/T3Panel.qml:850`; `ot3:ui/qml/T3Starfield.qml:35,49-52` |
+| Header: size | header height = search row bottom + 12; brand row 62; fades over its lower part, `fade = 1 − brand.height × 0.85 / height` | `ot3:ui/qml/T3Panel.qml:1121-1127,1135` |
+| Header: base | light sky: surface tinted with fg @ 0.06; dark sky: surface darkened 2.4× | `ot3:ui/qml/T3Panel.qml:1125` |
+| Header: brightness, nebula, meteor rate | 0.9 light / 1.25 dark; nebula 0.55 (accent up to 35 % towards the top-left); meteor rate 0.85 | `ot3:ui/qml/T3Panel.qml:1126`; `ot3:ui/assets/shaders/starfield.frag:104-106` |
 | Stars | three parallax layers with one star at most per grid cell: cells 29 / 53 / 97 px, densities 0.42 / 0.38 / 0.32, radii 0.55 / 0.8 / 1.15 (× 0.55–1.25 per star), weights 0.55 / 0.8 / 1, drift factors 0.30 / 0.62 / 1 | `ot3:ui/assets/shaders/starfield.frag:47,88-90` |
 | Twinkle | `0.55 + 0.45 · sin(t · (0.6…2.8) + h · 61)` | `ot3:ui/assets/shaders/starfield.frag:48-49` |
 | Colour | star ink (foreground) mixed towards the accent by up to 0.6 | `ot3:ui/assets/shaders/starfield.frag:92`; `ot3:ui/qml/T3Starfield.qml:59` |
@@ -579,18 +586,37 @@ fading out towards the list (`ot3:ui/qml/T3Panel.qml:1121-1128`;
 | Comets | 4 channels with periods 2.1 + 1.37·n s; a channel fires when its hash < rate × scale × energy (scale = Shooting stars: none 0, few 0.4, normal 1, many 2.2, `ot3:ui/qml/T3Panel.qml:854`), and energy is 0 when idle, so **comets only appear while something works**; 0.75–1.25 s each; right to left and downwards; tail clamp(0.22 × diagonal, 60, 240) dp; colour meteor ink mixed 25 % with the accent | `ot3:ui/assets/shaders/starfield.frag:56-78,113` |
 | Light themes | star ink = foreground; meteor ink = foreground on light skies and white on dark ones; ink gain 1.7 on light skies instead of 1 | `ot3:ui/qml/T3Starfield.qml:59-63`; `ot3:ui/assets/shaders/starfield.frag:98-100` |
 
+Energy is the panel's: the chat's own run and the sidebar's working count register with
+the same field, so the one sky speeds up for either (`ot3:ui/qml/T3Panel.qml:848`). While
+the phone's drawer is closed its sidebar is not composed, so a thread working elsewhere
+speeds the field only through the chat that is on screen.
+
+The share of the sidebar's rows, search row, timeline and composer adds no opaque
+background of its own: full-bleed surfaces use `Color.Transparent` and only cards,
+bubbles and fields keep their ot3 roles, so the field reads continuously behind them
+(`ot3:ui/qml/T3ThreadRow.qml:176-180`).
+
 Implementation: on API 33+, an AGSL `RuntimeShader` port of `starfield.frag` (the shader
 is the same author's) drawn with `drawWithCache` + `ShaderBrush`, uniforms updated from a
 `withFrameNanos` loop at ot3's frame intervals: 125 ms idle, 33 ms while busy, 16 ms
 with an explicit Full, 8 ms while a comet crosses, at least 40 ms in Light
 (`ot3:ui/qml/T3Starfield.qml:98-99`; `ot3:ui/qml/T3Ticker.qml:22-27`).
 Below API 33 (minSdk is 24, `app/build.gradle.kts:15`), a `Canvas` version of the same
-grid hash draws the stars and comets without the nebula. The loop runs only while the
-header is visible and the app is resumed; Off draws a static frame; Light keeps comets
-only in the header, as ot3's Light mode does (`ot3:ui/qml/T3Starfield.qml:47-48`).
+grid hash draws the stars and comets without the nebula. A shader that fails to construct
+or to take its uniforms or draw leaves that region on the Canvas fallback for good, so a
+driver bug (Mali on Android 16 among the ones observed) cannot leave a blank sky. The
+loop runs only while the screen is composed and the app is resumed; Off draws a static
+frame; Light keeps comets only in the header, as ot3's Light mode does
+(`ot3:ui/qml/T3Starfield.qml:47-48`).
 
 The wordmark row sits on the sky: T3 logo (`t3-logo`, 32 × 20 dp, fg), "Code", "OMARCHY",
 and on the right the count pills and the connection dot (4.1.1).
+
+Not ported yet: ot3's scroll parallax (`sky.follow(conversation.contentY)`,
+`ot3:ui/qml/T3Panel.qml:855`), its Star speed and Shooting stars preferences
+(`:853-854`) and its FPS meter. The composer, queue and approval cards keep their own
+opaque surfaces as ot3's cards do.
+
 
 ### 3.6 Strings
 
@@ -663,7 +689,7 @@ screen; Material components appear only inside them.
 | `T3ThreadRow` | `ThreadCardRow`, `ThreadSlimRow` | 4.1.3 |
 | shelf header in `T3Panel` | `ShelfHeader` | label, inline rule, chevron (`ot3:ui/qml/T3Panel.qml:1225-1367`) |
 | `T3ProjectIcon`, `T3PullRequestBadge`, `T3StatusBadges` | `ProjectChip`, `PrBadge`, `CountPills` | 3.7 |
-| `T3Starfield` | `SkyHeader` | 3.5 |
+| `T3Starfield` | `SkyField`, `SkyBackdrop`, `SkyHeader` | 3.5 |
 | `WorkIndicator` | `Ot3Spinner` | stretching arc, 1.25 s (`ot3:ui/qml/WorkIndicator.qml:13-53`) |
 | `T3ActivityText` | `ActivityText` | live shimmer 72 dp band, 2.2 s (`ot3:ui/qml/T3ActivityText.qml:18-35`) |
 | `T3CopyButton` | `CopyButton` | copy → loader → check / alert, resets after 1.8 s (`ot3:ui/qml/T3CopyButton.qml:12-18`) |
@@ -2206,7 +2232,7 @@ covers it, but it keeps ot3 and Android from drifting. When this spec is accepte
 3. Tablets keep T3 Mobile's exact breakpoints: rail + list + detail at 720 × 600 dp, an inspector from 960 dp, hinge alignment on foldables.
 4. Colours are the 22 Omarchy themes, converted to a JSON of precomputed ot3 roles; one luminance rule; Material 3 restyled, not replaced.
 5. Text is ot3's scale × 7/6 (body 14 sp), lengths 1 px = 1 dp, 48 dp touch targets; Fira Code for code; Lucide icons as vectors.
-6. The sky header is a port of ot3's starfield shader (AGSL, Canvas below API 33), with comets only while something works and full reduced-motion handling.
+6. The sky is a port of ot3's starfield shader (AGSL, Canvas below API 33): one field drawn behind the chat and the whole sidebar, with the brighter sidebar header band over it, comets only while something works and full reduced-motion handling.
 7. Every screen names its ot3 QML, its T3 Mobile TSX and the lib function it reads; strings come from ot3's 20-locale catalog.
 8. Approvals and questions sit above the composer as ot3 cards; questions stay paged; the composer is hidden while a question waits.
 9. Seven PRs: visual system and Home, timeline, composer, approvals, changes/diff/PRs, settings/palette/usage, tablets; each with JVM screenshot goldens compared to ot3 captures.
@@ -2228,7 +2254,9 @@ A fixture can prove reproducible state/layout; it does not grant aesthetic accep
   no duplicate top padding or floating-action reservation. Keep 48 dp touch targets,
   native font scaling, horizontal safeDrawing/cutout protection and real system bars.
 - Use SkyHeader/SkyBrandRow in production Home, real logo, count pills and existing
-  card/slim row roles. Working energy comes from the lib. Do not draw sky in chat.
+  card/slim row roles. Working energy comes from the lib. ~~Do not draw sky in chat.~~
+  Superseded 2026-10-27 by Andrés: the panel sky is drawn behind the chat and behind the
+  whole sidebar, as ot3 does (3.5).
 - Ship the source row aura (work comet, attention glints, 1300 ms change star), guarded
   AGSL plus Canvas fallback, pressed/selected feedback and visible surface motion.
   Decorative Off stops clocks/row reveals; attention stays static. System animator
@@ -2556,3 +2584,38 @@ the selected reference type, and the failure tint from the native projection.
 Native section labels and catalogued status labels use the same pinned AAR
 translations as desktop; unknown labels and provider output remain untouched.
 No protocol classification or output parsing is introduced in Kotlin.
+
+### 2026-10-27 — Sky behind the chat and the whole sidebar
+
+Andrés: "en OT3 el fondo animado (estrellas, estrellas fugaces, etc) se ve en el fondo del
+chat y en el fondo del sidebar, en ot3-android solo se ve en el header del sidebar."
+Accepted correction: the panel sky of 3.5 now covers the whole panel, so stars, comets
+and the working drift are visible behind the reader and behind the entire sidebar, in
+portrait and landscape, on Home and in the sidebar opened from a chat. The sidebar header
+keeps its own brighter band over that field. This supersedes the UI1i "Do not draw sky in
+chat" exclusion; it does not claim full chat parity.
+
+- One field: `SkyField` owns the clock, energy and Auto downgrade; `SkyBackdrop` draws the
+  panel, `SkyHeader` the band, and both are regions of the same `LocalSkyField`, so stars
+  align at the seam and no second clock runs (`ot3:ui/qml/T3Starfield.qml:8-19`).
+- Panel constants are ot3's panel instance, not the header's: brightness 0.5, meteor rate
+  0.3, no nebula, no fade, transparent base (`ot3:ui/qml/T3Panel.qml:842-856`).
+- Transparency follows the reference: full-bleed surfaces (Home and reader Scaffolds, the
+  chat toolbar, the assistant row container, the composer surface) no longer paint
+  `background`; cards, bubbles, fields, sheets and dialogs keep their roles. The phone's
+  sidebar drawer draws the same field with an opaque base, so it hides the chat while the
+  stars sit where the panel's are.
+- Kept: 48 dp targets, scroll, selection, draft, composer/IME insets, safe areas, the
+  sidebar reveal and its shader, and every protocol/bridge/notification/cache path. Energy
+  is the panel's: any working thread, chat or sidebar, idle → working in 1 600 ms.
+- Reduced motion (animator scale 0 → Off), battery saver (≤ Light) and pause on background
+  are unchanged; Light keeps comets to the header band, Full shows them across the panel.
+- The AGSL path stays guarded: a shader that cannot be created, does not take its
+  uniforms or fails to draw leaves that region on the existing Canvas fallback.
+
+Verification and evidence: [sky-chat-sidebar](ui/compare/sky-chat-sidebar/README.md).
+Focused region checks (`SkyRegionsDeviceTest`, `SkyPanelTest`) assert star pixels in the
+chat and sidebar regions themselves, not the presence of text or buttons. The JVM stills
+are Robolectric/Roborazzi captures, the recordings and screenshots are from the isolated
+API 34 emulator with the fixture transport; physical-device behaviour and aesthetic
+acceptance remain open, and parity is not claimed from this kit.

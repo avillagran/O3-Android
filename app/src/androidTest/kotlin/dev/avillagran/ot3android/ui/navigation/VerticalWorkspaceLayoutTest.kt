@@ -28,6 +28,9 @@ class VerticalWorkspaceLayoutTest {
         rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
         rule.waitUntil(15000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+        // The panel sky covers the chat; the sidebar header's own band only exists with the
+        // sidebar, which is closed in portrait (UI_SPEC 3.5).
+        rule.onNodeWithTag("workspace_sky").assertIsDisplayed()
         rule.onNodeWithTag("home_sky").assertDoesNotExist()
         val timeline = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot
         val composer = rule.onNodeWithTag("thread_composer_surface").fetchSemanticsNode().boundsInRoot

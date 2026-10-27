@@ -15,7 +15,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import dev.avillagran.ot3android.ui.sky.LocalSkyField
+import dev.avillagran.ot3android.ui.sky.SkyWorking
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import dev.avillagran.ot3android.ui.kit.Ot3Spinner
 import dev.avillagran.ot3android.ui.kit.rememberKitClock
@@ -201,6 +204,9 @@ fun ThreadContent(
     LaunchedEffect(state.draft, state.draftToken, editor) { editor.synchronize(state.draft, state.draftToken) }
     val hasQuestion = (state.view.timeline?.optJSONArray("questions")?.length() ?: 0) > 0
     LaunchedEffect(hasQuestion) { if (hasQuestion) expanded = false }
+    // The workspace's sky runs while this thread works, as ot3's panel does
+    // (`ot3:ui/qml/T3Panel.qml:848`): one energy for chat and sidebar together.
+    LocalSkyField.current?.let { field -> SkyWorking(field, state.view.working) }
     fun toggleEditor() {
         editor.newSurface()
         if (expanded) { editor.releaseFocus(); keyboard?.hide(); focus.clearFocus() }
@@ -222,13 +228,16 @@ fun ThreadContent(
     }
     Scaffold(
         modifier = modifier.testTag(ThreadScreenTags.ROOT),
+        containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets.safeDrawing,
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 expandedHeight = 56.dp,
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Ot3Theme.colors.background),
+                // The panel sky (UI_SPEC 3.5) stays visible behind the chat, so its chrome
+                // and its row and composer surfaces are transparent.
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 title = {
                     Column {
                         Text(
