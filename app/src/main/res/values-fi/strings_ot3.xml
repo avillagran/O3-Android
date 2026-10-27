@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">Palauta zoomaus</string>
     <string name="ot3_composer_edit">Muokkaa</string>
     <string name="ot3_composer_back">Takaisin keskusteluun</string>
+    <string name="ot3_diff_split">Jaettu</string>
+    <string name="ot3_diff_unified">Yhdistetty</string>
 </resources>

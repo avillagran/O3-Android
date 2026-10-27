@@ -1227,3 +1227,28 @@ in Kotlin. Request a native `history.merge(projection, pageEnvelope, historyStat
 cursor/boundary metadata. Preserve current live controls, validate source thread ids,
 and cover overlapping/replayed pages, concurrent streaming revisions and missing
 ranges with shared fixtures. No protocol or library checkout was changed here.
+
+### U35. Reader reference routing and scoped document read (2026-10-27)
+
+Tracked in [lib issue19](https://github.com/avillagran/lib-t3-rust/issues/19).
+The pinned v0.3.5 `markdown.link` classifies destinations but returns the original
+href without resolving thread/environment or file paths. Desktop
+`T3Backend.qml:1100–1113` resolves thread references against connected environments
+(prefer the selected environment), decodes file paths and strips location suffixes
+before its scoped document-open. Android currently opens HTTP(S) only.
+
+Request native `reader.reference {href, environmentId, threadId, environments}`
+(or equivalent) returning a tagged external URL, thread route, scoped document
+resource or anchor/unsupported result. Rust owns destination validation, environment
+selection and path normalization; Android owns navigation/loading/error UI. Never
+expand Android HOME for a remote path. Define shared behavior where classification
+and desktop routing differ, including colon suffixes and malformed encodings.
+
+`documents::resource` and `Connection::document` already exist in Rust; expose the
+bounded authenticated document read through Android/JNI instead of constructing
+signed asset URLs in Kotlin. Coordinate image bytes with U30. Tests must cover
+mixed-case web schemes, encoded/duplicate/missing thread IDs, remote/offline hosts,
+relative/absolute/file paths, spaces/unicode/location suffixes, unsafe schemes,
+malformed encoding, read bounds and stale results after environment changes.
+No Kotlin reference parser or shared-library checkout change was made. This remains
+an open reader parity requirement, not acceptance of file/thread navigation.

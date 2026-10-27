@@ -2334,7 +2334,7 @@ Selecting a bundled Omarchy palette in Appearance now immediately chooses its da
 
 ### Reader diff increment — 2026-10-26
 
-Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. Split/file tree/preview remain pending. Native hunk rows now fold locally; see the 2026-10-27 hunk evidence below.
+Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. File tree/preview remain pending. Native hunk rows now fold locally; see the 2026-10-27 hunk evidence below.
 
 ### Usage implementation checkpoint — 2026-10-26
 
@@ -2400,7 +2400,7 @@ limits: `docs/ui/compare/quota-strip/README.md`.
 The real Changes modal now offers ot3's narrow previous/next and path selector,
 showing one native file at a time. Selection is saveable and survives whitespace
 refetch; file navigation does not query the server. Shared OT3 touch feedback is used,
-without invented file-switch animation. Wide-screen tree, split layout and context expansion remain pending. Hunk folding is verified in the 2026-10-27 increment below.
+without invented file-switch animation. Wide-screen tree and context expansion remain pending. Hunk folding is verified in the 2026-10-27 increment below.
 Wrap/no-wrap is now a saveable dialog control: measured font widths and one horizontal
 patch scroll surface, with no refetch. Full-modal dark/light Robolectric goldens and
 overflow/scroll/state tests cover this control. API 36.1 device tests and same-content
@@ -2478,3 +2478,17 @@ it does not claim complete parity with the ot3 native diff renderer. File change
 whitespace/scope/content changes reset folds without resurrecting A→B→A state.
 Rotation of the same diff preserves folds. Evidence and limits:
 `docs/ui/compare/reader-diff/README.md` (hunk folding increment).
+
+
+### Wide diff split layout — 2026-10-27
+
+At useful content width ≥650dp (after safe insets and dialog padding), the reader
+shows Split/Unified. Narrower content forces unified and hides the control while
+preserving the user's split preference. `splitRows` from the pinned Rust 0.3.5 AAR
+provides exact left/right cells, null blanks and line numbers; Kotlin performs no
+patch parsing or change alignment. This follows `T3DiffReview.qml:65–66,71–81,205–213`.
+Each layout owns its fold set over its native row indices. Rotation or toggling
+layout preserves these sets; file/content/scope/whitespace changes reset both.
+Wrap and file selection remain local reading preferences. Labels come from the
+AAR catalog via the existing TSV importer. See `docs/ui/compare/reader-diff/README.md`.
+Tree/context/syntax/preview remain pending.

@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">重置缩放</string>
     <string name="ot3_composer_edit">编辑</string>
     <string name="ot3_composer_back">返回聊天</string>
+    <string name="ot3_diff_split">分栏视图</string>
+    <string name="ot3_diff_unified">统一视图</string>
 </resources>

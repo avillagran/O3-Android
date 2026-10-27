@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">Obnovit přiblížení</string>
     <string name="ot3_composer_edit">Upravit</string>
     <string name="ot3_composer_back">Zpět do chatu</string>
+    <string name="ot3_diff_split">Rozdělené</string>
+    <string name="ot3_diff_unified">Sjednocené</string>
 </resources>

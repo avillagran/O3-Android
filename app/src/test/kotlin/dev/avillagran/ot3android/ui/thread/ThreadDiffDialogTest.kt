@@ -20,6 +20,48 @@ import org.robolectric.annotation.Config
 class ThreadDiffDialogTest {
     @get:Rule val rule = createComposeRule()
 
+    @Test @Config(qualifiers = "w672dp-h900dp")
+    fun usefulWidth648HidesSplitControl() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        rule.setContent { Ot3Theme { ThreadDiffDialog(JSONObject(), { _, _ -> view }, {}) } }
+        rule.onNodeWithTag("thread_diff_layout").assertDoesNotExist()
+        rule.onNodeWithText("+renderNativeBlocks()").assertIsDisplayed()
+    }
+
+    @Test @Config(qualifiers = "w673dp-h900dp")
+    fun usefulWidth649HidesSplitControl() = usefulWidth648HidesSplitControl()
+
+    @Test @Config(qualifiers = "w674dp-h900dp")
+    fun usefulWidth650AllowsNativeSplitAndIndependentFolds() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        val original = view.toString()
+        var reads = 0
+        rule.setContent { Ot3Theme { ThreadDiffDialog(JSONObject(), { _, _ -> reads++; view }, {}) } }
+        rule.onNodeWithTag("thread_diff_layout").assertTextContains("Split").performClick()
+        rule.onNodeWithTag("thread_diff_layout").assertTextContains("Unified")
+        rule.onNodeWithTag("thread_diff_cell_0_3_0").assertTextContains("-oldPlainText()")
+        rule.onNodeWithTag("thread_diff_cell_0_3_1").assertTextContains("+renderNativeBlocks()")
+        rule.onNodeWithTag("thread_diff_hunk_0_2").performClick()
+        rule.onNodeWithText("+renderNativeBlocks()").assertDoesNotExist()
+        rule.onNodeWithTag("thread_diff_layout").performClick()
+        rule.onNodeWithText("+renderNativeBlocks()").assertIsDisplayed()
+        rule.onNodeWithTag("thread_diff_layout").performClick()
+        rule.onNodeWithText("+renderNativeBlocks()").assertDoesNotExist()
+        rule.onNodeWithTag("thread_diff_next").performClick()
+        rule.onNodeWithTag("thread_diff_previous").performClick()
+        rule.onNodeWithText("+renderNativeBlocks()").assertIsDisplayed()
+        rule.runOnIdle { assertEquals(1, reads); assertEquals(original, view.toString()) }
+    }
+
+    @Test fun nativeSplitNullCellsAreBlankAndNeverAlignedByAndroid() {
+        val view = JSONObject("""{"files":[{"path":"native","splitRows":[{"kind":"change","left":null,"right":{"kind":"addition","text":"+onlyRight","newLine":42}},{"kind":"change","left":{"kind":"deletion","text":"-onlyLeft","oldLine":9},"right":null}],"rows":[]}]}""")
+        rule.setContent { Ot3Theme { DiffLines(view, split = true) } }
+        rule.onNodeWithTag("thread_diff_cell_0_0_0").assertTextEquals("", "")
+        rule.onNodeWithTag("thread_diff_cell_0_0_1").assertTextEquals("42", "+onlyRight")
+        rule.onNodeWithTag("thread_diff_cell_0_1_0").assertTextEquals("9", "-onlyLeft")
+        rule.onNodeWithTag("thread_diff_cell_0_1_1").assertTextEquals("", "")
+    }
+
     @Test fun nativeHunkHeadersFoldOnlyTheirFollowingRowsAndSurviveRestore() {
         val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
         val rows = view.getJSONArray("files").getJSONObject(0).getJSONArray("rows")

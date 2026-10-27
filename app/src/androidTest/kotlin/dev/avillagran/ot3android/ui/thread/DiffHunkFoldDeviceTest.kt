@@ -23,6 +23,70 @@ class DiffHunkFoldDeviceTest {
     @Test fun tokyoHunksSurviveRotation() = exercise(true)
     @Test fun latteHunksSurviveRotation() = exercise(false)
 
+    @Test fun tokyoWideSplitKeepsIndependentFoldsAcrossPhoneRotation() = exerciseSplit(true)
+    @Test fun latteWideSplitKeepsIndependentFoldsAcrossPhoneRotation() = exerciseSplit(false)
+
+    private fun exerciseSplit(dark: Boolean) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
+            .putExtra("rich", true).putExtra("dark", dark)).use { scenario ->
+            rotate(scenario, false)
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
+            rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_diff_changes/cp-reader"))
+            rule.onNodeWithTag("thread_diff_changes/cp-reader").performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_diff_hunk_0_2").fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag("thread_diff_layout").assertDoesNotExist()
+            val name = if (dark) "tokyo" else "latte"
+            capture("$name-narrow-unified")
+            rotate(scenario, true)
+            val density = context.resources.displayMetrics.density
+            assertTrue("Actual content width must support split", rule.onNodeWithTag("thread_diff_lines").fetchSemanticsNode().boundsInRoot.width / density >= 650)
+            var readsBeforeLayout = 0
+            scenario.onActivity { readsBeforeLayout = it.fixture.transport.calls.count { call -> call.fn == "orchestration.getTurnDiff" } }
+            rule.onNodeWithTag("thread_diff_layout").assertTextContains("Split").performClick()
+            rule.onNodeWithTag("thread_diff_layout").assertTextContains("Unified")
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertIsDisplayed()
+            capture("$name-wide-split")
+            val header = rule.onNodeWithTag("thread_diff_hunk_0_2")
+            header.performTouchInput { click(center) }
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertDoesNotExist()
+            capture("$name-wide-split-folded")
+            rule.onNodeWithTag("thread_diff_layout").performClick()
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_layout").performClick()
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertDoesNotExist()
+            scenario.onActivity { assertEquals(readsBeforeLayout, it.fixture.transport.calls.count { call -> call.fn == "orchestration.getTurnDiff" }) }
+            rotate(scenario, false)
+            rule.onNodeWithTag("thread_diff_layout").assertDoesNotExist()
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertIsDisplayed()
+            rotate(scenario, true)
+            rule.onNodeWithTag("thread_diff_layout").assertTextContains("Unified")
+            header.assert(SemanticsMatcher.keyIsDefined(SemanticsActions.Expand))
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertDoesNotExist()
+            scenario.onActivity { readsBeforeLayout = it.fixture.transport.calls.count { call -> call.fn == "orchestration.getTurnDiff" } }
+            header.performTouchInput { click(center) }
+            rule.onNodeWithText("+MarkdownBlocks(nativeBlocks)").assertIsDisplayed()
+            rule.onNodeWithTag("thread_diff_wrap").performClick()
+            rule.onNodeWithTag("thread_diff_horizontal").assertExists()
+            rule.onNodeWithTag("thread_diff_next").performClick()
+            val horizontal = rule.onNodeWithTag("thread_diff_horizontal")
+            assertTrue(horizontal.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.HorizontalScrollAxisRange].maxValue() > 0)
+            horizontal.performTouchInput { swipeLeft() }
+            assertTrue(horizontal.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.HorizontalScrollAxisRange].value() > 0)
+            rule.onNodeWithTag("thread_diff_previous").performClick()
+            rule.onNodeWithTag("thread_diff_layout").assertTextContains("Unified")
+            scenario.onActivity {
+                assertEquals(readsBeforeLayout, it.fixture.transport.calls.count { call -> call.fn == "orchestration.getTurnDiff" })
+                assertEquals(1, it.fixture.transport.streamOpens.count { stream -> stream.threadId == "chat" })
+                assertTrue(it.fixture.transport.calls.none { call -> call.fn == "orchestration.dispatchCommand" })
+            }
+        }
+    }
+
     private fun exercise(dark: Boolean) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
@@ -30,6 +94,7 @@ class DiffHunkFoldDeviceTest {
             rotate(scenario, false)
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
+            rule.waitUntil(10_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_changes/cp-reader"))
             rule.onNodeWithTag("thread_fold_changes/cp-reader").performClick()
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_diff_changes/cp-reader"))

@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">Скинути масштаб</string>
     <string name="ot3_composer_edit">Редагувати</string>
     <string name="ot3_composer_back">Повернутися до чату</string>
+    <string name="ot3_diff_split">Розділений</string>
+    <string name="ot3_diff_unified">Об’єднаний</string>
 </resources>

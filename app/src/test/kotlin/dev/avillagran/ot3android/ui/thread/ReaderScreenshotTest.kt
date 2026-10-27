@@ -47,6 +47,24 @@ class ReaderScreenshotTest : ScreenshotTest() {
         composeRule.onNodeWithText("Binary file — metadata only").assertDoesNotExist()
     }
 
+    @Test @org.robolectric.annotation.Config(qualifiers = "w891dp-h411dp-land-xhdpi")
+    fun wideNativeSplit() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        snapshot("diff-split", screen = true, beforeCapture = {
+            composeRule.mainClock.autoAdvance = true
+            val layout = composeRule.onNodeWithTag("thread_diff_layout")
+            // Capture the settled layout, not a frame of Material's transient touch feedback.
+            // Actual header/layout touches are covered by DiffHunkFoldDeviceTest.
+            if (layout.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text].any { it.text == "Split" }) {
+                layout.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
+            }
+            composeRule.waitForIdle()
+            composeRule.onNodeWithTag("thread_diff_layout").assertTextContains("Unified")
+            composeRule.onNodeWithTag("thread_diff_cell_0_3_1").assertTextContains("+renderNativeBlocks()")
+            composeRule.mainClock.autoAdvance = false
+        }) { ThreadDiffDialog(JSONObject(), { _, _ -> view }, {}) }
+    }
+
     @Test fun diffReadingControls() {
         val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
         snapshot("diff-controls", screen = true) {

@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">Redefinir zoom</string>
     <string name="ot3_composer_edit">Editar</string>
     <string name="ot3_composer_back">Voltar à conversa</string>
+    <string name="ot3_diff_split">Dividido</string>
+    <string name="ot3_diff_unified">Unificado</string>
 </resources>

@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">Tilbakestill zoom</string>
     <string name="ot3_composer_edit">Rediger</string>
     <string name="ot3_composer_back">Tilbake til chatten</string>
+    <string name="ot3_diff_split">Delt</string>
+    <string name="ot3_diff_unified">Samlet</string>
 </resources>
