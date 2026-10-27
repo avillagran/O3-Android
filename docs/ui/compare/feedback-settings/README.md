@@ -25,3 +25,9 @@ No es evidencia de servidor productivo ni de aceptación física. Xiaomi intacto
 
 Pendiente: aceptación en Xiaomi por el usuario; funcionalidades de Archivo y
 Licencias fuera de este incremento; auditoría integral de formularios con IME.
+
+Seguimiento CI: la suite completa detectó que QuotaStripDeviceTest aún intentaba
+pulsar Chats desde Ajustes. Ahora usa Volver de Ajustes, conforme a la nueva UI.
+Las cuatro pruebas combinadas de navegación de Ajustes y QuotaStrip pasaron en
+API36.1 tras integrar main152b851 (tema/PR54). No se eliminó ninguna aserción de
+suscripción, persistencia, desconexión ni reconexión.
