@@ -196,3 +196,48 @@ Final integration verification after the narrow-height correction: app **268/268
 JVM passed; core **297 passed, 5 opt-in tests skipped**; all screenshot verification
 and lint passed. The final video is 15.7s (includes fixture startup). The emulator
 and its device-panel helper were stopped after capture.
+
+
+## API34 composer CI phase guards — 2026-10-27
+
+PR60 run `40460180936` failed only
+`latteSoftEnterNeverSendsPhysicalKeysFollowTheExactMode`: a dispatch count expected
+1 but observed 2. The report stack ends inside the shared `assertCount` Activity
+callback; it does not identify which of the two expanded-key assertions failed,
+or record command types, IDs or payloads. That report alone cannot distinguish
+a duplicate message from an action occurring in another UI/send phase. No
+production double-send diagnosis is claimed.
+
+On isolated `ot3a` Android14/API34 with software IME and emulated nonvirtual
+keyboard events, the unchanged exact Latte test passed (1/1, 9.553s). The class
+with diagnostics and the same keyboard case added for Tokyo passed (6/6, 27.601s).
+The original CI failure therefore was not reproduced locally.
+
+The test now establishes two previously implicit phase boundaries. An existing
+fixture response gate holds the first compact-send response: it records exactly
+one `message.dispatch` while the composer is disabled, proving that a call count
+is not send completion. The gate is released in `finally`, and the test waits for
+an enabled, empty field before starting the independent expanded scenario. After
+the real expand-button touch it waits for and asserts the expanded surface before
+injecting physical keys. No retries, fixed sleeps or increased timeouts were added.
+
+All original no-send/newline/modifier counts remain. Additional checks require the
+first command ID to remain unchanged after expanded Enter and Ctrl+Shift+Enter;
+only explicit expanded Ctrl+Enter may produce the second, distinct command ID.
+Both types must be `message.dispatch`, with the exact expected texts (two appended
+newlines in compact mode and one in expanded mode). Failure diagnostics now name
+the phase, actual expanded state and command payloads. Production/fixture behavior
+and keyboard routing were not changed.
+
+The final exact mode case passed in both themes (2/2, 9.746s), followed by the
+complete final ExpandedComposerDeviceTest class (6/6, 26.669s). Meaningful JVM
+checks passed: ComposerEditorStateTest 8/8 and
+ThreadComposerTest.theDraftIsLockedWhileSendingAndClearedOnAccept 1/1, with host JNI
+and Bridge SDK required. This validates the controlled transport/UI phase
+boundary; it does not establish the cause of the original CI-only count.
+
+Sources on node: downloaded `/tmp/pr60-second-reports/` CI XML/per-test logcat,
+`/tmp/editor-ci-baseline.log`, `/tmp/editor-ci-diagnostic.log`,
+`/tmp/editor-ci-final-device.log`, `/tmp/editor-ci-final-suite.log`, and
+`/tmp/editor-ci-jvm.log`. These are emulator/synthetic-transport checks, not
+physical-keyboard, OEM or production-server acceptance.

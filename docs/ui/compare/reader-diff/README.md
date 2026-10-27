@@ -95,5 +95,37 @@ no extra reads; whitespace refresh does; no command dispatch occurs.
   horizontal scrolling and rotations; the recording letterboxes orientation changes.
 
 These are emulator captures with synthetic transport and real Kotlin surfaces/JNI,
-not production-server or Xiaomi acceptance. Wide tree, split view, hunk/context
-controls and syntax highlighting remain pending.
+not production-server or Xiaomi acceptance. Wide tree, split view, context
+controls and syntax highlighting remain pending; hunk folding follows below.
+
+
+## Hunk folding increment — 2026-10-27
+
+Native `kind=hunk` headers now toggle their following rows until the next hunk.
+The 48dp touch target, 0.08 accent tint, chevron and accessibility Expand/Collapse
+actions follow the QML fallback `T3DiffReview.qml:71–81,101,103`. Kotlin does not
+parse patch text or mutate native JSON/full patch. This increment does not claim
+complete parity with ot3's native diff renderer. File navigation resets folds,
+as do new content, scope and whitespace settings; A→B→A does not restore stale
+folds. Saved local state survives real activity rotation for the same diff.
+
+Verification: focused JVM `ThreadDiffDialogTest` (5) and `ReaderContractTest` (4)
+passed; lint/debug APK and test APK builds passed. The three affected diff
+screenshot scenarios were updated intentionally (six theme goldens); all eight
+`ReaderScreenshotTest` tests then passed `verifyRoborazziDebug`. `DiffHunkFoldDeviceTest` passed
+2/2 on emulator-5580 / ot3a361 (API 36.1), exercising the actual Home → thread →
+Changes → diff graph, Rust JNI parsing and synthetic transport in both themes.
+It verifies touch folding, an independent second hunk, portrait → landscape →
+portrait restoration, file/whitespace resets, return to timeline, one stream and
+no mutation dispatch. Landscape assertions explicitly scroll the virtualized
+second hunk into view. This is emulator acceptance, not production transport or
+physical Xiaomi acceptance.
+
+- [Tokyo Night expanded](hunk-device/diff-hunks/tokyo-expanded.png) / [folded](hunk-device/diff-hunks/tokyo-folded.png)
+- [Catppuccin Latte expanded](hunk-device/diff-hunks/latte-expanded.png) / [folded](hunk-device/diff-hunks/latte-folded.png)
+- [Touch recording](hunk-device/hunk-touch.mp4): agent-device taps the first
+  header text at (540,871) then (540,848), folding and reopening it while the
+  second hunk remains visible. The SelectionContainer does not intercept these
+  taps. [Gesture telemetry](hunk-device/hunk-touch.gesture-telemetry.json).
+
+Split/tree/context controls and syntax highlighting remain pending.
