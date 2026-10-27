@@ -96,6 +96,31 @@ class Ot3NavigationTest {
     }
 
     @Test
+    fun settingsGraphHidesFooterAndHomeRestoresIt() {
+        launch()
+        onUi { navigator.selectTab(TopTab.Settings) }
+        composeRule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+        listOf(Appearance, Notifications, Environments, Usage, Archive, Licenses).forEach { route ->
+            onUi { navigator.push(route) }
+            composeRule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+            pressBack()
+            composeRule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+        }
+        onUi { navigator.selectTab(TopTab.Chats) }
+        composeRule.onNodeWithTag(NavTags.BAR).assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsBackReturnsHomeEvenWithARetainedChat() {
+        launch()
+        onUi { navigator.openThread("e1", "t1") }
+        onUi { navigator.selectTab(TopTab.Settings) }
+        onUi { navigator.home() }
+        assertEquals("Home", stack().last())
+        composeRule.onNodeWithTag(NavTags.BAR).assertIsDisplayed()
+    }
+
+    @Test
     fun openingAThreadResetsTheChatsStackToHomeAndThread() {
         launch()
         onUi { navigator.openThread("e1", "t1") }
@@ -147,7 +172,7 @@ class Ot3NavigationTest {
         onUi { navigator.push(Environments) }
         assertEquals("Environments", stack().last())
 
-        composeRule.onNodeWithTag(NavTags.tab(TopTab.PullRequests)).performClick()
+        onUi { navigator.selectTab(TopTab.PullRequests) }
         composeRule.waitForIdle()
         composeRule.onNodeWithTag(NavTags.notYet("PullRequests")).assertIsDisplayed()
 

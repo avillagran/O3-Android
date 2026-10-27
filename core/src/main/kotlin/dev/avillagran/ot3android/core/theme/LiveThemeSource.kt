@@ -125,8 +125,14 @@ class LiveThemeSource(
         visible.flatMapLatest { shown -> if (shown) connections(environmentId) else flowOf(null) }
             .distinctUntilChanged()
             .collectLatest { connection ->
-                if (connection == null) return@collectLatest
+                if (connection == null) {
+                    follower.useSaved()
+                    return@collectLatest
+                }
                 while (refreshes.tryReceive().isSuccess) Unit
+                // A new connection can point at a different host/home after editing a route.
+                // Only reuse the located filesystem paths within this connection epoch.
+                locations.remove(environmentId)
                 follower.read(connection.transport)
                 while (true) {
                     val asked = withTimeoutOrNull(pollIntervalMs) { refreshes.receive() } != null
@@ -141,6 +147,11 @@ class LiveThemeSource(
 
         /** The last read failed with an error (not "not Omarchy" or "no scope"): polls retry it. */
         private var failed = false
+
+        fun useSaved() {
+            shown = shown?.copy(fromCache = true)
+            shown?.let(::publish)
+        }
 
         suspend fun showCached() {
             shown = cache.read(environmentId)?.let { cached ->
@@ -178,7 +189,7 @@ class LiveThemeSource(
                     failed = reason is ThemeUnavailable.Error
                     val keep = shown
                     if (failed && keep != null) {
-                        publish(keep)
+                        useSaved()
                     } else {
                         if (shown != null) cache.remove(environmentId)
                         shown = null
@@ -212,7 +223,7 @@ class LiveThemeSource(
     }
 
     companion object {
-        /** How often theme files are checked while visible (UI_SPEC 3.1.3: every few minutes). */
-        const val POLL_INTERVAL_MS = 3 * 60_000L
+        /** How often theme files are checked while visible (foreground only; no theme-change stream is exposed). */
+        const val POLL_INTERVAL_MS = 15_000L
     }
 }

@@ -18,6 +18,12 @@ class SvgToVectorTest {
     private fun convert(svg: String) = SvgToVector.convert(svg, "test.svg")
 
     @Test
+    fun `provider mark preserves translucent interior`() {
+        val vector = convert("""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40"><path d="M24 32H8V16H24V32Z" fill="currentColor" opacity="0.35"/></svg>""")
+        assertTrue(vector.contains("""android:fillAlpha="0.35""""))
+    }
+
+    @Test
     fun `path is kept with explicit commands`() {
         assertEquals(listOf("M12 5 L12 19 M5 12 h14"), pathData(convert(lucide("""<path d="M12 5 12 19M5 12h14"/>"""))))
     }
