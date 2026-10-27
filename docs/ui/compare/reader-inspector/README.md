@@ -82,3 +82,11 @@ clipboard read while a foreign system ANR dialog covered the application. Image
 review rejected those captures. The capture helper now asserts that the active
 window belongs to OT3, so semantic assertions alone cannot certify visual evidence.
 A clean-window rerun is required; failed images/video stay outside the repository.
+
+Final guarded API36.1 attempt rejected both captures because an Android System UI
+service ANR (before OT3 launch) covered the application. The existing clipboard
+case also failed; the diff-rotation case passed. See device-verification.json.
+No final emulator screenshots or video are certified. The owned guest stopped,
+its private disks were removed, and all seven original AVD files retained identical
+hashes. A recording exporter could not confirm the old screenrecord PID after
+reboot; that failed export is not evidence. No Xiaomi operation occurred.
