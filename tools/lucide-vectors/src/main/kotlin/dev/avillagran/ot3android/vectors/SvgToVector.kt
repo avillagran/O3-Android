@@ -31,6 +31,7 @@ object SvgToVector {
         val evenOdd: Boolean,
         val lineCap: String,
         val lineJoin: String,
+        val opacity: Double = 1.0,
     )
 
     private data class Shape(val pathData: String, val paint: Paint)
@@ -66,6 +67,7 @@ object SvgToVector {
                 append(indent).append("""<path android:pathData="${shape.pathData}"""")
                 if (shape.paint.fill) {
                     append(""" android:fillColor="$WHITE"""")
+                    if (shape.paint.opacity != 1.0) append(""" android:fillAlpha="${number(shape.paint.opacity)}"""")
                     if (shape.paint.evenOdd) append(""" android:fillType="evenOdd"""")
                 }
                 if (shape.paint.stroke) {
@@ -102,6 +104,7 @@ object SvgToVector {
             evenOdd = attribute("fill-rule")?.let { it == "evenodd" } ?: inherited.evenOdd,
             lineCap = attribute("stroke-linecap") ?: inherited.lineCap,
             lineJoin = attribute("stroke-linejoin") ?: inherited.lineJoin,
+            opacity = inherited.opacity * (attribute("opacity")?.toDoubleOrNull()?.coerceIn(0.0, 1.0) ?: 1.0),
         )
     }
 

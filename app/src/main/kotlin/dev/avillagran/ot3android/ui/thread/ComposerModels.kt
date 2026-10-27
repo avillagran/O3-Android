@@ -10,6 +10,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,6 +51,7 @@ internal fun ComposerModels(
             provider = if (favorites.isNotEmpty()) "favorites" else selection.optString("instanceId")
             search = ""; picker = true; onRefresh()
         }, enabled = enabled, modifier = Modifier.weight(1f).testTag("composer_models")) {
+            selected?.let { ProviderIcon(it, colors.dim, Modifier.padding(end = 4.dp)) }
             Text(
                 selected?.optString("shortName")?.takeIf { it.isNotBlank() && it != "null" }
                     ?: selected?.optString("displayName")?.takeIf { it.isNotBlank() && it != "null" }
@@ -69,9 +72,13 @@ internal fun ComposerModels(
             LazyColumn(Modifier.width(88.dp).fillMaxHeight()) {
                 item { TextButton(onClick = { provider = "favorites" }) { Text(stringResource(R.string.composer_favorites)) } }
                 items(providers, key = { it.getString("instanceId") }) { row ->
-                    TextButton(onClick = { provider = row.getString("instanceId") }) {
-                        Text(row.optString("name"), color = if (provider == row.optString("instanceId")) colors.accent else colors.dim,
-                            style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    TextButton(onClick = { provider = row.getString("instanceId") },
+                        modifier = Modifier.testTag("model_provider_${row.getString("instanceId")}")) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            ProviderIcon(row, if (provider == row.optString("instanceId")) colors.accent else colors.dim)
+                            Text(row.optString("name"), color = if (provider == row.optString("instanceId")) colors.accent else colors.dim,
+                                style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
             }
@@ -86,6 +93,7 @@ internal fun ComposerModels(
                     Row(Modifier.fillMaxWidth().clickable(enabled && row.optBoolean("available")) {
                         onSelect(row); picker = false
                     }.padding(start = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        ProviderIcon(row, if (current) colors.accent else colors.dim, Modifier.padding(end = 8.dp))
                         Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
                             Text(row.optString("displayName"), color = if (current) colors.accent else colors.foreground,
                                 style = MaterialTheme.typography.bodyMedium)
@@ -124,4 +132,20 @@ internal fun ComposerModels(
             }
         }
     }
+}
+
+/** Exact provider driver identity from models.catalog; never the model name or instance label. */
+@DrawableRes
+internal fun providerDrawable(driverKind: String): Int = when (driverKind) {
+    "codex" -> R.drawable.ic_provider_openai
+    "claudeAgent" -> R.drawable.ic_provider_claude
+    "opencode" -> R.drawable.ic_provider_opencode
+    "cursor" -> R.drawable.ic_provider_cursor
+    else -> R.drawable.ic_provider_acp
+}
+
+@Composable
+private fun ProviderIcon(provider: JSONObject, tint: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+    Icon(painterResource(providerDrawable(provider.optString("driverKind"))), contentDescription = null,
+        tint = tint, modifier = modifier.size(20.dp).testTag("provider_icon_${provider.optString("instanceId")}"))
 }

@@ -84,3 +84,12 @@ Panel-left and panel-left-close: ot3 ui/assets/icons at 7b5b1de, Lucide ISC, str
 | `list-todo.svg`, `circle.svg`, `circle-dot.svg` | ot3 inline IconAssets.js at 7b5b1de, lines 11–13 | Lucide ISC |
 
 | `lock.svg`, `lock-open.svg`, `sparkles.svg`, `pen-line.svg` | ot3 inline IconAssets.js at 7b5b1de, lines 59–62 | Lucide ISC |
+
+Provider marks copied from ot3 `7b5b1de` without changing their geometry:
+`provider-openai.svg`, `provider-claude.svg`, `provider-cursor.svg` and
+`provider-acp.svg` from `ui/assets/icons`; `provider-opencode.svg` from the
+`opencode` entry of `ui/js/IconAssets.js` (provider package path recorded there).
+These are provider identity marks, with their respective trademark owners;
+use here identifies the selected service. Repository material is MIT,
+Copyright (c) 2026 Andrés Villagrán, with the same grant in the repository LICENSE.
+The existing converter centers and tints the monochrome marks for Android.
