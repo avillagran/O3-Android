@@ -107,7 +107,7 @@ object ThreadScreenTags {
 fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val imageConnection by viewModel.imageConnection.collectAsStateWithLifecycle()
-    androidx.compose.runtime.CompositionLocalProvider(LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, viewModel::readImage)) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
         ThreadContent(
             state = state,
             editorIdentity = viewModel.editorIdentity,

@@ -213,6 +213,9 @@
     <string name="ot3_pr_cancelled">Annulleret</string>
     <string name="ot3_queue_reorder">Omarranger besked</string>
     <string name="ot3_queue_move_down">Flyt ned</string>
+    <string name="ot3_image_zoom_in">Zoom ind</string>
+    <string name="ot3_image_zoom_out">Zoom ud</string>
+    <string name="ot3_image_zoom_reset">Nulstil zoom</string>
     <string name="ot3_composer_edit">Rediger</string>
     <string name="ot3_composer_back">Tilbage til chat</string>
 </resources>

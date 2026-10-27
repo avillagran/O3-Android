@@ -20,6 +20,35 @@ import org.junit.Assert.*
 class QuotaStripDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
+    private var keyboardSetting: String? = null
+    private fun shell(command: String): String = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+        .uiAutomation.executeShellCommand(command).use { descriptor ->
+            java.io.FileInputStream(descriptor.fileDescriptor).bufferedReader().use { it.readText().trim() }
+        }
+    @Before fun softwareKeyboard() {
+        keyboardSetting = shell("settings get secure show_ime_with_hard_keyboard")
+        shell("settings put secure show_ime_with_hard_keyboard 1")
+    }
+    @After fun restoreKeyboard() {
+        keyboardSetting?.let {
+            shell(if (it == "null") "settings delete secure show_ime_with_hard_keyboard" else "settings put secure show_ime_with_hard_keyboard $it")
+        }
+    }
+    private fun awaitIme(scenario: ActivityScenario<WorkspaceFixtureActivity>) {
+        rule.waitUntil(15_000) {
+            var shown = false
+            scenario.onActivity {
+                shown = androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)
+                    ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+            }
+            shown
+        }
+    }
+    private fun toggleQuota(wasShown: Boolean) {
+        val text = context.getString(if (wasShown) dev.avillagran.ot3android.R.string.ot3_home_hide_provider_usage else dev.avillagran.ot3android.R.string.ot3_home_show_provider_usage)
+        rule.waitUntil(15_000) { rule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithTag("quota_toggle").assertIsEnabled().assertIsDisplayed().performClick()
+    }
     @Before fun resetPreference() = runBlocking { context.appGraph.appearancePreferences.setProviderUsage(false) }
     @After fun restorePreference() = resetPreference()
 
@@ -69,7 +98,7 @@ class QuotaStripDeviceTest {
             capture("home-before.$theme")
             scenario.onActivity { assertEquals(0, it.fixture.transport.serverConfigCollectors().value) }
             rule.onNodeWithTag(HomeTags.OVERFLOW).performClick()
-            rule.onNodeWithTag("quota_toggle").performClick()
+            toggleQuota(false)
             rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("38% used").assertIsDisplayed()
             capture("home-after.$theme")
@@ -80,14 +109,17 @@ class QuotaStripDeviceTest {
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("38% used").assertIsDisplayed()
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextInput("Quota draft retained")
+            awaitIme(scenario)
             rule.onNodeWithTag("thread_overflow").performClick()
-            rule.onNodeWithTag("quota_toggle").performClick()
+            toggleQuota(true)
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("quota_strip").fetchSemanticsNodes().isEmpty() }
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Quota draft retained")
+            awaitIme(scenario)
             capture("thread-before.$theme")
             rule.onNodeWithTag("thread_overflow").performClick()
-            rule.onNodeWithTag("quota_toggle").performClick()
+            toggleQuota(false)
             rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
+            awaitIme(scenario)
             capture("thread-after.$theme")
             scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
             // Compose idle does not await Android's configuration/recreation. CI also

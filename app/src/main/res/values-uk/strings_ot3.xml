@@ -213,6 +213,9 @@
     <string name="ot3_pr_cancelled">Скасовано</string>
     <string name="ot3_queue_reorder">Змінити порядок повідомлення</string>
     <string name="ot3_queue_move_down">Перемістити вниз</string>
+    <string name="ot3_image_zoom_in">Збільшити</string>
+    <string name="ot3_image_zoom_out">Зменшити</string>
+    <string name="ot3_image_zoom_reset">Скинути масштаб</string>
     <string name="ot3_composer_edit">Редагувати</string>
     <string name="ot3_composer_back">Повернутися до чату</string>
 </resources>

@@ -1125,6 +1125,17 @@ shape, not projection membership. Map projected queue-edit rows to documented na
 inputs before invoking that strict builder; preserve original attachments/context and
 unsent draft. JNI and a real queue-edit rotation test exposed the prior metadata bug.
 
+
+### 2026-10-26 — attachment image zoom is UI geometry
+
+Add touch pinch/pan and double-tap to the existing fullscreen attachment reader,
+following T3 Mobile's double-tap-enabled ImageViewing rather than claiming desktop
+QML has zoom. Keep a bounded1–4× immediate transform, Fit aspect ratio and clamped
+normalized translation; no new gesture animation or protocol. Save only transform
+floats plus validated UI ownership. A bounded current-Connection token in the VM
+keeps rotation coherent and prevents another environment/connection/process inheriting
+a saved transform. Closing resets. Existing binary read, decode limits/semaphore and
+original-byte copy remain authoritative. Markdown/video/live acceptance stays open.
 ### 2026-10-26 — one composer surface with UI selection ownership
 
 Expand the existing thread composer rather than opening a second route/VM or modal.
@@ -1152,6 +1163,14 @@ orientations and verify the model control in overflow. Rotation waits for the ne
 decor window bounds before querying Compose/Espresso; no arbitrary delay or wider
 assertion tolerance was added.
 
+### 2026-10-27 — Quota menu reads loaded preferences and owns accepted writes outside the popup
+
+Delayed-DataStore Compose regressions on API34 proved an enabled false default before
+first load and cancellation of an accepted write after menu disposal. Show native
+Loading/disabled until the preference arrives; launch persistence in AppGraph.appScope
+and invert atomically inside DataStore. Preserve soft IME/draft in the graph regression.
+The precise cause of PR51's earlier CI timeout remains unproved; no timeout increase
+or keyboard dismissal masks that portrait path. See `ui/compare/quota-strip/api34-menu/`.
 
 ### 2026-10-26 — follow owns leases, Rust owns awareness
 

@@ -85,6 +85,7 @@ Panel-left and panel-left-close: ot3 ui/assets/icons at 7b5b1de, Lucide ISC, str
 
 | `lock.svg`, `lock-open.svg`, `sparkles.svg`, `pen-line.svg` | ot3 inline IconAssets.js at 7b5b1de, lines 59–62 | Lucide ISC |
 
+| `zoom-in.svg`, `zoom-out.svg`, `rotate-ccw.svg` | Lucide 0.564.0 `package/icons`, absent from ot3; Android touch viewer controls | Lucide ISC |
 Provider marks copied from ot3 `7b5b1de` without changing their geometry:
 `provider-openai.svg`, `provider-claude.svg`, `provider-cursor.svg` and
 `provider-acp.svg` from `ui/assets/icons`; `provider-opencode.svg` from the

@@ -213,6 +213,9 @@
     <string name="ot3_pr_cancelled">Anulowano</string>
     <string name="ot3_queue_reorder">Zmień kolejność wiadomości</string>
     <string name="ot3_queue_move_down">Przenieś w dół</string>
+    <string name="ot3_image_zoom_in">Powiększ</string>
+    <string name="ot3_image_zoom_out">Pomniejsz</string>
+    <string name="ot3_image_zoom_reset">Resetuj powiększenie</string>
     <string name="ot3_composer_edit">Edytuj</string>
     <string name="ot3_composer_back">Wróć do czatu</string>
 </resources>

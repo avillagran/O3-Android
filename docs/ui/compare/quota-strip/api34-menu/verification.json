@@ -1,0 +1,27 @@
+{
+  "platform": "Android 14 / API34",
+  "serial": "emulator-5580",
+  "transport": "synthetic WorkspaceFixture transport, real JNI quota projection",
+  "deviceTests": {
+    "passed": 9,
+    "failed": 0,
+    "durationSeconds": 25.952,
+    "classes": [
+      "QuotaToggleMenuTest (2)",
+      "QuotaStripDeviceTest (3)",
+      "ReaderImageZoomDeviceTest (4)"
+    ]
+  },
+  "jvmTests": {
+    "AppearancePreferencesTest": 5,
+    "SharedQuotaSourceTest_and_ReaderImageZoomTest": 9,
+    "Ot3IconsTest": 4
+  },
+  "regressionsFailedWithOldMenuLogic": 2,
+  "oldCiFailurePreciselyReproduced": false,
+  "portraitIMEVisibleBeforeAndAfterToggles": true,
+  "draftRetained": true,
+  "settingsHeaderBackRouteVerified": true,
+  "productionDispatches": 0,
+  "mainIntegrated": "18f75754259cfa68e0502c09811a49be374bf0c4"
+}

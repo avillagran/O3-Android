@@ -412,6 +412,16 @@ class ThreadViewModel(
         return domain.domain("toolInspector.parse", org.json.JSONObject(args.toString()).put("response", response)) as org.json.JSONObject
     }
 
+    // One ephemeral UI owner only; never serialized in a server request or draft.
+    private var imageOwnerConnection: Connection? = null
+    private var imageOwnerToken = java.util.UUID.randomUUID().toString()
+    fun imageOwner(connection: Connection?): String {
+        if (connection !== imageOwnerConnection) {
+            imageOwnerConnection = connection
+            imageOwnerToken = java.util.UUID.randomUUID().toString()
+        }
+        return org.json.JSONArray().put(environmentId).put(threadId).put(imageOwnerToken).toString()
+    }
     val imageConnection = supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 

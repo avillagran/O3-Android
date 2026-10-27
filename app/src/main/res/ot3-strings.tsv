@@ -250,6 +250,10 @@ ot3_pr_cancelled	Cancelled
 ot3_queue_reorder	Reorder message
 ot3_queue_move_down	Move down
 
+# Image viewer touch/keyboard alternatives
+ot3_image_zoom_in	Zoom in
+ot3_image_zoom_out	Zoom out
+ot3_image_zoom_reset	Reset zoom
 # Composer editor
 ot3_composer_edit	Edit
 ot3_composer_back	Back to chat

@@ -213,6 +213,9 @@
     <string name="ot3_pr_cancelled">Annulé</string>
     <string name="ot3_queue_reorder">Réordonner le message</string>
     <string name="ot3_queue_move_down">Descendre</string>
+    <string name="ot3_image_zoom_in">Zoom avant</string>
+    <string name="ot3_image_zoom_out">Zoom arrière</string>
+    <string name="ot3_image_zoom_reset">Réinitialiser le zoom</string>
     <string name="ot3_composer_edit">Modifier</string>
     <string name="ot3_composer_back">Retour au chat</string>
 </resources>

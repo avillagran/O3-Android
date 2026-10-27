@@ -213,6 +213,9 @@
     <string name="ot3_pr_cancelled">已取消</string>
     <string name="ot3_queue_reorder">调整消息顺序</string>
     <string name="ot3_queue_move_down">下移</string>
+    <string name="ot3_image_zoom_in">放大</string>
+    <string name="ot3_image_zoom_out">缩小</string>
+    <string name="ot3_image_zoom_reset">重置缩放</string>
     <string name="ot3_composer_edit">编辑</string>
     <string name="ot3_composer_back">返回聊天</string>
 </resources>
