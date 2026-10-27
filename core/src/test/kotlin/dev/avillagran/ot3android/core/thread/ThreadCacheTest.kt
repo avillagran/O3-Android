@@ -77,6 +77,8 @@ class ThreadCacheTest {
         val newer = cache.open("a", "one", "s")!!
         cache.write(newer, snapshot("new"))
         cache.write(older, snapshot("old"))
+        cache.remove(older)
+        cache.close(older)
         assertEquals("new", cache.read(newer)!!.getJSONObject("projection").getString("value"))
     }
 }

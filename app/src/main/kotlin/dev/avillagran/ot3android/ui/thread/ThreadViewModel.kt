@@ -110,6 +110,7 @@ class ThreadViewModel(
     private val preferences: dev.avillagran.ot3android.core.data.prefs.ComposerPreferences? = null,
     threadCache: dev.avillagran.ot3android.core.thread.ThreadCache? = null,
     cacheAuthority: suspend () -> String? = { environmentId },
+    cacheAuthorityUpdates: Flow<String?>? = null,
 ) : ViewModel() {
     val editorIdentity: String get() = org.json.JSONArray().put(environmentId).put(threadId).toString()
 
@@ -123,6 +124,7 @@ class ThreadViewModel(
         supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) },
         viewModelScope,
         cache = threadCache, cacheEnvironment = environmentId, cacheAuthority = cacheAuthority,
+        cacheAuthorityUpdates = cacheAuthorityUpdates,
     )
 
     private val composer = ThreadComposer(

@@ -85,6 +85,7 @@ class ThreadCache(
     }
 
     suspend fun remove(lease: Lease) = locked {
+        if (owners[key(lease.environment, lease.thread)] != lease.token) return@locked
         file(lease.environment, lease.thread).delete()
     }
 

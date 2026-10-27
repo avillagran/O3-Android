@@ -30,6 +30,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -125,6 +127,7 @@ class ThreadSession(
     private val cache: ThreadCache? = null,
     private val cacheEnvironment: String? = null,
     private val cacheAuthority: suspend () -> String? = { null },
+    private val cacheAuthorityUpdates: Flow<String?>? = null,
 ) {
     private val _view = MutableStateFlow(ThreadView(threadId))
     val view: StateFlow<ThreadView> = _view.asStateFlow()
@@ -134,6 +137,8 @@ class ThreadSession(
 
     /** Defensive snapshot for native mutation validation; stream-owned objects stay private. */
     fun projectionSnapshot(): JSONObject? = projection?.let { JSONObject(it.toString()) }
+    private val cacheEnabled get() = cache != null && cacheEnvironment != null
+    private var projectionAuthority: String? = null
     private var cacheLease: ThreadCache.Lease? = null
     private var cacheDirty = false
     private var lastCacheWriteAt: Long? = null
@@ -153,28 +158,42 @@ class ThreadSession(
     @Synchronized
     fun start() {
         if (job?.isActive == true) return
+        val previous = job
         job = scope.launch(dispatcher) {
+            previous?.join() // A prior close may still be flushing/closing its cache lease.
+            var initialized = false
+            var lastConnection: Connection? = null
+            var blockedConnection: Connection? = null
             try {
-                try { restoreCache() } catch (_: java.io.IOException) {
-                    cacheLease?.let { cache?.close(it) }
-                    cacheLease = null
-                }
-                connection.collectLatest { current ->
+                // Credential withdrawal must be observed even while the connection stays null.
+                combine(connection, cacheAuthorityUpdates ?: flowOf(null)) { current, _ -> current }
+                    .collectLatest { current ->
+                    if (cacheEnabled) {
+                        val authority = cacheAuthority()
+                        if (!initialized || projectionAuthority != authority) {
+                            if (projectionAuthority != authority) {
+                                // A previously observed transport belongs to the old local owner.
+                                // Do not persist its projection under a new credential's digest.
+                                if (initialized) blockedConnection = lastConnection
+                                clearCachedProjection()
+                            }
+                            projectionAuthority = authority
+                            initialized = true
+                            try { restoreCache(authority) } catch (_: java.io.IOException) {
+                                cacheLease?.let { cache?.close(it) }
+                                cacheLease = null
+                            }
+                        }
+                        if (current != null) lastConnection = current
+                        if (authority == null || (current != null && current == blockedConnection)) {
+                            _view.update { it.copy(stale = true, connectionState = ThreadConnection.Waiting) }
+                            return@collectLatest
+                        }
+                    }
                     if (current == null) {
                         if (projection != null) { stale = true; _view.update { it.copy(stale = true) } }
                         setConnection(ThreadConnection.Waiting)
                     } else {
-                        val authority = cacheAuthority()
-                        if (cacheLease != null && cacheLease?.authority != authority) {
-                            persistCache(force = true)
-                            cacheLease?.let { cache?.close(it) }
-                            cacheLease = null
-                            projection = null
-                            sequence = null
-                            needSnapshot = true
-                            _view.value = ThreadView(threadId)
-                            restoreCache()
-                        }
                         follow(current.transport)
                     }
                 }
@@ -182,6 +201,7 @@ class ThreadSession(
                 withContext(NonCancellable) {
                     persistCache(force = true)
                     cacheLease?.let { cache?.close(it) }
+                    cacheLease = null
                 }
             }
         }
@@ -190,7 +210,6 @@ class ThreadSession(
     @Synchronized
     fun close() {
         job?.cancel()
-        job = null
     }
 
     /** Skips a pending backoff or refetch wait, or tries again after a fatal error. */
@@ -418,24 +437,46 @@ class ThreadSession(
             if (error is CancellationException) throw error
             return false
         }
+        if (cacheEnabled && cacheAuthority() != projectionAuthority) {
+            clearCachedProjection()
+            return false
+        }
         dirty = false
         _view.update { current -> next.copy(connectionState = current.connectionState) }
         persistCache()
         return true
     }
 
-    private suspend fun restoreCache() {
+    private suspend fun clearCachedProjection() {
+        cacheLease?.let { cache?.remove(it); cache?.close(it) }
+        cacheLease = null
+        projection = null
+        sequence = null
+        history = ThreadTimelines.History.NONE
+        needSnapshot = true
+        dirty = false
+        stale = false
+        cacheDirty = false
+        lastCacheWriteAt = null
+        lastSnapshotAt = null
+        _view.value = ThreadView(threadId)
+    }
+
+    private suspend fun restoreCache(authority: String?) {
         val store = cache ?: return
         val environment = cacheEnvironment ?: return
-        val authority = cacheAuthority() ?: return
-        cacheLease = store.open(environment, threadId, authority) ?: return
-        val saved = store.read(cacheLease!!) ?: return
-        if (!replace(saved)) { store.remove(cacheLease!!); return }
+        if (authority == null) return
+        val lease = store.open(environment, threadId, authority) ?: return
+        cacheLease = lease
+        val saved = store.read(lease) ?: return
+        // Disk I/O suspended: do not publish a record after its credential was withdrawn.
+        if (cacheAuthority() != authority) { clearCachedProjection(); return }
+        if (!replace(saved)) { store.remove(lease); return }
         needSnapshot = false
         stale = true
         cacheDirty = false
         if (!publish()) {
-            store.remove(cacheLease!!)
+            store.remove(lease)
             projection = null
             sequence = null
             needSnapshot = true
@@ -446,6 +487,7 @@ class ThreadSession(
         val lease = cacheLease ?: return
         val p = projection ?: return
         val at = sequence ?: return
+        if (cacheAuthority() != lease.authority) return
         if (!cacheDirty || (!force && lastCacheWriteAt?.let { clock() - it < 1_000 } == true)) return
         val snapshot = JSONObject().put("projection", p).put("snapshotSequence", at)
             .put("hasMoreHistory", history.hasMore).put("payloadBudgetExceeded", history.payloadBudgetExceeded)
