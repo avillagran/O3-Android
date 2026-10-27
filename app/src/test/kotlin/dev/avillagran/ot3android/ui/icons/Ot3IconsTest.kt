@@ -22,6 +22,8 @@ class Ot3IconsTest {
         "git-merge", "git-pull-request-closed", "git-pull-request-draft",
         // Row status
         "shield-question", "message-circle-question", "circle-dot-dashed", "circle-dashed", "circle-alert", "circle-check",
+        // Reader inspector
+        "terminal", "sparkles",
         // Brand
         "t3-logo",
     )

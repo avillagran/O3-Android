@@ -284,3 +284,24 @@ ot3_inspector_exit_code	Exit code
 ot3_inspector_empty_output	No output.
 ot3_inspector_output_omitted	Output was withheld by the server. Retry to refresh.
 ot3_inspector_truncated	Display limit reached. Copy includes only the displayed text.
+
+# Native inspector section/status labels, same translation keys as desktop.
+ot3_inspector_label_output	Output
+ot3_inspector_label_reasoning	Reasoning
+ot3_inspector_label_results	Results
+ot3_inspector_label_file	File
+ot3_inspector_label_changes	Changes
+ot3_inspector_label_plan	Plan
+ot3_inspector_label_steps	Steps
+ot3_inspector_label_prompt	Prompt
+ot3_inspector_label_questions	Questions
+ot3_inspector_label_message	Message
+ot3_inspector_label_error	Error
+ot3_inspector_label_progress	Progress
+ot3_inspector_label_result	Result
+ot3_inspector_label_failed	failed
+ot3_inspector_label_completed	completed
+ot3_inspector_label_running	running
+ot3_inspector_label_pending	pending
+ot3_inspector_label_cancelled	cancelled
+ot3_inspector_label_interrupted	interrupted

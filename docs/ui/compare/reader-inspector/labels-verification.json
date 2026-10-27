@@ -1,0 +1,25 @@
+{
+  "app": {
+    "tests": 337,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 336
+  },
+  "core": {
+    "tests": 323,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5,
+    "passed": 318
+  },
+  "catalog": "pinned T3 AAR 0.3.5;258 strings in20 locales",
+  "nativeReference": "ot3 7b5b1de T3ToolInspector.qml:87 and IconAssets.js:16",
+  "evidence": "eight JVM native-graphics goldens; representative projection fixtures, not live/physical",
+  "checks": [
+    "app/core lint",
+    "full screenshot verification",
+    "assembleDebug",
+    "required host JNI and bridge SDK"
+  ]
+}

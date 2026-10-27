@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Нет вывода.</string>
     <string name="ot3_inspector_output_omitted">Сервер не предоставил вывод. Повторите попытку для обновления.</string>
     <string name="ot3_inspector_truncated">Достигнут предел отображения. Скопируется только показанный текст.</string>
+    <string name="ot3_inspector_label_output">Вывод</string>
+    <string name="ot3_inspector_label_reasoning">Рассуждение</string>
+    <string name="ot3_inspector_label_results">Результаты</string>
+    <string name="ot3_inspector_label_file">Файл</string>
+    <string name="ot3_inspector_label_changes">Изменения</string>
+    <string name="ot3_inspector_label_plan">План</string>
+    <string name="ot3_inspector_label_steps">Шаги</string>
+    <string name="ot3_inspector_label_prompt">Запрос</string>
+    <string name="ot3_inspector_label_questions">Вопросы</string>
+    <string name="ot3_inspector_label_message">Сообщение</string>
+    <string name="ot3_inspector_label_error">Ошибка</string>
+    <string name="ot3_inspector_label_progress">Ход выполнения</string>
+    <string name="ot3_inspector_label_result">Результат</string>
+    <string name="ot3_inspector_label_failed">ошибка</string>
+    <string name="ot3_inspector_label_completed">завершено</string>
+    <string name="ot3_inspector_label_running">выполняется</string>
+    <string name="ot3_inspector_label_pending">ожидает</string>
+    <string name="ot3_inspector_label_cancelled">отменено</string>
+    <string name="ot3_inspector_label_interrupted">прервано</string>
 </resources>

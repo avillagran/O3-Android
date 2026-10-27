@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Ingen utdata.</string>
     <string name="ot3_inspector_output_omitted">Serveren leverte ikke utdata. Prøv igjen for å oppdatere.</string>
     <string name="ot3_inspector_truncated">Visningsgrensen er nådd. Bare vist tekst kopieres.</string>
+    <string name="ot3_inspector_label_output">Utdata</string>
+    <string name="ot3_inspector_label_reasoning">Resonnement</string>
+    <string name="ot3_inspector_label_results">Resultater</string>
+    <string name="ot3_inspector_label_file">Fil</string>
+    <string name="ot3_inspector_label_changes">Endringer</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Trinn</string>
+    <string name="ot3_inspector_label_prompt">Instruksjon</string>
+    <string name="ot3_inspector_label_questions">Spørsmål</string>
+    <string name="ot3_inspector_label_message">Melding</string>
+    <string name="ot3_inspector_label_error">Feil</string>
+    <string name="ot3_inspector_label_progress">Fremdrift</string>
+    <string name="ot3_inspector_label_result">Resultat</string>
+    <string name="ot3_inspector_label_failed">mislyktes</string>
+    <string name="ot3_inspector_label_completed">fullført</string>
+    <string name="ot3_inspector_label_running">kjører</string>
+    <string name="ot3_inspector_label_pending">venter</string>
+    <string name="ot3_inspector_label_cancelled">avbrutt</string>
+    <string name="ot3_inspector_label_interrupted">avbrutt</string>
 </resources>

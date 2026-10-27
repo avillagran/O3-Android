@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Keine Ausgabe.</string>
     <string name="ot3_inspector_output_omitted">Der Server hat die Ausgabe zurückgehalten. Erneut versuchen, um sie zu aktualisieren.</string>
     <string name="ot3_inspector_truncated">Anzeigelimit erreicht. Beim Kopieren wird nur der sichtbare Text übernommen.</string>
+    <string name="ot3_inspector_label_output">Ausgabe</string>
+    <string name="ot3_inspector_label_reasoning">Schlussfolgerung</string>
+    <string name="ot3_inspector_label_results">Ergebnisse</string>
+    <string name="ot3_inspector_label_file">Datei</string>
+    <string name="ot3_inspector_label_changes">Änderungen</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Schritte</string>
+    <string name="ot3_inspector_label_prompt">Anweisung</string>
+    <string name="ot3_inspector_label_questions">Fragen</string>
+    <string name="ot3_inspector_label_message">Nachricht</string>
+    <string name="ot3_inspector_label_error">Fehler</string>
+    <string name="ot3_inspector_label_progress">Fortschritt</string>
+    <string name="ot3_inspector_label_result">Ergebnis</string>
+    <string name="ot3_inspector_label_failed">fehlgeschlagen</string>
+    <string name="ot3_inspector_label_completed">abgeschlossen</string>
+    <string name="ot3_inspector_label_running">läuft</string>
+    <string name="ot3_inspector_label_pending">ausstehend</string>
+    <string name="ot3_inspector_label_cancelled">abgebrochen</string>
+    <string name="ot3_inspector_label_interrupted">unterbrochen</string>
 </resources>

@@ -241,4 +241,23 @@
     <string name="ot3_inspector_empty_output">No output.</string>
     <string name="ot3_inspector_output_omitted">Output was withheld by the server. Retry to refresh.</string>
     <string name="ot3_inspector_truncated">Display limit reached. Copy includes only the displayed text.</string>
+    <string name="ot3_inspector_label_output">Output</string>
+    <string name="ot3_inspector_label_reasoning">Reasoning</string>
+    <string name="ot3_inspector_label_results">Results</string>
+    <string name="ot3_inspector_label_file">File</string>
+    <string name="ot3_inspector_label_changes">Changes</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Steps</string>
+    <string name="ot3_inspector_label_prompt">Prompt</string>
+    <string name="ot3_inspector_label_questions">Questions</string>
+    <string name="ot3_inspector_label_message">Message</string>
+    <string name="ot3_inspector_label_error">Error</string>
+    <string name="ot3_inspector_label_progress">Progress</string>
+    <string name="ot3_inspector_label_result">Result</string>
+    <string name="ot3_inspector_label_failed">failed</string>
+    <string name="ot3_inspector_label_completed">completed</string>
+    <string name="ot3_inspector_label_running">running</string>
+    <string name="ot3_inspector_label_pending">pending</string>
+    <string name="ot3_inspector_label_cancelled">cancelled</string>
+    <string name="ot3_inspector_label_interrupted">interrupted</string>
 </resources>

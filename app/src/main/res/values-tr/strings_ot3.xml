@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Çıktı yok.</string>
     <string name="ot3_inspector_output_omitted">Sunucu çıktıyı sağlamadı. Yenilemek için yeniden deneyin.</string>
     <string name="ot3_inspector_truncated">Görüntüleme sınırına ulaşıldı. Kopyalama yalnızca gösterilen metni içerir.</string>
+    <string name="ot3_inspector_label_output">Çıktı</string>
+    <string name="ot3_inspector_label_reasoning">Akıl yürütme</string>
+    <string name="ot3_inspector_label_results">Sonuçlar</string>
+    <string name="ot3_inspector_label_file">Dosya</string>
+    <string name="ot3_inspector_label_changes">Değişiklikler</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Adımlar</string>
+    <string name="ot3_inspector_label_prompt">İstem</string>
+    <string name="ot3_inspector_label_questions">Sorular</string>
+    <string name="ot3_inspector_label_message">İleti</string>
+    <string name="ot3_inspector_label_error">Hata</string>
+    <string name="ot3_inspector_label_progress">İlerleme</string>
+    <string name="ot3_inspector_label_result">Sonuç</string>
+    <string name="ot3_inspector_label_failed">başarısız</string>
+    <string name="ot3_inspector_label_completed">tamamlandı</string>
+    <string name="ot3_inspector_label_running">çalışıyor</string>
+    <string name="ot3_inspector_label_pending">bekliyor</string>
+    <string name="ot3_inspector_label_cancelled">iptal edildi</string>
+    <string name="ot3_inspector_label_interrupted">kesintiye uğradı</string>
 </resources>
