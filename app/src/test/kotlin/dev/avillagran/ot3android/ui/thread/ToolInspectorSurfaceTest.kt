@@ -103,4 +103,20 @@ class ToolInspectorSurfaceTest {
         rule.runOnIdle { assertEquals(2, reads) }
     }
 
+    @Test fun retryKeepsTheLastRawBodyUntilTheReplacementReadCompletes() {
+        var reads = 0
+        val replacement = CompletableDeferred<JSONObject>()
+        rule.setContent { Ot3Theme { ToolInspectorSurface(JSONObject(), {
+            reads++
+            if (reads == 1) view() else replacement.await()
+        }) } }
+        rule.onNodeWithTag("thread_inspector_tab_raw").performClick()
+        rule.onNodeWithTag("thread_inspector_retry").performClick()
+        rule.onNodeWithTag("thread_inspector_retry").assertIsNotEnabled()
+        rule.onNodeWithTag("thread_inspector_section_raw").assertTextEquals("native raw")
+        rule.runOnIdle { replacement.complete(view().put("raw", "replacement raw")) }
+        rule.onNodeWithTag("thread_inspector_section_raw").assertTextEquals("replacement raw")
+        rule.runOnIdle { assertEquals(2, reads) }
+    }
+
 }

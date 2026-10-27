@@ -45,7 +45,9 @@ internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSO
         var result by remember { mutableStateOf(InspectorRead()) }
         val reader by rememberUpdatedState(onInspect)
         LaunchedEffect(attempt) {
-            result = InspectorRead()
+            // Keep the last body during retry: collapsing a tall lazy row can dispose
+            // its inspector before the replacement read returns.
+            result = result.copy(loading = true, failed = false)
             result = try {
                 val response = reader(JSONObject(identity))
                 currentCoroutineContext().ensureActive()
@@ -80,7 +82,9 @@ internal fun ToolInspectorContent(
         if (loading) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Ot3Spinner(size = 12.dp)
             Text(stringResource(R.string.ot3_inspector_loading), color = colors.dim)
-        } else when {
+        }
+        when {
+            loading && view == null -> Unit
             failed -> Text(stringResource(R.string.ot3_inspector_unavailable_error), color = colors.failed)
             view == null -> Text(stringResource(R.string.ot3_inspector_disconnected), color = colors.dim)
             !available -> Text(stringResource(R.string.ot3_inspector_unavailable), color = colors.dim)
