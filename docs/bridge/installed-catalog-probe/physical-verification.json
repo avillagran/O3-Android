@@ -1,0 +1,27 @@
+{
+  "platform": "Xiaomi 23090RA98G Android16",
+  "targetAppSource": "c4a63af",
+  "tests": 1,
+  "failures": 0,
+  "skipped": 0,
+  "method": "reportSavedCatalogWithoutStartingTheApplicationGraph only; fixture-writing case not selected",
+  "report": {
+    "readOnly": true,
+    "nativeSdkAvailable": true,
+    "selectedBridgeOnDisk": false,
+    "databasePresent": true,
+    "environmentsTablePresent": true,
+    "bridgeManagedTablePresent": true,
+    "bridgeManagedCount": 0,
+    "environments": [
+      {
+        "label": "VQ",
+        "environmentId": "8b55eaad-3149-443c-953f-afd6dd002666",
+        "bridgeManaged": false
+      }
+    ],
+    "applicationGraphStarted": false
+  },
+  "productionConfigurationModified": false,
+  "liveTransportTest": false
+}

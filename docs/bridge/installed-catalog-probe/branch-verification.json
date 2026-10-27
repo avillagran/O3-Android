@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-27",
+  "base": "106f692",
+  "scope": "Local build verification; no new emulator or phone run",
+  "customRunner": {
+    "compileDebugAndroidTestKotlin": "PASS",
+    "assembleDebugAndroidTest": "PASS",
+    "lintDebugAndroidTest": "PASS",
+    "manifestRunner": "dev.avillagran.ot3android.diagnostics.InstalledCatalogReadOnlyRunner",
+    "manifestTargetPackage": "dev.avillagran.ot3android"
+  },
+  "defaultRunner": {
+    "processDebugAndroidTestManifest": "PASS",
+    "manifestRunner": "androidx.test.runner.AndroidJUnitRunner"
+  },
+  "historicalDeviceEvidence": [
+    "verification.json",
+    "physical-verification.json"
+  ],
+  "liveTransportTest": false
+}
