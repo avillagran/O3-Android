@@ -25,6 +25,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import dev.avillagran.ot3android.core.data.prefs.AnimationPreference
+import dev.avillagran.ot3android.core.data.prefs.RevealPace
+import kotlin.math.roundToInt
 
 /** ot3's durations and curves (docs/ui/tokens.md section 5). */
 object Ot3Motion {
@@ -106,7 +108,7 @@ fun resolveMotionLevel(preference: AnimationPreference, animatorsOff: Boolean, p
  * rule, `t3m:src/lib/designTokens.ts:8`), so Off snaps all of them.
  */
 @Immutable
-data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationPreference = AnimationPreference.AUTO) {
+data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationPreference = AnimationPreference.AUTO, val revealPace: RevealPace = RevealPace.NORMAL) {
     val animates: Boolean get() = level != Ot3MotionLevel.OFF
 
     fun <T> spec(full: FiniteAnimationSpec<T>): FiniteAnimationSpec<T> = if (animates) full else snap()
@@ -132,7 +134,10 @@ data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationP
 
     fun <T> statusPop(): FiniteAnimationSpec<T> = tween(Ot3Motion.STATUS_POP_MS, Ot3Motion.StatusPopEasing)
 
-    fun <T> reveal(): FiniteAnimationSpec<T> = tween(Ot3Motion.REVEAL_MS, Ot3Motion.easeOutBack(1.3f))
+    fun <T> reveal(nebula: Boolean = false): FiniteAnimationSpec<T> = tween(
+        ((if (nebula) 560 else Ot3Motion.REVEAL_MS) * revealPace.multiplier).roundToInt(),
+        if (nebula) Ot3Motion.EaseInOutCubic else Ot3Motion.easeOutBack(1.3f),
+    )
 
     fun <T> pane(): FiniteAnimationSpec<T> = tween(Ot3Motion.PANE_MS, Ot3Motion.EaseInOutCubic)
 
@@ -146,7 +151,7 @@ val LocalOt3Motion = staticCompositionLocalOf { Ot3MotionPolicy.Full }
 
 /** [resolveMotionLevel] for [preference], following the animator scale and battery saver live. */
 @Composable
-fun rememberOt3Motion(preference: AnimationPreference): Ot3MotionPolicy {
+fun rememberOt3Motion(preference: AnimationPreference, revealPace: RevealPace = RevealPace.NORMAL): Ot3MotionPolicy {
     val context = LocalContext.current.applicationContext
     var animatorsOff by remember { mutableStateOf(animatorsOff(context)) }
     var powerSave by remember { mutableStateOf(powerSave(context)) }
@@ -178,7 +183,7 @@ fun rememberOt3Motion(preference: AnimationPreference): Ot3MotionPolicy {
         }
     }
     val level = resolveMotionLevel(preference, animatorsOff, powerSave)
-    return remember(level, preference) { Ot3MotionPolicy(level, preference) }
+    return remember(level, preference, revealPace) { Ot3MotionPolicy(level, preference, revealPace) }
 }
 
 private fun animatorsOff(context: Context): Boolean =

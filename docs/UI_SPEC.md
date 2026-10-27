@@ -2492,3 +2492,14 @@ layout preserves these sets; file/content/scope/whitespace changes reset both.
 Wrap and file selection remain local reading preferences. Labels come from the
 AAR catalog via the existing TSV importer. See `docs/ui/compare/reader-diff/README.md`.
 Tree/context/syntax/preview remain pending.
+
+
+### Reveal pace increment — 2026-10-27
+
+Appearance exposes the persisted ot3 Transition speed choices Slow/Normal/Fast
+(1.6/1/0.6), applied only to existing SidebarReveal/VerticalReveal show/hide durations.
+Normal is unchanged; Off/system reduced motion and the power-save cap remain in
+force. Root theme/workspace wiring and real Appearance persistence are verified.
+Other reveal styles and complete motion aesthetics remain pending; this does not
+add a style selector. Scope, timings and emulator control captures:
+`docs/ui/compare/reveal-pace/README.md`.

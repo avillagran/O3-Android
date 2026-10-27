@@ -259,3 +259,7 @@ ot3_composer_edit	Edit
 ot3_composer_back	Back to chat
 ot3_diff_split	Split
 ot3_diff_unified	Unified
+ot3_transition_speed	Transition speed
+ot3_pace_slow	Slow
+ot3_pace_normal	Normal
+ot3_pace_fast	Fast

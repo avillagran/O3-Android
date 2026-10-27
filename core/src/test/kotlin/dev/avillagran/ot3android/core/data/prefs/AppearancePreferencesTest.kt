@@ -67,13 +67,30 @@ class AppearancePreferencesTest {
     }
 
     @Test
+    fun `reveal pace defaults to normal and survives readers and disk reopen`() = runBlocking {
+        assertEquals(RevealPace.NORMAL, preferences.settings.first().revealPace)
+        for (pace in RevealPace.entries) {
+            preferences.setRevealPace(pace)
+            assertEquals(pace, AppearancePreferences(dataStore).settings.first().revealPace)
+        }
+        checkNotNull(scope.coroutineContext[kotlinx.coroutines.Job]).let { it.cancel(); it.join() }
+        val reopenedScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        try {
+            val reopened = PreferenceDataStoreFactory.create(scope = reopenedScope) { folder.root.resolve("appearance.preferences_pb") }
+            assertEquals(RevealPace.FAST, AppearancePreferences(reopened).settings.first().revealPace)
+        } finally { reopenedScope.cancel() }
+    }
+
+    @Test
     fun `unknown stored values read as the defaults`() = runBlocking {
         dataStore.edit {
             it[AppearancePreferences.Keys.MODE] = "SEPIA"
             it[AppearancePreferences.Keys.ANIMATION] = "SOMETIMES"
+            it[AppearancePreferences.Keys.REVEAL_PACE] = "INSTANT"
         }
         val settings = preferences.settings.first()
         assertEquals(AppearanceMode.FOLLOW_SYSTEM, settings.mode)
         assertEquals(AnimationPreference.AUTO, settings.animation)
+        assertEquals(RevealPace.NORMAL, settings.revealPace)
     }
 }

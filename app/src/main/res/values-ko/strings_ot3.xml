@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">채팅으로 돌아가기</string>
     <string name="ot3_diff_split">분할</string>
     <string name="ot3_diff_unified">통합</string>
+    <string name="ot3_transition_speed">전환 속도</string>
+    <string name="ot3_pace_slow">느리게</string>
+    <string name="ot3_pace_normal">보통</string>
+    <string name="ot3_pace_fast">빠름</string>
 </resources>

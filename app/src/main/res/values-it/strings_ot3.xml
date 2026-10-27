@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">Torna alla chat</string>
     <string name="ot3_diff_split">Diviso</string>
     <string name="ot3_diff_unified">Unificato</string>
+    <string name="ot3_transition_speed">Velocità di transizione</string>
+    <string name="ot3_pace_slow">Lenta</string>
+    <string name="ot3_pace_normal">Normale</string>
+    <string name="ot3_pace_fast">Veloce</string>
 </resources>

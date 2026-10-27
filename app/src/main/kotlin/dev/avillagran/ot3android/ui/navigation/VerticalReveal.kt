@@ -15,7 +15,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
-import dev.avillagran.ot3android.ui.theme.Ot3Motion
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import kotlin.math.roundToInt
 
@@ -37,7 +36,7 @@ internal fun VerticalReveal(shown: Boolean, modifier: Modifier = Modifier, conte
         if (shown) 1f else 0f
     } else {
         val animated by animateFloatAsState(if (shown) 1f else 0f,
-            if (nebula) motion.tween(560, Ot3Motion.EaseInOutCubic) else motion.reveal(), label = "verticalReveal")
+            motion.reveal(nebula), label = "verticalReveal")
         animated
     }
     val extent = progress.coerceIn(0f, 1f)

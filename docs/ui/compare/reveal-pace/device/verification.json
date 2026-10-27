@@ -1,0 +1,60 @@
+{
+  "sourceCommit": "2624a18846f569c6a99543a9a0e9b8f3ddb692df",
+  "apkSha256": "03b5312f780824410900557d3bc624b84f5247d4ed2706b576d4bd385712ba62",
+  "device": {
+    "serial": "emulator-5580",
+    "avd": "ot3a",
+    "api": 34,
+    "platform": "Android 14",
+    "gpu": "software (gfxstream, lavapipe / swangle)",
+    "orientation": "landscape",
+    "resolution": [
+      2400,
+      1080
+    ]
+  },
+  "surface": "WorkspaceFixtureActivity: real Home / thread / workspace, synthetic transport and Rust JNI",
+  "theme": "Tokyo Night",
+  "content": "Same node/chat fixture, messages 59 and 58, unchanged reading position",
+  "capture": "agent-device 0.21.31, two actual touch injections per clip, natural Android animation clock, no instrumentation/clock stepping/retiming",
+  "setup": {
+    "androidRemoveAnimationsOriginal": true,
+    "androidRemoveAnimationsDuringAcceptedClips": false,
+    "androidRemoveAnimationsRestored": true,
+    "revealPaceOriginal": "NORMAL",
+    "revealPaceRestored": "NORMAL"
+  },
+  "clips": {
+    "slow": {
+      "file": "slow-sidebar.mp4",
+      "durationSeconds": 4.895944,
+      "bytes": 646673,
+      "frames": 73,
+      "sha256": "87a94141557b392604895976053ef3e5d94c63e703001a33416e7a3943062a3c",
+      "touches": [
+        "collapse sidebar",
+        "reopen sidebar"
+      ],
+      "telemetry": "slow-sidebar.gesture-telemetry.json"
+    },
+    "fast": {
+      "file": "fast-sidebar.mp4",
+      "durationSeconds": 4.557889,
+      "bytes": 533351,
+      "frames": 71,
+      "sha256": "dc5eb478277ac8d30798a9b534f0dc401e9687619565dc52a4699a3ef38559d3",
+      "touches": [
+        "collapse sidebar",
+        "reopen sidebar"
+      ],
+      "telemetry": "fast-sidebar.gesture-telemetry.json"
+    }
+  },
+  "inspection": "Full contact sheets and settled endpoints inspected; intermediate reveal frames present in both accepted clips",
+  "limits": [
+    "Software emulator, not physical-device performance",
+    "Clip durations are capture windows, not measured animation durations",
+    "Not all reveal styles or aesthetic parity accepted",
+    "First reduced-motion snap clips excluded from repository"
+  ]
+}

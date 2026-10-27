@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">Zpět do chatu</string>
     <string name="ot3_diff_split">Rozdělené</string>
     <string name="ot3_diff_unified">Sjednocené</string>
+    <string name="ot3_transition_speed">Rychlost přechodu</string>
+    <string name="ot3_pace_slow">Pomalá</string>
+    <string name="ot3_pace_normal">Normální</string>
+    <string name="ot3_pace_fast">Rychle</string>
 </resources>

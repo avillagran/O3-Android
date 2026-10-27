@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">Повернутися до чату</string>
     <string name="ot3_diff_split">Розділений</string>
     <string name="ot3_diff_unified">Об’єднаний</string>
+    <string name="ot3_transition_speed">Швидкість переходу</string>
+    <string name="ot3_pace_slow">Повільно</string>
+    <string name="ot3_pace_normal">Звичайно</string>
+    <string name="ot3_pace_fast">Швидко</string>
 </resources>

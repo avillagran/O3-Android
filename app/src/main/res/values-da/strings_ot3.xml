@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">Tilbage til chat</string>
     <string name="ot3_diff_split">Opdelt</string>
     <string name="ot3_diff_unified">Samlet</string>
+    <string name="ot3_transition_speed">Overgangshastighed</string>
+    <string name="ot3_pace_slow">Langsom</string>
+    <string name="ot3_pace_normal">Normal</string>
+    <string name="ot3_pace_fast">Hurtig</string>
 </resources>
