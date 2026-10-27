@@ -57,6 +57,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
@@ -207,7 +208,8 @@ fun ThreadContent(
         expanded = !expanded
     }
     val edit: (String, String) -> Unit = { text, token -> if (onDraftChangeTagged != null) onDraftChangeTagged(text, token) else onDraftChange(text) }
-    fun submit() { if (state.canSend && !state.sending) { editor.submitted(); onSend() } }
+    var followLatestRequest by androidx.compose.runtime.saveable.rememberSaveable(editorIdentity) { mutableIntStateOf(0) }
+    fun submit() { if (state.canSend && !state.sending) { editor.submitted(); followLatestRequest++; onSend() } }
     androidx.activity.compose.BackHandler(enabled = expanded) { toggleEditor() }
     val timelineState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     val toolbar: @Composable () -> Unit = {
@@ -337,7 +339,7 @@ fun ThreadContent(
                         !state.view.loaded -> Ot3Spinner(Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp)
                         (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(stringResource(R.string.thread_empty), modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY))
                         else -> if (state.readingPositionLoaded) timelineState.SaveableStateProvider(editorIdentity) {
-                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition)
+                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition, followLatestRequest)
                         }
                     }
                 }

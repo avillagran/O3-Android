@@ -49,6 +49,7 @@ internal fun JSONArray?.objects(): List<JSONObject> = this?.let { a -> (0 until 
 internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, onInspect: suspend (JSONObject) -> JSONObject? = { null }, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject? = { _, _ -> null },
     initialPosition: dev.avillagran.ot3android.core.data.prefs.ReadingPosition? = null,
     onPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
+    followLatestRequest: Int = 0,
 ) {
     val threadKey = LocalSelectedThreadKey.current
     // The modal belongs to the reader, not a lazy row which may leave composition
@@ -68,6 +69,35 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         val byKey = initialPosition?.let { position -> rows.indexOfFirst { it.optString("id") == position.rowId } } ?: -1
         LazyListState(if (byKey >= 0) byKey else initialPosition?.index?.coerceIn(0, (rows.size - 1).coerceAtLeast(0)) ?: 0,
             initialPosition?.offset ?: 0)
+    }
+    // LazyColumn preserves visible keys on insertion, including when a new latest
+    // row arrives. Keep following as user intent, not a value derived after that
+    // insertion has already moved the old anchor away from index zero.
+    var followingLatest by rememberSaveable(threadKey) {
+        mutableStateOf(list.firstVisibleItemIndex == 0 && list.firstVisibleItemScrollOffset <= 80)
+    }
+    var handledFollowRequest by rememberSaveable(threadKey) { mutableIntStateOf(0) }
+    LaunchedEffect(list, threadKey) {
+        var wasScrolling = false
+        snapshotFlow { list.isScrollInProgress }.collect { scrolling ->
+            if (scrolling) wasScrolling = true
+            else if (wasScrolling) {
+                followingLatest = list.firstVisibleItemIndex == 0 && list.firstVisibleItemScrollOffset <= 80
+                wasScrolling = false
+            }
+        }
+    }
+    LaunchedEffect(followLatestRequest) {
+        if (followLatestRequest != handledFollowRequest) {
+            handledFollowRequest = followLatestRequest
+            followingLatest = true
+            list.requestScrollToItem(0)
+        }
+    }
+    // Native row revisions cover streamed blocks as well as plain fallback text.
+    val contentRevision = rows.map { Triple(it.optString("id"), it.optString("rev"), it.optString("text")) }
+    LaunchedEffect(contentRevision, followingLatest) {
+        if (followingLatest && !list.isScrollInProgress) list.requestScrollToItem(0)
     }
     val savePosition by androidx.compose.runtime.rememberUpdatedState(onPosition)
     fun position() = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }?.let {
@@ -93,7 +123,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
                     Text("Earlier history is available on desktop", style = MaterialTheme.typography.labelSmall)
                 }
             }
-            if (away) TextButton(onClick = { scope.launch { list.animateScrollToItem(0) } },
+            if (away) TextButton(onClick = { scope.launch { followingLatest = true; list.animateScrollToItem(0) } },
                 modifier = Modifier.align(Alignment.BottomEnd).background(Ot3Theme.colors.surface).testTag("thread_jump_latest")) {
                 Text("Jump to latest ↓")
             }
