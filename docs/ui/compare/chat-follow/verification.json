@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-27",
+  "base": "106f692",
+  "regression": "Without follow logic, incoming m20 is not displayed after insertion; TimelineFollowLatestTest failed as expected.",
+  "fixedFollowTests": {
+    "tests": 6,
+    "failures": 0,
+    "scenarios": [
+      "incoming rows",
+      "stream growth",
+      "read history without jumping",
+      "explicit follow request",
+      "jump latest",
+      "restored history",
+      "send button from history",
+      "recreation"
+    ]
+  },
+  "jvm": {
+    "app": {
+      "tests": 343,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "core": {
+      "tests": 323,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 5
+    }
+  },
+  "lintDebug": "PASS",
+  "assembleDebug": "PASS",
+  "apkSha256": "6461dc438e3b970da82ab2960d3907165d726669844dd9622d282ee31d21519b",
+  "signerSha256": "42d98c51c52b69bba86db1c4510b895c100968ad3c3911762182698f74927417",
+  "physicalAcceptance": "Not yet established; installation recorded separately."
+}
