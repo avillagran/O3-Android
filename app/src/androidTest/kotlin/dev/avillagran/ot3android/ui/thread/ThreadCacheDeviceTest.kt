@@ -51,6 +51,14 @@ class ThreadCacheDeviceTest {
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains("Borrador sin conexión")
             assertEquals(1, fixture.snapshotReads.get())
             assertEquals(0, fixture.transport.collectors("chat").value)
+            if (androidx.test.platform.app.InstrumentationRegistry.getArguments().getString("cacheEvidence") == "true") {
+                rule.waitForIdle()
+                val output = java.io.File(context.getExternalFilesDir(null), "cache-authority/offline.png")
+                output.parentFile!!.mkdirs()
+                val bitmap = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+                try { output.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
+                finally { bitmap.recycle() }
+            }
             fixture.setCacheOffline(false)
             rule.waitUntil(10_000) { rule.onAllNodesWithTag(ThreadScreenTags.STALE).fetchSemanticsNodes().isEmpty() }
             assertEquals(1, fixture.snapshotReads.get())

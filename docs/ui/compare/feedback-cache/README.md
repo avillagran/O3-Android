@@ -10,7 +10,8 @@ se conservaba al recrear el destino, pero no al crear una navegación nueva.
 
 Ahora se guarda la proyección opaca de Rust, su snapshotSequence y los campos de
 historial como una unidad atómica. Se separa por id local de entorno+hilo, y se
-valida además UUID del servidor+origen guardados: cambiar de host no reutiliza
+valida además la autoridad local derivada de id local de entorno+origen+credencial
+(ver [revisión de aislamiento](authority-safety.md)): cambiar de host o credencial no reutiliza
 mensajes/cursor de otro servidor. Los nombres de archivo son hashes sin colisiones
 por separadores. No hay mezcla, ordenación ni deduplicación de mensajes en Kotlin:
 projection.apply y timeline.view siguen siendo Rust.

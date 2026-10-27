@@ -14,6 +14,37 @@ class ThreadCacheAuthoritySessionTest {
     private fun snapshot(text: String) = ThreadFixtures.bounded(10,
         ThreadFixtures.projection(messages = listOf(ThreadFixtures.message("m1", text, "2026-10-25T01:00:00Z"))))
 
+    @Test fun firstConnectionCanLearnItsServerIdWithoutBlockingItsOwnStream(): Unit = runBlocking {
+        val dao = dev.avillagran.ot3android.core.data.InMemoryEnvironmentDao()
+        val tokens = dev.avillagran.ot3android.core.data.InMemoryTokenStore()
+        val repo = dev.avillagran.ot3android.core.data.EnvironmentRepository(dao, { tokens }, dev.avillagran.ot3android.core.connection.MemoryCursorStore())
+        val env = repo.save(null, "Lab", "http://fixture.invalid", null, "synthetic-" + "a".repeat(64))
+        val originalAuthority = repo.cacheAuthority(env.id)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val fake = FakeT3Transport()
+        fake.connect(ConnectRoute.Bearer(env.baseUrl, "synthetic-token"))
+        var reads = 0
+        fake.onBoundedThread("t1") { reads++; snapshot("first") }
+        val connection = MutableStateFlow<Connection?>(Connection(fake, 1))
+        val session = ThreadSession("t1", connection, scope, domain = TestDomain,
+            cache = ThreadCache(root.newFolder()), cacheEnvironment = env.id,
+            cacheAuthority = { repo.cacheAuthority(env.id) }, cacheAuthorityUpdates = repo.cacheAuthorities(env.id))
+        try {
+            session.start()
+            withTimeout(5_000) { fake.collectors("t1").first { it == 1 } }
+            // Supervisor publishes the Connection before onConnected records the descriptor.
+            repo.markConnected(env.id, "newly-learned-server")
+            assertEquals(originalAuthority, repo.cacheAuthority(env.id))
+            fake.emitThread("t1", ThreadUpdates.batch(ThreadFixtures.event(11, "message.updated",
+                ThreadFixtures.message("m1", "still-streaming", "2026-10-25T01:00:00Z")), cursor = 11))
+            val updated = withTimeout(5_000) { session.view.first { it.sequence == 11L } }
+            assertEquals("still-streaming", updated.messages.single().text)
+            assertEquals(1, reads)
+            assertEquals(1, fake.streamOpens.size)
+            assertEquals(Connection(fake, 1), connection.value)
+        } finally { session.close(); scope.coroutineContext[Job]!!.cancelAndJoin() }
+    }
+
     @Test fun sameUrlCredentialReplacementCannotRestoreThePriorProcessCache(): Unit = runBlocking {
         val dao = dev.avillagran.ot3android.core.data.InMemoryEnvironmentDao()
         val tokens = dev.avillagran.ot3android.core.data.InMemoryTokenStore()

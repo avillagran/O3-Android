@@ -55,9 +55,11 @@ class EnvironmentRepository(
             catch (_: java.security.GeneralSecurityException) { null } catch (_: SecurityException) { null }
         if (token.isNullOrBlank()) return@withLock null
         // Tokens are high-entropy bearer credentials. Only the domain-separated digest leaves
-        // this lock; length-delimited JSON also isolates route/server/local identity changes.
+        // this lock; saved route + local id bind the endpoint. The advertised server UUID
+        // may be learned after connection publication, so it is metadata rather than a
+        // credential boundary (null → known must not block that healthy connection).
         val material = org.json.JSONArray().put("ot3-thread-cache-authority-v1")
-            .put(row.id).put(row.environmentId).put(row.baseUrl).put(token).toString()
+            .put(row.id).put(row.baseUrl).put(token).toString()
         java.security.MessageDigest.getInstance("SHA-256").digest(material.toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
     }

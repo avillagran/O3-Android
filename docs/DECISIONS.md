@@ -1163,3 +1163,16 @@ without skipping awareness evaluation or alerts. Recover missing/stale Android
 records only on the existing deadline wake, identified by a random UI-only extras
 stamp; Room ticks must not postpone that wake. Avoid duplicate cancels and privacy
 refreshes after actual NMS queue shedding was observed in the synthetic system lab.
+
+### 2026-10-27 — Saved thread projections belong to the current local credential
+
+Resolve a domain-separated SHA256 authority over local environment identity, route and the
+high-entropy credential under EnvironmentRepository.mutations, reusing its existing
+token gate. Persist only the digest. Observe distinct authority changes even while
+connection remains null; invalidate held state and block the old Connection identity.
+Metadata-only edits, including first-discovered server UUID, retain valid offline cache.
+The saved local ID/route/credential bind the cache; independent advertised-UUID isolation
+is not claimed. Guard remove with lease ownership too.
+No independent expiry timer or Kotlin protocol authorization policy is added; idle
+natural expiry without an existing signal/read remains unaccepted. See
+`ui/compare/feedback-cache/authority-safety.md` for tests and exact limits.
