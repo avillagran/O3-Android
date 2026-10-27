@@ -1213,3 +1213,12 @@ records fresh frame/blackhole/pings and successor streams at4.525s/5.418s; netwo
 recovery is not attributed exclusively to wakeSubscriptions. Baseline is session-local,
 not DataStore; idle is fixed15min, not configurable. Natural/legacy expiry stays open.
 See `ui/compare/ui-n/resilience/README.md` and its native system checks.
+
+### 2026-10-27 — Legacy expiry is presentation scheduling, not awareness policy
+
+API24/25 now schedule received absolute Rust deadlines via inexact non-wakeup RTC
+alarms and a non-exported receiver. Persisted slot generations and presentation stamps
+protect replacements and privacy refresh from stale callbacks/NMS snapshots. API26+
+keeps its native timeout. No exact alarm permission or wake-during-idle request is added;
+cleanup may be delayed. Summary lifecycle remains pending rather than risking removal
+of enqueued children. [Verification and limits](ui/compare/ui-n/legacy-expiry.md).
