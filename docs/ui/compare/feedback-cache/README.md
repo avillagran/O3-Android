@@ -89,3 +89,8 @@ mensajes desde el servidor cuando vuelve la red, conservando borrador/outbox/pos
 Integración posterior: origin/main152b851 (incluye tema/PR54) fusionado en939ad35.
 Pruebas focales nativas de caché y tema, aplicación visual de tokens, guardas de
 acciones y assembleDebug pasaron juntas tras esa integración.
+
+Aclaración U18: history.path y history.envelope ya existen en0.3.5. Falta la
+integración común de páginas históricas con el estado vivo, no esos primitivos.
+El seguimiento específico quedó añadido en docs/LIB_REQUESTS.md; esta caché no
+implementa un merge histórico en Kotlin ni promete todo el historial offline.
