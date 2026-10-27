@@ -244,15 +244,25 @@ private fun tint(context: Context, phase: AwarenessPhase): Int? = when (phase) {
 }?.let { ContextCompat.getColor(context, it) }
 
 /** Reapply privacy to already posted cards without replaying alert sounds or changing routes/timeouts. */
-fun refreshNotificationPrivacy(context: Context, detail: LockscreenDetail) {
+fun refreshNotificationPrivacy(context: Context, detail: LockscreenDetail, skipActivity: Boolean = false) {
     if (!ThreadFollowService.allowed(context)) return
     val manager = context.getSystemService(NotificationManager::class.java)
     manager.activeNotifications.forEach { posted ->
+        if (skipActivity && posted.tag == null && posted.id == Ot3NotificationIds.ACTIVITY_ID) return@forEach
         val notification = posted.notification
         val status = notification.extras.getString("ot3.publicStatus") ?: return@forEach
+        val public = notification.publicVersion
+        val alreadyCorrect = when (detail) {
+            LockscreenDetail.Full -> notification.visibility == Notification.VISIBILITY_PUBLIC && public == null
+            LockscreenDetail.Hidden -> notification.visibility == Notification.VISIBILITY_PRIVATE && public == null
+            LockscreenDetail.State -> notification.visibility == Notification.VISIBILITY_PRIVATE &&
+                public?.extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString() == context.getString(R.string.app_name) &&
+                public.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() == status
+        }
         val expiry = notification.extras.getLong("ot3.expiresAt", 0)
         val remaining = expiry - System.currentTimeMillis()
         if (expiry > 0 && remaining <= 0) { manager.cancel(posted.tag, posted.id); return@forEach }
+        if (alreadyCorrect) return@forEach
         val builder = Notification.Builder.recoverBuilder(context, notification).setOnlyAlertOnce(true)
         if (expiry > 0 && Build.VERSION.SDK_INT >= 26) builder.setTimeoutAfter(remaining)
         when (detail) {

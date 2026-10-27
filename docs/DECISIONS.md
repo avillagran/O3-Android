@@ -1151,3 +1151,15 @@ show-IME-with-hardware-keyboard preference themselves, assert visible IME in bot
 orientations and verify the model control in overflow. Rotation waits for the new
 decor window bounds before querying Compose/Espresso; no arbitrary delay or wider
 assertion tolerance was added.
+
+
+### 2026-10-26 — follow owns leases, Rust owns awareness
+
+Keep one follow lease per saved environment across metadata updates. Switching
+observers to a replacement supervisor preserves that environment's lease; retired
+unauthorized callbacks cannot close its replacement. Current privacy is an input to
+every card build. Compare complete parsed card+privacy before Android publication,
+without skipping awareness evaluation or alerts. Recover missing/stale Android
+records only on the existing deadline wake, identified by a random UI-only extras
+stamp; Room ticks must not postpone that wake. Avoid duplicate cancels and privacy
+refreshes after actual NMS queue shedding was observed in the synthetic system lab.
