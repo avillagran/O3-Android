@@ -85,3 +85,7 @@ No son datos productivos ni prueba física. No hubo envío, borrado de servidor 
 Pendiente: aceptación productiva/física; historial anterior fuera de la ventana U18;
 no se promete que una caché expulsada permita leer offline. Una expulsión recupera
 mensajes desde el servidor cuando vuelve la red, conservando borrador/outbox/posición.
+
+Integración posterior: origin/main152b851 (incluye tema/PR54) fusionado en939ad35.
+Pruebas focales nativas de caché y tema, aplicación visual de tokens, guardas de
+acciones y assembleDebug pasaron juntas tras esa integración.
