@@ -1,0 +1,75 @@
+ot3a / emulator-5580 / API34 / software GPU+IME
+animator_duration_scale=0.0 transition_animation_scale=0.0 window_animation_scale=0.0 (unchanged)
+Final QuotaStripDeviceTest + UsageDeviceTest: OK (7 tests), 31.03s
+ImeShowCompletionTest: 3 tests, 0 failures/errors/skips
+
+10-27 05:05:40.673  4673  4738 I TestRunner: run started: 7 tests
+10-27 05:05:40.674  4673  4738 I TestRunner: started: emptyOfflineReconnectAndAppearancePreference(dev.avillagran.ot3android.ui.usage.QuotaStripDeviceTest)
+10-27 05:05:41.089  4673  4673 I QuotaImeHandshake: uptime=223900 activity=112307766 decor=258231822 host=0 windowFocus=false active=false accepting=false ime=null bottom=null observe
+10-27 05:05:44.045  4673  4673 I QuotaImeHandshake: uptime=226856 activity=22340025 decor=258231822 host=0 windowFocus=true active=false accepting=false ime=false bottom=0 observe
+10-27 05:05:46.219  4673  4738 I TestRunner: finished: emptyOfflineReconnectAndAppearancePreference(dev.avillagran.ot3android.ui.usage.QuotaStripDeviceTest)
+10-27 05:05:46.231  4673  4738 I TestRunner: started: latteToggleNavigationRecreationDraftAndSharedStream(dev.avillagran.ot3android.ui.usage.QuotaStripDeviceTest)
+10-27 05:05:46.371  4673  4673 I QuotaImeHandshake: uptime=229182 activity=84040220 decor=112998791 host=0 windowFocus=false active=false accepting=false ime=null bottom=null observe
+10-27 05:05:48.079  4673  4673 I QuotaImeHandshake: uptime=230890 activity=239844851 decor=112998791 host=0 windowFocus=true active=false accepting=false ime=false bottom=0 observe
+10-27 05:05:49.251  4673  4673 I QuotaImeHandshake: uptime=232062 activity=239844851 decor=112998791 host=151839162 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:05:49.286  4673  4673 I ImeTracker: dev.avillagran.ot3android:c6c84c4b: onShown
+10-27 05:05:49.288  4673  4673 I QuotaImeHandshake: uptime=232100 activity=239844851 decor=112998791 host=151839162 windowFocus=true active=true accepting=true ime=true bottom=883 end showEnded=true
+10-27 05:05:49.569  4673  4673 I QuotaImeHandshake: uptime=232380 activity=239844851 decor=112998791 host=151839162 windowFocus=false active=false accepting=false ime=true bottom=883 prepare
+10-27 05:05:49.571  4673  4673 I QuotaImeHandshake: uptime=232382 activity=239844851 decor=112998791 host=151839162 windowFocus=false active=false accepting=false ime=true bottom=883 end showEnded=false
+10-27 05:05:49.999  4673  4673 I QuotaImeHandshake: uptime=232810 activity=239844851 decor=112998791 host=151839162 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:05:50.034  4673  4673 I ImeTracker: dev.avillagran.ot3android:41ac09d0: onShown
+10-27 05:05:50.036  4673  4673 I QuotaImeHandshake: uptime=232847 activity=239844851 decor=112998791 host=151839162 windowFocus=true active=true accepting=true ime=true bottom=883 end showEnded=true
+10-27 05:05:50.452  4673  4673 I QuotaImeHandshake: uptime=233263 activity=239844851 decor=112998791 host=151839162 windowFocus=false active=false accepting=false ime=true bottom=883 prepare
+10-27 05:05:50.453  4673  4673 I QuotaImeHandshake: uptime=233265 activity=239844851 decor=112998791 host=151839162 windowFocus=false active=false accepting=false ime=true bottom=883 end showEnded=false
+10-27 05:05:50.837  4673  4673 I QuotaImeHandshake: uptime=233648 activity=239844851 decor=112998791 host=151839162 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:05:50.856  4673  4673 I ImeTracker: dev.avillagran.ot3android:2505eed0: onShown
+10-27 05:05:50.858  4673  4673 I QuotaImeHandshake: uptime=233669 activity=239844851 decor=112998791 host=151839162 windowFocus=true active=true accepting=true ime=true bottom=883 end showEnded=true
+10-27 05:05:51.288  4673  4673 I QuotaImeHandshake: uptime=234100 activity=197247615 decor=92786451 host=0 windowFocus=false active=false accepting=false ime=null bottom=null observe
+10-27 05:05:52.139  4673  4673 I QuotaImeHandshake: uptime=234950 activity=197247615 decor=92786451 host=40277850 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:05:52.169  4673  4673 I ImeTracker: dev.avillagran.ot3android:56a969f3: onShown
+10-27 05:05:52.171  4673  4673 I QuotaImeHandshake: uptime=234982 activity=197247615 decor=92786451 host=40277850 windowFocus=true active=true accepting=true ime=true bottom=686 end showEnded=true
+10-27 05:05:52.292  4673  4738 I QuotaImeHandshake: beforeBack routeComposer=true sidebar=true
+10-27 05:05:52.292  4673  4673 I QuotaImeHandshake: uptime=235103 activity=197247615 decor=92786451 host=40277850 windowFocus=true active=true accepting=true ime=true bottom=686 beforeBack
+10-27 05:05:52.297  4673  4673 I ViewInteraction: Performing 'send keyCode: 4, metaState: 0 key event' action on view view.getRootView() to equal view
+10-27 05:05:52.310   509   522 I ImeTracker: dev.avillagran.ot3android:cb6aaa46: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_SOFT_INPUT_BY_BACK_KEY
+10-27 05:05:52.321  4673  4673 I QuotaImeHandshake: uptime=235132 activity=197247615 decor=92786451 host=40277850 windowFocus=true active=true accepting=true ime=true bottom=686 prepare
+10-27 05:05:52.349  4673  4673 I ImeTracker: dev.avillagran.ot3android:cb6aaa46: onHidden
+10-27 05:05:52.350  4673  4673 I QuotaImeHandshake: uptime=235162 activity=197247615 decor=92786451 host=40277850 windowFocus=true active=true accepting=true ime=false bottom=0 end showEnded=false
+10-27 05:05:55.087  4673  4738 I TestRunner: finished: latteToggleNavigationRecreationDraftAndSharedStream(dev.avillagran.ot3android.ui.usage.QuotaStripDeviceTest)
+10-27 05:05:55.088  4673  4738 I TestRunner: started: tokyoToggleNavigationRecreationDraftAndSharedStream(dev.avillagran.ot3android.ui.usage.QuotaStripDeviceTest)
+10-27 05:05:55.171  4673  4673 I QuotaImeHandshake: uptime=237982 activity=195686612 decor=164791916 host=0 windowFocus=false active=false accepting=false ime=null bottom=null observe
+10-27 05:05:56.504  4673  4673 I QuotaImeHandshake: uptime=239315 activity=49622163 decor=164791916 host=0 windowFocus=true active=false accepting=false ime=false bottom=0 observe
+10-27 05:05:57.524  4673  4673 I QuotaImeHandshake: uptime=240335 activity=49622163 decor=164791916 host=106556122 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:05:57.549  4673  4673 I ImeTracker: dev.avillagran.ot3android:2f018747: onShown
+10-27 05:05:57.551  4673  4673 I QuotaImeHandshake: uptime=240362 activity=49622163 decor=164791916 host=106556122 windowFocus=true active=true accepting=true ime=true bottom=883 end showEnded=true
+10-27 05:05:57.729  4673  4673 I QuotaImeHandshake: uptime=240540 activity=49622163 decor=164791916 host=106556122 windowFocus=false active=false accepting=false ime=true bottom=883 prepare
+10-27 05:05:57.807  4673  4673 I QuotaImeHandshake: uptime=240618 activity=49622163 decor=164791916 host=106556122 windowFocus=false active=false accepting=false ime=false bottom=0 end showEnded=true
+10-27 05:05:58.121  4673  4673 I QuotaImeHandshake: uptime=240933 activity=49622163 decor=164791916 host=106556122 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:05:58.148  4673  4673 I ImeTracker: dev.avillagran.ot3android:664f48b6: onShown
+10-27 05:05:58.150  4673  4673 I QuotaImeHandshake: uptime=240961 activity=49622163 decor=164791916 host=106556122 windowFocus=true active=true accepting=true ime=true bottom=883 end showEnded=true
+10-27 05:05:58.451  4673  4673 I QuotaImeHandshake: uptime=241262 activity=49622163 decor=164791916 host=106556122 windowFocus=false active=false accepting=false ime=true bottom=883 prepare
+10-27 05:05:58.454  4673  4673 I QuotaImeHandshake: uptime=241265 activity=49622163 decor=164791916 host=106556122 windowFocus=false active=false accepting=false ime=true bottom=883 end showEnded=false
+10-27 05:05:58.840  4673  4673 I QuotaImeHandshake: uptime=241651 activity=49622163 decor=164791916 host=106556122 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:05:58.866  4673  4673 I ImeTracker: dev.avillagran.ot3android:d4bc69c9: onShown
+10-27 05:05:58.868  4673  4673 I QuotaImeHandshake: uptime=241679 activity=49622163 decor=164791916 host=106556122 windowFocus=true active=true accepting=true ime=true bottom=883 end showEnded=true
+10-27 05:05:59.309  4673  4673 I QuotaImeHandshake: uptime=242120 activity=172821513 decor=108869159 host=0 windowFocus=false active=false accepting=false ime=null bottom=null observe
+10-27 05:06:00.038  4673  4673 I QuotaImeHandshake: uptime=242849 activity=172821513 decor=108869159 host=180426430 windowFocus=true active=true accepting=true ime=false bottom=0 prepare
+10-27 05:06:00.071  4673  4673 I ImeTracker: dev.avillagran.ot3android:b71f1a92: onShown
+10-27 05:06:00.072  4673  4673 I QuotaImeHandshake: uptime=242884 activity=172821513 decor=108869159 host=180426430 windowFocus=true active=true accepting=true ime=true bottom=686 end showEnded=true
+10-27 05:06:00.192  4673  4738 I QuotaImeHandshake: beforeBack routeComposer=true sidebar=true
+10-27 05:06:00.194  4673  4673 I QuotaImeHandshake: uptime=243004 activity=172821513 decor=108869159 host=180426430 windowFocus=true active=true accepting=true ime=true bottom=686 beforeBack
+10-27 05:06:00.196  4673  4673 I ViewInteraction: Performing 'send keyCode: 4, metaState: 0 key event' action on view view.getRootView() to equal view
+10-27 05:06:00.205   509  1433 I ImeTracker: dev.avillagran.ot3android:af632382: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_SOFT_INPUT_BY_BACK_KEY
+10-27 05:06:00.225  4673  4673 I QuotaImeHandshake: uptime=243036 activity=172821513 decor=108869159 host=180426430 windowFocus=true active=true accepting=true ime=true bottom=686 prepare
+10-27 05:06:00.256  4673  4673 I ImeTracker: dev.avillagran.ot3android:af632382: onHidden
+10-27 05:06:00.258  4673  4673 I QuotaImeHandshake: uptime=243069 activity=172821513 decor=108869159 host=180426430 windowFocus=true active=true accepting=true ime=false bottom=0 end showEnded=false
+10-27 05:06:02.787  4673  4738 I TestRunner: finished: tokyoToggleNavigationRecreationDraftAndSharedStream(dev.avillagran.ot3android.ui.usage.QuotaStripDeviceTest)
+10-27 05:06:02.788  4673  4738 I TestRunner: started: settingsPeriodRotationRefreshAndBack(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:05.290  4673  4738 I TestRunner: finished: settingsPeriodRotationRefreshAndBack(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:05.291  4673  4738 I TestRunner: started: limitsStreamRotationTabsAndBackReleaseSubscription(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:08.025  4673  4738 I TestRunner: finished: limitsStreamRotationTabsAndBackReleaseSubscription(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:08.029  4673  4738 I TestRunner: started: repeatedTabEntrancesKeepOneSubscription(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:10.292  4673  4738 I TestRunner: finished: repeatedTabEntrancesKeepOneSubscription(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:10.302  4673  4738 I TestRunner: started: refreshPricesReadsUpdatedSummaryWithoutDispatch(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:11.702  4673  4738 I TestRunner: finished: refreshPricesReadsUpdatedSummaryWithoutDispatch(dev.avillagran.ot3android.ui.usage.UsageDeviceTest)
+10-27 05:06:11.703  4673  4738 I TestRunner: run finished: 7 tests, 0 failed, 0 ignored

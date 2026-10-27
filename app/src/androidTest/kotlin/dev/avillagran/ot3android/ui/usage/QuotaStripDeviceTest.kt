@@ -21,15 +21,18 @@ class QuotaStripDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
     private val context get() = ApplicationProvider.getApplicationContext<Context>()
     private var keyboardSetting: String? = null
+    private lateinit var currentWindowIme: CurrentWindowIme
     private fun shell(command: String): String = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
         .uiAutomation.executeShellCommand(command).use { descriptor ->
             java.io.FileInputStream(descriptor.fileDescriptor).bufferedReader().use { it.readText().trim() }
         }
     @Before fun softwareKeyboard() {
+        currentWindowIme = CurrentWindowIme(context as android.app.Application)
         keyboardSetting = shell("settings get secure show_ime_with_hard_keyboard")
         shell("settings put secure show_ime_with_hard_keyboard 1")
     }
     @After fun restoreKeyboard() {
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync { currentWindowIme.close() }
         keyboardSetting?.let {
             shell(if (it == "null") "settings delete secure show_ime_with_hard_keyboard" else "settings put secure show_ime_with_hard_keyboard $it")
         }
@@ -136,14 +139,21 @@ class QuotaStripDeviceTest {
             }
             // Rotation can request the IME for the recreated composer asynchronously.
             // CI recorded that restore/show arriving after Espresso's earlier hide.
-            // Focus the recreated field once and await its IME. Dismiss it with
+            // Visible root insets alone can precede that window's actual show.
+            // Observe its completed show before dismissing it with
             // one real Back action so Android owns the IME hide lifecycle instead
             // of clearing AndroidComposeView focus during Compose restoration.
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus) { it() }
             rule.waitUntil(15_000) {
                 rule.onAllNodes(hasTestTag(ThreadScreenTags.COMPOSER) and isFocused()).fetchSemanticsNodes().isNotEmpty()
             }
-            awaitIme(scenario)
+            rule.waitUntil(15_000) {
+                var ready = false
+                scenario.onActivity { ready = currentWindowIme.ready(it) }
+                ready
+            }
+            android.util.Log.i("QuotaImeHandshake", "beforeBack routeComposer=${rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().isNotEmpty()} sidebar=${rule.onNodeWithTag("thread_sidebar").isDisplayed()}")
+            scenario.onActivity { currentWindowIme.beforeBack(it) }
             pressBack()
             // Back must be consumed by the IME, leaving the thread route intact.
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertExists().assertTextContains("Quota draft retained")
