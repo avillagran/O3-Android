@@ -94,3 +94,5 @@ These are provider identity marks, with their respective trademark owners;
 use here identifies the selected service. Repository material is MIT,
 Copyright (c) 2026 Andrés Villagrán, with the same grant in the repository LICENSE.
 The existing converter centers and tints the monochrome marks for Android.
+
+`terminal.svg`: exact ot3 inline `ui/js/IconAssets.js:16` at7b5b1de, Lucide ISC, stroke1.75.

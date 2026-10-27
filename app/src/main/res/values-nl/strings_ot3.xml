@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Geen uitvoer.</string>
     <string name="ot3_inspector_output_omitted">De server heeft de uitvoer achtergehouden. Probeer opnieuw om deze te vernieuwen.</string>
     <string name="ot3_inspector_truncated">Weergavelimiet bereikt. Kopiëren neemt alleen de getoonde tekst over.</string>
+    <string name="ot3_inspector_label_output">Uitvoer</string>
+    <string name="ot3_inspector_label_reasoning">Redenering</string>
+    <string name="ot3_inspector_label_results">Resultaten</string>
+    <string name="ot3_inspector_label_file">Bestand</string>
+    <string name="ot3_inspector_label_changes">Wijzigingen</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Stappen</string>
+    <string name="ot3_inspector_label_prompt">Opdracht</string>
+    <string name="ot3_inspector_label_questions">Vragen</string>
+    <string name="ot3_inspector_label_message">Bericht</string>
+    <string name="ot3_inspector_label_error">Fout</string>
+    <string name="ot3_inspector_label_progress">Voortgang</string>
+    <string name="ot3_inspector_label_result">Resultaat</string>
+    <string name="ot3_inspector_label_failed">mislukt</string>
+    <string name="ot3_inspector_label_completed">voltooid</string>
+    <string name="ot3_inspector_label_running">bezig</string>
+    <string name="ot3_inspector_label_pending">in afwachting</string>
+    <string name="ot3_inspector_label_cancelled">geannuleerd</string>
+    <string name="ot3_inspector_label_interrupted">onderbroken</string>
 </resources>

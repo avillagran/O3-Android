@@ -2548,3 +2548,11 @@ read and leaves the thread stream and reading anchor intact. Short content wraps
 height is capped at90%, width at640dp, scrim50%, and controls retain48dp targets.
 Static labels use the common AAR catalog. Live output/common reduction and exact
 popup motion remain pending. See [current evidence](ui/compare/reader-inspector/README.md).
+
+### 2026-10-27 — Native inspector labels and header
+
+The reader inspector uses the desktop terminal/sparkles icon choice directly from
+the selected reference type, and the failure tint from the native projection.
+Native section labels and catalogued status labels use the same pinned AAR
+translations as desktop; unknown labels and provider output remain untouched.
+No protocol classification or output parsing is introduced in Kotlin.

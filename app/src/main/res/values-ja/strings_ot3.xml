@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">出力なし。</string>
     <string name="ot3_inspector_output_omitted">サーバーが出力を提供しませんでした。再試行して更新してください。</string>
     <string name="ot3_inspector_truncated">表示上限に達しました。コピーには表示中のテキストのみが含まれます。</string>
+    <string name="ot3_inspector_label_output">出力</string>
+    <string name="ot3_inspector_label_reasoning">推論</string>
+    <string name="ot3_inspector_label_results">結果</string>
+    <string name="ot3_inspector_label_file">ファイル</string>
+    <string name="ot3_inspector_label_changes">変更</string>
+    <string name="ot3_inspector_label_plan">計画</string>
+    <string name="ot3_inspector_label_steps">手順</string>
+    <string name="ot3_inspector_label_prompt">指示</string>
+    <string name="ot3_inspector_label_questions">質問</string>
+    <string name="ot3_inspector_label_message">メッセージ</string>
+    <string name="ot3_inspector_label_error">エラー</string>
+    <string name="ot3_inspector_label_progress">進行状況</string>
+    <string name="ot3_inspector_label_result">結果</string>
+    <string name="ot3_inspector_label_failed">失敗</string>
+    <string name="ot3_inspector_label_completed">完了</string>
+    <string name="ot3_inspector_label_running">実行中</string>
+    <string name="ot3_inspector_label_pending">保留中</string>
+    <string name="ot3_inspector_label_cancelled">キャンセル済み</string>
+    <string name="ot3_inspector_label_interrupted">中断</string>
 </resources>

@@ -25,6 +25,7 @@ object Ot3Icons {
     @DrawableRes val GripVertical: Int = R.drawable.ic_grip_vertical
     @DrawableRes val Lock: Int = R.drawable.ic_lock
     @DrawableRes val LockOpen: Int = R.drawable.ic_lock_open
+    @DrawableRes val Terminal: Int = R.drawable.ic_terminal
     @DrawableRes val Sparkles: Int = R.drawable.ic_sparkles
     @DrawableRes val PenLine: Int = R.drawable.ic_pen_line
 
@@ -152,6 +153,7 @@ object Ot3Icons {
         "lock" to Lock,
         "lock-open" to LockOpen,
         "sparkles" to Sparkles,
+        "terminal" to Terminal,
 
         "sliders-horizontal" to SlidersHorizontal,
         "smartphone" to Smartphone,

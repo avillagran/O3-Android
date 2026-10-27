@@ -84,9 +84,31 @@ class ToolInspectorSurfaceTest {
     }
     @Test @Config(qualifiers = "es") fun labelsUseTheSharedSpanishCatalog() {
         rule.setContent { Ot3Theme { ToolInspectorContent(view(), false, false, "details", {}, {}) } }
+        rule.onNodeWithText("Salida").assertExists()
+        rule.onNodeWithTag("thread_inspector_section_output").assertTextEquals("native output")
         rule.onNodeWithText("Metadatos").assertExists()
         rule.onNodeWithText("Elemento sin procesar").assertExists()
-        rule.onNodeWithTag("thread_inspector_status").assertTextEquals("failed · Código de salida: 7")
+        rule.onNodeWithTag("thread_inspector_status").assertTextEquals("fallido · Código de salida: 7")
+    }
+
+    @Test fun headerIconFollowsSelectedReferenceType() {
+        val reference = mutableStateOf(JSONObject().put("type", "reasoning"))
+        rule.setContent { Ot3Theme { ToolInspectorSurface(reference.value, { view() }) } }
+        rule.onNodeWithTag("thread_inspector_icon_sparkles").assertExists()
+        rule.onNodeWithTag("thread_inspector_icon_terminal").assertDoesNotExist()
+        rule.runOnIdle { reference.value = JSONObject().put("type", "command_execution") }
+        rule.onNodeWithTag("thread_inspector_icon_terminal").assertExists()
+        rule.onNodeWithTag("thread_inspector_icon_sparkles").assertDoesNotExist()
+    }
+
+    @Test @Config(qualifiers = "es") fun unknownNativeLabelsAndOutputRemainUnchanged() {
+        val detail = view().put("status", "provider-specific-state").put("sections",
+            org.json.JSONArray().put(JSONObject().put("key", "custom").put("label", "Provider detail")
+                .put("text", "failed Input Output")))
+        rule.setContent { Ot3Theme { ToolInspectorContent(detail, false, false, "details", {}, {}) } }
+        rule.onNodeWithText("Provider detail").assertExists()
+        rule.onNodeWithTag("thread_inspector_status").assertTextEquals("provider-specific-state · Código de salida: 7")
+        rule.onNodeWithTag("thread_inspector_section_custom").assertTextEquals("failed Input Output")
     }
 
     @Test fun groupedActivityReadsOnlyTheSelectedEntryAndCanClose() {

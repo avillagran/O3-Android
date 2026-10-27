@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Немає виводу.</string>
     <string name="ot3_inspector_output_omitted">Сервер не надав вивід. Повторіть спробу для оновлення.</string>
     <string name="ot3_inspector_truncated">Досягнуто межі відображення. Скопіюється лише показаний текст.</string>
+    <string name="ot3_inspector_label_output">Вивід</string>
+    <string name="ot3_inspector_label_reasoning">Міркування</string>
+    <string name="ot3_inspector_label_results">Результати</string>
+    <string name="ot3_inspector_label_file">Файл</string>
+    <string name="ot3_inspector_label_changes">Зміни</string>
+    <string name="ot3_inspector_label_plan">План</string>
+    <string name="ot3_inspector_label_steps">Кроки</string>
+    <string name="ot3_inspector_label_prompt">Запит</string>
+    <string name="ot3_inspector_label_questions">Запитання</string>
+    <string name="ot3_inspector_label_message">Повідомлення</string>
+    <string name="ot3_inspector_label_error">Помилка</string>
+    <string name="ot3_inspector_label_progress">Перебіг виконання</string>
+    <string name="ot3_inspector_label_result">Результат</string>
+    <string name="ot3_inspector_label_failed">помилка</string>
+    <string name="ot3_inspector_label_completed">завершено</string>
+    <string name="ot3_inspector_label_running">виконується</string>
+    <string name="ot3_inspector_label_pending">очікує</string>
+    <string name="ot3_inspector_label_cancelled">скасовано</string>
+    <string name="ot3_inspector_label_interrupted">перервано</string>
 </resources>

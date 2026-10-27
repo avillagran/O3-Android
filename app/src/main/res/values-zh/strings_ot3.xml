@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">无输出。</string>
     <string name="ot3_inspector_output_omitted">服务器未提供输出。重试以刷新。</string>
     <string name="ot3_inspector_truncated">已达到显示上限。复制仅包含显示的文本。</string>
+    <string name="ot3_inspector_label_output">输出</string>
+    <string name="ot3_inspector_label_reasoning">推理</string>
+    <string name="ot3_inspector_label_results">结果</string>
+    <string name="ot3_inspector_label_file">文件</string>
+    <string name="ot3_inspector_label_changes">更改</string>
+    <string name="ot3_inspector_label_plan">计划</string>
+    <string name="ot3_inspector_label_steps">步骤</string>
+    <string name="ot3_inspector_label_prompt">提示</string>
+    <string name="ot3_inspector_label_questions">问题</string>
+    <string name="ot3_inspector_label_message">消息</string>
+    <string name="ot3_inspector_label_error">错误</string>
+    <string name="ot3_inspector_label_progress">进度</string>
+    <string name="ot3_inspector_label_result">结果</string>
+    <string name="ot3_inspector_label_failed">失败</string>
+    <string name="ot3_inspector_label_completed">已完成</string>
+    <string name="ot3_inspector_label_running">运行中</string>
+    <string name="ot3_inspector_label_pending">待处理</string>
+    <string name="ot3_inspector_label_cancelled">已取消</string>
+    <string name="ot3_inspector_label_interrupted">已中断</string>
 </resources>

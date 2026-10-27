@@ -19,7 +19,8 @@ The pinned035 AAR source is `d4bf6054b4480efdcd8a436cb66cb7f2e23664b1`.
 `src/domain/review.rs:66–69` declares the fields; `src/tool_inspector.rs:320–325`
 returns them. Kotlin renders these fields without reproducing classification,
 request validation or protocol rules. All static labels come from the AAR catalog
-in20 locales. Native section/status labels remain as returned by the projection.
+in20 locales. Native section/status labels are translated with the same source keys in the
+pinned AAR catalog. Unknown/provider-specific labels and output text stay intact.
 
 One reference owns one cancellable read. A defensive reference copy and a
 post-read cancellation check reject non-cooperative stale completion. Tabs reuse
@@ -28,14 +29,14 @@ closing/dismissing cancels this read, not the shared thread subscription.
 
 ## Verification and evidence
 
-Ten focused Robolectric checks cover modes/copy, availability and truncation,
+Twelve focused Robolectric checks cover modes/copy, availability and truncation,
 error/retry, stale completion, Spanish labels, explicit grouped selection,
 retained retry body, a136dp timeline viewport, short-window density and source-row
 replacement while the inspector remains open. App lint and both APK builds pass.
 
-Six native-graphics JVM goldens under
+Eight native-graphics JVM goldens under
 `app/src/test/snapshots/ToolInspectorScreenshotTest/` cover Details, Raw and the
-actual dialog in Tokyo Night and Catppuccin Latte. These are representative
+actual dialog plus Spanish reasoning in Tokyo Night and Catppuccin Latte. These are representative
 projection fixtures, not live-server or physical-device evidence.
 
 Run the behavioral class with `:app:testDebugUnitTest --tests '*ToolInspectorSurfaceTest'`.
@@ -44,7 +45,7 @@ combining task filters can select only the last filter.
 
 `ToolInspectorDeviceTest` uses the actual graph, view model, session and Rust035
 scope/request/parse over a deterministic transport. It covers portrait/landscape,
-modes, retry, close, one shared thread stream and no dispatch. The targeted API34 device run passed4/4 with
+modes, retry, close, one shared thread stream and no dispatch. The preceding reader-owned-window API34 device run passed4/4 with
 zero failures/skips; see emulator-api34/verification.json. Capture checks reject a foreign
 active window instead of accepting Compose semantics behind a system dialog.
 
@@ -63,9 +64,7 @@ proven; the new device test also requires return to the specific Details entry.
 
 Follow live output remains U36 / [lib issue22](https://github.com/avillagran/lib-t3-rust/issues/22):
 the typed subscription exists but the common bounded ANSI/VT/overwrite reducer is
-missing. No Kotlin parser or fabricated polling was added. Header terminal/
-reasoning icon, native-label translation, exact desktop popup motion and wider
-inspector-pane placement remain differences. This increment does not close UI-2.
+missing. No Kotlin parser or fabricated polling was added. Exact desktop popup motion and wider inspector-pane placement remain differences. This increment does not close UI-2.
 
 ## API34 device evidence
 
@@ -79,3 +78,17 @@ foreign windows still fail the capture guard.
 The26s video is an unchanged-speed excerpt starting at18s of the raw recording.
 Capture-only800ms holds let Android's encoder see each selected state. It is not a
 latency, exact popup-motion, live-server or physical-device acceptance claim.
+
+## Native-label and header follow-up
+
+The selected reference now chooses the same terminal/sparkles header icon as
+`T3ToolInspector.qml:87`; `detail.failed` chooses the native failure tint. The
+terminal SVG is copied verbatim from ot3's `ui/js/IconAssets.js:16` and registered
+in the shared icon catalog, rather than substituted with a provider mark.
+
+Section labels and the six catalogued native statuses use the pinned AAR's
+translations in20 locales, matching desktop's `T3I18n.tr` source keys. Unknown
+labels/statuses fall back unchanged. Input/output bodies are never translated.
+Spanish checks verify `Salida`/`fallido`, unchanged native output, and fallback.
+The prior API34 video predates this header/translation follow-up; do not use it
+as evidence of the new labels or icons. Fresh JVM goldens document this change.

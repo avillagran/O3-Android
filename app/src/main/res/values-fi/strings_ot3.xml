@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Ei tulostetta.</string>
     <string name="ot3_inspector_output_omitted">Palvelin ei toimittanut tulostetta. Päivitä yrittämällä uudelleen.</string>
     <string name="ot3_inspector_truncated">Näyttöraja saavutettiin. Kopiointi sisältää vain näytetyn tekstin.</string>
+    <string name="ot3_inspector_label_output">Tuloste</string>
+    <string name="ot3_inspector_label_reasoning">Päättely</string>
+    <string name="ot3_inspector_label_results">Tulokset</string>
+    <string name="ot3_inspector_label_file">Tiedosto</string>
+    <string name="ot3_inspector_label_changes">Muutokset</string>
+    <string name="ot3_inspector_label_plan">Suunnitelma</string>
+    <string name="ot3_inspector_label_steps">Vaiheet</string>
+    <string name="ot3_inspector_label_prompt">Kehote</string>
+    <string name="ot3_inspector_label_questions">Kysymykset</string>
+    <string name="ot3_inspector_label_message">Viesti</string>
+    <string name="ot3_inspector_label_error">Virhe</string>
+    <string name="ot3_inspector_label_progress">Edistyminen</string>
+    <string name="ot3_inspector_label_result">Tulos</string>
+    <string name="ot3_inspector_label_failed">epäonnistui</string>
+    <string name="ot3_inspector_label_completed">valmis</string>
+    <string name="ot3_inspector_label_running">käynnissä</string>
+    <string name="ot3_inspector_label_pending">odottaa</string>
+    <string name="ot3_inspector_label_cancelled">peruttu</string>
+    <string name="ot3_inspector_label_interrupted">keskeytynyt</string>
 </resources>

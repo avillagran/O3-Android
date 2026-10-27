@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Brak danych wyjściowych.</string>
     <string name="ot3_inspector_output_omitted">Serwer nie udostępnił danych wyjściowych. Spróbuj ponownie, aby je odświeżyć.</string>
     <string name="ot3_inspector_truncated">Osiągnięto limit wyświetlania. Kopia obejmuje tylko widoczny tekst.</string>
+    <string name="ot3_inspector_label_output">Dane wyjściowe</string>
+    <string name="ot3_inspector_label_reasoning">Rozumowanie</string>
+    <string name="ot3_inspector_label_results">Wyniki</string>
+    <string name="ot3_inspector_label_file">Plik</string>
+    <string name="ot3_inspector_label_changes">Zmiany</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Kroki</string>
+    <string name="ot3_inspector_label_prompt">Polecenie</string>
+    <string name="ot3_inspector_label_questions">Pytania</string>
+    <string name="ot3_inspector_label_message">Wiadomość</string>
+    <string name="ot3_inspector_label_error">Błąd</string>
+    <string name="ot3_inspector_label_progress">Postęp</string>
+    <string name="ot3_inspector_label_result">Wynik</string>
+    <string name="ot3_inspector_label_failed">nie powiodło się</string>
+    <string name="ot3_inspector_label_completed">ukończono</string>
+    <string name="ot3_inspector_label_running">w toku</string>
+    <string name="ot3_inspector_label_pending">oczekuje</string>
+    <string name="ot3_inspector_label_cancelled">anulowano</string>
+    <string name="ot3_inspector_label_interrupted">przerwano</string>
 </resources>

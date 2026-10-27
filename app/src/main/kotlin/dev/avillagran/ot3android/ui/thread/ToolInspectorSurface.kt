@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import dev.avillagran.ot3android.ui.kit.Ot3Spinner
 import dev.avillagran.ot3android.ui.kit.Ot3Button
 import dev.avillagran.ot3android.ui.kit.Ot3ButtonStyle
+import dev.avillagran.ot3android.ui.kit.Ot3Icon
 import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.ui.theme.FiraCode
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
@@ -79,7 +80,7 @@ internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSO
                 InspectorRead(loading = false, failed = true)
             }
         }
-        ToolInspectorContent(result.view, result.loading, result.failed, mode, { mode = it }, { attempt++ }, onClose)
+        ToolInspectorContent(result.view, result.loading, result.failed, mode, { mode = it }, { attempt++ }, onClose, reference.optString("type"))
     }
 }
 
@@ -87,12 +88,16 @@ internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSO
 internal fun ToolInspectorContent(
     view: JSONObject?, loading: Boolean, failed: Boolean, mode: String,
     onMode: (String) -> Unit, onRetry: () -> Unit, onClose: (() -> Unit)? = null,
+    referenceType: String = "",
 ) {
     val colors = Ot3Theme.colors
     val available = view?.optBoolean("available") == true
     val failure = view?.optBoolean("failed") == true
     Column(Modifier.fillMaxWidth().testTag("thread_inspector"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val icon = if (referenceType == "reasoning") "sparkles" else "terminal"
+            Ot3Icon(icon, null, tint = if (failure) colors.failed else colors.dim,
+                modifier = Modifier.testTag("thread_inspector_icon_$icon"))
             Text(view?.optString("title").orEmpty().ifBlank { stringResource(R.string.ot3_inspector_activity_details) },
                 color = colors.foreground,
                 style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -121,7 +126,7 @@ internal fun ToolInspectorContent(
                 }
                 val status = view.optString("status")
                 if (status.isNotBlank() || !view.isNull("exitCode")) Text(
-                    listOfNotNull(status.takeIf { it.isNotBlank() }, if (view.isNull("exitCode")) null else stringResource(R.string.ot3_inspector_exit_code) + ": " + view.get("exitCode")).joinToString(" · "),
+                    listOfNotNull(status.takeIf { it.isNotBlank() }?.let { inspectorLabel(it) }, if (view.isNull("exitCode")) null else stringResource(R.string.ot3_inspector_exit_code) + ": " + view.get("exitCode")).joinToString(" · "),
                     color = if (failure) colors.failed else colors.dim, modifier = Modifier.testTag("thread_inspector_status"), style = MaterialTheme.typography.bodySmall)
                 if (mode == "details" && view.optBoolean("emptyOutput")) Text(stringResource(R.string.ot3_inspector_empty_output), color = colors.dim, style = MaterialTheme.typography.bodySmall)
                 if (view.optBoolean("outputOmitted")) Text(stringResource(R.string.ot3_inspector_output_omitted), color = colors.dim, style = MaterialTheme.typography.bodySmall)
@@ -143,7 +148,7 @@ private fun InspectorSection(section: JSONObject) {
     val sectionKey = section.optString("key")
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(section.optString("label"), style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+            Text(inspectorLabel(section.optString("label")), color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
             CopyText(section.optString("text"), "inspector_$sectionKey")
         }
         SelectionContainer {
@@ -159,4 +164,37 @@ private fun InspectorSection(section: JSONObject) {
         if (section.optBoolean("truncated")) Text(stringResource(R.string.ot3_inspector_truncated),
             style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.failed)
     }
+}
+
+/** Translate only native catalog labels; unknown/provider-specific labels remain intact. */
+@Composable
+private fun inspectorLabel(source: String): String {
+    val resource = when (source) {
+        "Input" -> R.string.ot3_status_input
+        "Diff" -> R.string.ot3_diff
+        "Details" -> R.string.ot3_inspector_details
+        "Metadata" -> R.string.ot3_inspector_metadata
+        "Raw item" -> R.string.ot3_inspector_raw_item
+        "Output" -> R.string.ot3_inspector_label_output
+        "Reasoning" -> R.string.ot3_inspector_label_reasoning
+        "Results" -> R.string.ot3_inspector_label_results
+        "File" -> R.string.ot3_inspector_label_file
+        "Changes" -> R.string.ot3_inspector_label_changes
+        "Plan" -> R.string.ot3_inspector_label_plan
+        "Steps" -> R.string.ot3_inspector_label_steps
+        "Prompt" -> R.string.ot3_inspector_label_prompt
+        "Questions" -> R.string.ot3_inspector_label_questions
+        "Message" -> R.string.ot3_inspector_label_message
+        "Error" -> R.string.ot3_inspector_label_error
+        "Progress" -> R.string.ot3_inspector_label_progress
+        "Result" -> R.string.ot3_inspector_label_result
+        "failed" -> R.string.ot3_inspector_label_failed
+        "completed" -> R.string.ot3_inspector_label_completed
+        "running" -> R.string.ot3_inspector_label_running
+        "pending" -> R.string.ot3_inspector_label_pending
+        "cancelled" -> R.string.ot3_inspector_label_cancelled
+        "interrupted" -> R.string.ot3_inspector_label_interrupted
+        else -> null
+    }
+    return resource?.let { stringResource(it) } ?: source
 }

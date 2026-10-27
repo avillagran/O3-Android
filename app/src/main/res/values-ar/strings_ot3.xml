@@ -243,4 +243,23 @@
     <string name="ot3_inspector_empty_output">لا توجد مخرجات.</string>
     <string name="ot3_inspector_output_omitted">لم يقدّم الخادم المخرجات. أعِد المحاولة لتحديثها.</string>
     <string name="ot3_inspector_truncated">تم بلوغ حد العرض. يشمل النسخ النص المعروض فقط.</string>
+    <string name="ot3_inspector_label_output">المخرجات</string>
+    <string name="ot3_inspector_label_reasoning">الاستدلال</string>
+    <string name="ot3_inspector_label_results">النتائج</string>
+    <string name="ot3_inspector_label_file">ملف</string>
+    <string name="ot3_inspector_label_changes">التغييرات</string>
+    <string name="ot3_inspector_label_plan">الخطة</string>
+    <string name="ot3_inspector_label_steps">الخطوات</string>
+    <string name="ot3_inspector_label_prompt">التوجيه</string>
+    <string name="ot3_inspector_label_questions">الأسئلة</string>
+    <string name="ot3_inspector_label_message">الرسالة</string>
+    <string name="ot3_inspector_label_error">الخطأ</string>
+    <string name="ot3_inspector_label_progress">التقدم</string>
+    <string name="ot3_inspector_label_result">النتيجة</string>
+    <string name="ot3_inspector_label_failed">فشل</string>
+    <string name="ot3_inspector_label_completed">مكتمل</string>
+    <string name="ot3_inspector_label_running">جارٍ التنفيذ</string>
+    <string name="ot3_inspector_label_pending">قيد الانتظار</string>
+    <string name="ot3_inspector_label_cancelled">أُلغي</string>
+    <string name="ot3_inspector_label_interrupted">توقّف</string>
 </resources>

@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Intet output.</string>
     <string name="ot3_inspector_output_omitted">Serveren leverede ikke output. Prøv igen for at opdatere.</string>
     <string name="ot3_inspector_truncated">Visningsgrænsen er nået. Kun den viste tekst kopieres.</string>
+    <string name="ot3_inspector_label_output">Output</string>
+    <string name="ot3_inspector_label_reasoning">Ræsonnement</string>
+    <string name="ot3_inspector_label_results">Resultater</string>
+    <string name="ot3_inspector_label_file">Fil</string>
+    <string name="ot3_inspector_label_changes">Ændringer</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Trin</string>
+    <string name="ot3_inspector_label_prompt">Instruktion</string>
+    <string name="ot3_inspector_label_questions">Spørgsmål</string>
+    <string name="ot3_inspector_label_message">Besked</string>
+    <string name="ot3_inspector_label_error">Fejl</string>
+    <string name="ot3_inspector_label_progress">Fremdrift</string>
+    <string name="ot3_inspector_label_result">Resultat</string>
+    <string name="ot3_inspector_label_failed">mislykkedes</string>
+    <string name="ot3_inspector_label_completed">fuldført</string>
+    <string name="ot3_inspector_label_running">kører</string>
+    <string name="ot3_inspector_label_pending">afventer</string>
+    <string name="ot3_inspector_label_cancelled">annulleret</string>
+    <string name="ot3_inspector_label_interrupted">afbrudt</string>
 </resources>

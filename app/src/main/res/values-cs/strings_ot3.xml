@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Žádný výstup.</string>
     <string name="ot3_inspector_output_omitted">Server neposkytl výstup. Obnovte jej opakováním pokusu.</string>
     <string name="ot3_inspector_truncated">Byl dosažen limit zobrazení. Kopíruje se pouze zobrazený text.</string>
+    <string name="ot3_inspector_label_output">Výstup</string>
+    <string name="ot3_inspector_label_reasoning">Uvažování</string>
+    <string name="ot3_inspector_label_results">Výsledky</string>
+    <string name="ot3_inspector_label_file">Soubor</string>
+    <string name="ot3_inspector_label_changes">Změny</string>
+    <string name="ot3_inspector_label_plan">Plán</string>
+    <string name="ot3_inspector_label_steps">Kroky</string>
+    <string name="ot3_inspector_label_prompt">Zadání</string>
+    <string name="ot3_inspector_label_questions">Otázky</string>
+    <string name="ot3_inspector_label_message">Zpráva</string>
+    <string name="ot3_inspector_label_error">Chyba</string>
+    <string name="ot3_inspector_label_progress">Průběh</string>
+    <string name="ot3_inspector_label_result">Výsledek</string>
+    <string name="ot3_inspector_label_failed">selhalo</string>
+    <string name="ot3_inspector_label_completed">dokončeno</string>
+    <string name="ot3_inspector_label_running">probíhá</string>
+    <string name="ot3_inspector_label_pending">čeká</string>
+    <string name="ot3_inspector_label_cancelled">zrušeno</string>
+    <string name="ot3_inspector_label_interrupted">přerušeno</string>
 </resources>

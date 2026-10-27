@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Inga utdata.</string>
     <string name="ot3_inspector_output_omitted">Servern lämnade inte utdata. Försök igen för att uppdatera.</string>
     <string name="ot3_inspector_truncated">Visningsgränsen har nåtts. Endast visad text kopieras.</string>
+    <string name="ot3_inspector_label_output">Utdata</string>
+    <string name="ot3_inspector_label_reasoning">Resonemang</string>
+    <string name="ot3_inspector_label_results">Resultat</string>
+    <string name="ot3_inspector_label_file">Fil</string>
+    <string name="ot3_inspector_label_changes">Ändringar</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Steg</string>
+    <string name="ot3_inspector_label_prompt">Instruktion</string>
+    <string name="ot3_inspector_label_questions">Frågor</string>
+    <string name="ot3_inspector_label_message">Meddelande</string>
+    <string name="ot3_inspector_label_error">Fel</string>
+    <string name="ot3_inspector_label_progress">Förlopp</string>
+    <string name="ot3_inspector_label_result">Resultat</string>
+    <string name="ot3_inspector_label_failed">misslyckades</string>
+    <string name="ot3_inspector_label_completed">slutförd</string>
+    <string name="ot3_inspector_label_running">pågår</string>
+    <string name="ot3_inspector_label_pending">väntar</string>
+    <string name="ot3_inspector_label_cancelled">avbruten</string>
+    <string name="ot3_inspector_label_interrupted">avbruten</string>
 </resources>

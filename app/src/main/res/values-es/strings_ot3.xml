@@ -242,4 +242,23 @@
     <string name="ot3_inspector_empty_output">Sin salida.</string>
     <string name="ot3_inspector_output_omitted">El servidor no proporcionó la salida. Vuelve a intentarlo para actualizarla.</string>
     <string name="ot3_inspector_truncated">Se alcanzó el límite de visualización. La copia solo incluye el texto mostrado.</string>
+    <string name="ot3_inspector_label_output">Salida</string>
+    <string name="ot3_inspector_label_reasoning">Razonamiento</string>
+    <string name="ot3_inspector_label_results">Resultados</string>
+    <string name="ot3_inspector_label_file">Archivo</string>
+    <string name="ot3_inspector_label_changes">Cambios</string>
+    <string name="ot3_inspector_label_plan">Plan</string>
+    <string name="ot3_inspector_label_steps">Pasos</string>
+    <string name="ot3_inspector_label_prompt">Instrucción</string>
+    <string name="ot3_inspector_label_questions">Preguntas</string>
+    <string name="ot3_inspector_label_message">Mensaje</string>
+    <string name="ot3_inspector_label_error">Error</string>
+    <string name="ot3_inspector_label_progress">Progreso</string>
+    <string name="ot3_inspector_label_result">Resultado</string>
+    <string name="ot3_inspector_label_failed">fallido</string>
+    <string name="ot3_inspector_label_completed">completado</string>
+    <string name="ot3_inspector_label_running">en curso</string>
+    <string name="ot3_inspector_label_pending">pendiente</string>
+    <string name="ot3_inspector_label_cancelled">cancelado</string>
+    <string name="ot3_inspector_label_interrupted">interrumpido</string>
 </resources>
