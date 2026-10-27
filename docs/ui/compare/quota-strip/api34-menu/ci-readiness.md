@@ -82,3 +82,48 @@ was cleared or snapshots changed. Sources on node: `/tmp/pr60-third-reports/`,
 `/tmp/quota-back-final-api34.log` (discarded 6/7 run),
 `/tmp/quota-back-verified-api34.log` (final 7/7), and
 `/tmp/quota-back-final-build.log`.
+
+## Current-window show completion (2026-10-27)
+
+The subsequent PR61 CI failure was **not** an IME-hidden timeout: the immediate
+post-Back composer assertion failed. Its report shows Back at 07:35:20.219 before
+the recreated AndroidComposeView `95baa3f` requested show at 20.401 and before
+`ImeTracker.onShown` at 20.704. Thus focused Compose semantics plus visible root
+insets did not establish that the current window's restored IME could consume
+Back. Source: `/tmp/pr61-quota-review-reports/`, quota Tokyo logcat.
+
+The quota test now registers an Activity lifecycle observer before launch. Each
+Activity gets its own completion gate on its decor at `onActivityPreCreated`
+(with `onActivityCreated` fallback). The decor callback continues dispatch to
+children and does not replace AndroidComposeView's callback. Readiness requires
+an observed IME prepare/progress/end sequence finishing visible with positive
+height, the current attached/focused window and input host, matching window
+tokens, active InputMethodManager editor/accepting text, and current visible IME
+insets. Cached visibility alone cannot complete the gate. A new preparation
+invalidates completion; progress/end from unrelated animations cannot complete
+it. Destruction/final cleanup removes decor and lifecycle callbacks.
+
+This uses the documented [insets callback lifecycle and dispatch order](https://developer.android.com/reference/android/view/WindowInsetsAnimation.Callback):
+layout may receive the final insets before animation completion. A transaction
+barrier alone was not selected as evidence of IME show completion. The test
+still sends exactly one Back and keeps the immediate compositor/draft/sidebar
+assertions, the original 15s hidden wait, collector checks and no-command checks.
+No product code, sleeps, retries, timeout increases or golden changes.
+
+An initial API34 Tokyo probe passed 1/1 in 21.98s. On its new decor, show-end
+uptime 71220 preceded pre-Back 71325. A first full Quota+Usage run passed 7/7 in
+32.447s. All three system animation scales were read as `0.0` before and after;
+no animation settings were changed. The callback still delivered IME completion
+at scale zero. The final gate additionally binds progress to the prepared
+animation identity and is verified by three JVM tests covering stale/new-window
+state, unknown events, cancellation, zero elapsed time and overlap. Final-device
+Quota+Usage verification passed **7/7 in 31.03s** after that identity refinement.
+The [compact event trace](current-window-ime-trace.txt) records both themes
+and the single Back after current-window show-end. The test APK build and
+focused JVM run passed with required bridge SDK/host JNI flags.
+
+These are real Android window/IME and JNI tests using WorkspaceFixtureActivity
+with synthetic server transport on ot3a/API34/emulator-5580, software GPU and
+software keyboard. They validate the new ordering locally; they do not claim
+the unchanged failing baseline was reproduced or that the full CI suite has
+already passed. No physical Xiaomi test was performed.
