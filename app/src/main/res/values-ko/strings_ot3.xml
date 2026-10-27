@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">확대/축소 초기화</string>
     <string name="ot3_composer_edit">편집</string>
     <string name="ot3_composer_back">채팅으로 돌아가기</string>
+    <string name="ot3_diff_split">분할</string>
+    <string name="ot3_diff_unified">통합</string>
 </resources>

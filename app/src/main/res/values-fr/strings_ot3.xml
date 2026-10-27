@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">Réinitialiser le zoom</string>
     <string name="ot3_composer_edit">Modifier</string>
     <string name="ot3_composer_back">Retour au chat</string>
+    <string name="ot3_diff_split">Côte à côte</string>
+    <string name="ot3_diff_unified">Unifié</string>
 </resources>

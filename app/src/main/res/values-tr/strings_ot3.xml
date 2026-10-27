@@ -218,4 +218,6 @@
     <string name="ot3_image_zoom_reset">Yakınlaştırmayı sıfırla</string>
     <string name="ot3_composer_edit">Düzenle</string>
     <string name="ot3_composer_back">Sohbete dön</string>
+    <string name="ot3_diff_split">Bölünmüş</string>
+    <string name="ot3_diff_unified">Birleşik</string>
 </resources>

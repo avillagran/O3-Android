@@ -257,3 +257,5 @@ ot3_image_zoom_reset	Reset zoom
 # Composer editor
 ot3_composer_edit	Edit
 ot3_composer_back	Back to chat
+ot3_diff_split	Split
+ot3_diff_unified	Unified

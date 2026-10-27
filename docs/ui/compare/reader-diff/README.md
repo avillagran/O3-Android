@@ -129,3 +129,44 @@ physical Xiaomi acceptance.
   taps. [Gesture telemetry](hunk-device/hunk-touch.gesture-telemetry.json).
 
 Split/tree/context controls and syntax highlighting remain pending.
+
+
+## Wide split increment — 2026-10-27
+
+Wide mode places Diff, whitespace, layout, wrap and Close in a single adaptive
+bar, leaving more height for code on a rotated phone. Narrow chrome is unchanged.
+The Split/Unified button appears at useful content width ≥650dp, after safe
+insets and the dialog's 12dp padding on each side. Below the threshold the view
+is unified and the button is absent; returning wide restores the split preference.
+Rendering consumes Rust 0.3.5 `splitRows` directly: left old-line gutter, right
+new-line gutter, null sides blank, native cell kinds for color, equal columns and
+a separator. No Android parsing/alignment or native payload mutation is involved.
+Reference: QML `T3DiffReview.qml:65–66,71–81,205–213`, Rust
+`diff_review.rs:64–94`. This is parity with the QML fallback behavior, not a claim
+of complete parity with ot3's native document renderer.
+
+Independent UI fold sets use each layout's own native indices; toggling and
+phone portrait → landscape → portrait → landscape preserve preference and folds.
+Changing files/content/scope/whitespace clears both. Saved content identity is a
+SHA256 fingerprint, never the full patch. Wrap stays local and no-wrap scrolls
+the complete two-column patch. Rotation recreates/refetches the dialog normally
+(four reads across the three recreations in this scenario); layout/wrap/file
+actions themselves add no reads. There is one thread stream and no command dispatch.
+
+Validation: 648/649dp useful width hides the control, 650dp exposes it; focused
+Compose tests cover native null cells, side-specific numbers, independent folds
+and unchanged payload. JNI tests verify the pinned fixture and unequal native
+left/right-null output. Existing reader goldens remain unchanged; two wide split
+goldens were added, with Split state and the native right cell asserted before
+capture. Final verification: 9 dialog JVM tests, 5 JNI contract tests, 9 reader
+screenshot tests, and 2 split device tests (25.859s); the two existing hunk device
+scenarios also passed earlier in the four-test regression run. Debug/test APK build, lint, string importer check and focused
+Roborazzi verification passed. Emulator evidence uses ot3a361 API36.1, real
+Home/thread/Changes/dialog Kotlin UI and JNI with synthetic transport. It is not
+production-server or physical Xiaomi acceptance.
+
+- Tokyo Night: [narrow unified](split-device/tokyo-narrow-unified.png), [wide split](split-device/tokyo-wide-split.png), [folded](split-device/tokyo-wide-split-folded.png).
+- Catppuccin Latte: [narrow unified](split-device/latte-narrow-unified.png), [wide split](split-device/latte-wide-split.png), [folded](split-device/latte-wide-split-folded.png).
+- [24.24-second touch recording](split-device/split-touch.mp4) and [gesture telemetry](split-device/split-touch.gesture-telemetry.json): wide Unified/Split and hunk touch.
+
+File tree, context controls, syntax highlighting and new copying features remain out of scope.
