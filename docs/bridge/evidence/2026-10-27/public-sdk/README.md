@@ -17,9 +17,16 @@ separate T3 AAR and host JNI remain pinned coherently to lib v0.3.5.
 
 Strict core JVM tests passed (319 passed,5 opt-in skips), including one actual
 host-JNI call and one fixed-diagnostic mapping case; core lint passed. Delegated emulator acceptance for
-this exact source is still pending. Earlier10/10 delegated acceptance used sourceDD628
+this exact source passed10/10 on API34, zero skipped; see android-acceptance.json. Earlier10/10 delegated acceptance used sourceDD628
 and is historical evidence, not substituted for a rerun. Ordinary application
 transport streams, productive hosts and physical acceptance remain open.
 
 The strict SDK CI candidate is in ../../../ci/bridge-sdk.yml; it is not installed
 as a workflow because the available GitHub credential lacks workflow scope.
+
+The exact-source rerun exercised native pairing/catalog/provenance/Room and real
+T3 readonly scope, identity witness, wrong-host denial, expiry, renewal, revocation
+and independent credential adoption. Its HTTP reads still use the SDK lab helper;
+they do not prove ordinary application transport streams. Production host/x86/arm
+JNI was restored in a finally block. The owned emulator stopped with status0;
+private clone removed and all seven original AVD files stayed hash-identical.

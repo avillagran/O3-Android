@@ -58,7 +58,7 @@
   },
   "actualHostJniCases": 1,
   "coreLint": "passed",
-  "androidDevice": "Exact-source rerun pending",
+  "androidDevice": "API34 exact-source unified run10/10; no skipped cases",
   "ci": "Candidate workflow validated by actionlint but not installed: missing workflow credential scope",
   "nativeBridgeTestCases": 2,
   "fixedDiagnosticMappingCases": 1
