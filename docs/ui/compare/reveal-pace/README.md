@@ -47,10 +47,10 @@ Verification:
 
 [Slow selected](appearance-slow.png) and [Fast selected](appearance-fast.png) are
 actual MainActivity screenshots from the isolated API34 emulator. They document
-the control and persisted choice, not reveal aesthetics. No video was captured;
-visual motion acceptance and a short two-pace recording remain a follow-up.
-The optional `revealEvidence` argument supports captures and real-time frame
-stepping for that later recording, without adding wall-clock sleeps to normal CI.
+the control and persisted choice. The initial increment did not include video;
+the real-time follow-up below adds two short clips. Complete visual motion parity
+and the other reveal styles remain pending. The optional `revealEvidence` test
+argument remains separate from these recordings; it was not used for them.
 
 A discarded JVM geometry experiment advanced the clock in one large jump and did
 not settle the workspace geometry as intended. The final JVM test checks actual
@@ -62,3 +62,42 @@ Logs on node: `/tmp/reveal-unit.log`, `/tmp/reveal-final-unit.log`,
 `/tmp/reveal-device-settings.log`, `/tmp/reveal-workspace-final.log`,
 `/tmp/reveal-device-build.log`. No Xiaomi, production dispatch, shared library or
 Vault work occurred.
+
+
+## Real-time touch recording — 2026-10-27
+
+The verified debug candidate at `2624a18` (APK SHA256
+`03b5312f780824410900557d3bc624b84f5247d4ed2706b576d4bd385712ba62`)
+was installed on isolated emulator-5580 / ot3a, Android14/API34. Software rendering
+used gfxstream with lavapipe/swangle. Both clips are 2400×1080 landscape, Tokyo
+Night, the same node/chat fixture content and reading position. The flow is the
+actual Home → thread → workspace with Rust JNI and synthetic transport.
+
+- [Slow, 4.896s](device/slow-sidebar.mp4): collapse and reopen through two real
+  agent-device touches. [Selected setting](device/slow-settings.png),
+  [touch telemetry](device/slow-sidebar.gesture-telemetry.json).
+- [Fast, 4.558s](device/fast-sidebar.mp4): the same actions and surface.
+  [Selected setting](device/fast-settings.png),
+  [touch telemetry](device/fast-sidebar.gesture-telemetry.json).
+- [Capture metadata/checksums](device/verification.json).
+
+Both accepted clips contain visible intermediate reveal frames and settle back
+to the open sidebar. They were inspected across full contact sheets. The shorter
+Fast reveal phase is observable, but software-emulator capture is not a physical
+performance benchmark: total clip length includes pauses and is not an animation
+duration measurement. No Compose test clock, frame stepping, test instrumentation,
+retiming, manually rendered animation or production code change was used. The
+agent-device capture records actual touch injection and native UI rendering.
+
+QA initially found Android Accessibility **Remove animations** enabled. The first
+two attempts correctly snapped and were rejected as two-pace motion evidence;
+those discarded clips are outside the repository. The system option was disabled
+through the Android Settings UI for the accepted recordings, then restored to its
+original enabled state. The app's original Normal pace was also restored through
+Appearance and observed selected. This explicitly distinguishes QA setup from the
+correct reduced-motion behavior. No developer-mode setting was enabled.
+
+No test suite was rerun: this follow-up adds evidence only to the already verified
+APK. No Xiaomi, physical keyboard, production transport, extra reveal style or
+complete aesthetic parity acceptance is claimed. QA contact sheets remain on node
+at `/tmp/pace-slow-accepted-sheet.png` and `/tmp/pace-fast-accepted-sheet.png`.
