@@ -220,3 +220,34 @@ The script now rejects target=android-0 and exposes explicit tools/renderer over
 This is a local A/B observation, not proof that every newer image is compatible.
 A [matching first-hand runner-images report](https://github.com/actions/runner-images/issues/14484)
 was used to select the metadata hypothesis; the verification above is local.
+
+## A private COW clone when the disk is tight
+
+A new API34 AVD needs about 7.4 GB of userdata (the emulator refuses to start below its
+disk check), which the host does not always have. A clone that shares `ot3a`'s images
+through qcow2 overlays boots in the same ~30 s and costs a few hundred MB:
+
+```sh
+avd=~/.android/avd
+clone=$avd/ot3a-sky.avd
+mkdir -p "$clone"
+cp "$avd/ot3a.avd"/{config.ini,initrd,userdata.img,version_num.cache,netsim.ini} "$clone"/
+cp --sparse=always "$avd/ot3a.avd"/{userdata-qemu.img,cache.img,encryptionkey.img} "$clone"/
+qemu-img create -q -f qcow2 -F qcow2 -b "$avd/ot3a.avd/userdata-qemu.img.qcow2" "$clone/userdata-qemu.img.qcow2"
+qemu-img create -q -f qcow2 -F qcow2 -b "$avd/ot3a.avd/cache.img.qcow2" "$clone/cache.img.qcow2"
+qemu-img create -q -f qcow2 -F qcow2 -b "$avd/ot3a.avd/encryptionkey.img.qcow2" "$clone/encryptionkey.img.qcow2"
+sed -i 's/^avd.ini.displayname=.*/avd.ini.displayname=ot3a-sky/' "$clone/config.ini"
+printf 'avd.ini.encoding=UTF-8\npath=%s\npath.rel=avd/ot3a-sky.avd\ntarget=android-34\n' "$clone" > "$avd/ot3a-sky.ini"
+OT3A_EMU_AVD=ot3a-sky OT3A_EMU_STATE_DIR=~/.cache/ot3a-sky-emulator scripts/emulator.sh start --headless
+```
+
+The emulator writes only to the overlays; the backing images are opened read-only. Hash
+`userdata-qemu.img.qcow2`, `cache.img.qcow2` and `encryptionkey.img.qcow2` before and
+after a session to prove the original AVD was not touched. Copy the small raw images as
+well: without `userdata-qemu.img` in the clone the emulator decides there is no data
+partition and stops at `Not enough space to create userdata partition` asking for 7.37 GB.
+The Device panel's `device_open` uses its own launcher, which fails the same way on a tight
+disk; `scripts/emulator.sh` is the working path. A clone is not a snapshot: it inherits
+the source AVD's apps and settings, so install the APK under test and set or reset the
+animation scales yourself (`settings put global animator_duration_scale 1` for motion
+captures, `0` for one static frame — the emulator images ship with 0).
