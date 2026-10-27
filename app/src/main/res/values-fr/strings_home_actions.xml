@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">Impossible de confirmer l\'action. Vérifiez l\'état du fil avant de réessayer.</string>
+</resources>

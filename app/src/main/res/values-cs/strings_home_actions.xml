@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">Akci se nepodařilo potvrdit. Před dalším pokusem zkontrolujte stav vlákna.</string>
+</resources>

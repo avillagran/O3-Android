@@ -109,7 +109,7 @@ data object Licenses
 
 /** Long press on a thread row: ot3's thread menu. */
 @Serializable
-data class ThreadActionsSheet(val environmentId: String, val threadId: String)
+data class ThreadActionsSheet(val environmentId: String, val threadId: String, val initialAction: String? = null)
 
 /** Long press on a project chip or name. */
 @Serializable

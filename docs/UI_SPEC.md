@@ -807,7 +807,11 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
 
 #### 4.1.5 Actions
 
-- **Swipe** (2.3): Settle / Move to active / Wake / Archive; Snooze.
+- **Swipe** (2.3): Settle / Move to active / Wake / Archive; Snooze. Since 2026-10-27 the
+  drag reveals the primary action and, when the row has one, the secondary action without
+  committing; releasing past max(actions + 44 dp, 58 % of the width) commits the primary
+  once with 2.3's long-press haptic, and RTL mirrors the drag. With Remove animations on
+  the reveal snaps and the commit stays.
 - **Thread actions sheet** (long press), ot3's menu in ot3's order
   (`ot3:ui/qml/T3ThreadRow.qml:378-410`): New thread on {branch}; Pin thread / Unpin
   thread; Move up / Move down; Mark settled / Move to active; Snooze thread / Wake thread
@@ -815,9 +819,12 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
   Auto-settle behavior ▸ Enabled / Disabled; Copy ▸ Path, Branch, Thread ID; Project
   settings; Archive thread; Delete. Items are gated by server capabilities
   (`threadPinning`, `threadSettlement`, `threadSnooze`, `threadTitleRegeneration`,
-  `threadAutoSettleOptOut`) and write access, as in ot3. The sheet header shows ot3's
-  hover card content: title, project, environment, branch, model, provider history and
-  "Usage limit reached" / "Error occurred" (`ot3:ui/qml/T3ThreadRow.qml:325-342`).
+  `threadAutoSettleOptOut`) and write access, as in ot3. The menu keeps that order and
+  preserves capability-based visibility; visible unavailable items stay disabled. The sheet header shows
+  ot3's hover card content: title, project, environment, branch, model, provider history
+  and "Usage limit reached" / "Error occurred" (`ot3:ui/qml/T3ThreadRow.qml:325-342`);
+  today it carries title and project · environment · branch only, the partial header
+  noted below.
 - **Confirmations:** Rename, Archive and Delete use ot3's dialog; Delete reads "This
   permanently clears conversation history for this thread." / "This action cannot be
   undone." with Retry after a failure (`ot3:ui/qml/T3ThreadRow.qml:411-427`).
@@ -829,8 +836,35 @@ snooze countdown (`ot3:docs/NATIVE_VISUAL_AUDIT.md:61`).
   pane, where the rail carries it.
 - **Data:** commands from `sidebar::command` and `sidebar::thread_action`
   (`lib:src/sidebar.rs:63,71`) sent with `orchestration.dispatchCommand` through the
-  outbox; existing request item 4 in `LIB_REQUESTS.md`. Interim: the sheet shows only
-  Copy and Filter (no mutation) until the builders are reachable.
+  outbox; existing request item 4 in `LIB_REQUESTS.md`.
+- **Interim note `interimCopyFilter`** (UI-1, 2026-10-25; superseded 2026-10-27): the
+  sheet showed only Copy and Filter, with no mutation, until the builders were
+  reachable. Kept as history; the implementation note that follows replaces it and
+  leaves ot3's rules above unchanged.
+- **Implemented (2026-10-27):** `core/.../home/ThreadManagement.kt` builds an
+  `ActionContext` from `models.catalog` (the five `thread*` capabilities) and the
+  `authSession` permissions (`orchestration:operate` for writes); `HomeViewModel` and
+  `AppScreens` pass that context to the swipe and the sheet. Available now: pin / unpin,
+  mark settled / move to active, snooze / wake now with ot3's presets and a custom date
+  and time (`snoozedUntil`, UTC ISO-8601), rename, regenerate title, mark unread,
+  auto-settle enabled / disabled, and archive / delete behind their confirmation; Copy,
+  Filter by {project} and All projects stay local. Every native command goes through
+  `MessageSender.sidebar` to the durable outbox (`sidebar.command` for the lifecycle
+  actions, `sidebar.threadAction` otherwise); an unknown outcome stays queued for
+  explicit same-id recovery and is never replayed automatically. Cross-check:
+  [thread-actions](ui/compare/thread-actions/README.md).
+- **Still open, not parity:** Move up / Move down are listed and disabled because the
+  domain API has no portable fractional `pinOrderKey` builder; New thread on {branch}
+  waits for UI-5; Project settings waits for UI-6; the header is the partial card above;
+  and no productive physical acceptance of the sheet or the swipe has been recorded.
+  Tests: five shared Compose checks in
+  `app/src/sharedTest/.../ui/home/ThreadActionsComposeContract.kt` passed on the JVM;
+  the androidTest wrapper compiled and awaits emulator CI. Four checks in
+  `core/.../home/ThreadManagementTest.kt` passed with real host JNI builders, fake RPC
+  and an in-memory outbox. Full JVM suite: 669 passed, 6 optional skipped; app/core
+  lint and APK build passed. The known Xiaomi was updated with install-r and its
+  installed base.apk digest matched the signed build; no real management action was
+  dispatched for acceptance. See the linked verification JSON.
 
 #### 4.1.6 States
 
@@ -2097,7 +2131,7 @@ Seven PRs, each mergeable alone, each ending with captures compared side by side
 
 | PR | Scope | Motion (3.4.3; recordings 3.4.5) | Visual acceptance | Tests | Lib needed |
 |---|---|---|---|---|---|
-| **UI-1 Visual system and Home** | theme generator and JSON (22 themes), `Ot3Theme`, Fira Code, Lucide vectors, kit (3.9), sky header (AGSL + Canvas), strings generator, typed routes and the three tabs, merged Home with header, search, filter sheet, card and slim rows, shelves, swipe and long-press sheets (Copy and Filter only until builders), Environments under Settings restyled, route-in-use indicator (4.2.1, Home and thread top bar), compact quota strip in Home from the live `server.subscribeServerConfig` stream (4.10.2), Component catalog with a Motion page | `Ot3Motion`, `Ot3Easing`, `Ot3Durations`, `Ot3Ticker`, `Ot3Reveal` (all five styles, spring below API 33); rows arrive / depart / close gaps / fly between shelves; status icon pop, tint and spin; draft pen; shelves through `Ot3Reveal`; sky energy, drift, comets while working, frame pacing and Auto downgrade; connection-dot pulse; swipe spring; FAB; kit control timings; quota strip reveal; predictive back. Recordings: Home rows and shelves, sky idle → working → idle, swipe, Remove animations on | Home vs `ot3-sidebar-and-thread.png` (left column) and `ot3-timeline-shelves-composer.png` (shelves, slim rows); sky in a dark and a light theme | generator goldens (tokens.md §1); status, time and shelf mapping; sky uniforms; navigation (row → thread, back order) | none blocking; U2 and U21 for full status, order and chips; U14 (closed) and U26 for the strip's pooling and marker, U27 for route kinds (interim: user-chosen kind, preferred route only) |
+| **UI-1 Visual system and Home** | theme generator and JSON (22 themes), `Ot3Theme`, Fira Code, Lucide vectors, kit (3.9), sky header (AGSL + Canvas), strings generator, typed routes and the three tabs, merged Home with header, search, filter sheet, card and slim rows, shelves, swipe and long-press sheets (Copy and Filter only until builders; management actions wired 2026-10-27, 4.1.5), Environments under Settings restyled, route-in-use indicator (4.2.1, Home and thread top bar), compact quota strip in Home from the live `server.subscribeServerConfig` stream (4.10.2), Component catalog with a Motion page | `Ot3Motion`, `Ot3Easing`, `Ot3Durations`, `Ot3Ticker`, `Ot3Reveal` (all five styles, spring below API 33); rows arrive / depart / close gaps / fly between shelves; status icon pop, tint and spin; draft pen; shelves through `Ot3Reveal`; sky energy, drift, comets while working, frame pacing and Auto downgrade; connection-dot pulse; swipe spring; FAB; kit control timings; quota strip reveal; predictive back. Recordings: Home rows and shelves, sky idle → working → idle, swipe, Remove animations on | Home vs `ot3-sidebar-and-thread.png` (left column) and `ot3-timeline-shelves-composer.png` (shelves, slim rows); sky in a dark and a light theme | generator goldens (tokens.md §1); status, time and shelf mapping; sky uniforms; navigation (row → thread, back order) | none blocking; U2 and U21 for full status, order and chips; U14 (closed) and U26 for the strip's pooling and marker, U27 for route kinds (interim: user-chosen kind, preferred route only) |
 | **UI-2 Thread timeline** | top bar, find, user and assistant messages, Markdown renderer, copy, fork, quote, activity blocks and inspector, Thinking rows, changed-files card, dividers, error cards, subagent cards and child threads, plan card, working pill, jump to latest, Load earlier, states (4.3) | spinner and shimmer on activity rows and the working pill, minimap-free phone timeline, `Ot3Reveal` for the find bar; messages appear without animation, as ot3. Recordings: a streaming run with the working pill | thread vs `ot3-sidebar-and-thread.png` (right) and `ot3-timeline-shelves-composer.png` (Markdown) | row mapping per role; Markdown blocks; scroll policy with streaming | U0, U3, U4, U10 (blocking for activity, changes, dividers); U18 for history |
 | **UI-3 Composer** | frame, collapsed / card / expanded, completions, model picker, options, permission, Plan / Build, send / queue / steer / stop and Send options, queue strip and sheet, attachments with upload, drafts status, notices (4.4) | composer focus and send colour, draft saved / saving, queue strip through `Ot3Reveal`, sheet physics. Recordings: send, queue, draft status | composer vs `ot3-sidebar-and-thread.png` (bottom) and `ot3-model-picker.png` | send state machine; queue mapping; IME insets | U5, U7, U8, request item 4 |
 | **UI-4 Approvals, questions and plans** | approval and question cards, secret card, ready-plan banner and follow-ups, tasks strip, Edit from here (4.5, 4.3.7) | tasks strip and ready-plan banner through `Ot3Reveal`; question auto-advance after 200 ms; cards not animated, as ot3. Recordings: approval → answered, multi-question | cards vs ot3 card tokens; plan banner vs `ot3-plan-card.png` | decision gating; multi-question flow; replay rules after `rpc_outcome_unknown` | U6, U15, U24, request item 4 |

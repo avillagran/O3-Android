@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-27",
+  "base": "1a05392 (PR70 chat follow retained)",
+  "jvm": {
+    "app": {
+      "tests": 348,
+      "skipped": 1,
+      "errors": 0,
+      "failures": 0
+    },
+    "core": {
+      "tests": 327,
+      "skipped": 5,
+      "errors": 0,
+      "failures": 0
+    }
+  },
+  "newGestureTests": {
+    "passed": 5,
+    "skipped": 0,
+    "sharedAndroidTestCompiled": true,
+    "deviceExecution": "Not run locally; awaits CI emulator"
+  },
+  "newNativeManagementTests": {
+    "passed": 4,
+    "skipped": 0,
+    "backend": "real host JNI domain builders with fake typed RPC and memory outbox"
+  },
+  "lintDebug": "PASS (app and core)",
+  "assembleDebug": "PASS",
+  "nativeCommandDurability": "persist-before-send; same-commandId explicit retry verified for unknown outcome",
+  "apkSha256": "d6893cb26282d0f17143c1365747676cdad6f986beb1b9603bee057cc265b175",
+  "physicalAcceptance": "Not yet verified; no real pin/archive/delete action was dispatched as a test.",
+  "installation": {
+    "device": "Known Xiaomi J75/23090RA98G",
+    "method": "install-r",
+    "result": "Success",
+    "source": "eb6c595",
+    "sha256MatchesBuiltApk": true,
+    "installedBaseApkSha256": "d6893cb26282d0f17143c1365747676cdad6f986beb1b9603bee057cc265b175",
+    "personalUiOperated": false
+  }
+}

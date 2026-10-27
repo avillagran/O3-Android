@@ -1,0 +1,3 @@
+<resources>
+    <string name="home_action_unconfirmed">アクションを確認できませんでした。再試行する前にスレッドの状態を確認してください。</string>
+</resources>

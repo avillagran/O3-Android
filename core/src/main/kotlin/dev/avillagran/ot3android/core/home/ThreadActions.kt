@@ -6,12 +6,7 @@ import java.util.TimeZone
 /** Server capabilities that gate thread actions, as ot3 reads them from the environment's catalog. */
 enum class ServerCapability { ThreadPinning, ThreadSettlement, ThreadSnooze, ThreadTitleRegeneration, ThreadAutoSettleOptOut }
 
-/**
- * What the app may do on a thread's environment. Interim: no capability is read yet, write
- * access is unknown, the lib's command builders (`sidebar::command`, `sidebar::thread_action`,
- * LIB_REQUESTS.md request item 4) are not reachable from Kotlin, and New thread and project
- * settings have no screen yet. So every mutating item is disabled; later PRs flip these flags.
- */
+/** Server-advertised capabilities and authenticated session permissions, scoped to one connection. */
 data class ActionContext(
     val capabilities: Set<ServerCapability> = emptySet(),
     /** The token may write (ot3 `canWrite`). */
@@ -107,8 +102,9 @@ object ThreadActions {
         return listOf(
             MenuEntry(ThreadAction.NewThreadOnBranch, branch != null, operate && context.newThreadAvailable, 0),
             MenuEntry(if (row.pinned) ThreadAction.Unpin else ThreadAction.Pin, pinning, operate && pinning, 0),
-            MenuEntry(ThreadAction.MoveUp, row.pinned && pinning, operate, 0),
-            MenuEntry(ThreadAction.MoveDown, row.pinned && pinning, operate, 0),
+            // Fractional pin-order generation is not exposed by the domain API yet.
+            MenuEntry(ThreadAction.MoveUp, row.pinned && pinning, false, 0),
+            MenuEntry(ThreadAction.MoveDown, row.pinned && pinning, false, 0),
             MenuEntry(if (row.settled) ThreadAction.MoveToActive else ThreadAction.MarkSettled, settlement, operate && settlement, 0),
             MenuEntry(
                 if (row.snoozed) ThreadAction.WakeNow else ThreadAction.Snooze,
@@ -156,7 +152,7 @@ object ThreadActions {
      * T3 Mobile's swipe (`t3m:src/features/threads/threadListV2.ts:95-118`): Wake on snoozed
      * rows, Move to active on settled ones, Settle on the rest when the server supports
      * settlement, else Archive; Snooze as the secondary action. Every swipe mutates, so they
-     * are disabled until the builders are reachable.
+     * require current write permission and native builders.
      */
     fun swipe(row: HomeRow, context: ActionContext): SwipeActions {
         val primary = when {
@@ -165,8 +161,13 @@ object ThreadActions {
             context.has(ServerCapability.ThreadSettlement) -> SwipeAction.Settle
             else -> SwipeAction.Archive
         }
-        val secondary = SwipeAction.Snooze.takeIf { !row.snoozed && context.has(ServerCapability.ThreadSnooze) }
-        return SwipeActions(primary, secondary, enabled = context.canOperate)
+        val secondary = SwipeAction.Snooze.takeIf { !row.snoozed && row.canSnooze && context.has(ServerCapability.ThreadSnooze) }
+        return SwipeActions(primary, secondary, enabled = context.canOperate && !row.subagent && when (primary) {
+            SwipeAction.Wake -> context.has(ServerCapability.ThreadSnooze)
+            SwipeAction.MoveToActive -> context.has(ServerCapability.ThreadSettlement)
+            SwipeAction.Archive -> !row.working
+            else -> true
+        })
     }
 
     /** ot3's project menu (`ot3:ui/qml/T3ProjectMenu.qml:62-72`). */

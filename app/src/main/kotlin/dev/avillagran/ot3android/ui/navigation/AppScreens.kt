@@ -5,6 +5,9 @@ import android.content.ClipData
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.ClipEntry
@@ -50,7 +53,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val owner = remember(entry) { navigator.navController.getBackStackEntry(ChatsGraph) }
         val graph = LocalContext.current.appGraph
         return viewModel(viewModelStoreOwner = owner) {
-            HomeViewModel(graph.environmentRepository, graph.connectionManager, graph.homePreferences)
+            HomeViewModel(graph.environmentRepository, graph.connectionManager, graph.homePreferences, sender = graph.messageSender)
         }
     }
 
@@ -58,6 +61,13 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     override fun Home(entry: NavBackStackEntry, isTop: Boolean) {
         val viewModel = homeViewModel(entry)
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val actionError by viewModel.actionError.collectAsStateWithLifecycle()
+        actionError?.let { code -> androidx.compose.material3.AlertDialog(
+            onDismissRequest = { viewModel.actionError.value = null },
+            title = { androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(dev.avillagran.ot3android.R.string.ot3_row_error)) },
+            text = { androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(dev.avillagran.ot3android.R.string.home_action_unconfirmed)) },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { viewModel.actionError.value = null }) {
+                androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(dev.avillagran.ot3android.R.string.ot3_dialog_close)) } }) }
         HomeScreen(state, isTop, onIntent = { intent -> onHomeIntent(intent, viewModel) }, quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(onOpenLimits = { navigator.push(QuotaLimits()) }) })
     }
 
@@ -71,6 +81,15 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 if (projectId != null && pr.optString("repository").isNotBlank() && pr.optInt("number") > 0) {
                     navigator.push(PullRequest(intent.row.environmentId, projectId, pr.getString("repository"), pr.getInt("number"), pr.optString("host").takeIf { it.isNotBlank() }))
                 }
+            }
+            is HomeIntent.Swipe -> when (intent.action) {
+                dev.avillagran.ot3android.core.home.SwipeAction.Snooze -> navigator.openSheet(SnoozeUntilSheet(intent.row.environmentId, intent.row.threadId))
+                dev.avillagran.ot3android.core.home.SwipeAction.Archive -> navigator.openSheet(ThreadActionsSheet(intent.row.environmentId, intent.row.threadId, ThreadAction.Archive.name))
+                else -> viewModel.manage(intent.row, when (intent.action) {
+                    dev.avillagran.ot3android.core.home.SwipeAction.Settle -> ThreadAction.MarkSettled
+                    dev.avillagran.ot3android.core.home.SwipeAction.MoveToActive -> ThreadAction.MoveToActive
+                    else -> ThreadAction.WakeNow
+                })
             }
             is HomeIntent.RowActions -> navigator.openSheet(ThreadActionsSheet(intent.row.environmentId, intent.row.threadId))
             is HomeIntent.ProjectActions -> intent.row.projectId?.let { navigator.openSheet(ProjectActionsSheet(intent.row.environmentId, it)) }
@@ -303,7 +322,24 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             autoSettleDisabled = row.autoSettleDisabled,
             canSnooze = row.canSnooze,
         )
-        ThreadActionsContent(row, ThreadActions.menu(target, ActionContext.Interim)) { action ->
+        var pending by rememberSaveable(row.key) { mutableStateOf(route.initialAction?.let { ThreadAction.valueOf(it) }) }
+        pending?.let { action -> dev.avillagran.ot3android.ui.home.ThreadManagementDialog(row, action,
+            onDismiss = { pending = null }, onConfirm = { title ->
+                viewModel.manage(row, action, title = title, confirmed = true)
+                pending = null
+                navigator.closeSheet(entry)
+            }) }
+        ThreadActionsContent(row, ThreadActions.menu(target, current.actionContexts[row.environmentId] ?: ActionContext.Interim)) { action ->
+            if (action in setOf(ThreadAction.Rename, ThreadAction.Archive, ThreadAction.Delete)) {
+                pending = action
+                return@ThreadActionsContent
+            }
+            if (action == ThreadAction.Snooze) {
+                navigator.closeSheet(entry)
+                navigator.openSheet(SnoozeUntilSheet(row.environmentId, row.threadId))
+                return@ThreadActionsContent
+            }
+            if (dev.avillagran.ot3android.core.home.ThreadManagement.supported(action)) viewModel.manage(row, action)
             when (action) {
                 ThreadAction.CopyPath -> row.path
                 ThreadAction.CopyBranch -> row.branch
@@ -357,6 +393,30 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     @Composable
     override fun SnoozeUntil(entry: NavBackStackEntry, route: SnoozeUntilSheet) {
         val presets = remember(entry) { ThreadActions.snoozePresets(System.currentTimeMillis()) }
-        SnoozeUntilContent(presets, enabled = ActionContext.Interim.canOperate) { navigator.closeSheet(entry) }
+        val viewModel = homeViewModel(entry)
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val row = state?.rows?.get("${route.environmentId}/${route.threadId}") ?: return
+        val context = LocalContext.current
+        fun choose(at: Long) {
+            val format = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+            format.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            viewModel.manage(row, ThreadAction.Snooze, until = format.format(java.util.Date(at)))
+            navigator.closeSheet(entry)
+        }
+        SnoozeUntilContent(presets, enabled = state?.actionContexts?.get(row.environmentId)?.canOperate == true && row.canSnooze) { preset ->
+            val at = preset.at
+            if (at != null) choose(at)
+            else {
+                val calendar = java.util.Calendar.getInstance()
+                android.app.DatePickerDialog(context, { _, year, month, day ->
+                    android.app.TimePickerDialog(context, { _, hour, minute ->
+                        calendar.set(year, month, day, hour, minute, 0)
+                        choose(calendar.timeInMillis)
+                    }, calendar.get(java.util.Calendar.HOUR_OF_DAY), calendar.get(java.util.Calendar.MINUTE), true).show()
+                }, calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.MONTH), calendar.get(java.util.Calendar.DAY_OF_MONTH)).apply {
+                    datePicker.minDate = System.currentTimeMillis()
+                }.show()
+            }
+        }
     }
 }
