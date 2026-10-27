@@ -1136,6 +1136,16 @@ consumed directly by OmaBridge; Android's v0.3.5 C ABI does not expose
 connectionCatalog.reconcileBridge (unknown_function). See the sanitized
 `docs/bridge/evidence/2026-10-26/delegated/clock-reconcile.json`. The764ms marker
 includes transport latency and is not an exact host/device clock-offset measurement.
+
+2026-10-27 implementation checkpoint: lib PR20 (`8c80c4d`, merged into the
+catalog branch) fixes this guard with a fixed 30-second future-issue allowance,
+distinct window/TTL/future/expiration errors, and no change to absolute expiration,
+identity or revision checks. All 356 native tests and x86/ARM/Kotlin CI pass.
+OmaBridge PR6 consumes it directly and audits enrollment receipt time independently;
+credential deadlines have no grace. The Android candidate now integrates current
+main and prepares this SDK pin, but JNI packaging and renewed delegated Android
+acceptance remain required. This does not close productive NODE/VQ acceptance or
+imply the function is present in Android's separate v0.3.5 AAR.
 ### U31. Shared PR page ordering/merge and authenticated diff read (2026-10-26)
 
 Pinned v0.3.5 provides `pullRequests.request`, `sidebarBadge`, `payload` and typed

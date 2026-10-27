@@ -2372,6 +2372,13 @@ completed delegated issuance evidence. API36.1 acceptance remains red at catalog
 freshness (`bridge_catalog_expired`); the common clock-skew request is tracked in
 LIB_REQUESTS. No productive NODE discovery, Home capture, or physical acceptance
 is claimed. Lab TLS artifacts are replaced by production-flavor SDKs after tests.
+
+2026-10-27 continuation: native lib PR20 implements the bounded catalog clock
+policy with green x86/ARM/Kotlin CI. OmaBridge PR6 adds independent receipt-time
+credential checks. The integrated Android candidate must repeat its delegated
+JNI/QUIC/shell acceptance with the new source pin before this checkpoint can be
+declared green. Production NODE/VQ, Home evidence and physical acceptance remain
+open; a native fix or unit fixture alone does not establish them.
 ### Limits page checkpoint — 2026-10-26
 
 Settings → Usage → Limits subscribes only while visible, for the selected environment,
