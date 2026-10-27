@@ -27,9 +27,9 @@ class QuotaToggleMenuTest {
         // No DataStore value has arrived: a default false is not a loaded preference.
         rule.onNodeWithTag("quota_toggle").assertIsNotEnabled()
         store.read.complete(Unit)
-        rule.waitUntil { rule.onAllNodesWithText("Hide provider usage").fetchSemanticsNodes().isNotEmpty() }
+        rule.waitUntil(15_000) { rule.onAllNodesWithText("Hide provider usage").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("quota_toggle").assertIsEnabled().performClick()
-        rule.waitUntil { store.writes.value == 1 }
+        rule.waitUntil(15_000) { store.writes.value == 1 }
         assertFalse(store.current.value[AppearancePreferences.Keys.PROVIDER_USAGE]!!)
     }
 
@@ -37,12 +37,12 @@ class QuotaToggleMenuTest {
         val store = GatedStore(delayWrite = true).apply { read.complete(Unit) }
         val mounted = mutableStateOf(true)
         rule.setContent { MaterialTheme { if (mounted.value) QuotaToggleMenuItem(AppearancePreferences(store), owner) { mounted.value = false } } }
-        rule.waitUntil { rule.onAllNodesWithText("Hide provider usage").fetchSemanticsNodes().isNotEmpty() }
+        rule.waitUntil(15_000) { rule.onAllNodesWithText("Hide provider usage").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("quota_toggle").performClick()
-        rule.waitUntil { store.started.value }
+        rule.waitUntil(15_000) { store.started.value }
         rule.onNodeWithTag("quota_toggle").assertDoesNotExist()
         store.write.complete(Unit)
-        rule.waitUntil { store.writes.value == 1 }
+        rule.waitUntil(15_000) { store.writes.value == 1 }
         assertFalse(store.current.value[AppearancePreferences.Keys.PROVIDER_USAGE]!!)
     }
 

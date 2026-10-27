@@ -111,3 +111,10 @@ API 36.1 validation enables `show_ime_with_hard_keyboard=1` to exercise software
 keyboard input and verifies the settled landscape capture after dismissal. API 34
 CI remains the cross-version check; this does not establish keyboard-open strip
 usability at every viewport height.
+
+## API34 menu persistence regression
+
+[API34 follow-up](api34-menu/README.md) distinguishes the old PR51 CI timeout from two
+separately reproduced menu state/lifetime defects, fixes both and verifies portrait
+toggling with software IME retained. This also integrates the PR52 Settings header Back
+route; the earlier rotation synchronization notes above describe a different failure.

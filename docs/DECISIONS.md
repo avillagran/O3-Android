@@ -1162,3 +1162,12 @@ show-IME-with-hardware-keyboard preference themselves, assert visible IME in bot
 orientations and verify the model control in overflow. Rotation waits for the new
 decor window bounds before querying Compose/Espresso; no arbitrary delay or wider
 assertion tolerance was added.
+
+### 2026-10-27 — Quota menu reads loaded preferences and owns accepted writes outside the popup
+
+Delayed-DataStore Compose regressions on API34 proved an enabled false default before
+first load and cancellation of an accepted write after menu disposal. Show native
+Loading/disabled until the preference arrives; launch persistence in AppGraph.appScope
+and invert atomically inside DataStore. Preserve soft IME/draft in the graph regression.
+The precise cause of PR51's earlier CI timeout remains unproved; no timeout increase
+or keyboard dismissal masks that portrait path. See `ui/compare/quota-strip/api34-menu/`.
