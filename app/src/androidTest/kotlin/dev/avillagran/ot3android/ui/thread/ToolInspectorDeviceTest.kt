@@ -64,6 +64,7 @@ class ToolInspectorDeviceTest {
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_inspector").fetchSemanticsNodes().isEmpty() }
             timeline.performScrollToNode(hasTestTag("thread_inspect_work/think-reader_0"))
             rule.onNodeWithTag("thread_inspect_work/think-reader_0").assertIsDisplayed()
+            capture("$name-closed-landscape")
             scenario.onActivity { activity ->
                 assertEquals(readsBeforeRetry + 1, activity.fixture.transport.calls.count { it.fn == "orchestration.getTurnItem" })
                 assertEquals(1, activity.fixture.transport.streamOpens.count { it.threadId == "chat" })
@@ -76,9 +77,15 @@ class ToolInspectorDeviceTest {
         rule.waitForIdle()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
+        rule.waitUntil(5_000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() == context.packageName }
         assertEquals("Evidence must not be covered by a system/foreign window", context.packageName,
             instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString())
-        val file = File(context.getExternalFilesDir(null), "reader-inspector/$name.png").apply { parentFile!!.mkdirs() }
+        val output = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
+            ?.let(::File) ?: File(context.getExternalFilesDir(null), "reader-inspector")
+        // Opt-in evidence hold: let the device recorder encode this state.
+        // This is deliberately not a latency/performance measurement.
+        android.os.SystemClock.sleep(800)
+        val file = File(output, "$name.png").apply { parentFile!!.mkdirs() }
         InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot().let { bitmap ->
             file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
             bitmap.recycle()

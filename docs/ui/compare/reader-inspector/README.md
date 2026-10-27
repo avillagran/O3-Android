@@ -44,8 +44,8 @@ combining task filters can select only the last filter.
 
 `ToolInspectorDeviceTest` uses the actual graph, view model, session and Rust035
 scope/request/parse over a deterministic transport. It covers portrait/landscape,
-modes, retry, close, one shared thread stream and no dispatch. Device acceptance
-for the reader-owned window is still pending. Capture checks reject a foreign
+modes, retry, close, one shared thread stream and no dispatch. The targeted API34 device run passed4/4 with
+zero failures/skips; see emulator-api34/verification.json. Capture checks reject a foreign
 active window instead of accepting Compose semantics behind a system dialog.
 
 ## Earlier failures and remaining differences
@@ -66,3 +66,16 @@ the typed subscription exists but the common bounded ANSI/VT/overwrite reducer i
 missing. No Kotlin parser or fabricated polling was added. Header terminal/
 reasoning icon, native-label translation, exact desktop popup motion and wider
 inspector-pane placement remain differences. This increment does not close UI-2.
+
+## API34 device evidence
+
+[Eight captures, video and exact verification](emulator-api34/verification.json)
+cover Tokyo Night/Latte Details, Raw, portrait/landscape and return to the specific
+Details entry after Close. The four cases passed together on the final app code.
+Additional-test-output artifacts are pulled before APK cleanup. A bounded wait
+handles the accessibility root being briefly null during window transitions;
+foreign windows still fail the capture guard.
+
+The26s video is an unchanged-speed excerpt starting at18s of the raw recording.
+Capture-only800ms holds let Android's encoder see each selected state. It is not a
+latency, exact popup-motion, live-server or physical-device acceptance claim.
