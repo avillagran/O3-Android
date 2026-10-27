@@ -2330,7 +2330,7 @@ Selecting a bundled Omarchy palette in Appearance now immediately chooses its da
 
 ### Reader diff increment — 2026-10-26
 
-Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. Split/file tree/hunk folding/preview remain pending.
+Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. Split/file tree/preview remain pending. Native hunk rows now fold locally; see the 2026-10-27 hunk evidence below.
 
 ### Usage implementation checkpoint — 2026-10-26
 
@@ -2396,7 +2396,7 @@ limits: `docs/ui/compare/quota-strip/README.md`.
 The real Changes modal now offers ot3's narrow previous/next and path selector,
 showing one native file at a time. Selection is saveable and survives whitespace
 refetch; file navigation does not query the server. Shared OT3 touch feedback is used,
-without invented file-switch animation. Wide-screen tree, split layout, context expansion and hunk folding remain pending.
+without invented file-switch animation. Wide-screen tree, split layout and context expansion remain pending. Hunk folding is verified in the 2026-10-27 increment below.
 Wrap/no-wrap is now a saveable dialog control: measured font widths and one horizontal
 patch scroll surface, with no refetch. Full-modal dark/light Robolectric goldens and
 overflow/scroll/state tests cover this control. API 36.1 device tests and same-content
@@ -2462,3 +2462,15 @@ allows recovery on existing deadline ticks without new polling/throttle or filte
 Rust transitions. Native group summaries are not cancelled while their child posts
 are still being enqueued. See `ui/compare/ui-n/system-lab/README.md` for real-service,
 loopback/JNI evidence and remaining Doze/process-death/physical limitations.
+
+
+### Reader hunk folding — 2026-10-27
+
+The unified diff reader folds native `kind=hunk` rows with a 48dp header, accent
+background at 0.08 opacity, chevron and accessibility Expand/Collapse actions.
+Following rows disappear until the next native hunk; the native JSON and patch
+remain intact. This follows the QML fallback `T3DiffReview.qml:71–81,101,103`;
+it does not claim complete parity with the ot3 native diff renderer. File changes,
+whitespace/scope/content changes reset folds without resurrecting A→B→A state.
+Rotation of the same diff preserves folds. Evidence and limits:
+`docs/ui/compare/reader-diff/README.md` (hunk folding increment).
