@@ -13,6 +13,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.produceIn
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
@@ -116,6 +122,9 @@ class ThreadSession(
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
     /** The lib's `projection.apply` and `timeline.view`; never on the main thread. */
     private val domain: DomainCalls = DomainEngine.shared,
+    private val cache: ThreadCache? = null,
+    private val cacheEnvironment: String? = null,
+    private val cacheAuthority: suspend () -> String? = { null },
 ) {
     private val _view = MutableStateFlow(ThreadView(threadId))
     val view: StateFlow<ThreadView> = _view.asStateFlow()
@@ -125,6 +134,9 @@ class ThreadSession(
 
     /** Defensive snapshot for native mutation validation; stream-owned objects stay private. */
     fun projectionSnapshot(): JSONObject? = projection?.let { JSONObject(it.toString()) }
+    private var cacheLease: ThreadCache.Lease? = null
+    private var cacheDirty = false
+    private var lastCacheWriteAt: Long? = null
     private var sequence: Long? = null
     private var history = ThreadTimelines.History.NONE
 
@@ -142,11 +154,34 @@ class ThreadSession(
     fun start() {
         if (job?.isActive == true) return
         job = scope.launch(dispatcher) {
-            connection.collectLatest { current ->
-                if (current == null) {
-                    setConnection(ThreadConnection.Waiting)
-                } else {
-                    follow(current.transport)
+            try {
+                try { restoreCache() } catch (_: java.io.IOException) {
+                    cacheLease?.let { cache?.close(it) }
+                    cacheLease = null
+                }
+                connection.collectLatest { current ->
+                    if (current == null) {
+                        if (projection != null) { stale = true; _view.update { it.copy(stale = true) } }
+                        setConnection(ThreadConnection.Waiting)
+                    } else {
+                        val authority = cacheAuthority()
+                        if (cacheLease != null && cacheLease?.authority != authority) {
+                            persistCache(force = true)
+                            cacheLease?.let { cache?.close(it) }
+                            cacheLease = null
+                            projection = null
+                            sequence = null
+                            needSnapshot = true
+                            _view.value = ThreadView(threadId)
+                            restoreCache()
+                        }
+                        follow(current.transport)
+                    }
+                }
+            } finally {
+                withContext(NonCancellable) {
+                    persistCache(force = true)
+                    cacheLease?.let { cache?.close(it) }
                 }
             }
         }
@@ -169,6 +204,8 @@ class ThreadSession(
         while (true) {
             val openedAt = clock()
             var error = attempt(transport, backoff)
+            // A saved cursor that cannot resume falls back through the existing snapshot path.
+            if (stale && error != CANCELLED) needSnapshot = true
             currentCoroutineContext().ensureActive()
             if (error == CANCELLED) {
                 quickCancels = if (clock() - openedAt < QUICK_CANCEL_MS) quickCancels + 1 else 1
@@ -221,13 +258,29 @@ class ThreadSession(
                 if (!publish()) return INTERNAL_ERROR
             }
             var ended: String? = null
-            transport.threadStream(
+            val stream = transport.threadStream(
                 threadId,
                 afterSequence = sequence,
                 completionMarker = false,
                 boundedSnapshot = true,
                 compactTurnItems = false,
-            ).takeWhile { update ->
+            )
+            // An idle server may not acknowledge a saved cursor with an item. Keep the saved
+            // view visible, but bound that wait and validate with a snapshot instead of
+            // leaving actions disabled until some unrelated event arrives.
+            val updates = if (stale) flow {
+                coroutineScope {
+                    val inbox = stream.buffer(1).produceIn(this)
+                    try {
+                        val first = withTimeoutOrNull(CACHE_RESUME_TIMEOUT_MS) { inbox.receiveCatching() }
+                            ?: throw T3Exception(REFETCH)
+                        first.exceptionOrNull()?.let { throw it }
+                        first.getOrNull()?.let { emit(it) }
+                        for (update in inbox) emit(update)
+                    } finally { inbox.cancel() }
+                }
+            } else stream
+            updates.takeWhile { update ->
                 if (connectedAt == null) {
                     connectedAt = clock()
                     setConnection(ThreadConnection.Live)
@@ -246,6 +299,7 @@ class ThreadSession(
                     // Nothing applied (a cursor-only item, a type the lib ignores): no new view.
                     if (!dirty) {
                         _view.update { it.copy(sequence = sequence) }
+                        persistCache()
                     } else if (!publish()) {
                         ended = REFETCH
                     }
@@ -302,6 +356,7 @@ class ThreadSession(
         sequence = at
         history = ThreadTimelines.History.of(snapshot)
         dirty = true
+        cacheDirty = true
         return true
     }
 
@@ -325,7 +380,9 @@ class ThreadSession(
             projection = result.projection
             if (result.applied > 0) dirty = true
         }
-        update.cursor?.let { sequence = it }
+        update.cursor?.let { if (sequence != it) cacheDirty = true; sequence = it }
+        if (update.start == "resume" && stale) { stale = false; dirty = true }
+        if (events.isNotEmpty()) cacheDirty = true
         return true
     }
 
@@ -363,7 +420,38 @@ class ThreadSession(
         }
         dirty = false
         _view.update { current -> next.copy(connectionState = current.connectionState) }
+        persistCache()
         return true
+    }
+
+    private suspend fun restoreCache() {
+        val store = cache ?: return
+        val environment = cacheEnvironment ?: return
+        val authority = cacheAuthority() ?: return
+        cacheLease = store.open(environment, threadId, authority) ?: return
+        val saved = store.read(cacheLease!!) ?: return
+        if (!replace(saved)) { store.remove(cacheLease!!); return }
+        needSnapshot = false
+        stale = true
+        cacheDirty = false
+        if (!publish()) {
+            store.remove(cacheLease!!)
+            projection = null
+            sequence = null
+            needSnapshot = true
+        }
+    }
+
+    private suspend fun persistCache(force: Boolean = false) {
+        val lease = cacheLease ?: return
+        val p = projection ?: return
+        val at = sequence ?: return
+        if (!cacheDirty || (!force && lastCacheWriteAt?.let { clock() - it < 1_000 } == true)) return
+        val snapshot = JSONObject().put("projection", p).put("snapshotSequence", at)
+            .put("hasMoreHistory", history.hasMore).put("payloadBudgetExceeded", history.payloadBudgetExceeded)
+        history.cursor?.let { snapshot.put("historyCursor", it) }
+        try { cache?.write(lease, snapshot); cacheDirty = false; lastCacheWriteAt = clock() }
+        catch (error: java.io.IOException) { /* Cache loss only costs a fresh snapshot. */ }
     }
 
     companion object {
@@ -396,6 +484,7 @@ class ThreadSession(
 
         /** The shortest time between two `boundedThread` reads. */
         const val REFETCH_INTERVAL_MS = 10_000L
+        const val CACHE_RESUME_TIMEOUT_MS = 3_000L
 
         /** Stream ends after which events may have been lost: the snapshot is read again. */
         val REFETCH_ERRORS = setOf("stream_backpressure", ConnectionSupervisor.STREAM_CLOSED)

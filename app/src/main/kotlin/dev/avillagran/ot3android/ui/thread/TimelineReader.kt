@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyListState
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -42,8 +44,12 @@ import java.util.Date
 internal fun JSONArray?.objects(): List<JSONObject> = this?.let { a -> (0 until a.length()).mapNotNull(a::optJSONObject) }.orEmpty()
 
 /** Draw Rust's complete ordered view. No grouping, Markdown parsing or eligibility rules here. */
+@OptIn(kotlinx.coroutines.FlowPreview::class)
 @Composable
-internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, onInspect: suspend (JSONObject) -> JSONObject? = { null }, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject? = { _, _ -> null }) {
+internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, onInspect: suspend (JSONObject) -> JSONObject? = { null }, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject? = { _, _ -> null },
+    initialPosition: dev.avillagran.ot3android.core.data.prefs.ReadingPosition? = null,
+    onPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
+) {
     val threadKey = LocalSelectedThreadKey.current
     // The modal belongs to the reader, not a lazy row which may leave composition
     // when rotation changes the viewport. Scope saved state to the selected thread.
@@ -56,7 +62,21 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         fallback.map { JSONObject().put("id", it.id).put("role", it.role).put("text", it.text)
             .put("createdAt", it.createdAt).put("streaming", it.streaming).put("rev", it.rev) }
     }.asReversed()
-    val list = rememberSaveable(saver = readingAnchorSaver(rows)) { LazyListState() }
+    val list = rememberSaveable(saver = readingAnchorSaver(rows)) {
+        val byKey = initialPosition?.let { position -> rows.indexOfFirst { it.optString("id") == position.rowId } } ?: -1
+        LazyListState(if (byKey >= 0) byKey else initialPosition?.index?.coerceIn(0, (rows.size - 1).coerceAtLeast(0)) ?: 0,
+            initialPosition?.offset ?: 0)
+    }
+    val savePosition by androidx.compose.runtime.rememberUpdatedState(onPosition)
+    fun position() = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }?.let {
+        dev.avillagran.ot3android.core.data.prefs.ReadingPosition(it.key as? String ?: "", list.firstVisibleItemIndex, list.firstVisibleItemScrollOffset)
+    }
+    androidx.compose.runtime.LaunchedEffect(list, threadKey) {
+        androidx.compose.runtime.snapshotFlow { position() }.debounce(250).distinctUntilChanged().collect { it?.let(savePosition) }
+    }
+    androidx.compose.runtime.DisposableEffect(list, threadKey) {
+        onDispose { position()?.let(savePosition) }
+    }
     val scope = rememberCoroutineScope()
     val away by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 80 } }
     CompositionLocalProvider(LocalOpenReaderImage provides { openedImage = it.toString() }) {
