@@ -5,7 +5,9 @@ Spec: [UI_SPEC 4.14](../../../UI_SPEC.md#414-notifications-and-live-updates). De
 
 **Current status:** runtime is implemented. Real NODE chip evidence is in [runtime](runtime/);
 secure lockscreen and synthetic grouped-alert service evidence is tracked in
-[system-lab](system-lab/README.md). Doze/process-death/physical acceptance remains open.
+[system-lab](system-lab/README.md). Later [resilience evidence](resilience/README.md)
+covers forced Doze and controlled SIGKILL with an external fixture. Natural expiry,
+real LMK/OEM/physical behavior and the explicit limits in those labs remain open.
 
 **Original preparation scope (historical):** that tranche shipped documentation, a status bar icon, two
 channels, presentation builders and a parser for the proposed lib objects, with
@@ -46,7 +48,11 @@ no test asserts that a card *is* promoted.
 | FGS start from background | allowed | allowed (≤ 30) / restricted (31+) | restricted | restricted | restricted |
 | `specialUse` type | n/a (FGS without type) | n/a until 34 | 34+: `FOREGROUND_SERVICE_SPECIAL_USE` + subtype property | same | same |
 
-## Acceptance for the runtime tranche (not claimed here)
+## Original acceptance plan for the runtime tranche (historical)
+
+This list preserves the initial design, including proposed baseline persistence,
+configurable idle minutes and timeout callbacks. It is not the current implemented
+checklist: use the system/resilience evidence and UI_SPEC4.14 for exact scope.
 
 1. U28 released in a lib version pinned by `libs/lib-t3-rust.lock`; `NotificationContract`
    fixtures replaced by the lib's own outputs; no notification rule in Kotlin.
@@ -80,7 +86,7 @@ No emulator was started and no device was reserved: the bridge-closure agent own
   `platforms/android-37.0`. androidx.core 1.17.0 (already pinned) provides
   `setRequestPromotedOngoing`, `setShortCriticalText`, `canPostPromotedNotifications`.
 
-## Steps after the current priorities (UI-2a, bridge catalog)
+## Original planned steps (historical, before U28/runtime)
 
 1. Lib: implement and release U28 (`awareness.view`) with shared fixtures; pin it.
 2. Root installs `system-images;android-36.1;google_apis;x86_64` and creates a dedicated
@@ -164,8 +170,12 @@ prove immediate revocation detection on an already established stream.
   QA environment deleted, service absent, harness inactive and emulator stopped. No Xiaomi
   operation, message submission or productive environment change.
 
-Still missing: actual lock-screen capture, grouped transition alerts, Doze, process death,
-multiple environments, natural expiry/idle timeout and automatic revocation detection.
+At this earlier live-NODE checkpoint, lockscreen/grouped/multi-environment and
+resilience evidence was still missing. Subsequent [system lab](system-lab/README.md)
+verified secure lockscreen/grouped/multi-environment behavior; the later
+[resilience lab](resilience/README.md) covers forced Doze and controlled process
+termination within explicit limits. Natural expiry/idle timeout, OEM/LMK behavior and
+automatic remote revocation detection remain pending.
 The QA environment was explicitly seeded: **this is not automatic bridge NODE/VQ discovery**.
 UI-N and desktop parity remain open.
 

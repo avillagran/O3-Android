@@ -116,4 +116,6 @@ by the lab operator after instrumentation, since revoking it terminates the app.
 The Open assertion must pump Compose's test clock (`waitUntil`): a coroutine-only poll
 after external SystemUI ACTION_CLICK leaves the received deep link waiting for Compose
 recomposition. This was a harness issue; no navigation production change was needed.
-Doze/process death, natural 15-minute expiry and OEM/physical behavior remain pending.
+At this 2026-10-26 checkpoint, Doze/process death were still pending. The later
+[resilience lab](../resilience/README.md) adds forced-Doze/SIGKILL evidence with
+explicit limits. Natural15-minute expiry and OEM/physical behavior remain pending.

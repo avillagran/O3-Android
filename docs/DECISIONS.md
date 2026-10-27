@@ -1195,3 +1195,21 @@ is not claimed. Guard remove with lease ownership too.
 No independent expiry timer or Kotlin protocol authorization policy is added; idle
 natural expiry without an existing signal/read remains unaccepted. See
 `ui/compare/feedback-cache/authority-safety.md` for tests and exact limits.
+
+### 2026-10-27 — Follow resilience is visible re-entry with a cold baseline, not a restart promise
+
+A loopback server in a separate host JVM survives app SIGKILL. An opt-in isolated
+instrumentation APK has a different UID and controls DeviceIdleController/key events;
+the real application is not instrumented during lifecycle acceptance. No helper IPC,
+permission or dependency enters the product. Measured State/Full process cycles retained
+opt-in/privacy and restored following on visible reopen, without reposting two native
+child alerts. No automatic restart was observed for bounded5-second windows; this does
+not emulate LMK, force-stop or OEM policy. The service remains START_NOT_STICKY.
+
+Forced deep Doze retained the FGS; Working remained until a controlled connection
+failure was observed, then Rust supplied Waiting and recovered. Loopback does not
+prove Android network enforcement or natural maintenance windows. Wake-probe chronology
+records fresh frame/blackhole/pings and successor streams at4.525s/5.418s; network
+recovery is not attributed exclusively to wakeSubscriptions. Baseline is session-local,
+not DataStore; idle is fixed15min, not configurable. Natural/legacy expiry stays open.
+See `ui/compare/ui-n/resilience/README.md` and its native system checks.
