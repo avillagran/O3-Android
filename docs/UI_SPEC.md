@@ -2525,3 +2525,26 @@ recordings are instrumented component scenarios, not a wall-clock smoothness or
 physical-device aesthetic acceptance. Interactive GUI capture remains limited by
 the unavailable Jev key; no Android Settings fallback was used. Sources, GPU proof,
 recordings and remaining boundaries: `docs/ui/compare/reveal-styles/README.md`.
+
+### 2026-10-27 reader inspector increment
+
+Activity entries now open an explicit selected inspector with Details / Metadata /
+Raw item modes, native status/exit code, bounded selectable sections, copy, retry
+and close. Expanding a group alone must not request every entry. Replacing its
+reference cancels the old read and prevents stale completion from replacing the
+current inspector. Labels use the pinned035 AAR catalog in20 locales.
+
+This phone increment remains inline; desktop popup placement and Follow live
+output remain differences, not completed parity. No polling is invented. See
+[verification and reference](ui/compare/reader-inspector/README.md).
+
+### 2026-10-27 — Reader-owned inspector window
+
+The current inspector uses the sheet/popup ownership specified in4.3.3, replacing
+its initial inline placement. The timeline owns the saved reference by selected
+thread, outside lazy rows; only explicit selection reads an item. Recycling or
+replacing a source row does not close/refetch the window. Close/Back cancels its
+read and leaves the thread stream and reading anchor intact. Short content wraps;
+height is capped at90%, width at640dp, scrim50%, and controls retain48dp targets.
+Static labels use the common AAR catalog. Live output/common reduction and exact
+popup motion remain pending. See [current evidence](ui/compare/reader-inspector/README.md).

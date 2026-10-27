@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Skládání</string>
     <string name="ot3_reveal_spring">Pružina</string>
     <string name="ot3_reveal_instant">Okamžitě</string>
+    <string name="ot3_inspector_activity_details">Podrobnosti aktivity</string>
+    <string name="ot3_inspector_loading">Načítání výstupu…</string>
+    <string name="ot3_inspector_unavailable_error">Výstup se nepodařilo načíst</string>
+    <string name="ot3_inspector_disconnected">Offline</string>
+    <string name="ot3_inspector_unavailable">Výstup již není dostupný.</string>
+    <string name="ot3_inspector_details">Podrobnosti</string>
+    <string name="ot3_inspector_metadata">Metadata</string>
+    <string name="ot3_inspector_raw_item">Nezpracovaná položka</string>
+    <string name="ot3_inspector_exit_code">Návratový kód</string>
+    <string name="ot3_inspector_empty_output">Žádný výstup.</string>
+    <string name="ot3_inspector_output_omitted">Server neposkytl výstup. Obnovte jej opakováním pokusu.</string>
+    <string name="ot3_inspector_truncated">Byl dosažen limit zobrazení. Kopíruje se pouze zobrazený text.</string>
 </resources>

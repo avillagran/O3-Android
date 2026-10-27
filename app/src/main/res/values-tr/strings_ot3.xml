@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Katlama</string>
     <string name="ot3_reveal_spring">Yaylı</string>
     <string name="ot3_reveal_instant">Anında</string>
+    <string name="ot3_inspector_activity_details">Etkinlik ayrıntıları</string>
+    <string name="ot3_inspector_loading">Çıktı yükleniyor…</string>
+    <string name="ot3_inspector_unavailable_error">Çıktı yüklenemedi</string>
+    <string name="ot3_inspector_disconnected">Çevrimdışı</string>
+    <string name="ot3_inspector_unavailable">Çıktı artık kullanılamıyor.</string>
+    <string name="ot3_inspector_details">Ayrıntılar</string>
+    <string name="ot3_inspector_metadata">Üst veriler</string>
+    <string name="ot3_inspector_raw_item">Ham öğe</string>
+    <string name="ot3_inspector_exit_code">Çıkış kodu</string>
+    <string name="ot3_inspector_empty_output">Çıktı yok.</string>
+    <string name="ot3_inspector_output_omitted">Sunucu çıktıyı sağlamadı. Yenilemek için yeniden deneyin.</string>
+    <string name="ot3_inspector_truncated">Görüntüleme sınırına ulaşıldı. Kopyalama yalnızca gösterilen metni içerir.</string>
 </resources>

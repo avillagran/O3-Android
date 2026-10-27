@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">折叠</string>
     <string name="ot3_reveal_spring">弹性</string>
     <string name="ot3_reveal_instant">即时</string>
+    <string name="ot3_inspector_activity_details">活动详情</string>
+    <string name="ot3_inspector_loading">正在加载输出…</string>
+    <string name="ot3_inspector_unavailable_error">无法加载输出</string>
+    <string name="ot3_inspector_disconnected">离线</string>
+    <string name="ot3_inspector_unavailable">输出已不再可用。</string>
+    <string name="ot3_inspector_details">详情</string>
+    <string name="ot3_inspector_metadata">元数据</string>
+    <string name="ot3_inspector_raw_item">原始条目</string>
+    <string name="ot3_inspector_exit_code">退出代码</string>
+    <string name="ot3_inspector_empty_output">无输出。</string>
+    <string name="ot3_inspector_output_omitted">服务器未提供输出。重试以刷新。</string>
+    <string name="ot3_inspector_truncated">已达到显示上限。复制仅包含显示的文本。</string>
 </resources>

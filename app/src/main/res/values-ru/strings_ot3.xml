@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Складывание</string>
     <string name="ot3_reveal_spring">Пружина</string>
     <string name="ot3_reveal_instant">Мгновенно</string>
+    <string name="ot3_inspector_activity_details">Подробности действия</string>
+    <string name="ot3_inspector_loading">Загрузка вывода…</string>
+    <string name="ot3_inspector_unavailable_error">Не удалось загрузить вывод</string>
+    <string name="ot3_inspector_disconnected">Не в сети</string>
+    <string name="ot3_inspector_unavailable">Вывод больше недоступен.</string>
+    <string name="ot3_inspector_details">Подробности</string>
+    <string name="ot3_inspector_metadata">Метаданные</string>
+    <string name="ot3_inspector_raw_item">Исходный элемент</string>
+    <string name="ot3_inspector_exit_code">Код выхода</string>
+    <string name="ot3_inspector_empty_output">Нет вывода.</string>
+    <string name="ot3_inspector_output_omitted">Сервер не предоставил вывод. Повторите попытку для обновления.</string>
+    <string name="ot3_inspector_truncated">Достигнут предел отображения. Скопируется только показанный текст.</string>
 </resources>

@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Piega</string>
     <string name="ot3_reveal_spring">Elastico</string>
     <string name="ot3_reveal_instant">Istantaneo</string>
+    <string name="ot3_inspector_activity_details">Dettagli dell\'attività</string>
+    <string name="ot3_inspector_loading">Caricamento dell\'output…</string>
+    <string name="ot3_inspector_unavailable_error">Impossibile caricare l\'output</string>
+    <string name="ot3_inspector_disconnected">Non in linea</string>
+    <string name="ot3_inspector_unavailable">L\'output non è più disponibile.</string>
+    <string name="ot3_inspector_details">Dettagli</string>
+    <string name="ot3_inspector_metadata">Metadati</string>
+    <string name="ot3_inspector_raw_item">Elemento grezzo</string>
+    <string name="ot3_inspector_exit_code">Codice di uscita</string>
+    <string name="ot3_inspector_empty_output">Nessun output.</string>
+    <string name="ot3_inspector_output_omitted">Il server non ha fornito l\'output. Riprova per aggiornarlo.</string>
+    <string name="ot3_inspector_truncated">Limite di visualizzazione raggiunto. La copia include solo il testo mostrato.</string>
 </resources>

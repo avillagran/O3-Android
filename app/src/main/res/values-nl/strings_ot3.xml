@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Vouwen</string>
     <string name="ot3_reveal_spring">Verend</string>
     <string name="ot3_reveal_instant">Direct</string>
+    <string name="ot3_inspector_activity_details">Activiteitsdetails</string>
+    <string name="ot3_inspector_loading">Uitvoer laden…</string>
+    <string name="ot3_inspector_unavailable_error">Kan uitvoer niet laden</string>
+    <string name="ot3_inspector_disconnected">Offline</string>
+    <string name="ot3_inspector_unavailable">De uitvoer is niet meer beschikbaar.</string>
+    <string name="ot3_inspector_details">Details</string>
+    <string name="ot3_inspector_metadata">Metagegevens</string>
+    <string name="ot3_inspector_raw_item">Ruw item</string>
+    <string name="ot3_inspector_exit_code">Afsluitcode</string>
+    <string name="ot3_inspector_empty_output">Geen uitvoer.</string>
+    <string name="ot3_inspector_output_omitted">De server heeft de uitvoer achtergehouden. Probeer opnieuw om deze te vernieuwen.</string>
+    <string name="ot3_inspector_truncated">Weergavelimiet bereikt. Kopiëren neemt alleen de getoonde tekst over.</string>
 </resources>

@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Складання</string>
     <string name="ot3_reveal_spring">Пружина</string>
     <string name="ot3_reveal_instant">Миттєво</string>
+    <string name="ot3_inspector_activity_details">Подробиці дії</string>
+    <string name="ot3_inspector_loading">Завантаження виводу…</string>
+    <string name="ot3_inspector_unavailable_error">Не вдалося завантажити вивід</string>
+    <string name="ot3_inspector_disconnected">Не в мережі</string>
+    <string name="ot3_inspector_unavailable">Вивід більше недоступний.</string>
+    <string name="ot3_inspector_details">Подробиці</string>
+    <string name="ot3_inspector_metadata">Метадані</string>
+    <string name="ot3_inspector_raw_item">Початковий елемент</string>
+    <string name="ot3_inspector_exit_code">Код виходу</string>
+    <string name="ot3_inspector_empty_output">Немає виводу.</string>
+    <string name="ot3_inspector_output_omitted">Сервер не надав вивід. Повторіть спробу для оновлення.</string>
+    <string name="ot3_inspector_truncated">Досягнуто межі відображення. Скопіюється лише показаний текст.</string>
 </resources>

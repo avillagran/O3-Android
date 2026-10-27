@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Dobra</string>
     <string name="ot3_reveal_spring">Elástico</string>
     <string name="ot3_reveal_instant">Instantâneo</string>
+    <string name="ot3_inspector_activity_details">Detalhes da atividade</string>
+    <string name="ot3_inspector_loading">Carregando saída…</string>
+    <string name="ot3_inspector_unavailable_error">Não foi possível carregar a saída</string>
+    <string name="ot3_inspector_disconnected">Sem conexão</string>
+    <string name="ot3_inspector_unavailable">A saída não está mais disponível.</string>
+    <string name="ot3_inspector_details">Detalhes</string>
+    <string name="ot3_inspector_metadata">Metadados</string>
+    <string name="ot3_inspector_raw_item">Item bruto</string>
+    <string name="ot3_inspector_exit_code">Código de saída</string>
+    <string name="ot3_inspector_empty_output">Sem saída.</string>
+    <string name="ot3_inspector_output_omitted">O servidor não forneceu a saída. Tente novamente para atualizá-la.</string>
+    <string name="ot3_inspector_truncated">O limite de exibição foi atingido. A cópia inclui apenas o texto exibido.</string>
 </resources>

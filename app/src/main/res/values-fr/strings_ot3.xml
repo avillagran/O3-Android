@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Pliage</string>
     <string name="ot3_reveal_spring">Ressort</string>
     <string name="ot3_reveal_instant">Instantané</string>
+    <string name="ot3_inspector_activity_details">Détails de l\'activité</string>
+    <string name="ot3_inspector_loading">Chargement de la sortie…</string>
+    <string name="ot3_inspector_unavailable_error">Impossible de charger la sortie</string>
+    <string name="ot3_inspector_disconnected">Hors ligne</string>
+    <string name="ot3_inspector_unavailable">La sortie n\'est plus disponible.</string>
+    <string name="ot3_inspector_details">Détails</string>
+    <string name="ot3_inspector_metadata">Métadonnées</string>
+    <string name="ot3_inspector_raw_item">Élément brut</string>
+    <string name="ot3_inspector_exit_code">Code de sortie</string>
+    <string name="ot3_inspector_empty_output">Aucune sortie.</string>
+    <string name="ot3_inspector_output_omitted">Le serveur n\'a pas fourni la sortie. Réessayez pour l\'actualiser.</string>
+    <string name="ot3_inspector_truncated">Limite d\'affichage atteint. La copie ne comprend que le texte affiché.</string>
 </resources>

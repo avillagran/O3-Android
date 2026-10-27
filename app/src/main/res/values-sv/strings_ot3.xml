@@ -230,4 +230,16 @@
     <string name="ot3_reveal_fold">Vikning</string>
     <string name="ot3_reveal_spring">Fjädrande</string>
     <string name="ot3_reveal_instant">Direkt</string>
+    <string name="ot3_inspector_activity_details">Aktivitetsdetaljer</string>
+    <string name="ot3_inspector_loading">Läser in utdata…</string>
+    <string name="ot3_inspector_unavailable_error">Det gick inte att läsa in utdata</string>
+    <string name="ot3_inspector_disconnected">Frånkopplad</string>
+    <string name="ot3_inspector_unavailable">Utdata är inte längre tillgängliga.</string>
+    <string name="ot3_inspector_details">Detaljer</string>
+    <string name="ot3_inspector_metadata">Metadata</string>
+    <string name="ot3_inspector_raw_item">Råobjekt</string>
+    <string name="ot3_inspector_exit_code">Avslutningskod</string>
+    <string name="ot3_inspector_empty_output">Inga utdata.</string>
+    <string name="ot3_inspector_output_omitted">Servern lämnade inte utdata. Försök igen för att uppdatera.</string>
+    <string name="ot3_inspector_truncated">Visningsgränsen har nåtts. Endast visad text kopieras.</string>
 </resources>

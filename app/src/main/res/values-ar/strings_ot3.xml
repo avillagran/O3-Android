@@ -231,4 +231,16 @@
     <string name="ot3_reveal_fold">طيّ</string>
     <string name="ot3_reveal_spring">نابض</string>
     <string name="ot3_reveal_instant">فوري</string>
+    <string name="ot3_inspector_activity_details">تفاصيل النشاط</string>
+    <string name="ot3_inspector_loading">جارٍ تحميل المخرجات…</string>
+    <string name="ot3_inspector_unavailable_error">تعذر تحميل المخرجات</string>
+    <string name="ot3_inspector_disconnected">غير متصل</string>
+    <string name="ot3_inspector_unavailable">لم تعد المخرجات متاحة.</string>
+    <string name="ot3_inspector_details">التفاصيل</string>
+    <string name="ot3_inspector_metadata">البيانات الوصفية</string>
+    <string name="ot3_inspector_raw_item">العنصر الخام</string>
+    <string name="ot3_inspector_exit_code">رمز الخروج</string>
+    <string name="ot3_inspector_empty_output">لا توجد مخرجات.</string>
+    <string name="ot3_inspector_output_omitted">لم يقدّم الخادم المخرجات. أعِد المحاولة لتحديثها.</string>
+    <string name="ot3_inspector_truncated">تم بلوغ حد العرض. يشمل النسخ النص المعروض فقط.</string>
 </resources>
