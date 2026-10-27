@@ -22,7 +22,11 @@ class OmarchyThemeSelectionTest {
             rule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
             rule.onNodeWithTag(SettingsTags.entry(SettingsEntry.Appearance)).performClick()
             rule.waitUntil(5_000) { rule.onAllNodesWithTag(AppearanceSettingsTags.light("catppuccin-latte")).fetchSemanticsNodes().isNotEmpty() }
+            // Editing the fallback must preserve desktop following.
             rule.onNodeWithTag(AppearanceSettingsTags.light("catppuccin-latte")).performScrollTo().performClick()
+            rule.waitUntil(5_000) { runBlocking { prefs.settings.first().manual.mode == AppearanceMode.LIGHT } }
+            assertTrue(prefs.settings.first().followEnvironment)
+            rule.onNodeWithTag("appearance_phone").performScrollTo().performClick()
             rule.waitUntil(5_000) { runBlocking { val s = prefs.settings.first(); !s.followEnvironment && s.manual.mode == AppearanceMode.LIGHT } }
             assertEquals("catppuccin-latte", prefs.settings.first().manual.lightThemeId)
             rule.activityRule.scenario.recreate()

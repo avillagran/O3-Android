@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.FloatingWindow
 import androidx.navigation.NavGraphBuilder
@@ -73,7 +74,9 @@ fun Ot3NavHost(
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            if (contentDestination?.hasRoute(Thread::class) != true && !WindowInsets.isImeVisible) Ot3NavigationBar(navigator, TopTab.of(current.value))
+            if (contentDestination?.hasRoute(Thread::class) != true &&
+                contentDestination?.hierarchy?.any { it.hasRoute(SettingsGraph::class) } != true &&
+                !WindowInsets.isImeVisible) Ot3NavigationBar(navigator, TopTab.of(current.value))
         },
     ) { padding ->
         NavHost(

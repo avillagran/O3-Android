@@ -1184,3 +1184,29 @@ and durable storage; it must not port fallback/search/routing rules to Kotlin.
 
 UI_SPEC §4.7 and the NewThread route remain unimplemented; this request is not
 acceptance of that flow. No library checkout or production configuration was changed.
+
+### U33 — common composer edit transforms (does not block UI-N)
+
+Own-lib [issue18](https://github.com/avillagran/lib-t3-rust/issues/18) requests recall
+candidates, completion trigger/replacement and list continuation from ot3 `7b5b1de`
+T3Composer.qml:131,139–153,194–219. Existing035 `composer.paths/catalog/fileLink/
+attachmentReference` and timeline `recallableText` do not expose these policies.
+Define selection/replacement offsets as UTF-16 code units (or explicit conversion)
+for Compose/QML, including astral/combining text and stale ranges. Android owns
+selection, IME locks and scratch recall UI; it must not port QML regex/domain rules.
+
+## 2026-10-26 — U34: Bounded provider registry icon bytes
+
+Checked against v0.3.5 `src/models.rs` and binary operations: `models.catalog`
+already validates and supplies `registryIcon`, `driverKind` and `instanceId`.
+Android can render bundled desktop provider marks from exact driver identity,
+with the desktop ACP mark for custom/unknown providers. It must not infer identity
+from model names or instance display names.
+
+Missing for complete registry parity: a native bounded/cancellable icon byte read,
+for example `models.registryIconBytes(catalogProvider) -> {mimeType,bytes}` via the
+binary ABI. Reuse catalog URL validation; allow only its official registry source,
+validate redirects/content/size, no bearer credentials, and expose cancellation.
+The Android consumer renders/caches returned bytes and retains the bundled fallback
+while loading or on error. The current attachment image API cannot fetch this URL.
+No Kotlin HTTP/protocol implementation or library checkout change is introduced.
