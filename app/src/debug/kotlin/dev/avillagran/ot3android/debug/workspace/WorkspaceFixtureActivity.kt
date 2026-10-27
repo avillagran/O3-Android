@@ -121,8 +121,12 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             }
             val fixtureColors = remember { dev.avillagran.ot3android.ui.theme.OmarchyThemeCatalog.loadBlocking(application)
                 .let { catalog -> dev.avillagran.ot3android.ui.theme.Ot3Colors.fromTheme(catalog[if (intent.getBooleanExtra("dark", false)) "tokyo-night" else "catppuccin-latte"]!!) } }
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides
+                androidx.compose.ui.unit.Density(density.density, intent.getFloatExtra("fontScale", density.fontScale))) {
             Ot3Theme(colors = fixtureColors, motion = dev.avillagran.ot3android.ui.theme.rememberOt3Motion(
                 dev.avillagran.ot3android.core.data.prefs.AnimationPreference.AUTO)) { Ot3NavHost(nav, screens) }
+            }
         }
     }
 }
@@ -254,6 +258,17 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
                 .put("url", "https://github.com/example/fixture/pull/42")
                 .put("snapshot", JSONObject().put("state", "open").put("isDraft", true)))
             .put("createdAt", "2026-10-25T10:00:00Z").put("status", "idle")).also { threads ->
+                if (request.startsWith("sidebar-")) {
+                    threads.remove(0)
+                    val activeCount = when (request) { "sidebar-empty" -> 0; "sidebar-short" -> 1; else -> 80 }
+                    fun row(id: String) = JSONObject().put("id", id).put("projectId", "project")
+                        .put("title", "Hilo de prueba $id").put("createdAt", "2026-10-25T09:00:00Z").put("status", "idle")
+                    repeat(activeCount) { threads.put(row("active-$it")) }
+                    repeat(25) {
+                        threads.put(row("snoozed-$it").put("snoozedUntil", "2099-10-25T15:00:00Z"))
+                        threads.put(row("settled-$it").put("settledAt", "2026-10-25T08:00:00Z"))
+                    }
+                }
                 if (rich) {
                     fun row(id: String, title: String) = JSONObject().put("id", id).put("projectId", "project")
                         .put("title", title).put("branch", "feat/ui-1i").put("createdAt", "2026-10-25T09:00:00Z")
