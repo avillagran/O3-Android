@@ -170,3 +170,29 @@ production-server or physical Xiaomi acceptance.
 - [24.24-second touch recording](split-device/split-touch.mp4) and [gesture telemetry](split-device/split-touch.gesture-telemetry.json): wide Unified/Split and hunk touch.
 
 File tree, context controls, syntax highlighting and new copying features remain out of scope.
+
+
+### Static split golden follow-up — 2026-10-27
+
+PR61 build run `40460200877` failed only the Latte `wideNativeSplit` golden.
+The downloaded actual/reference comparison confines all 3,099 differing pixels
+to the layout button bounds `(1351,32)–(1487,112)`; split rows and the rest of the
+screen match. The reference itself retained a transient pressed-control capsule.
+The comparison shows different side arcs of that capsule; it does not establish
+which Material feedback/shape animation contributed to the particular frame.
+The original focal test passed locally with CI's required JNI/Bridge SDK options,
+so the original timing failure was not reproduced locally.
+
+The screenshot now activates the layout with its semantic OnClick action, which
+does not inject a touch press, and still requires Unified action text and the
+native right cell before capturing the complete golden. Device touch tests remain
+unchanged. Recording both themes leaves Tokyo Night byte-identical and removes
+only the accidental Latte control capsule (9,587 pixels inside the same bounds).
+No production change, comparison tolerance or assertion was relaxed.
+
+Final full `ReaderScreenshotTest` verification passed 9/9 in 17s with
+`OT3A_REQUIRE_HOST_JNI=1`, `-Pot3a.requireHostJni=true` and
+`-Pot3a.requireBridgeSdk=true`, using `:app:testDebugUnitTest
+:app:verifyRoborazziDebug --tests '*ReaderScreenshotTest*'`. Logs on node:
+`/tmp/pr61-golden-repro.log`, `/tmp/pr61-static-record.log` and
+`/tmp/pr61-static-verify.log`; downloaded CI reports: `/tmp/pr61-golden-reports/`.

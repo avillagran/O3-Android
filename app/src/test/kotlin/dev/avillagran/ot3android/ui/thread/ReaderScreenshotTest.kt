@@ -53,7 +53,11 @@ class ReaderScreenshotTest : ScreenshotTest() {
         snapshot("diff-split", screen = true, beforeCapture = {
             composeRule.mainClock.autoAdvance = true
             val layout = composeRule.onNodeWithTag("thread_diff_layout")
-            if (layout.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text].any { it.text == "Split" }) layout.performClick()
+            // Capture the settled layout, not a frame of Material's transient touch feedback.
+            // Actual header/layout touches are covered by DiffHunkFoldDeviceTest.
+            if (layout.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text].any { it.text == "Split" }) {
+                layout.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
+            }
             composeRule.waitForIdle()
             composeRule.onNodeWithTag("thread_diff_layout").assertTextContains("Unified")
             composeRule.onNodeWithTag("thread_diff_cell_0_3_1").assertTextContains("+renderNativeBlocks()")
