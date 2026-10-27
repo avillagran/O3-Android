@@ -76,40 +76,40 @@ class BridgeCatalogNativeTest {
             controller.refresh()
             val initial = repository.environments.first()
             assertEquals(3, initial.size)
-            val node = initial.single { it.environmentId == NODE }
-            val vq = initial.single { it.environmentId == VQ }
-            cursors.setCursor(node.id, 7)
-            database.draftDao().upsert(DraftEntity("${node.id}/thread", "node draft", 2))
-            assertNull(repository.token(node.id))
+            val host = initial.single { it.environmentId == HOST }
+            val gateway = initial.single { it.environmentId == GATEWAY }
+            cursors.setCursor(host.id, 7)
+            database.draftDao().upsert(DraftEntity("${host.id}/thread", "host draft", 2))
+            assertNull(repository.token(host.id))
             stage = "catalog rename/recovery"
             lab("/change"); controller.refresh()
-            val changed = repository.find(node.id)!!
-            assertEquals("NODE renamed", changed.label)
-            assertEquals("https://changed-node.fixture.invalid/", changed.baseUrl)
-            assertEquals(7L, cursors.cursor(node.id))
+            val changed = repository.find(host.id)!!
+            assertEquals("HOST renamed", changed.label)
+            assertEquals("https://changed-host.fixture.invalid/", changed.baseUrl)
+            assertEquals(7L, cursors.cursor(host.id))
             stage = "catalog withdrawal"
             lab("/withdraw"); controller.refresh()
-            assertEquals("revoked", database.bridgeManagedDao().find(node.id)!!.status)
-            assertEquals("", repository.find(node.id)!!.baseUrl)
+            assertEquals("revoked", database.bridgeManagedDao().find(host.id)!!.status)
+            assertEquals("", repository.find(host.id)!!.baseUrl)
             assertEquals(3, repository.environments.first().size)
-            assertEquals(vq.id, repository.environments.first().single { it.environmentId == VQ }.id)
+            assertEquals(gateway.id, repository.environments.first().single { it.environmentId == GATEWAY }.id)
             stage = "catalog rename/recovery"
             lab("/change"); controller.refresh()
-            assertEquals("discovered", database.bridgeManagedDao().find(node.id)!!.status)
-            assertEquals(7L, cursors.cursor(node.id))
+            assertEquals("discovered", database.bridgeManagedDao().find(host.id)!!.status)
+            assertEquals(7L, cursors.cursor(host.id))
             stage = "native process restart"
             controller.close()
             assertEquals(client, controller.open(directory.absolutePath, directOnly = true))
             controller.refresh() // Restores the selected bridge; no selectBridge/pair call.
             assertEquals(3, repository.environments.first().size)
-            assertEquals(node.id, repository.environments.first().single { it.environmentId == NODE }.id)
+            assertEquals(host.id, repository.environments.first().single { it.environmentId == HOST }.id)
             stage = "native grant revoke"
             lab("/revoke"); controller.refresh()
             assertEquals("revoked", controller.status.value)
             assertTrue(database.bridgeManagedDao().all().all { it.status == "revoked" })
             assertEquals("private-fixture-token", repository.token(independent.id))
             assertEquals(42L, cursors.cursor(independent.id))
-            assertEquals("node draft", database.draftDao().find("${node.id}/thread")?.text)
+            assertEquals("host draft", database.draftDao().find("${host.id}/thread")?.text)
         } catch (error: Exception) {
             throw AssertionError("Catalog lab failed at $stage", error)
         } finally {
@@ -117,7 +117,7 @@ class BridgeCatalogNativeTest {
         }
     }
     private companion object {
-        const val VQ = "00000000-0000-4000-8000-000000000001"
-        const val NODE = "00000000-0000-4000-8000-000000000002"
+        const val GATEWAY = "00000000-0000-4000-8000-000000000001"
+        const val HOST = "00000000-0000-4000-8000-000000000002"
     }
 }
