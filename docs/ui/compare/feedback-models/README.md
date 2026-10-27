@@ -30,3 +30,8 @@ binaria actual no obtiene sus bytes. Los proveedores de registro/desconocidos
 muestran ACP hasta tener una lectura nativa acotada; no hay HTTP en Kotlin ni
 heurísticas por nombre para simular la marca del registro. Aceptación física
 pendiente del usuario. No se modificaron repositorios de referencia ni la lib.
+
+Seguimiento CI: Ot3IconsTest exigió registrar las cinco nuevas fuentes en el
+mapa central además de renderizarlas en el selector. Se añadieron sus entradas,
+sin relajar esa comprobación. Tras integrar main152b851 (tema/PR54), las268 pruebas
+JVM de app, lint, todas las capturas y las pruebas del conversor pasaron juntas.
