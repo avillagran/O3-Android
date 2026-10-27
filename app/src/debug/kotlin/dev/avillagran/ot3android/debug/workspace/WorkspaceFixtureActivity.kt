@@ -47,7 +47,10 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             if (fixture.caching && intent.getBooleanExtra("cacheThread", false)) LaunchedEffect(nav) {
                 fixture.repository.environments.first { list -> list.any { it.id == "node" } }
                 nav.currentBackStackEntryFlow.first()
-                navigator.openThread("node", "chat")
+                // Navigation must use Android Main even when the test interceptor resumes a Room wait on a worker.
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main.immediate) {
+                    navigator.openThread("node", "chat")
+                }
             }
             val screens = remember(navigator, fixture) {
                 object : Ot3Screens by AppScreens(navigator) {
