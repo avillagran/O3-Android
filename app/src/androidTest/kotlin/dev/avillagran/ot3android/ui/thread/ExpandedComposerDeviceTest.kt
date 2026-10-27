@@ -103,9 +103,15 @@ class ExpandedComposerDeviceTest {
         } finally { compactResponse.complete(Unit) }
         waitSendComplete()
         field().performTextReplacement(SAMPLE)
-        rule.onNodeWithTag("composer_expand").performClick()
-        rule.waitUntil(15_000) { rule.onNodeWithTag("composer_expanded").isDisplayed() }
-        rule.onNodeWithTag("composer_expanded").assertIsDisplayed()
+        val expand = rule.onNodeWithTag("composer_expand")
+        traceInputTransition(scenario, "keyboardMode dark=$dark expandAfterSend", expand, surface = {
+            "expanded=${rule.onAllNodesWithTag("composer_expanded").fetchSemanticsNodes().size} " +
+                "composer=${rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().size}"
+        }) { click ->
+            click()
+            rule.waitUntil(15_000) { rule.onNodeWithTag("composer_expanded").isDisplayed() }
+            rule.onNodeWithTag("composer_expanded").assertIsDisplayed()
+        }
         field().performTextInputSelection(TextRange(SAMPLE.length))
         waitIme(scenario, true); capture(if (dark) "tokyo" else "latte", "expanded")
         inject(KeyEvent.KEYCODE_ENTER); assertCount(scenario, 1, "expanded physical Enter") // Expanded physical Enter is newline.
