@@ -1,0 +1,36 @@
+{
+  "platform": "API34 emulator, private COW clone; not productive phone",
+  "testAppSource": "c4a63af",
+  "tests": 2,
+  "failures": 0,
+  "skipped": 0,
+  "fixtureDatabaseBytesUnchanged": true,
+  "fixturePrivateCanariesExcluded": true,
+  "report": {
+    "readOnly": true,
+    "nativeSdkAvailable": true,
+    "selectedBridgeOnDisk": false,
+    "databasePresent": false,
+    "applicationGraphStarted": false
+  },
+  "physicalProbeExecuted": true,
+  "physicalReason": "User authorized retry; install succeeded; separate physical-verification.json records the read-only result",
+  "customRunner": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0
+  },
+  "normalRunner": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 1
+  },
+  "finalUnit": {
+    "MainPID": "0",
+    "Result": "success",
+    "ExecMainStatus": "0",
+    "MemoryPeak": "[not set]",
+    "InvocationID": ""
+  },
+  "sourceAvdFilesUnchanged": 7
+}

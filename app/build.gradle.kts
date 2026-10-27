@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val installedCatalogReadOnlyRunner = providers.gradleProperty("ot3a.installedCatalogReadOnlyRunner").orElse("false")
+
 android {
     namespace = "dev.avillagran.ot3android"
     compileSdk = 36
@@ -20,7 +22,9 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = if (installedCatalogReadOnlyRunner.get() == "true")
+            "dev.avillagran.ot3android.diagnostics.InstalledCatalogReadOnlyRunner"
+        else "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
