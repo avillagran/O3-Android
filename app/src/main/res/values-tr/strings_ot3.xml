@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">Sohbete dön</string>
     <string name="ot3_diff_split">Bölünmüş</string>
     <string name="ot3_diff_unified">Birleşik</string>
+    <string name="ot3_transition_speed">Geçiş hızı</string>
+    <string name="ot3_pace_slow">Yavaş</string>
+    <string name="ot3_pace_normal">Normal</string>
+    <string name="ot3_pace_fast">Hızlı</string>
 </resources>

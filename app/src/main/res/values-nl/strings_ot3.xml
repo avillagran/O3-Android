@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">Terug naar chat</string>
     <string name="ot3_diff_split">Gesplitst</string>
     <string name="ot3_diff_unified">Gecombineerd</string>
+    <string name="ot3_transition_speed">Overgangssnelheid</string>
+    <string name="ot3_pace_slow">Langzaam</string>
+    <string name="ot3_pace_normal">Normaal</string>
+    <string name="ot3_pace_fast">Snel</string>
 </resources>

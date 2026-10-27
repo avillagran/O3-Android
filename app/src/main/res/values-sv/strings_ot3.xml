@@ -220,4 +220,8 @@
     <string name="ot3_composer_back">Tillbaka till chatten</string>
     <string name="ot3_diff_split">Delad</string>
     <string name="ot3_diff_unified">Sammanfogad</string>
+    <string name="ot3_transition_speed">Övergångshastighet</string>
+    <string name="ot3_pace_slow">Långsam</string>
+    <string name="ot3_pace_normal">Normal</string>
+    <string name="ot3_pace_fast">Snabbt</string>
 </resources>

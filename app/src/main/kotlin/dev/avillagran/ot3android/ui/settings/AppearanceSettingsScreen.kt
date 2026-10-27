@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
+import dev.avillagran.ot3android.core.data.prefs.RevealPace
 import dev.avillagran.ot3android.core.data.prefs.AppearanceMode
 import dev.avillagran.ot3android.core.theme.FallbackReason
 import dev.avillagran.ot3android.core.theme.ThemeSelection
@@ -127,6 +128,15 @@ fun AppearanceSettingsScreen(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.ot3_home_show_provider_usage), Modifier.weight(1f))
                 Switch(checked = settings.manual.providerUsage, onCheckedChange = viewModel::setProviderUsage, modifier = Modifier.testTag("appearance_provider_usage"))
+            }
+            Header(R.string.ot3_transition_speed)
+            RevealPace.entries.forEach { pace ->
+                val label = when (pace) {
+                    RevealPace.SLOW -> R.string.ot3_pace_slow
+                    RevealPace.NORMAL -> R.string.ot3_pace_normal
+                    RevealPace.FAST -> R.string.ot3_pace_fast
+                }
+                Choice(stringResource(label), settings.manual.revealPace == pace, "appearance_reveal_pace_${pace.name}") { viewModel.setRevealPace(pace) }
             }
             Header(R.string.appearance_dark_theme)
             ThemeGrid(current.darkThemes, settings.manual.darkThemeId.takeUnless { settings.manual.mode == AppearanceMode.LIGHT }, AppearanceSettingsTags::dark) { if (settings.followEnvironment) viewModel.setFallbackDarkTheme(it) else viewModel.setDarkTheme(it) }

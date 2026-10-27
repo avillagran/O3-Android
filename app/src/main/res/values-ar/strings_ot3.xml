@@ -221,4 +221,8 @@
     <string name="ot3_composer_back">العودة للمحادثة</string>
     <string name="ot3_diff_split">مقسّم</string>
     <string name="ot3_diff_unified">موحّد</string>
+    <string name="ot3_transition_speed">سرعة الانتقال</string>
+    <string name="ot3_pace_slow">بطيئة</string>
+    <string name="ot3_pace_normal">عادي</string>
+    <string name="ot3_pace_fast">سريع</string>
 </resources>

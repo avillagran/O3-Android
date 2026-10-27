@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.ui.theme
 
 import androidx.compose.animation.core.SnapSpec
 import androidx.compose.animation.core.TweenSpec
+import dev.avillagran.ot3android.core.data.prefs.RevealPace
 import dev.avillagran.ot3android.core.data.prefs.AnimationPreference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -35,6 +36,33 @@ class Ot3MotionTest {
         val light = Ot3MotionPolicy(Ot3MotionLevel.LIGHT)
         assertEquals(Ot3Motion.COLOR_CHANGE_MS, (light.colorChange<Float>() as TweenSpec).durationMillis)
         assertEquals(Ot3Motion.SHELF_MOVE_MS, (Ot3MotionPolicy.Full.shelfMove<Float>() as TweenSpec).durationMillis)
+    }
+
+    @Test fun `pace scales only both reveal paths and never overrides platform limits`() {
+        val normal = Ot3MotionPolicy.Full
+        val cases = listOf(Triple(RevealPace.SLOW, 832, 896), Triple(RevealPace.NORMAL, 520, 560), Triple(RevealPace.FAST, 312, 336))
+        for ((pace, spring, nebula) in cases) {
+            val paced = Ot3MotionPolicy(Ot3MotionLevel.FULL, revealPace = pace)
+            assertEquals(spring, (paced.reveal<Float>() as TweenSpec).durationMillis)
+            assertEquals(nebula, (paced.reveal<Float>(nebula = true) as TweenSpec).durationMillis)
+            assertEquals(normal.colorChange<Float>(), paced.colorChange<Float>())
+            assertEquals(normal.fieldBorder<Float>(), paced.fieldBorder<Float>())
+            assertEquals(normal.switchKnob<Float>(), paced.switchKnob<Float>())
+            assertEquals(normal.rowArriveFade<Float>(), paced.rowArriveFade<Float>())
+            assertEquals(normal.rowArriveDrift<Float>(), paced.rowArriveDrift<Float>())
+            assertEquals(normal.rowDepart<Float>(), paced.rowDepart<Float>())
+            assertEquals(normal.shelfMove<Float>(), paced.shelfMove<Float>())
+            assertEquals(normal.statusPop<Float>(), paced.statusPop<Float>())
+            assertEquals(normal.pane<Float>(), paced.pane<Float>())
+            val saver = Ot3MotionPolicy(resolveMotionLevel(AnimationPreference.FULL, false, true), revealPace = pace)
+            assertEquals(Ot3MotionLevel.LIGHT, saver.level)
+            assertEquals(spring, (saver.reveal<Float>() as TweenSpec).durationMillis)
+            for (off in listOf(Ot3MotionPolicy(Ot3MotionLevel.OFF, revealPace = pace),
+                Ot3MotionPolicy(resolveMotionLevel(AnimationPreference.FULL, true, false), revealPace = pace))) {
+                assertTrue(off.reveal<Float>() is SnapSpec)
+                assertTrue(off.reveal<Float>(true) is SnapSpec)
+            }
+        }
     }
 
     @Test

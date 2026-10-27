@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import dev.avillagran.ot3android.ui.theme.Ot3Motion
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 
 /** T3Reveal's default nebula, not a navigation transition. Shader only while moving.
@@ -35,7 +34,7 @@ internal fun SidebarReveal(shown: Boolean, modifier: Modifier = Modifier, conten
     } else null
     val nebula = effect != null
     val progress by animateFloatAsState(if (shown) 1f else 0f,
-        if (nebula) motion.tween(560, Ot3Motion.EaseInOutCubic) else motion.reveal(), label = "sidebarReveal")
+        motion.reveal(nebula), label = "sidebarReveal")
     val extent = progress.coerceIn(0f, 1f)
     val reach = if (nebula) (extent / 0.6f).coerceAtMost(1f) else extent
     val reverse = LocalLayoutDirection.current == LayoutDirection.Rtl

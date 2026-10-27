@@ -139,8 +139,10 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             val density = androidx.compose.ui.platform.LocalDensity.current
             CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides
                 androidx.compose.ui.unit.Density(density.density, intent.getFloatExtra("fontScale", density.fontScale))) {
+            val motionSettings by (application as dev.avillagran.ot3android.Ot3Application).graph.appearancePreferences.settings
+                .collectAsStateWithLifecycle(dev.avillagran.ot3android.core.data.prefs.AppearanceSettings())
             Ot3Theme(colors = fixtureColors, motion = dev.avillagran.ot3android.ui.theme.rememberOt3Motion(
-                dev.avillagran.ot3android.core.data.prefs.AnimationPreference.AUTO)) { Ot3NavHost(nav, screens) }
+                motionSettings.animation, motionSettings.revealPace)) { Ot3NavHost(nav, screens) }
             }
         }
     }

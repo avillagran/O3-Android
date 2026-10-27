@@ -18,6 +18,9 @@ enum class AppearanceMode { FOLLOW_SYSTEM, DARK, LIGHT }
 /** ot3's "Animated starfield" preference (`ot3:ui/qml/T3Preferences.qml:260`). */
 enum class AnimationPreference { AUTO, FULL, LIGHT, OFF }
 
+/** Duration multiplier only for T3Reveal show/hide (ot3 T3Motion.qml:10–11). */
+enum class RevealPace(val multiplier: Float) { SLOW(1.6f), NORMAL(1f), FAST(0.6f) }
+
 /** One Omarchy theme id per appearance, or [AppearanceSettings.MATERIAL_YOU]. */
 data class ThemePair(val dark: String, val light: String)
 
@@ -27,6 +30,7 @@ data class AppearanceSettings(
     val lightThemeId: String = DEFAULT_THEMES.light,
     val animation: AnimationPreference = AnimationPreference.AUTO,
     val providerUsage: Boolean = false,
+    val revealPace: RevealPace = RevealPace.NORMAL,
 ) {
     companion object {
         /** The default themes, in one place (UI_SPEC 3.1.3). */
@@ -50,8 +54,11 @@ class AppearancePreferences(private val dataStore: DataStore<Preferences>) {
             lightThemeId = prefs[Keys.LIGHT_THEME] ?: defaults.lightThemeId,
             providerUsage = prefs[Keys.PROVIDER_USAGE] ?: false,
             animation = enumOrDefault(prefs[Keys.ANIMATION], defaults.animation),
+            revealPace = enumOrDefault(prefs[Keys.REVEAL_PACE], defaults.revealPace),
         )
     }
+
+    suspend fun setRevealPace(pace: RevealPace) { dataStore.edit { it[Keys.REVEAL_PACE] = pace.name } }
 
     suspend fun setProviderUsage(shown: Boolean) { dataStore.edit { it[Keys.PROVIDER_USAGE] = shown } }
 
@@ -84,6 +91,7 @@ class AppearancePreferences(private val dataStore: DataStore<Preferences>) {
         val MODE = stringPreferencesKey("mode")
         val DARK_THEME = stringPreferencesKey("dark_theme")
         val LIGHT_THEME = stringPreferencesKey("light_theme")
+        val REVEAL_PACE = stringPreferencesKey("reveal_pace")
         val ANIMATION = stringPreferencesKey("animation")
     }
 }
