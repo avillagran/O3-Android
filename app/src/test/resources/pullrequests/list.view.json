@@ -1,0 +1,152 @@
+{
+  "entries": [
+    {
+      "author": {"login": "andres"},
+      "isDraft": false,
+      "repository": "example/ot3",
+      "title": "Read pull requests across environments",
+      "url": "https://github.com/example/ot3/pull/42",
+      "number": 42,
+      "badge": {
+        "current": {
+          "author": {"login": "andres"},
+          "isDraft": false,
+          "repository": "example/ot3",
+          "title": "Read pull requests across environments",
+          "url": "https://github.com/example/ot3/pull/42",
+          "number": 42,
+          "reviewDecision": "review-required",
+          "host": "github.com",
+          "state": "open",
+          "checksState": "passing",
+          "projectId": "project",
+          "snapshot": {
+            "number": 42,
+            "reviewDecision": "review-required",
+            "author": {"login": "andres"},
+            "host": "github.com",
+            "isDraft": false,
+            "state": "open",
+            "repository": "example/ot3",
+            "title": "Read pull requests across environments",
+            "checksState": "passing",
+            "projectId": "project",
+            "url": "https://github.com/example/ot3/pull/42",
+            "updatedAt": "2026-10-26T20:00:00Z"
+          },
+          "updatedAt": "2026-10-26T20:00:00Z"
+        },
+        "kind": "single",
+        "links": [{
+          "author": {"login": "andres"},
+          "isDraft": false,
+          "repository": "example/ot3",
+          "title": "Read pull requests across environments",
+          "url": "https://github.com/example/ot3/pull/42",
+          "number": 42,
+          "reviewDecision": "review-required",
+          "host": "github.com",
+          "state": "open",
+          "checksState": "passing",
+          "projectId": "project",
+          "snapshot": {
+            "number": 42,
+            "reviewDecision": "review-required",
+            "author": {"login": "andres"},
+            "host": "github.com",
+            "isDraft": false,
+            "state": "open",
+            "repository": "example/ot3",
+            "title": "Read pull requests across environments",
+            "checksState": "passing",
+            "projectId": "project",
+            "url": "https://github.com/example/ot3/pull/42",
+            "updatedAt": "2026-10-26T20:00:00Z"
+          },
+          "updatedAt": "2026-10-26T20:00:00Z"
+        }],
+        "state": "open",
+        "text": "42"
+      },
+      "reviewDecision": "review-required",
+      "host": "github.com",
+      "state": "open",
+      "projectId": "project",
+      "checksState": "passing",
+      "updatedAt": "2026-10-26T20:00:00Z"
+    },
+    {
+      "number": 39,
+      "badge": {
+        "current": {
+          "number": 39,
+          "author": {"login": "maintainer"},
+          "host": "git.example.test",
+          "isDraft": true,
+          "state": "open",
+          "repository": "example/ot3",
+          "title": "Preserve the selected project on reconnect",
+          "checksState": "pending",
+          "projectId": "project",
+          "snapshot": {
+            "number": 39,
+            "author": {"login": "maintainer"},
+            "host": "git.example.test",
+            "isDraft": true,
+            "state": "open",
+            "repository": "example/ot3",
+            "title": "Preserve the selected project on reconnect",
+            "checksState": "pending",
+            "projectId": "project",
+            "url": "https://git.example.test/example/ot3/pull/39",
+            "updatedAt": "2026-10-25T20:00:00Z"
+          },
+          "url": "https://git.example.test/example/ot3/pull/39",
+          "updatedAt": "2026-10-25T20:00:00Z"
+        },
+        "kind": "single",
+        "links": [{
+          "number": 39,
+          "author": {"login": "maintainer"},
+          "host": "git.example.test",
+          "isDraft": true,
+          "state": "open",
+          "repository": "example/ot3",
+          "title": "Preserve the selected project on reconnect",
+          "checksState": "pending",
+          "projectId": "project",
+          "snapshot": {
+            "number": 39,
+            "author": {"login": "maintainer"},
+            "host": "git.example.test",
+            "isDraft": true,
+            "state": "open",
+            "repository": "example/ot3",
+            "title": "Preserve the selected project on reconnect",
+            "checksState": "pending",
+            "projectId": "project",
+            "url": "https://git.example.test/example/ot3/pull/39",
+            "updatedAt": "2026-10-25T20:00:00Z"
+          },
+          "url": "https://git.example.test/example/ot3/pull/39",
+          "updatedAt": "2026-10-25T20:00:00Z"
+        }],
+        "state": "draft",
+        "text": "39"
+      },
+      "author": {"login": "maintainer"},
+      "host": "git.example.test",
+      "isDraft": true,
+      "state": "open",
+      "repository": "example/ot3",
+      "title": "Preserve the selected project on reconnect",
+      "projectId": "project",
+      "checksState": "pending",
+      "url": "https://git.example.test/example/ot3/pull/39",
+      "updatedAt": "2026-10-25T20:00:00Z"
+    }
+  ],
+  "nextCursors": {"project": "fixture-next"},
+  "truncated": true,
+  "errors": []
+}

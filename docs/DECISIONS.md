@@ -1009,3 +1009,232 @@ Local date formatting uses APIs available at minSdk 24. Period/environment chang
 cancel reads, and connection replacement invalidates the result. Preserve selection
 with the navigation entry SavedStateHandle. Limits and pricing refresh are separate
 remaining work, not inferred from the synthetic summary used in screenshot tests.
+
+### 2026-10-26 — Visible quota stream and probe pacing
+
+The Limits tab owns a typed server-config stream only while its selected environment
+is visible. Rust quotaSources.apply folds and sanitizes observations; Android only
+controls lifetime, retry and presentation. The application shares a monotonic
+five-minute probe gate per environment, counting failed attempts. Until U26 exposes
+the common presentation, display native usedPercent and absolute reset times without
+recreating pooling or pace rules. Screenshot inputs are frozen native outputs; actual
+JNI stream/reducer behavior is tested separately to avoid Robolectric classloader
+collisions when the complete suite runs.
+
+### 2026-10-26 — Shared visible quota ownership and opt-in strip
+
+Home, thread and Limits acquire the application SharedQuotaSource by environment.
+The final release cancels and joins the stream/reducer entry; reconnect replaces it,
+without retaining a background subscription. An independent application refresh gate
+continues to count every attempted probe for five minutes. Keep reader/composer and
+shell lifetimes unchanged: Home owns a stable lazy-list header slot, and the thread
+owns a stable slot under its real toolbar. The shared Appearance DataStore preference
+is off by default and is also available in both overflows. Group taps use a typed
+Limits route with an optional environment, preserving the calling screen's Back path.
+Until U26, use native used percentages and platform absolute reset dates with static
+bars; do not implement desktop pooling, remaining/pace or notices in Kotlin. Details,
+validation and remaining differences: `ui/compare/quota-strip/README.md`. The Usage /
+Limits tab fade is deferred to a separate increment.
+
+### 2026-10-26 — Local diff reading controls
+
+File navigation and wrap are presentation state, not protocol operations. Preserve
+the selected native path (including oldPath fallback after rename) and wrap mode
+across dialog recreation; neither control fetches again. Unwrapped width comes
+from Fira Code font metrics, as ot3's T3DiffReview does, and the patch scrolls as
+one surface. Rust remains responsible for scope, patch parsing and line limits.
+
+
+### 2026-10-26 — Diff modal lifetime across viewport changes
+
+Keep the open diff at reader scope, keyed by the selected thread, rather than inside
+a virtualized Changes row. Device rotation can dispose that row while the modal is
+open. A real-workspace regression now checks both orientations and a single stream;
+standalone dialog restoration was insufficient to catch this failure.
+
+### 2026-10-26 — Read-only pull request navigation
+
+Replace the PR list/detail placeholders with typed native reads. Keep host in the
+route as an optional backward-compatible field; a list row and Home badge supply
+the native reference, including enterprise host. Never synthesize a provider URL.
+Rust builds recipes, validates typed inputs, derives badges and parses Markdown;
+Android owns scope selection, view lifetime, scroll and retry presentation.
+
+An explicit project is never broadened to All projects when shell metadata is
+missing. A removed selected environment is unavailable until another is selected.
+Environment/project changes are atomic; reconnect cancels the previous generation
+and clears its data/cursors. Server pages are appended verbatim until U31 supplies
+common merge/order semantics. Comments and review-thread bodies use the existing
+Markdown reader. PR patches and all mutations remain absent, visibly/documentedly.
+
+
+### 2026-10-26 — Native attachment image access and bounded rendering
+
+Read native attachment descriptors through T3Client.image rather than constructing
+asset URLs in Android. Kotlin owns only lifecycle, connection-generation guards and
+platform decoding with bounded dimensions. Keep the image dialog at reader scope
+so virtualization cannot dismiss it during rotation. Native calls have no per-read
+cancel handle; UI cancellation discards late results while Rust retains its deadline.
+Markdown media-file references are not attachment IDs and await U30 JNI exposure.
+
+### 2026-10-26 — Pull request return state and ownership
+
+Keep one private page cache and actual LazyListState in the list navigation-entry
+ViewModel. Back/recreation may reuse pages/cursor/visible pixel offset only after the
+current exact scope and Connection transport identity/epoch validate. While hidden,
+observable payloads expire and no connection/project collection or lease remains.
+Do not compose an empty list during validation: it would clamp the retained anchor.
+
+A different/offline connection, scope/filter/query change or explicit Refresh clears
+the cache and resets position. The first effective environment is pinned, avoiding
+a deleted default silently switching accounts. Process death refetches; large payloads
+and list position are not saved into process bundles. Keep page data verbatim until
+U31 supplies common merge/order. A session-tagged buffered More action covers the
+publication/receiver-registration gap without replaying canceled/offscreen actions.
+
+### 2026-10-26 — Explicit Android image clipboard offers
+
+Use the same native binary attachment read as previews, under the shared two-job
+semaphore, when the user presses Copy image. Offer the original bytes and validated
+MIME through a read-only Content URI, never the sampled preview bitmap. Android
+receivers resolve a ContentProvider URI; desktop's wl-copy PNG normalization is not
+needed for this platform contract. No Kotlin asset URL, HTTP client or protocol parser.
+
+Expose only `cacheDir/clipboard-images/` through a non-exported, grant-enabled
+FileProvider, using UUID filenames and a fixed MIME/extension mapping. Keep at most
+eight 10 MiB files; remove files aged at least 24 hours on startup/next copy,
+revoking URI grants before deletion. This is opportunistic cleanup, with no expiry
+timer; Android may also reclaim cache. Existing explicit clipboard offers remain
+usable across disconnect until cleanup/reclamation; no durable gallery is implied.
+Unpublished files are deleted on failure/cancellation. Recheck the live connection
+immediately before publishing and cancel UI work on lifecycle/generation changes.
+Use the existing kit CopyButton's busy/check/error feedback and 1.8-second reset;
+show its 48 dp touch action on thumbnails and viewer rather than requiring hover.
+
+### 2026-10-26 — Touch queue input, authoritative order
+
+Use a 48 dp grip with immediate source opacity0.5 and 2 dp accent insertion marker.
+Pointer position chooses native beforeRunId/null input; server rows are never reordered
+optimistically. Stable run-order/pending/eligibility/connection/edit/orientation inputs
+cancel stale drags without reacting to JSON object recreation. Keep long queues usable
+through grip Up/Down menu/TalkBack actions rather than introducing edge-autoscroll.
+
+Continue through MessageSender's durable queue path and reuse error/unknown retry
+feedback inside the sheet. queue.derive supplies capabilities; queue.command validates
+shape, not projection membership. Map projected queue-edit rows to documented native
+inputs before invoking that strict builder; preserve original attachments/context and
+unsent draft. JNI and a real queue-edit rotation test exposed the prior metadata bug.
+
+
+### 2026-10-26 — attachment image zoom is UI geometry
+
+Add touch pinch/pan and double-tap to the existing fullscreen attachment reader,
+following T3 Mobile's double-tap-enabled ImageViewing rather than claiming desktop
+QML has zoom. Keep a bounded1–4× immediate transform, Fit aspect ratio and clamped
+normalized translation; no new gesture animation or protocol. Save only transform
+floats plus validated UI ownership. A bounded current-Connection token in the VM
+keeps rotation coherent and prevents another environment/connection/process inheriting
+a saved transform. Closing resets. Existing binary read, decode limits/semaphore and
+original-byte copy remain authoritative. Markdown/video/live acceptance stays open.
+### 2026-10-26 — one composer surface with UI selection ownership
+
+Expand the existing thread composer rather than opening a second route/VM or modal.
+Keep draft text in ThreadComposer/Room; save only cursor/selection/focus per canonical
+environment/thread identity. A transient UI edit token pairs local text with its echo
+so delayed combined-flow emissions cannot overwrite rapid typing. Null-token external
+updates remain authoritative. Queue edits retain their separate normal selection and
+existing attachment/context ownership. Explicit user edits, including clearing to
+empty before Room load, win over initial persisted draft loading.
+
+Back/Esc closes expanded mode and IME on phones. Soft/virtual Enter stays newline;
+physical compact Enter sends, expanded Ctrl+Enter sends. Repeat/composition do not
+send. Unsupported alternate delivery/new-thread shortcuts remain inactive. No new
+protocol, persistence payload, remote stream or animation is introduced.
+
+### 2026-10-26 — Expanded composer with a large landscape IME
+
+The explicit landscape+visible-IME test exposed a 4 px text viewport: header and
+options consumed the available 394 px window above IME. Below 220 dp remaining
+window height, options move to the header overflow, preserving text and touch
+targets. Finite toolbar width also restores the weighted model selector that an
+unbounded horizontal-scroll wrapper hid. Tests now set/restore the emulator's
+show-IME-with-hardware-keyboard preference themselves, assert visible IME in both
+orientations and verify the model control in overflow. Rotation waits for the new
+decor window bounds before querying Compose/Espresso; no arbitrary delay or wider
+assertion tolerance was added.
+
+### 2026-10-27 — Quota menu reads loaded preferences and owns accepted writes outside the popup
+
+Delayed-DataStore Compose regressions on API34 proved an enabled false default before
+first load and cancellation of an accepted write after menu disposal. Show native
+Loading/disabled until the preference arrives; launch persistence in AppGraph.appScope
+and invert atomically inside DataStore. Preserve soft IME/draft in the graph regression.
+The precise cause of PR51's earlier CI timeout remains unproved; no timeout increase
+or keyboard dismissal masks that portrait path. See `ui/compare/quota-strip/api34-menu/`.
+
+### 2026-10-26 — follow owns leases, Rust owns awareness
+
+Keep one follow lease per saved environment across metadata updates. Switching
+observers to a replacement supervisor preserves that environment's lease; retired
+unauthorized callbacks cannot close its replacement. Current privacy is an input to
+every card build. Compare complete parsed card+privacy before Android publication,
+without skipping awareness evaluation or alerts. Recover missing/stale Android
+records only on the existing deadline wake, identified by a random UI-only extras
+stamp; Room ticks must not postpone that wake. Avoid duplicate cancels and privacy
+refreshes after actual NMS queue shedding was observed in the synthetic system lab.
+
+### 2026-10-27 — Saved thread projections belong to the current local credential
+
+Resolve a domain-separated SHA256 authority over local environment identity, route and the
+high-entropy credential under EnvironmentRepository.mutations, reusing its existing
+token gate. Persist only the digest. Observe distinct authority changes even while
+connection remains null; invalidate held state and block the old Connection identity.
+Metadata-only edits, including first-discovered server UUID, retain valid offline cache.
+The saved local ID/route/credential bind the cache; independent advertised-UUID isolation
+is not claimed. Guard remove with lease ownership too.
+No independent expiry timer or Kotlin protocol authorization policy is added; idle
+natural expiry without an existing signal/read remains unaccepted. See
+`ui/compare/feedback-cache/authority-safety.md` for tests and exact limits.
+
+### 2026-10-27 — Follow resilience is visible re-entry with a cold baseline, not a restart promise
+
+A loopback server in a separate host JVM survives app SIGKILL. An opt-in isolated
+instrumentation APK has a different UID and controls DeviceIdleController/key events;
+the real application is not instrumented during lifecycle acceptance. No helper IPC,
+permission or dependency enters the product. Measured State/Full process cycles retained
+opt-in/privacy and restored following on visible reopen, without reposting two native
+child alerts. No automatic restart was observed for bounded5-second windows; this does
+not emulate LMK, force-stop or OEM policy. The service remains START_NOT_STICKY.
+
+Forced deep Doze retained the FGS; Working remained until a controlled connection
+failure was observed, then Rust supplied Waiting and recovered. Loopback does not
+prove Android network enforcement or natural maintenance windows. Wake-probe chronology
+records fresh frame/blackhole/pings and successor streams at4.525s/5.418s; network
+recovery is not attributed exclusively to wakeSubscriptions. Baseline is session-local,
+not DataStore; idle is fixed15min, not configurable. Natural/legacy expiry stays open.
+See `ui/compare/ui-n/resilience/README.md` and its native system checks.
+
+### 2026-10-27 — Legacy expiry is presentation scheduling, not awareness policy
+
+API24/25 now schedule received absolute Rust deadlines via inexact non-wakeup RTC
+alarms and a non-exported receiver. Persisted slot generations and presentation stamps
+protect replacements and privacy refresh from stale callbacks/NMS snapshots. API26+
+keeps its native timeout. No exact alarm permission or wake-during-idle request is added;
+cleanup may be delayed. Summary lifecycle remains pending rather than risking removal
+of enqueued children. [Verification and limits](ui/compare/ui-n/legacy-expiry.md).
+
+### 2026-10-27 — Reveal choices are local UI preferences; effects snapshot uniforms
+
+Show/hide style and pace persist in Appearance and reach both reveal axes through
+the shared theme policy. They follow T3Motion/T3Reveal's five choices and timings;
+shader capability failure falls back to Spring and reduced motion remains immediate.
+Instant uses a direct target branch so it also interrupts an unchanged animation
+target. These presentation settings add no protocol behavior or server requests.
+
+RuntimeShader is cached per reveal, but the attached RenderEffect is created after
+the current frame's uniforms. Android/Skia copies the builder into the image filter;
+reusing an effect created before uniform updates left moving content empty. A real
+GPU pixel regression demonstrated the failure and its correction on both axes.
+The capability probe may be cached; its effect must never be attached to a frame.
+The shader's artistic code remains unchanged and no effect stays attached at rest.
+See [source references, regression and capture limits](ui/compare/reveal-styles/README.md).

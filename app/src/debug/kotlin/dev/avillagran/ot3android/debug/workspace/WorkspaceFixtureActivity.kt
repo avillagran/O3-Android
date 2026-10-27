@@ -25,6 +25,7 @@ import dev.avillagran.ot3android.ui.home.*
 import dev.avillagran.ot3android.ui.navigation.*
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import dev.avillagran.ot3android.ui.thread.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -40,11 +41,22 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             android.graphics.Color.TRANSPARENT) { intent.getBooleanExtra("dark", false) }
         enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         setContent {
-            fixture = viewModel { WorkspaceFixture(application, intent.getBooleanExtra("rich", false), intent.getStringExtra("request").orEmpty()) }
+            fixture = viewModel { WorkspaceFixture(application, intent.getBooleanExtra("rich", false), intent.getStringExtra("request").orEmpty(), intent.getBooleanExtra("cacheOffline", false)) }
             val nav = rememberOt3NavController()
             val navigator = remember(nav) { Ot3Navigator(nav) }
+            if (fixture.caching && intent.getBooleanExtra("cacheThread", false)) LaunchedEffect(nav) {
+                fixture.repository.environments.first { list -> list.any { it.id == "node" } }
+                nav.currentBackStackEntryFlow.first()
+                // Navigation must use Android Main even when the test interceptor resumes a Room wait on a worker.
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main.immediate) {
+                    navigator.openThread("node", "chat")
+                }
+            }
             val screens = remember(navigator, fixture) {
                 object : Ot3Screens by AppScreens(navigator) {
+                    @Composable override fun SettingsPlaceholder(name: String, title: Int) {
+                        AppScreens(navigator).SettingsPlaceholder(name, title)
+                    }
                     @Composable override fun Home(entry: NavBackStackEntry, isTop: Boolean) {
                         val owner = remember(entry) { nav.getBackStackEntry(ChatsGraph) }
                         val vm: HomeViewModel = viewModel(viewModelStoreOwner = owner) {
@@ -54,18 +66,26 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                         HomeScreen(state, isTop, { intent ->
                             when (intent) {
                                 is HomeIntent.OpenRow -> navigator.openThread(intent.row.environmentId, intent.row.threadId)
+                                is HomeIntent.OpenPullRequest -> intent.row.pullRequestBadge?.optJSONObject("current")?.let { pr ->
+                                    navigator.push(PullRequest(intent.row.environmentId, pr.getString("projectId"), pr.getString("repository"), pr.getInt("number"), pr.getString("host")))
+                                }
                                 is HomeIntent.SetQuery -> vm.setQuery(intent.text)
                                 HomeIntent.ClearSearch -> vm.clearSearch()
                                 is HomeIntent.ToggleShelf -> vm.toggleShelf(intent.shelf)
                                 else -> Unit
                             }
+                        }, quotaStrip = {
+                            dev.avillagran.ot3android.ui.usage.QuotaStripHost(source = fixture.quotas, environments = fixture.repository.environments,
+                                onOpenLimits = { navigator.push(dev.avillagran.ot3android.ui.navigation.QuotaLimits()) })
                         })
                     }
-                    @Composable override fun Usage() {
+                    // Route arguments are explicit, matching the production screen dispatch.
+                    @Composable override fun Usage(initialTab: String, environmentId: String?) {
                         val model: dev.avillagran.ot3android.ui.usage.UsageViewModel = viewModel {
                             dev.avillagran.ot3android.ui.usage.UsageViewModel(
                                 fixture.repository.environments, fixture.connections::connectionFlow,
-                                createSavedStateHandle(),
+                                createSavedStateHandle().apply { if (!contains("tab")) set("tab", initialTab); if (!contains("environment")) set("environment", environmentId) },
+                                quotaSource = fixture.quotas,
                             ) { connection, period ->
                                 dev.avillagran.ot3android.core.usage.UsageReader.read(
                                     connection.transport, period, "2026-10-26", "America/Santiago")
@@ -74,27 +94,99 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                         val state by model.state.collectAsStateWithLifecycle()
                         dev.avillagran.ot3android.ui.usage.UsageScreen(state,
                             model::selectEnvironment, model::selectPeriod, model::refresh,
-                            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices)
+                            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices, onTab = model::selectTab)
+                    }
+                    @Composable override fun PullRequests() {
+                        val model: dev.avillagran.ot3android.ui.pullrequests.PullRequestsViewModel = viewModel {
+                            dev.avillagran.ot3android.ui.pullrequests.PullRequestsViewModel(fixture.repository.environments,
+                                fixture.connections::connectionFlow, projects = { id -> kotlinx.coroutines.flow.flow {
+                                    fixture.connections.supervisor(id)?.shell?.collect { emit(it?.projects.orEmpty()) }
+                                } }, saved = createSavedStateHandle())
+                        }
+                        fixture.prListState = model.listState
+                        val state by model.state.collectAsStateWithLifecycle()
+                        dev.avillagran.ot3android.ui.pullrequests.PullRequestsScreen(state, model::selectEnvironment,
+                            model::selectProject, model::selectState, model::selectInvolvement, model::setQuery,
+                            model::refresh, model::loadMore, { id, pr -> navigator.push(PullRequest(id, pr.getString("projectId"), pr.getString("repository"), pr.getInt("number"), pr.getString("host"))) }, listState = model.listState)
+                    }
+                    @Composable override fun PullRequest(route: PullRequest) {
+                        val model: dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel = viewModel {
+                            dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel(route.environmentId,
+                                JSONObject().put("projectId", route.projectId).put("repository", route.repository).put("number", route.number).put("host", route.host),
+                                fixture.connections::connectionFlow, createSavedStateHandle())
+                        }
+                        val state by model.state.collectAsStateWithLifecycle()
+                        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state,
+                            model::selectTab, model::refresh, { navigator.back() })
                     }
                     @Composable override fun Thread(route: Thread) {
                         val vm: ThreadViewModel = viewModel {
                             ThreadViewModel(route.environmentId, route.threadId, fixture.connections,
-                                fixture.drafts, fixture.outbox, fixture.sender, fixture.viewModelScope)
+                                fixture.drafts, fixture.outbox, fixture.sender, fixture.viewModelScope,
+                                preferences = if (fixture.caching) (application as dev.avillagran.ot3android.Ot3Application).graph.composerPreferences else null,
+                                threadCache = fixture.cache,
+                                cacheAuthority = { "fixture-server" })
                         }
-                        ThreadScreen(vm, { navigator.back() })
+                        ThreadScreen(vm, { navigator.back() }, quotaStrip = {
+                            dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, false, fixture.quotas, fixture.repository.environments,
+                                onOpenLimits = { navigator.push(dev.avillagran.ot3android.ui.navigation.QuotaLimits(route.environmentId)) })
+                        })
                     }
                 }
             }
             val fixtureColors = remember { dev.avillagran.ot3android.ui.theme.OmarchyThemeCatalog.loadBlocking(application)
                 .let { catalog -> dev.avillagran.ot3android.ui.theme.Ot3Colors.fromTheme(catalog[if (intent.getBooleanExtra("dark", false)) "tokyo-night" else "catppuccin-latte"]!!) } }
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides
+                androidx.compose.ui.unit.Density(density.density, intent.getFloatExtra("fontScale", density.fontScale))) {
+            val motionSettings by (application as dev.avillagran.ot3android.Ot3Application).graph.appearancePreferences.settings
+                .collectAsStateWithLifecycle(dev.avillagran.ot3android.core.data.prefs.AppearanceSettings())
             Ot3Theme(colors = fixtureColors, motion = dev.avillagran.ot3android.ui.theme.rememberOt3Motion(
-                dev.avillagran.ot3android.core.data.prefs.AnimationPreference.AUTO)) { Ot3NavHost(nav, screens) }
+                motionSettings.animation, motionSettings.revealPace, motionSettings.revealStyle)) { Ot3NavHost(nav, screens) }
+            }
         }
     }
 }
 
-class WorkspaceFixture(application: Application, private val rich: Boolean = false, private val request: String = "") : AndroidViewModel(application) {
-    private val database = Room.inMemoryDatabaseBuilder(application, Ot3Database::class.java).build()
+class WorkspaceFixture(application: Application, private val rich: Boolean = false, private val request: String = "", initialOffline: Boolean = false) : AndroidViewModel(application) {
+    val caching = request == "cache"
+    val cacheDirectory = java.io.File(application.noBackupFilesDir, "fixture-thread-cache")
+    val cache = if (caching) ThreadCache(cacheDirectory) else null
+    @Volatile var cacheOffline = initialOffline
+    val snapshotReads = java.util.concurrent.atomic.AtomicInteger()
+    suspend fun setCacheOffline(offline: Boolean) {
+        cacheOffline = offline
+        if (offline) connections.supervisor("node")?.stopAndJoin()
+        else connections.startIfCurrent(connections.supervisor("node"))
+    }
+    var queueHold: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+    var queueUnknownFirst = false
+    var queueRejectNext = false
+    private var queueDispatches = 0
+    private var queueOrder = listOf("q1", "q2", "q3", "q4")
+    private var queueSequence = 1L
+    suspend fun publishQueueOrder(order: List<String>) {
+        queueOrder = order
+        val runs = bounded().getJSONObject("projection").getJSONArray("runs").objects().filter { it.optString("status") == "queued" }
+        val events = runs.map { row -> JSONObject().put("kind", "event").put("event", JSONObject().put("type", "run.updated").put("payload", row)) }
+        transport.emitThread("chat", ThreadUpdates.event(*events.toTypedArray(), cursor = ++queueSequence))
+    }
+    private fun addQueue(projection: JSONObject) {
+        projection.put("providerThreads", JSONArray("""[{"id":"pt-queue","appThreadId":"chat","providerSessionId":"ps-queue"}]"""))
+        projection.put("providerSessions", JSONArray("""[{"id":"ps-queue","status":"ready","capabilities":{"turns":{"supportsQueuedMessages":true,"supportsSteer":true}}}]"""))
+        projection.put("providerTurns", JSONArray("""[{"id":"turn-active","runAttemptId":"attempt-active","status":"running"}]"""))
+        val runs = JSONArray().put(JSONObject("""{"id":"active-run","status":"running","activeAttemptId":"attempt-active","providerThreadId":"pt-queue"}"""))
+        queueOrder.forEachIndexed { index, run ->
+            runs.put(JSONObject().put("id", run).put("status", "queued").put("userMessageId", "message-$run").put("queuePosition", index + 1).put("ordinal", listOf("q1", "q2", "q3", "q4").indexOf(run) + 2))
+            projection.getJSONArray("messages").put(JSONObject().put("id", "message-$run").put("runId", run).put("role", "user").put("text", "Queued instruction $run")
+                .put("createdAt", "2026-10-26T20:00:00Z").put("attachments", if (run == "q1") JSONArray("""[{"type":"file","name":"notes.txt","url":"https://fixture.invalid/notes"}]""") else JSONArray())
+                .put("context", JSONObject().put("filePaths", JSONArray().put("/fixture/notes.txt"))))
+        }
+        projection.put("runs", runs)
+    }
+    var prListState: androidx.compose.foundation.lazy.LazyListState? = null
+    private val database = if (caching) Room.databaseBuilder(application, Ot3Database::class.java, "cache-fixture.db").build()
+        else Room.inMemoryDatabaseBuilder(application, Ot3Database::class.java).build()
     private val cursors = object : ShellCursorStore {
         override suspend fun cursor(environmentId: String): Long? = null
         override suspend fun setCursor(environmentId: String, cursor: Long?) = Unit
@@ -109,10 +201,44 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         override val shelves = MutableStateFlow(ShelfState())
         override suspend fun update(transform: (ShelfState) -> ShelfState) { shelves.value = transform(shelves.value) }
     }
+    val refreshGate = dev.avillagran.ot3android.ui.usage.ProviderRefreshGate()
+    val quotas by lazy { dev.avillagran.ot3android.ui.usage.SharedQuotaSource(viewModelScope, connections::connectionFlow, refreshGate::refresh) }
     private var pricesFresh = request != "prices"
     val transport = FakeT3Transport().apply {
-        onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
+        onImage = { _, _, _ -> application.assets.open("reader/preview.png").use { it.readBytes() } }
+        onFetchDescriptor("http://fixture.invalid") {
+            if (cacheOffline) throw dev.avillagran.t3.T3Exception("network_error")
+            JSONObject().put("environmentId", "node")
+        }
         onShell { fixtureShell() }
+        listOf("list", "detail", "checks", "activity").forEach { action -> onCall("pullRequests.$action") { args ->
+            val data = JSONObject(application.assets.open("pullrequests/$action.json").bufferedReader().use { it.readText() })
+            if (action == "detail" && request == "pr-retain") data.put("number", args.getInt("number")).put("title", "Pull request ${args.getInt("number")}")
+            if (action == "list" && request == "pr-retain") {
+                val page = when (args.optJSONObject("cursors")?.optString("project")) {
+                    "fixture-page-2" -> 2
+                    "fixture-page-3" -> 3
+                    else -> 1
+                }
+                val template = data.getJSONArray("entries").getJSONObject(0)
+                val entries = JSONArray()
+                repeat(12) { index ->
+                    val number = page * 100 + index
+                    entries.put(JSONObject(template.toString()).put("number", number).put("title", "Pull request $number")
+                        .put("url", "https://github.com/example/ot3/pull/$number"))
+                }
+                data.put("entries", entries).put("truncated", page < 3)
+                    .put("nextCursors", JSONObject().put("project", "fixture-page-${page + 1}"))
+            } else if (action == "list" && args.has("cursors")) {
+                data.put("truncated", false).put("entries", JSONArray().put(data.getJSONArray("entries").getJSONObject(0).put("number", 36).put("title", "Restore reading position")))
+            } else data
+        } }
+        onCall("server.refreshProviders") { JSONObject() }
+        onServerConfigStream { kotlinx.coroutines.flow.flow {
+            val events = if (request == "quota-empty") JSONArray("""[{"version":1,"type":"snapshot","config":{"providers":[]}}]""") else JSONArray(application.assets.open("usage/limits.events.json").bufferedReader().use { it.readText() })
+            emit(dev.avillagran.t3.T3Batch(events, false, null))
+            kotlinx.coroutines.awaitCancellation()
+        } }
         onCall("server.refreshUsageRates") { pricesFresh = true; JSONObject().put("status", "fresh") }
         onCall("server.getUsageSummary") { args ->
             val input = JSONObject(application.assets.open("usage/summary.input.json").bufferedReader().use { it.readText() })
@@ -124,15 +250,27 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
             }
             summary.put("buckets", JSONArray(buckets))
         }
-        onCall("server.getConfig") { JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
-        onCall("orchestration.dispatchCommand") { JSONObject().put("sequence", 2) }
-        onBoundedThread("chat") { bounded() }
+        onCall("server.getConfig") { if (request == "providers") providerFixtureConfig() else JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
+        onCall("orchestration.dispatchCommand") {
+            if (request in listOf("queue", "editor")) {
+                queueDispatches++
+                queueHold?.await()
+                if (queueRejectNext) { queueRejectNext = false; throw dev.avillagran.t3.T3Exception("rpc_rejected") }
+                if (queueUnknownFirst && queueDispatches == 1) throw dev.avillagran.t3.T3Exception("rpc_outcome_unknown")
+            }
+            JSONObject().put("sequence", 2)
+        }
+        onBoundedThread("chat") { snapshotReads.incrementAndGet(); bounded() }
+        if (caching) onThreadStream { _, after -> kotlinx.coroutines.flow.flow {
+            if (after != null) emit(ThreadUpdates.batch(JSONObject().put("kind", "event").put("event",
+                JSONObject().put("type", "thread.visited").put("payload", JSONObject().put("threadId", "chat"))), cursor = after, start = "resume"))
+        } }
         onDomain("timeline.view") { DomainEngine.shared.domain("timeline.view", it) }
         onDomain("projection.apply") { DomainEngine.shared.domain("projection.apply", it) }
         onCall("orchestration.getTurnDiff") { args ->
             JSONObject().put("threadId", args.getString("threadId"))
                 .put("fromTurnCount", args.getInt("fromTurnCount")).put("toTurnCount", args.getInt("toTurnCount"))
-                .put("diff", "diff --git a/ui/TimelineReader.kt b/ui/TimelineReader.kt\n--- a/ui/TimelineReader.kt\n+++ b/ui/TimelineReader.kt\n@@ -1 +1 @@\n-Text(markdown)\n+MarkdownBlocks(nativeBlocks)\n")
+                .put("diff", "diff --git a/ui/TimelineReader.kt b/ui/TimelineReader.kt\n--- a/ui/TimelineReader.kt\n+++ b/ui/TimelineReader.kt\n@@ -1 +1 @@\n-Text(markdown)\n+MarkdownBlocks(nativeBlocks)\n@@ -20 +20 @@\n-copyVisibleRowsOnly()\n+KeepFullPatchForCopy()\ndiff --git a/ui/ThreadWorkspace.kt b/ui/ThreadWorkspace.kt\n--- a/ui/ThreadWorkspace.kt\n+++ b/ui/ThreadWorkspace.kt\n@@ -1 +1 @@\n-resetSelectedFile()\n+rememberSelectedFile(environmentId, threadId, selectedPath, preserveDraft = true, preserveReadingPosition = true)\n")
         }
         onCall("orchestration.getTurnItem") { args ->
             JSONObject().put("item", fixtureItems().objects().firstOrNull { it.optString("id") == args.optString("itemId") })
@@ -155,6 +293,17 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
                 .put("url", "https://github.com/example/fixture/pull/42")
                 .put("snapshot", JSONObject().put("state", "open").put("isDraft", true)))
             .put("createdAt", "2026-10-25T10:00:00Z").put("status", "idle")).also { threads ->
+                if (request.startsWith("sidebar-")) {
+                    threads.remove(0)
+                    val activeCount = when (request) { "sidebar-empty" -> 0; "sidebar-short" -> 1; else -> 80 }
+                    fun row(id: String) = JSONObject().put("id", id).put("projectId", "project")
+                        .put("title", "Hilo de prueba $id").put("createdAt", "2026-10-25T09:00:00Z").put("status", "idle")
+                    repeat(activeCount) { threads.put(row("active-$it")) }
+                    repeat(25) {
+                        threads.put(row("snoozed-$it").put("snoozedUntil", "2099-10-25T15:00:00Z"))
+                        threads.put(row("settled-$it").put("settledAt", "2026-10-25T08:00:00Z"))
+                    }
+                }
                 if (rich) {
                     fun row(id: String, title: String) = JSONObject().put("id", id).put("projectId", "project")
                         .put("title", title).put("branch", "feat/ui-1i").put("createdAt", "2026-10-25T09:00:00Z")
@@ -165,6 +314,18 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
                     threads.put(row("settled", "Tipografía y roles").put("settledAt", "2026-10-25T08:00:00Z"))
                 }
             })
+    private fun providerFixtureConfig(): JSONObject {
+        val rows = JSONArray()
+        listOf("codex", "claudeAgent", "opencode", "cursor", "custom").forEachIndexed { index, driver ->
+            rows.put(JSONObject().put("enabled", true).put("instanceId", if (index == 0) "fixture-provider" else "provider-$index")
+                .put("displayName", if (index == 4) "Personalizado" else "Proveedor ${index + 1}")
+                .put("driver", driver).put("status", "ready")
+                .put("models", JSONArray().put(JSONObject().put("slug", "fixture-model")
+                    .put("name", "Mismo modelo").put("shortName", "Modelo"))))
+        }
+        return JSONObject().put("settings", JSONObject().put("favorites", JSONArray())).put("providers", rows)
+    }
+
     private fun bounded(): JSONObject {
         val messages = JSONArray()
         repeat(60) { i -> messages.put(JSONObject().put("id", "m$i").put("role", if (i % 2 == 0) "user" else "assistant")
@@ -188,12 +349,12 @@ The checks completed; review the activity and changed files above.
 | VQ | main | Ready, awaiting review | 3 |
 | Omarchy | [source](https://example.com) | A longer cell wraps without hiding the next row | 108 |
 """ else "Mensaje $i: posición de lectura conservada al girar y contraer el panel.")
-            .put("createdAt", "2026-10-25T10:${i.toString().padStart(2, '0')}:00Z").put("attachments", JSONArray())) }
+            .put("createdAt", "2026-10-25T10:${i.toString().padStart(2, '0')}:00Z").put("attachments", if (rich && i == 58) JSONArray("""[{"id":"reader-shot","type":"image","name":"Vista previa del lector.png","mimeType":"image/png"}]""") else JSONArray())) }
         return JSONObject().put("snapshotSequence", 1).put("projection", JSONObject()
             .put("thread", JSONObject().put("id", "chat").put("title", "Navegación y metadatos")
                 .put("runtimeMode", "approval-required").put("modelSelection", JSONObject().put("instanceId", "fixture-provider").put("model", "fixture-model")))
             .put("messages", messages).put("runs", if (rich) JSONArray("""[{"id":"run-reader","status":"completed","createdAt":"2026-10-25T10:57:00Z"}]""") else JSONArray())
-            .put("runtimeRequests", if (request.isBlank()) JSONArray() else JSONArray().put(JSONObject()
+            .put("runtimeRequests", if (request !in listOf("approval", "question")) JSONArray() else JSONArray().put(JSONObject()
                 .put("id", "request-fixture").put("kind", if (request == "question") "user_input" else "command")
                 .put("status", "pending").put("createdAt", "2026-10-25T10:59:00Z")
                 .put("responseCapability", JSONObject().put("type", "live"))))
@@ -201,7 +362,7 @@ The checks completed; review the activity and changed files above.
                 if (request == "approval") items.put(JSONObject("""{"id":"approval-fixture","type":"approval_request","requestId":"request-fixture","prompt":"./gradlew :app:testDebugUnitTest","options":[{"decision":"accept","label":"Approve"},{"decision":"decline","label":"Decline"},{"decision":"acceptForSession","label":"Always allow this session","warning":"Applies to later requests"}]}"""))
                 if (request == "question") items.put(JSONObject("""{"id":"question-fixture","type":"user_input_request","requestId":"request-fixture","questions":[{"id":"theme","header":"Review theme","question":"Which **theme** should be checked next?","allowCustomAnswer":false,"options":[{"label":"Tokyo Night","value":"tokyo-night"},{"label":"Catppuccin Latte","value":"catppuccin-latte"}]}]}"""))
             })
-            .put("checkpoints", if (rich) JSONArray("""[{"id":"cp-reader","runId":"run-reader","appRunOrdinal":1,"status":"ready","capturedAt":"2026-10-25T10:58:45Z","files":[{"path":"ui/TimelineReader.kt","kind":"modified","additions":42,"deletions":8},{"path":"ui/ThreadWorkspace.kt","kind":"modified","additions":18,"deletions":5}]}]""") else JSONArray()))
+            .put("checkpoints", if (rich) JSONArray("""[{"id":"cp-reader","runId":"run-reader","appRunOrdinal":1,"status":"ready","capturedAt":"2026-10-25T10:58:45Z","files":[{"path":"ui/TimelineReader.kt","kind":"modified","additions":42,"deletions":8},{"path":"ui/ThreadWorkspace.kt","kind":"modified","additions":18,"deletions":5}]}]""") else JSONArray())).also { if (request == "queue") addQueue(it.getJSONObject("projection")) }
     }
 }
 

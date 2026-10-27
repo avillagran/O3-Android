@@ -35,13 +35,22 @@ interface Ot3Screens {
     fun Settings()
 
     @Composable
+    fun SettingsPlaceholder(name: String, title: Int) { NotYetScreen(name) }
+
+    @Composable
     fun Appearance() { NotYetScreen("Appearance") }
 
     @Composable
     fun Notifications() { NotYetScreen("Notifications") }
 
     @Composable
-    fun Usage() { NotYetScreen("Usage") }
+    fun Usage(initialTab: String, environmentId: String?) { NotYetScreen("Usage") }
+
+    @Composable
+    fun PullRequests() { NotYetScreen("PullRequests") }
+
+    @Composable
+    fun PullRequest(route: PullRequest) { NotYetScreen("PullRequest") }
 
     @Composable
     fun Environments()
@@ -95,8 +104,8 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         sheet<SnoozeUntilSheet> { entry -> screens.SnoozeUntil(entry, entry.toRoute()) }
     }
     navigation<PullRequestsGraph>(startDestination = PullRequests) {
-        composable<PullRequests> { NotYetScreen("PullRequests") }
-        composable<PullRequest> { NotYetScreen("PullRequest") }
+        composable<PullRequests> { screens.PullRequests() }
+        composable<PullRequest> { screens.PullRequest(it.toRoute()) }
         composable<PullRequestFile> { NotYetScreen("PullRequestFile") }
     }
     navigation<SettingsGraph>(startDestination = Settings) {
@@ -107,9 +116,10 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<AddEnvironment> { entry -> screens.AddEnvironment(entry.toRoute()) }
         composable<PairEnvironment> { screens.PairEnvironment() }
         composable<ScanPairingCode> { screens.ScanPairingCode() }
-        composable<Usage> { screens.Usage() }
-        composable<Archive> { NotYetScreen("Archive") }
-        composable<Licenses> { NotYetScreen("Licenses") }
+        composable<Usage> { screens.Usage("usage", null) }
+        composable<QuotaLimits> { val route = it.toRoute<QuotaLimits>(); screens.Usage("limits", route.environmentId) }
+        composable<Archive> { screens.SettingsPlaceholder("Archive", R.string.settings_archive) }
+        composable<Licenses> { screens.SettingsPlaceholder("Licenses", R.string.settings_licenses) }
     }
 }
 

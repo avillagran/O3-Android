@@ -8,6 +8,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -46,13 +47,67 @@ class AppearancePreferencesTest {
     }
 
     @Test
+    fun `provider usage is opt in and survives a new preferences reader`() = runBlocking {
+        assertEquals(false, preferences.settings.first().providerUsage)
+        preferences.setProviderUsage(true)
+        assertEquals(true, AppearancePreferences(dataStore).settings.first().providerUsage)
+        preferences.setProviderUsage(false)
+        assertEquals(false, AppearancePreferences(dataStore).settings.first().providerUsage)
+    }
+
+    @Test
+    fun `provider usage toggles atomically across readers`() = runBlocking {
+        preferences.setProviderUsage(true)
+        kotlinx.coroutines.coroutineScope {
+            repeat(20) { launch { AppearancePreferences(dataStore).toggleProviderUsage() } }
+        }
+        assertEquals(true, preferences.settings.first().providerUsage)
+        preferences.toggleProviderUsage()
+        assertEquals(false, preferences.settings.first().providerUsage)
+    }
+
+    @Test
+    fun `reveal pace defaults to normal and survives readers and disk reopen`() = runBlocking {
+        assertEquals(RevealPace.NORMAL, preferences.settings.first().revealPace)
+        for (pace in RevealPace.entries) {
+            preferences.setRevealPace(pace)
+            assertEquals(pace, AppearancePreferences(dataStore).settings.first().revealPace)
+        }
+        checkNotNull(scope.coroutineContext[kotlinx.coroutines.Job]).let { it.cancel(); it.join() }
+        val reopenedScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        try {
+            val reopened = PreferenceDataStoreFactory.create(scope = reopenedScope) { folder.root.resolve("appearance.preferences_pb") }
+            assertEquals(RevealPace.FAST, AppearancePreferences(reopened).settings.first().revealPace)
+        } finally { reopenedScope.cancel() }
+    }
+
+    @Test
+    fun `reveal styles default to nebula and survive readers and disk reopen`() = runBlocking {
+        assertEquals(RevealStyle.NEBULA, preferences.settings.first().revealStyle)
+        for (style in RevealStyle.entries) {
+            preferences.setRevealStyle(style)
+            assertEquals(style, AppearancePreferences(dataStore).settings.first().revealStyle)
+        }
+        checkNotNull(scope.coroutineContext[kotlinx.coroutines.Job]).let { it.cancel(); it.join() }
+        val reopenedScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        try {
+            val reopened = PreferenceDataStoreFactory.create(scope = reopenedScope) { folder.root.resolve("appearance.preferences_pb") }
+            assertEquals(RevealStyle.INSTANT, AppearancePreferences(reopened).settings.first().revealStyle)
+        } finally { reopenedScope.cancel() }
+    }
+
+    @Test
     fun `unknown stored values read as the defaults`() = runBlocking {
         dataStore.edit {
             it[AppearancePreferences.Keys.MODE] = "SEPIA"
             it[AppearancePreferences.Keys.ANIMATION] = "SOMETIMES"
+            it[AppearancePreferences.Keys.REVEAL_PACE] = "INSTANT"
+            it[AppearancePreferences.Keys.REVEAL_STYLE] = "UNKNOWN"
         }
         val settings = preferences.settings.first()
         assertEquals(AppearanceMode.FOLLOW_SYSTEM, settings.mode)
         assertEquals(AnimationPreference.AUTO, settings.animation)
+        assertEquals(RevealPace.NORMAL, settings.revealPace)
+        assertEquals(RevealStyle.NEBULA, settings.revealStyle)
     }
 }

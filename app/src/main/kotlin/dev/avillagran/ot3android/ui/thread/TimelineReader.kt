@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyListState
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -32,6 +34,7 @@ import dev.avillagran.ot3android.core.thread.ThreadMessage
 import dev.avillagran.ot3android.ui.kit.Ot3Spinner
 import dev.avillagran.ot3android.ui.theme.FiraCode
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
+import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -41,29 +44,57 @@ import java.util.Date
 internal fun JSONArray?.objects(): List<JSONObject> = this?.let { a -> (0 until a.length()).mapNotNull(a::optJSONObject) }.orEmpty()
 
 /** Draw Rust's complete ordered view. No grouping, Markdown parsing or eligibility rules here. */
+@OptIn(kotlinx.coroutines.FlowPreview::class)
 @Composable
-internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, onInspect: suspend (JSONObject) -> JSONObject? = { null }, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject? = { _, _ -> null }) {
+internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, onInspect: suspend (JSONObject) -> JSONObject? = { null }, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject? = { _, _ -> null },
+    initialPosition: dev.avillagran.ot3android.core.data.prefs.ReadingPosition? = null,
+    onPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
+) {
+    val threadKey = LocalSelectedThreadKey.current
+    // The modal belongs to the reader, not a lazy row which may leave composition
+    // when rotation changes the viewport. Scope saved state to the selected thread.
+    val imageGeneration = LocalReaderImages.current.generation
+    var openedImage by rememberSaveable(threadKey, imageGeneration) { mutableStateOf<String?>(null) }
+    openedImage?.let { descriptor -> ReaderImageDialog(JSONObject(descriptor)) { openedImage = null } }
+    var openedDiff by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
+    openedDiff?.let { summary -> ThreadDiffDialog(JSONObject(summary), onReadDiff) { openedDiff = null } }
     val rows = view?.optJSONArray("timeline").objects().ifEmpty {
         fallback.map { JSONObject().put("id", it.id).put("role", it.role).put("text", it.text)
             .put("createdAt", it.createdAt).put("streaming", it.streaming).put("rev", it.rev) }
     }.asReversed()
-    val list = rememberSaveable(saver = readingAnchorSaver(rows)) { LazyListState() }
+    val list = rememberSaveable(saver = readingAnchorSaver(rows)) {
+        val byKey = initialPosition?.let { position -> rows.indexOfFirst { it.optString("id") == position.rowId } } ?: -1
+        LazyListState(if (byKey >= 0) byKey else initialPosition?.index?.coerceIn(0, (rows.size - 1).coerceAtLeast(0)) ?: 0,
+            initialPosition?.offset ?: 0)
+    }
+    val savePosition by androidx.compose.runtime.rememberUpdatedState(onPosition)
+    fun position() = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }?.let {
+        dev.avillagran.ot3android.core.data.prefs.ReadingPosition(it.key as? String ?: "", list.firstVisibleItemIndex, list.firstVisibleItemScrollOffset)
+    }
+    androidx.compose.runtime.LaunchedEffect(list, threadKey) {
+        androidx.compose.runtime.snapshotFlow { position() }.debounce(250).distinctUntilChanged().collect { it?.let(savePosition) }
+    }
+    androidx.compose.runtime.DisposableEffect(list, threadKey) {
+        onDispose { position()?.let(savePosition) }
+    }
     val scope = rememberCoroutineScope()
     val away by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 80 } }
-    Box(Modifier.fillMaxSize()) {
-        LazyColumn(state = list, reverseLayout = true, contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
-            items(rows, key = { it.getString("id") }) { row ->
-                // rev invalidates content, never the item's saveable expansion or reading anchor.
-                TimelineRow(row, onInspect, onReadDiff)
+    CompositionLocalProvider(LocalOpenReaderImage provides { openedImage = it.toString() }) {
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(state = list, reverseLayout = true, contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
+                items(rows, key = { it.getString("id") }) { row ->
+                    // rev invalidates content, never the item's saveable expansion or reading anchor.
+                    TimelineRow(row, onInspect) { openedDiff = it.toString() }
+                }
+                if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
+                    Text("Earlier history is available on desktop", style = MaterialTheme.typography.labelSmall)
+                }
             }
-            if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
-                Text("Earlier history is available on desktop", style = MaterialTheme.typography.labelSmall)
+            if (away) TextButton(onClick = { scope.launch { list.animateScrollToItem(0) } },
+                modifier = Modifier.align(Alignment.BottomEnd).background(Ot3Theme.colors.surface).testTag("thread_jump_latest")) {
+                Text("Jump to latest ↓")
             }
-        }
-        if (away) TextButton(onClick = { scope.launch { list.animateScrollToItem(0) } },
-            modifier = Modifier.align(Alignment.BottomEnd).background(Ot3Theme.colors.surface).testTag("thread_jump_latest")) {
-            Text("Jump to latest ↓")
         }
     }
 }
@@ -86,7 +117,7 @@ private fun readingAnchorSaver(rows: List<JSONObject>): Saver<LazyListState, *> 
 )
 
 @Composable
-private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject?) {
+private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onOpenDiff: (JSONObject) -> Unit) {
     val role = row.optString("role")
     val id = row.getString("id")
     if (role == "user") {
@@ -107,10 +138,10 @@ private fun TimelineRow(row: JSONObject, onInspect: suspend (JSONObject) -> JSON
                     "assistant" -> {
                         if (row.optJSONArray("blocks").objects().isNotEmpty()) MarkdownBlocks(row.optJSONArray("blocks"))
                         else SelectionContainer { Text(row.optString("text")) }
-                        row.optJSONArray("attachments").objects().forEach { Text("Attachment · ${it.optString("name", "Preview unavailable")}", color = colors.dim) }
+                        MessageAttachments(row)
                     }
                     "activity" -> ActivityBlock(row.getJSONObject("activity"), id, onInspect)
-                    "changes" -> ChangesBlock(row.getJSONObject("changes"), id, onReadDiff)
+                    "changes" -> ChangesBlock(row.getJSONObject("changes"), id, onOpenDiff)
                     "plan" -> Fold("Plan", id) { MarkdownBlocks(row.optJSONObject("plan")?.optJSONArray("blocks")) }
                     "error" -> Text(row.optJSONObject("error")?.optString("message").orEmpty(), color = MaterialTheme.colorScheme.error)
                     "context" -> Text("Context compacted", color = colors.dim)
@@ -181,11 +212,9 @@ private fun Inspector(reference: JSONObject, onInspect: suspend (JSONObject) -> 
 }
 
 @Composable
-private fun ChangesBlock(changes: JSONObject, id: String, onReadDiff: suspend (JSONObject, Boolean) -> JSONObject?) {
-    var opened by rememberSaveable(id) { mutableStateOf(false) }
-    if (opened) ThreadDiffDialog(changes, onReadDiff) { opened = false }
+private fun ChangesBlock(changes: JSONObject, id: String, onOpenDiff: (JSONObject) -> Unit) {
     Fold("Changes +${changes.optInt("additions")} −${changes.optInt("deletions")}", id) {
-        TextButton(onClick = { opened = true }, modifier = Modifier.testTag("thread_diff_$id")) { Text(stringResource(R.string.ot3_open_diff)) }
+        TextButton(onClick = { onOpenDiff(changes) }, modifier = Modifier.testTag("thread_diff_$id")) { Text(stringResource(R.string.ot3_open_diff)) }
         changes.optJSONArray("files").objects().forEach { file ->
             SelectionContainer { Text("${file.optString("path")} · ${file.optString("kind")} +${file.optInt("additions")} −${file.optInt("deletions")}", fontFamily = FiraCode, style = MaterialTheme.typography.bodySmall) }
         }
@@ -237,9 +266,11 @@ internal fun inlineSpans(spans: JSONArray?): AnnotatedString = buildAnnotatedStr
             fontStyle = if (span.optBoolean("emphasis")) FontStyle.Italic else null,
             fontFamily = if (span.optString("type") == "code") FiraCode else null,
             textDecoration = if (span.optBoolean("strikethrough")) TextDecoration.LineThrough else null)
-        val href = span.optJSONObject("link")?.optString("href")
-        // Only external web destinations are opened by Android; file/thread links need native routing.
-        val web = href?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+        val link = span.optJSONObject("link")
+        // Rust owns destination classification. Android requires a normalized scheme
+        // for intent matching; file/thread/anchor destinations still need native routing.
+        val web = link?.takeIf { it.optString("kind") in setOf("web", "github") }
+            ?.getString("href")?.let { android.net.Uri.parse(it).normalizeScheme().toString() }
         if (web != null) pushLink(LinkAnnotation.Url(web))
         withStyle(style) { append(if (span.optString("type") == "break") "\n" else span.optString("text")) }
         if (web != null) pop()

@@ -1,0 +1,57 @@
+{
+  "commentsTruncated": false,
+  "comments": [{
+    "createdAt": "2026-10-26T20:05:00Z",
+    "author": {"login": "reviewer"},
+    "blocks": [{
+      "spans": [
+        {
+          "text": "The ",
+          "type": "text"
+        },
+        {
+          "strong": true,
+          "text": "environment scope",
+          "type": "text"
+        },
+        {
+          "text": " is preserved. Please check rotation as well.",
+          "type": "text"
+        }
+      ],
+      "type": "paragraph"
+    }],
+    "id": "comment-1",
+    "body": "The **environment scope** is preserved. Please check rotation as well."
+  }],
+  "commits": [],
+  "reviewThreads": [{
+    "path": "ui/PullRequestsScreen.kt",
+    "comments": [{
+      "createdAt": "2026-10-26T20:08:00Z",
+      "author": {"login": "andres"},
+      "blocks": [{
+        "spans": [
+          {
+            "text": "Selection is kept in ",
+            "type": "text"
+          },
+          {
+            "text": "SavedStateHandle",
+            "type": "code"
+          },
+          {
+            "text": ".",
+            "type": "text"
+          }
+        ],
+        "type": "paragraph"
+      }],
+      "id": "inline-1",
+      "body": "Selection is kept in `SavedStateHandle`."
+    }],
+    "id": "review-1",
+    "isResolved": false
+  }],
+  "commentCount": 1
+}

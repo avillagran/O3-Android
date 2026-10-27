@@ -25,6 +25,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import dev.avillagran.ot3android.core.data.prefs.AnimationPreference
+import dev.avillagran.ot3android.core.data.prefs.RevealPace
+import dev.avillagran.ot3android.core.data.prefs.RevealStyle
+import kotlin.math.roundToInt
 
 /** ot3's durations and curves (docs/ui/tokens.md section 5). */
 object Ot3Motion {
@@ -76,6 +79,8 @@ object Ot3Motion {
 
     val EaseInOutQuart: Easing = Easing { t -> if (t < 0.5f) 8f * t * t * t * t else { val u = -2f * t + 2f; 1f - u * u * u * u / 2f } }
 
+    val EaseInOutSine: Easing = Easing { t -> ((1.0 - kotlin.math.cos(Math.PI * t)) / 2.0).toFloat() }
+
     val RowDriftEasing: Easing = easeOutBack(1.2f)
     val StatusPopEasing: Easing = easeOutBack(2.4f)
 }
@@ -106,7 +111,7 @@ fun resolveMotionLevel(preference: AnimationPreference, animatorsOff: Boolean, p
  * rule, `t3m:src/lib/designTokens.ts:8`), so Off snaps all of them.
  */
 @Immutable
-data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationPreference = AnimationPreference.AUTO) {
+data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationPreference = AnimationPreference.AUTO, val revealPace: RevealPace = RevealPace.NORMAL, val revealStyle: RevealStyle = RevealStyle.NEBULA) {
     val animates: Boolean get() = level != Ot3MotionLevel.OFF
 
     fun <T> spec(full: FiniteAnimationSpec<T>): FiniteAnimationSpec<T> = if (animates) full else snap()
@@ -132,7 +137,23 @@ data class Ot3MotionPolicy(val level: Ot3MotionLevel, val preference: AnimationP
 
     fun <T> statusPop(): FiniteAnimationSpec<T> = tween(Ot3Motion.STATUS_POP_MS, Ot3Motion.StatusPopEasing)
 
-    fun <T> reveal(): FiniteAnimationSpec<T> = tween(Ot3Motion.REVEAL_MS, Ot3Motion.easeOutBack(1.3f))
+    fun effectiveRevealStyle(shaderAvailable: Boolean): RevealStyle = when {
+        !animates || revealStyle == RevealStyle.INSTANT -> RevealStyle.INSTANT
+        !shaderAvailable -> RevealStyle.SPRING
+        else -> revealStyle
+    }
+
+    fun <T> reveal(style: RevealStyle = RevealStyle.SPRING): FiniteAnimationSpec<T> {
+        if (!animates || style == RevealStyle.INSTANT) return snap()
+        val (duration, easing) = when (style) {
+            RevealStyle.NEBULA -> 560 to Ot3Motion.EaseInOutCubic
+            RevealStyle.WARP -> 460 to Ot3Motion.EaseInOutQuart
+            RevealStyle.FOLD -> 500 to Ot3Motion.EaseInOutSine
+            RevealStyle.SPRING -> 520 to Ot3Motion.easeOutBack(1.3f)
+            RevealStyle.INSTANT -> error("handled above")
+        }
+        return tween((duration * revealPace.multiplier).roundToInt(), easing)
+    }
 
     fun <T> pane(): FiniteAnimationSpec<T> = tween(Ot3Motion.PANE_MS, Ot3Motion.EaseInOutCubic)
 
@@ -146,7 +167,7 @@ val LocalOt3Motion = staticCompositionLocalOf { Ot3MotionPolicy.Full }
 
 /** [resolveMotionLevel] for [preference], following the animator scale and battery saver live. */
 @Composable
-fun rememberOt3Motion(preference: AnimationPreference): Ot3MotionPolicy {
+fun rememberOt3Motion(preference: AnimationPreference, revealPace: RevealPace = RevealPace.NORMAL, revealStyle: RevealStyle = RevealStyle.NEBULA): Ot3MotionPolicy {
     val context = LocalContext.current.applicationContext
     var animatorsOff by remember { mutableStateOf(animatorsOff(context)) }
     var powerSave by remember { mutableStateOf(powerSave(context)) }
@@ -178,7 +199,7 @@ fun rememberOt3Motion(preference: AnimationPreference): Ot3MotionPolicy {
         }
     }
     val level = resolveMotionLevel(preference, animatorsOff, powerSave)
-    return remember(level, preference) { Ot3MotionPolicy(level, preference) }
+    return remember(level, preference, revealPace, revealStyle) { Ot3MotionPolicy(level, preference, revealPace, revealStyle) }
 }
 
 private fun animatorsOff(context: Context): Boolean =

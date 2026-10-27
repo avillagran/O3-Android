@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">Лимиты использования недоступны.</string>
+    <string name="limits_used">Использовано %1$s</string>
+    <string name="limits_checked">Проверено %1$s</string>
+</resources>

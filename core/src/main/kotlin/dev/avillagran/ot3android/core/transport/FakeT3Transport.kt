@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android.core.transport
 
+import dev.avillagran.t3.T3Batch
 import dev.avillagran.t3.T3Exception
 import dev.avillagran.t3.ThreadUpdate
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.update
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -91,6 +93,13 @@ class FakeT3Transport(
     @Volatile private var streamFailure: T3Exception? = null
 
     private val threadFlows = ConcurrentHashMap<String, MutableSharedFlow<ThreadUpdate>>()
+    private val configFlow = MutableSharedFlow<T3Batch>(extraBufferCapacity = BUFFER)
+    @Volatile private var configSource: (() -> Flow<T3Batch>)? = null
+
+    fun onServerConfigStream(source: (() -> Flow<T3Batch>)?) { configSource = source }
+    fun serverConfigCollectors(): StateFlow<Int> = configFlow.subscriptionCount
+    suspend fun emitServerConfig(batch: T3Batch) = configFlow.emit(batch)
+
     private val shellFlow = MutableSharedFlow<ThreadUpdate>(extraBufferCapacity = BUFFER)
 
     /** Bumped by connect, disconnect and close; a stream ends when it moves past its start. */
@@ -184,6 +193,14 @@ class FakeT3Transport(
         return answer(args)
     }
 
+    var onImage: (suspend (String, String, String) -> ByteArray)? = null
+
+    override suspend fun image(id: String, name: String, mimeType: String): ByteArray {
+        record("image", id, name, mimeType)
+        requireConnected()
+        return (onImage ?: throw T3Exception("image_unavailable"))(id, name, mimeType)
+    }
+
     override suspend fun shell(): JSONObject {
         record("shell")
         requireConnected()
@@ -244,6 +261,24 @@ class FakeT3Transport(
         record("threadStream", threadId, afterSequence, completionMarker, boundedSnapshot, compactTurnItems)
         val open = StreamOpen(threadId, afterSequence, completionMarker, boundedSnapshot, compactTurnItems)
         return stream(open, threadFlow(threadId)) { threadSource?.invoke(threadId, afterSequence) }
+    }
+
+    override fun serverConfigStream(): Flow<T3Batch> = flow {
+        record("serverConfigStream")
+        requireConnected()
+        streamFailure?.let { streamFailure = null; throw it }
+        val started = session.value
+        val ended = flow {
+            session.first { it != started }
+            emit(T3Batch(JSONArray(), true, null))
+        }
+        open.update { it + 1 }
+        try {
+            emitAll(merge(configFlow, configSource?.invoke() ?: emptyFlow(), ended)
+                .transformWhile { emit(it); !it.closed })
+        } finally {
+            open.update { it - 1 }
+        }
     }
 
     override suspend fun wakeSubscriptions(): Int {

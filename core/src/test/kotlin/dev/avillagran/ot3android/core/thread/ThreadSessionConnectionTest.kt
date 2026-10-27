@@ -21,7 +21,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -87,7 +87,7 @@ class ThreadSessionConnectionTest {
         assertEquals(listOf<Long?>(10, 11), fake.streamOpens.filter { it.threadId == "t1" }.map { it.afterSequence })
         assertEquals("no second snapshot", 1, fake.log.count { it.method == "boundedThread" })
         assertEquals(1, fake.collectors("t1").value)
-        assertFalse(session.view.value.stale)
+        assertTrue("Saved content waits for the new stream to acknowledge resume", session.view.value.stale)
         assertEquals(listOf("m1", "m2"), session.view.value.messages.map { it.id })
 
         supervisor.stop()

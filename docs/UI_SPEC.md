@@ -154,7 +154,9 @@ Confirmations (Rename, Archive, Delete, Remove connection, Merge) are `AlertDial
 ot3's dialog shape (radius 10, padding 18, accent border, failed border for destructive
 actions, `ot3:ui/qml/T3ThreadRow.qml:412-413`) and ot3's texts (4.1.5). Images open in a
 full-screen viewer with pinch zoom, like T3 Mobile's `FilePreviewModal`
-(`t3m:src/features/threads/ThreadFeed.tsx:460-533`).
+(`t3m:src/features/threads/ThreadFeed.tsx:460-533`). The Android attachment viewer
+uses bounded1–4× pinch/pan, double-tap zoom/reset and keyboard/accessibility controls
+(see attachment touch viewer increment below); QML itself remains aspect-fit.
 
 ### 2.3 Gestures
 
@@ -1212,14 +1214,22 @@ focused, 12 dp margins (`ot3:ui/qml/T3Composer.qml:263-271`). Layout (T3 Mobile)
   the toolbar: attach · model chip ▾ · permission · Plan/Build · options — spacer — draft
   status · send (`t3m:src/features/threads/ThreadComposer.tsx:1129-1218`; ot3 toolbar
   `ot3:ui/qml/T3Composer.qml:444-745`). Tapping the timeline collapses it.
-- **Expanded editor:** a maximize icon at three or more lines opens a full-screen editor
-  (ot3 `ot3:ui/qml/T3Composer.qml:385-389,701-709`).
+- **Expanded editor:** the always-available square-pen icon opens the same editor in
+  the thread surface; Back/Esc returns to the conversation (ot3
+  `ot3:ui/qml/T3Composer.qml:385-389,701-709`, `T3Panel.qml:2021-2031`).
+  Android keeps 48 dp controls, the model/options toolbar and bounded scrollable
+  notices visible above IME. Back closes IME as a phone adaptation. Compact editor
+  height is 56–130 dp; expanded editor fills available space. Selection survives
+  mode changes and rotation, scoped by environment and thread.
 - **Placeholder:** "Ask anything, @files/folders, $skills or /commands…"
   (`ot3:ui/qml/T3Composer.qml:407`); while an approval is pending, "Send a message to
   decline and redirect the agent" (mobile-only, from
   `t3m:src/features/threads/ThreadDetailScreen.tsx:1601-1603`).
 - **Keys:** the soft keyboard's Enter inserts a newline; a hardware Enter sends and
-  Shift+Enter inserts a newline, ot3's compact behaviour (`ot3:ui/qml/T3Composer.qml:218-237`).
+  Shift+Enter inserts a newline. Expanded hardware Enter inserts a newline and
+  Ctrl+Enter sends (`ot3:ui/qml/T3Composer.qml:218-237`). Repeat and composition
+  never trigger send; virtual/soft keyboard events are not classified as hardware.
+  Compact Ctrl+Enter and Ctrl+Shift+Enter actions await supported domain contracts.
   Up at the first line recalls earlier prompts; list continuation on Enter
   (`ot3:ui/qml/T3Composer.qml:194-217`); recall text from `prompt_recall::recall`
   (`lib:src/prompt_recall.rs:151`).
@@ -1316,12 +1326,16 @@ item 4) through today's `MessageSender`.
   unavailable", and actions Edit in composer, Steer the active run, Remove from queue
   (`ot3:ui/qml/T3Queue.qml:37-80`); swipe to remove (T3 Mobile).
 - Data: `queue::derive` (items, `held`, `canSteer`, `canReorder`, hidden message ids;
-  `lib:src/queue.rs:5`) and `queue::command` (`:31`), U5. Interim: hidden.
+  `lib:src/queue.rs:5`) and `queue::command` (`:31`), U5. Native reads and durable commands are integrated.
 
 Implementation progress (2026-10-26): the queue strip and sheet now consume the real
 `timeline.view.queue`, with Rust-built persisted Resume/Remove/Reorder/Steer/Edit commands.
-Editing leaves the unsent draft intact. Source drag reorder and reveal motion, plus
-emulator/live evidence, are pending; this does not close UI-3. See
+Editing leaves the unsent draft intact and maps only documented native edit inputs. A
+48 dp grip now supports touch drag (.5 source opacity, 2 dp accent insertion line),
+with an Up/Down step menu and accessibility actions. Same/adjacent/tap/cancel/stale
+inputs are no-ops; only stream updates change visible order. Phone Ot3Sheet replaces
+desktop inline reveal; no edge autoscroll or direct grip arrow-key binding. Productive
+provider/phone acceptance and other composer gaps remain; this does not close UI-3. See
 `docs/ui/compare/ui-3/README.md` for the remaining differences.
 
 #### 4.4.7 Attachments
@@ -1567,6 +1581,26 @@ before sending. The Rust pieces still missing are the page rules of `pull_reques
 (a comment needs words, only the page's actions; `lib:README.md`, Typed API notes) and
 the row badge, both in U19.
 
+**Android read increment (2026-10-26):** list with saved environment/project scope,
+300 ms search, state/involvement filters, native badges and opaque cursor paging;
+Overview, Checks and Conversation use the typed reads above, with native Markdown.
+Home's badge opens the native-selected current PR. Enterprise host is preserved in
+the route. Loading/error/retry/offline and connection-generation cancellation are
+implemented. Loaded pages, cursor and visible row/pixel offset survive detail→Back,
+activity recreation and rotation within the list navigation entry, after validating
+current connection ownership. Scope/filter/query/Refresh or a different/offline
+connection clears retained data and resets position. No background list collection;
+process death refetches page one. Explicit missing project/environment metadata
+never broadens scope.
+
+Pages currently keep the server's returned order and repeated entries. Newest-first
+cross-page merge is pending shared Rust U31, rather than a Kotlin copy of QML's rule.
+Code/file patches await the native authenticated diff binding in U31; Overview shows
+only the available changed-file count. Write/review/merge/labels/watch/work-on-PR,
+full activity/commit timelines, row overflow and rich inline review state remain
+pending. This is a useful read-only increment, not completion of section 4.8. See
+`ui/compare/pull-requests/README.md` for exact evidence and limitations.
+
 ### 4.9 Settings
 
 - **ot3:** `ot3:ui/qml/T3Preferences.qml` (pages `:54`, search `:46,75-106`, environment
@@ -1782,7 +1816,9 @@ T3 Mobile's place and tabs (`t3m:src/features/settings/SettingsRouteScreen.tsx:2
 - Environment scope: the Settings scope select (4.9); with several environments the page
   shows the selected one, as ot3 asks one environment at a time
   (`ot3:ui/qml/T3Backend.qml:641`).
-- Pull to refresh on both tabs (T3 Mobile); tab switch fades 160 ms.
+- Pull to refresh on both tabs (T3 Mobile); the incoming tab body fades in over
+  160 ms, with system reduced motion respected. There is no outgoing fade or
+  cross-fade (`t3m:src/features/usage/UsageRouteScreen.tsx:261-264`).
 
 #### 4.10.4 Strings
 
@@ -1897,15 +1933,15 @@ thread on screen and consumes its alert (T3's rule, `AgentNotifications.kt:148-1
   (DECISIONS 2026-10-25). The follow service never opens its own: it reads the same
   `ShellState` per environment and passes all of them to the lib. Counts are
   `sidebar.view` `counts`; phases, card, alerts, dedupe, expiry, chip kind and grouping
-  come from the proposed `awareness.view` (LIB_REQUESTS.md U28). **No Kotlin rule
-  computes a phase, a count, a transition, a deadline or a chip kind.** U28 shipped in lib v0.3.5. The UI-1 pre-release keeps its matched v0.3.4
-  artifacts; runtime wiring and the v0.3.5 pin follow that release (rule 6: no interim
-  reimplementation of notification semantics).
-- **Baseline.** The lib returns an opaque `baseline` the host persists per installation
-  (DataStore) and passes back. A missing baseline for an environment means "first
-  observation": no alerts (cold start, new environment, cleared data). Reconnecting
-  (`Unreachable` → `Connected`) passes the environment as not ready meanwhile, so its rows
-  are neither withdrawn nor replayed as transitions (ot3 `main.rs:75-77`).
+  come from `awareness.view` in the pinned v0.3.5 lib (LIB_REQUESTS.md U28).
+  **No Kotlin rule computes a phase, a count, a transition, a deadline or a chip kind.**
+  The earlier UI-1 preparation used v0.3.4; that is historical, not the runtime pin.
+- **Baseline (implemented).** ThreadAwareness keeps the lib's opaque baseline only for
+  the service session, under a mutex. It is not persisted in DataStore. A cold process
+  seeds silently; a new environment also has no previous transition to replay. The
+  earlier per-installation persistence proposal is not implemented. Reconnection keeps
+  the current session's baseline while the environment is not ready; Rust chooses the
+  visible stale phase and transition suppression. See the process-recovery lab below.
 - **Authorisation.** Only environments with a saved credential and a supervisor that is
   not `Unauthorized` are passed. A bridge-catalog entry that is discovered but not
   authorised, withdrawn or revoked (`docs/bridge/CATALOG_SYNC.md`) never contributes a row,
@@ -1914,27 +1950,27 @@ thread on screen and consumes its alert (T3's rule, `AgentNotifications.kt:148-1
 
 #### 4.14.3 Leasing: the app and the follow service share supervisors
 
-Today `ConnectionManager.setForeground(false)` stops every running supervisor on the
-process's `ON_STOP`. UI-N changes that to leases, without a second stream:
+The implemented manager has a foreground flag plus counted `acquireFollowLease`
+handles per local environment (rather than the originally proposed Ui/Follow holder enum).
 
-1. `ConnectionManager.lease(environmentId, holder)` returns a handle; `holder` is `Ui`
-   (screens) or `Follow` (the service). A supervisor runs while it has at least one lease.
-2. `ON_STOP` releases only `Ui` leases. When **Follow threads** is on and the service
-   holds `Follow` leases, those supervisors keep running; the others stop as today.
-3. `ON_RESUME` and default-network changes keep calling `wakeAll()` (`wakeSubscriptions`),
-   for leased supervisors too. Reconnection keeps the supervisor's jittered `Backoff`
-   and stops on `unauthorized`; the service adds no retry loop.
-4. The service releases its leases on idle stop, on disconnect from the notification,
-   when the toggle goes off, on `onTimeout`, and when an environment is forgotten or its
-   grant is withdrawn.
+1. Foreground consumers and the follow service share the same supervisor and shell.
+2. ON_STOP stops supervisors without a follow lease. Closing the last follow lease
+   stops that supervisor when the app is backgrounded; closing twice is harmless.
+3. ON_RESUME and default-network callbacks call wakeAll()/wakeSubscriptions for
+   existing supervisors and skip a pending unreachable backoff. The existing supervisor
+   owns reconnect/backoff; the service adds no network retry loop.
+4. Service destruction releases its leases; removed environments release only their
+   own. Opt-out, permission loss and observed credential rejection stop following.
+   Natural idle expiry, platform timeout callbacks and automatic remote revocation
+   are not all accepted by the lab and must not be inferred from lease unit tests.
 
 #### 4.14.4 Follow service
 
 - **Opt-in.** Settings → Notifications → **Follow active threads** (off by default),
   with a sentence: it keeps a connection open while threads work so their state shows
   in the status bar and lock screen; it uses battery and stops by itself.
-- **Start** only from a visible app (toggle on, or opening a thread / sending a message
-  while the toggle is on and something works): API 31+ forbids starting a foreground
+- **Start** only from a visible app (explicit toggle/permission flow, or the visible
+  application lifecycle while opt-in is persisted and an environment is connected): API 31+ forbids starting a foreground
   service from the background. No start from `BOOT_COMPLETED`, no restart at boot, no alarms to resurrect it, no battery-optimisation exemption
   request (Doze's FCM-first policy; this app has no FCM).
 - **Type: `specialUse`** with the subtype property
@@ -1944,22 +1980,32 @@ process's `ON_STOP`. UI-N changes that to leases, without a second stream:
   `dataSync`, whose description is transfer work and which, for targetSdk 35+, is capped
   at 6 h per 24 h across the app, reset only when the user brings the app to the
   foreground, with `ForegroundServiceStartNotAllowedException` once exhausted. Long or
-  repeated runs would hit it. The service still implements `onTimeout(int, int)` and stops
-  within seconds, so a later type change cannot crash it. Play's App content declaration
-  is needed only if the app ships on Play.
-- **Stop.** When nothing has worked or needed the user for **15 minutes** (default; 5, 15,
-  30 or 60 in Settings), the service demotes the card to a finished/waiting card with its
-  lib deadline (finished 15 min, waiting up to 24 h) and stops. 15 minutes equals T3's
-  finished-card lifetime, so the card and the service end together. Also on
-  **Disconnect** (notification action), toggle off, `onTimeout`, revoked or removed
-  environments, and notification permission revoked.
-- **Notification.** The foreground service's notification **is** the ongoing card
-  (`startForeground(ACTIVITY_ID, card)`), so there is never a second "ot3 is running"
-  notification.
-- **Battery.** No wakelocks, no exact alarms, no polling: the shell stream is push.
-  Doze suspends network for apps (the guide lists no FGS exception), so a dozing phone
-  may delay updates until a maintenance window or the user wakes it; the card says so
-  through the lib's `stale` phase rather than pretending.
+  repeated runs would hit it. An explicit `onTimeout(int, int)` adaptation remains
+  pending; it is not present in the current specialUse service. Play's App content
+  declaration is needed only if the app ships on Play.
+- **Stop (current runtime).** IDLE_MS is a fixed 15-minute elapsed budget since the
+  last native active card. Settings does not offer the previously proposed 5/15/30/60
+  selector; that remains pending. Native card deadlines remain authoritative. Toggle
+  off, the notification's Stop action, forgotten/observed rejected environments and
+  permission loss stop following. Natural 15-minute idle/card expiry is not accepted
+  by short synthetic runs.
+- **Process lifetime.** onStartCommand returns START_NOT_STICKY; no automatic restart is promised
+  (Android may still deliver pending start intents). No boot receiver,
+  work job or alarm resurrects this service. Opt-in/privacy persist; a visible app
+  with permission and a connected environment starts following again. The lab
+  observed no restart in bounded 5-second windows after controlled SIGKILL, then
+  verified visible reopen with a cold silent baseline. This is not LMK/OEM acceptance.
+- **Notification.** A native active card is the FGS notification. A quiet service
+  notice is used when there is no active card, so a normal Done/Failed card can expire
+  separately; no second permanent tracking card is added.
+- **Battery.** No wakelocks, exact alarms or periodic HTTP shell refetch are added.
+  The native stream is push with its own liveness pings; the local card/deadline
+  scheduler caps requested delay at 30 s;
+  Android may defer its execution. Doze may defer CPU/network. It does not itself mark
+  a ready environment stale: the last Working presentation can remain until the
+  supervisor observes failure, after which Rust supplies Waiting/stale. The forced
+  Doze lab verifies that observed transition and recovery with a controlled outage,
+  not real network enforcement on loopback or natural maintenance windows.
 
 #### 4.14.5 Live Updates (API 36.1+) and older APIs
 
@@ -1982,10 +2028,14 @@ process's `ON_STOP`. UI-N changes that to leases, without a second stream:
   with `EXTRA_APP_PACKAGE` (the constant in the API 36/37 SDK and T3's module; the guide
   names `ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS`, which the SDK does not have), else
   the app's notification settings (26+), else app details.
-- Below 36.1 the same card is a normal ongoing notification. API 24–25 have no channels
-  and no timeout: priority LOW/HIGH stand in for channels, and while the service runs it
-  cancels expired cards; T3's single inexact `setAndAllowWhileIdle` alarm for a stopped
-  process (`AgentNotifications.kt:280-290`) is adopted in the runtime tranche.
+- Below 36.1 the same card is a normal ongoing notification. API24/25 have no
+  platform timeout. The compatibility presenter schedules each Rust-provided absolute
+  `expiresAt` with an inexact, non-wakeup RTC alarm and a non-exported receiver,
+  retaining only slot/generation/deadline metadata in preferences. Cleanup survives
+  service teardown; idle can delay it. No exact-alarm permission or periodic polling
+  is requested. API26+ keeps native timeout. This avoids T3's wake-during-idle alarm
+  (`AgentNotifications.kt:280–290`). Summary cleanup remains pending on all APIs.
+  [Verification and limits](ui/compare/ui-n/legacy-expiry.md).
 
 #### 4.14.6 Channels, alerts and actions
 
@@ -2284,7 +2334,7 @@ Selecting a bundled Omarchy palette in Appearance now immediately chooses its da
 
 ### Reader diff increment — 2026-10-26
 
-Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. Split/file tree/hunk folding/preview remain pending.
+Changes → Open diff now uses typed getTurnDiff and native diffReview.scopedResult, with a unified wrapped modal, line numbers, missing/binary states, retry and whitespace refetch. Evidence/scope: `docs/ui/compare/reader-diff/README.md`. File tree/preview remain pending. Native hunk rows now fold locally; see the 2026-10-27 hunk evidence below.
 
 ### Usage implementation checkpoint — 2026-10-26
 
@@ -2322,3 +2372,163 @@ completed delegated issuance evidence. API36.1 acceptance remains red at catalog
 freshness (`bridge_catalog_expired`); the common clock-skew request is tracked in
 LIB_REQUESTS. No productive NODE discovery, Home capture, or physical acceptance
 is claimed. Lab TLS artifacts are replaced by production-flavor SDKs after tests.
+### Limits page checkpoint — 2026-10-26
+
+Settings → Usage → Limits subscribes only while visible, for the selected environment,
+using typed server configuration updates with hub sources enabled. Native
+quotaSources.apply owns folding and private-field removal. The page renders provider
+and hub accounts with separate used-percentage bars and platform-formatted absolute
+reset/check times. One application-scoped probe per environment per five minutes,
+including failures; cancellation and reconnect generations clear stale data.
+U26 pooling/remaining/pace, compact Home/thread strips remain pending. The incoming tab body now uses the
+160 ms T3 Mobile entrance; see [usage evidence](ui/compare/usage/README.md).
+See [limits evidence](ui/compare/usage-limits/README.md).
+
+### Compact quota strip checkpoint — 2026-10-26
+
+§4.10.2 now has an opt-in, persisted Appearance/overflow control (default off), a
+stable first lazy-list item in Home including placeholder states, and a stable slot
+under the actual thread toolbar capped at 200 dp. Home reads all saved environments;
+thread reads its environment. Group taps open Limits, passing the thread environment.
+`AppGraph.quotaSource` shares visible consumers with the real Limits view model:
+one reducer/server-config stream per environment, canceled and joined on last release,
+connection replacement or disconnect. No stream remains without a visible consumer.
+The application five-minute ProviderRefreshGate still counts failures across screens.
+Until U26, native usedPercent is explicitly labelled “used”; resets retain Android's
+absolute formatter. Home takes at most two windows in native order; thread shows all.
+There is no Kotlin pooling, remaining, pace, marker or notice algorithm. Empty connected
+observations hide the strip; loading/offline/read failure shows connection state.
+Appearance and reveal obey Ot3Motion, without bar animation. Inline account expansion,
+U26 presentation and the Usage/Limits 160 ms fade remain pending. Evidence and exact
+limits: `docs/ui/compare/quota-strip/README.md`.
+
+### Diff file navigation increment — 2026-10-26
+
+The real Changes modal now offers ot3's narrow previous/next and path selector,
+showing one native file at a time. Selection is saveable and survives whitespace
+refetch; file navigation does not query the server. Shared OT3 touch feedback is used,
+without invented file-switch animation. Wide-screen tree and context expansion remain pending. Hunk folding is verified in the 2026-10-27 increment below.
+Wrap/no-wrap is now a saveable dialog control: measured font widths and one horizontal
+patch scroll surface, with no refetch. Full-modal dark/light Robolectric goldens and
+overflow/scroll/state tests cover this control. API 36.1 device tests and same-content
+Tokyo/Latte captures now cover the real chat route. The reader owns the dialog
+outside virtualized rows so rotation cannot dismiss it when Changes leaves the viewport.
+Evidence and remaining desktop differences: `docs/ui/compare/reader-diff/README.md`.
+
+
+### Attachment image reader increment — 2026-10-26
+
+Real user/assistant attachment rows now render bounded 220×160 previews and an
+aspect-fit full-screen viewer through Rust's binary image grant contract. Selection
+lives outside lazy rows, scoped to thread and connection, and survives rotation.
+Decode bounds are read first off the UI thread; preview/viewer edge caps are 640/2048 px
+and at most two image jobs run concurrently. Close/Retry use the shared catalog.
+Evidence: `ui/compare/reader-images/README.md` (Tokyo/Latte emulator, synthetic data;
+separate host-JNI signed-grant integration). Markdown media-file images require U30;
+zoom/pan, video/file previews and production-grant acceptance remain open.
+Explicit image clipboard support is described in the following increment.
+
+### Attachment image clipboard increment — 2026-10-26
+
+A visible Copy image icon overlays the thumbnail's top-right corner without adding
+height. The viewer has the same action beside Close and truncates long filenames.
+The touch target, tooltip, keyboard accessibility, busy/check/error states and reset
+use the shared kit CopyButton. Labels come from ot3's 20-locale catalog.
+
+Only an explicit button press requests clipboard bytes. The same Rust attachment API
+and two-job limit apply; the original payload and MIME are offered as a narrow,
+read-only Content URI. Connection changes or lifecycle disposal cancel/drop the action.
+No preview bitmap is copied. Cache offers are bounded to eight images/80 MiB and
+are removed at age ≥24 hours on the next startup/copy cleanup (no timer). Evidence and platform
+parity differences: `ui/compare/reader-image-copy/README.md`.
+
+
+### Attachment touch viewer increment — 2026-10-26
+
+The actual fullscreen attachment viewer supports centroid-anchored pinch, pan only
+while enlarged, double-tap zoom/reset and48dp Zoom in/out/Reset controls. Fit respects
+aspect ratio and bounds follow the fitted image, with no swipe dismissal or new
+animation. The1–4× maximum is an Android adaptation of T3Mobile's zoom-capable
+ImageViewing (680152e27 MediaImagePreview.tsx:59–66); ot3 T3Panel.qml:922–954
+only specifies Fit/copy/close. Scope/Bundle validation includes attachment, canonical
+environment/thread and ephemeral Connection/VM identity. Rotation retains normalized
+position and clamps against the new viewport; close/reopen and connection change
+reset. No image bytes or bitmap are saved, and gestures do not reread/decode.
+See `ui/compare/reader-image-zoom/README.md` for evidence and remaining gaps.
+Expanded editor narrow-height adaptation (2026-10-26): when the window height left
+above IME is below 220 dp, the model/options row moves into the header overflow.
+Back and Send keep their 48 dp header targets; the text viewport no longer collapses
+to a few pixels in phone landscape. Model/options also remain available in overflow
+when IME closes. The regular toolbar receives finite width so its weighted model
+selector stays visible. This is a phone adaptation, not a desktop layout claim.
+
+
+### UI-N lockscreen/system lab — 2026-10-26
+
+The service applies current Full/Status/Hidden privacy on every card publication,
+retains environment leases across lastConnectedAt/label updates, and releases only
+removed environments. Exact AwarenessCard+privacy presentation equality prevents
+identical updates flooding Android's enqueue queue. A UI-only platform-record stamp
+allows recovery on existing deadline ticks without new polling/throttle or filtering
+Rust transitions. Native group summaries are not cancelled while their child posts
+are still being enqueued. See `ui/compare/ui-n/system-lab/README.md` for real-service,
+loopback/JNI evidence and remaining Doze/process-death/physical limitations.
+
+
+### Reader hunk folding — 2026-10-27
+
+The unified diff reader folds native `kind=hunk` rows with a 48dp header, accent
+background at 0.08 opacity, chevron and accessibility Expand/Collapse actions.
+Following rows disappear until the next native hunk; the native JSON and patch
+remain intact. This follows the QML fallback `T3DiffReview.qml:71–81,101,103`;
+it does not claim complete parity with the ot3 native diff renderer. File changes,
+whitespace/scope/content changes reset folds without resurrecting A→B→A state.
+Rotation of the same diff preserves folds. Evidence and limits:
+`docs/ui/compare/reader-diff/README.md` (hunk folding increment).
+
+
+### Wide diff split layout — 2026-10-27
+
+At useful content width ≥650dp (after safe insets and dialog padding), the reader
+shows Split/Unified. Narrower content forces unified and hides the control while
+preserving the user's split preference. `splitRows` from the pinned Rust 0.3.5 AAR
+provides exact left/right cells, null blanks and line numbers; Kotlin performs no
+patch parsing or change alignment. This follows `T3DiffReview.qml:65–66,71–81,205–213`.
+Each layout owns its fold set over its native row indices. Rotation or toggling
+layout preserves these sets; file/content/scope/whitespace changes reset both.
+Wrap and file selection remain local reading preferences. Labels come from the
+AAR catalog via the existing TSV importer. See `docs/ui/compare/reader-diff/README.md`.
+Tree/context/syntax/preview remain pending.
+
+
+### Reveal pace increment — 2026-10-27
+
+Appearance exposes the persisted ot3 Transition speed choices Slow/Normal/Fast
+(1.6/1/0.6), applied only to existing SidebarReveal/VerticalReveal show/hide durations.
+Normal is unchanged; Off/system reduced motion and the power-save cap remain in
+force. Root theme/workspace wiring and real Appearance persistence are verified.
+That increment did not add a style selector; the following styles increment
+supersedes that limitation. Complete motion aesthetics remain pending.
+Scope, timings and emulator control captures:
+`docs/ui/compare/reveal-pace/README.md`.
+
+### Reveal styles and uniform snapshot correction — 2026-10-27
+
+Appearance now persists Show and hide: Nebula, Hyperspace, Fold, Spring and Instant,
+using the AAR's labels. The choice reaches both SidebarReveal and VerticalReveal.
+Durations/curves follow T3Reveal.qml and the existing pace multiplier; other
+animations keep their independent timings. Unsupported shader paths use Spring,
+and Instant/system reduced motion snap even when enabled during an active reveal.
+
+Moving shader regions now create RenderEffect after setting each frame's uniforms.
+The previous cached effect retained its initial uniform snapshot and could hide
+all content until the transition settled. A device pixel regression fails on that
+baseline and passes for all three shaded styles on both axes after correction.
+RuntimeShader stays cached, artistic AGSL stays unchanged, and settled content
+uses no attached effect.
+
+MainActivity selection/recreation and workspace propagation are verified; Warp/Fold
+recordings are instrumented component scenarios, not a wall-clock smoothness or
+physical-device aesthetic acceptance. Interactive GUI capture remains limited by
+the unavailable Jev key; no Android Settings fallback was used. Sources, GPU proof,
+recordings and remaining boundaries: `docs/ui/compare/reveal-styles/README.md`.

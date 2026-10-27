@@ -8,4 +8,7 @@ Xiaomi update: main343158e APK sha256 cf44dc505a7dcde2620be33b9a82bfbc114d64ae6f
 
 Pre-release: https://github.com/avillagran/ot3-android/releases/tag/apk-2026-10-26-343158e
 
-Pending: actual lockscreen/Doze/grouped-transition lifecycle evidence, productive NODE/VQ discovery, remaining reader/composer parity.
+Historical pending list for this controls tranche: lockscreen/Doze/grouped lifecycle
+evidence. Later [system lab](../system-lab/README.md) and
+[resilience lab](../resilience/README.md) provide bounded evidence; their remaining
+limits, productive NODE/VQ discovery and remaining reader/composer parity are still open.

@@ -1,0 +1,62 @@
+{
+  "connected": true,
+  "providers": [
+    {
+      "auth": {
+        "email": "demo@example.test",
+        "status": "authenticated"
+      },
+      "availability": "available",
+      "displayName": "Codex",
+      "driver": "codex",
+      "enabled": true,
+      "installed": true,
+      "instanceId": "codex",
+      "usageLimits": {
+        "checkedAt": "2026-10-26T18:00:00Z",
+        "windows": [
+          {
+            "id": "session",
+            "kind": "session",
+            "label": "5 hours",
+            "resetsAt": "2026-10-26T21:30:00Z",
+            "usedPercent": 38.0
+          },
+          {
+            "id": "weekly",
+            "kind": "weekly",
+            "label": "Weekly",
+            "resetsAt": "2026-11-01T12:00:00Z",
+            "usedPercent": 67.0
+          }
+        ]
+      }
+    }
+  ],
+  "usageLimitSources": [
+    {
+      "accounts": [
+        {
+          "driver": "claude",
+          "email": "team@example.test",
+          "id": "claude",
+          "plan": "Pro",
+          "usageLimits": {
+            "checkedAt": "2026-10-26T18:00:00Z",
+            "windows": [
+              {
+                "id": "monthly",
+                "kind": "monthly",
+                "label": "Monthly",
+                "resetsAt": "2026-11-01T00:00:00Z",
+                "usedPercent": 21.0
+              }
+            ]
+          }
+        }
+      ],
+      "id": "team",
+      "label": "Team accounts"
+    }
+  ]
+}

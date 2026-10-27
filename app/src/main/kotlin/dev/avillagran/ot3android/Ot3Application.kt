@@ -21,6 +21,9 @@ class Ot3Application : Application() {
     override fun onCreate() {
         super.onCreate()
         graph = AppGraph(this)
+        graph.appScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { dev.avillagran.ot3android.ui.thread.ImageClipboard.cleanup(this@Ot3Application) }
+        }
         ProcessLifecycleOwner.get().lifecycle.addObserver(ConnectionLifecycle(graph))
         watchNetwork()
     }
@@ -38,9 +41,9 @@ class Ot3Application : Application() {
 }
 
 /**
- * Streams run only while the app is visible: stopped on the process's ON_STOP, resumed from
- * their held shell on ON_START, and probed with `wakeSubscriptions` on ON_RESUME. The live
- * theme reads and polls only while visible too.
+ * Foreground screens start shared supervisors; ON_STOP stops those without a follow
+ * lease. Leased supervisors may keep following in the background. ON_RESUME probes
+ * existing streams with `wakeSubscriptions`; the live theme reads only while visible.
  */
 private class ConnectionLifecycle(private val graph: AppGraph) : DefaultLifecycleObserver {
     private var starter: Job? = null

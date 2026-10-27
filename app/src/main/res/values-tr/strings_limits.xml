@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">Kullanım sınırı bilgisi yok.</string>
+    <string name="limits_used">%1$s kullanıldı</string>
+    <string name="limits_checked">Kontrol: %1$s</string>
+</resources>

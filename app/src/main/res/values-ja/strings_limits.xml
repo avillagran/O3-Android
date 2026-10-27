@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">利用制限の情報はありません。</string>
+    <string name="limits_used">%1$s 使用済み</string>
+    <string name="limits_checked">確認日時: %1$s</string>
+</resources>

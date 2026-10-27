@@ -1,5 +1,6 @@
 package dev.avillagran.ot3android.ui.navigation
 
+import androidx.compose.foundation.layout.padding
 import android.content.ClipData
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -57,7 +58,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     override fun Home(entry: NavBackStackEntry, isTop: Boolean) {
         val viewModel = homeViewModel(entry)
         val state by viewModel.state.collectAsStateWithLifecycle()
-        HomeScreen(state, isTop, onIntent = { intent -> onHomeIntent(intent, viewModel) })
+        HomeScreen(state, isTop, onIntent = { intent -> onHomeIntent(intent, viewModel) }, quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(onOpenLimits = { navigator.push(QuotaLimits()) }) })
     }
 
     private fun onHomeIntent(intent: HomeIntent, viewModel: HomeViewModel) {
@@ -65,6 +66,12 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             is HomeIntent.SetQuery -> viewModel.setQuery(intent.text)
             HomeIntent.ClearSearch -> viewModel.clearSearch()
             is HomeIntent.OpenRow -> navigator.openThread(intent.row.environmentId, intent.row.threadId)
+            is HomeIntent.OpenPullRequest -> intent.row.pullRequestBadge?.optJSONObject("current")?.let { pr ->
+                val projectId = pr.optString("projectId").takeIf { it.isNotBlank() } ?: intent.row.projectId
+                if (projectId != null && pr.optString("repository").isNotBlank() && pr.optInt("number") > 0) {
+                    navigator.push(PullRequest(intent.row.environmentId, projectId, pr.getString("repository"), pr.getInt("number"), pr.optString("host").takeIf { it.isNotBlank() }))
+                }
+            }
             is HomeIntent.RowActions -> navigator.openSheet(ThreadActionsSheet(intent.row.environmentId, intent.row.threadId))
             is HomeIntent.ProjectActions -> intent.row.projectId?.let { navigator.openSheet(ProjectActionsSheet(intent.row.environmentId, it)) }
             is HomeIntent.OpenMessage -> navigator.openThread(intent.match.environmentId, intent.match.threadId)
@@ -106,15 +113,19 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                     graph.messageSender,
                     graph.appScope,
                     graph.composerPreferences,
+                    graph.threadCache,
+                    cacheAuthority = { graph.environmentRepository.cacheAuthority(route.environmentId) },
+                    cacheAuthorityUpdates = graph.environmentRepository.cacheAuthorities(route.environmentId),
                 )
             },
             onBack = { navigator.back() },
+            quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, compact = false, onOpenLimits = { navigator.push(QuotaLimits(route.environmentId)) }) },
         )
     }
 
     @Composable
     override fun Settings() {
-        SettingsScreen(onOpen = { entry ->
+        SettingsScreen(onBack = { navigator.home() }, onOpen = { entry ->
             when (entry) {
                 SettingsEntry.Environments -> navigator.push(Environments)
                 SettingsEntry.Appearance -> navigator.push(Appearance)
@@ -126,21 +137,75 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         })
     }
 
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
     @Composable
-    override fun Usage() {
+    override fun SettingsPlaceholder(name: String, title: Int) {
+        androidx.compose.material3.Scaffold(topBar = {
+            androidx.compose.material3.TopAppBar(
+                title = { androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(title)) },
+                navigationIcon = {
+                    androidx.compose.material3.IconButton(onClick = { navigator.back() }) {
+                        androidx.compose.material3.Icon(
+                            androidx.compose.ui.res.painterResource(dev.avillagran.ot3android.R.drawable.ic_arrow_back),
+                            androidx.compose.ui.res.stringResource(dev.avillagran.ot3android.R.string.action_back),
+                        )
+                    }
+                },
+            )
+        }) { padding ->
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier
+                .padding(padding)) { NotYetScreen(name) }
+        }
+    }
+
+    @Composable
+    override fun Usage(initialTab: String, environmentId: String?) {
         val graph = LocalContext.current.appGraph
         val model = viewModel {
             dev.avillagran.ot3android.ui.usage.UsageViewModel(
                 graph.environmentRepository.environments,
                 graph.connectionManager::connectionFlow,
-                createSavedStateHandle(),
+                createSavedStateHandle().apply { if (!contains("tab")) set("tab", initialTab); if (!contains("environment")) set("environment", environmentId) },
+                refreshProviders = graph.providerRefreshGate::refresh,
+                quotaSource = graph.quotaSource,
             )
         }
         val state by model.state.collectAsStateWithLifecycle()
         dev.avillagran.ot3android.ui.usage.UsageScreen(
             state, model::selectEnvironment, model::selectPeriod, model::refresh,
-            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices,
+            onBack = { navigator.back() }, onRefreshPrices = model::refreshPrices, onTab = model::selectTab,
         )
+    }
+
+    @Composable
+    override fun PullRequests() {
+        val graph = LocalContext.current.appGraph
+        val model = viewModel {
+            dev.avillagran.ot3android.ui.pullrequests.PullRequestsViewModel(
+                graph.environmentRepository.environments, graph.connectionManager::connectionFlow,
+                projects = { id -> kotlinx.coroutines.flow.flow {
+                    val supervisor = graph.connectionManager.supervisor(id)
+                    if (supervisor == null) emit(emptyList())
+                    else supervisor.shell.collect { emit(it?.projects.orEmpty()) }
+                } }, saved = createSavedStateHandle(),
+            )
+        }
+        val state by model.state.collectAsStateWithLifecycle()
+        dev.avillagran.ot3android.ui.pullrequests.PullRequestsScreen(state, model::selectEnvironment, model::selectProject,
+            model::selectState, model::selectInvolvement, model::setQuery, model::refresh, model::loadMore,
+            onOpen = { id, entry -> navigator.push(PullRequest(id, entry.getString("projectId"), entry.getString("repository"), entry.getInt("number"), entry.getString("host"))) }, listState = model.listState)
+    }
+
+    @Composable
+    override fun PullRequest(route: PullRequest) {
+        val graph = LocalContext.current.appGraph
+        val model = viewModel {
+            dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel(route.environmentId,
+                org.json.JSONObject().put("projectId", route.projectId).put("repository", route.repository).put("number", route.number).put("host", route.host),
+                graph.connectionManager::connectionFlow, createSavedStateHandle())
+        }
+        val state by model.state.collectAsStateWithLifecycle()
+        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state, model::selectTab, model::refresh, { navigator.back() })
     }
 
     @Composable
@@ -168,6 +233,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val bridgeStatus by graph.bridgeCatalog.status.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
         EnvironmentsScreen(
+            onBack = { navigator.back() },
             viewModel = appViewModel { graph -> EnvironmentsViewModel(graph.environmentRepository, graph.connectionManager) },
             // Rows expand in place with UI-6; until then a tap edits, as the edit action does.
             onOpen = { id -> navigator.addEnvironment(id) },

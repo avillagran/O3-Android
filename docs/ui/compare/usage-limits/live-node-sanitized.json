@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-26T19:42:27.150150+00:00",
+  "server": "local NODE T3",
+  "transport": "host JNI C ABI 0.3.5",
+  "subscription": "server.subscribeServerConfig",
+  "usageLimitSources": true,
+  "eventTypes": [
+    "snapshot",
+    "usageLimitSourcesUpdated"
+  ],
+  "nativeUpdates": 2,
+  "providerCount": 10,
+  "providerWindowCount": 4,
+  "sourceCount": 0,
+  "sourceAccountCount": 0,
+  "refreshProvidersCalled": false,
+  "physicalAcceptance": false,
+  "sessionRevoked": true
+}

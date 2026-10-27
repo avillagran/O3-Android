@@ -17,12 +17,61 @@ class ReaderScreenshotTest : ScreenshotTest() {
         java.util.TimeZone.setDefault(originalZone)
         java.util.Locale.setDefault(originalLocale)
     }
+    @Test fun attachmentPreviewTokyo() = attachmentPreview("tokyo-night")
+    @Test fun attachmentPreviewLatte() = attachmentPreview("catppuccin-latte")
+
+    private fun attachmentPreview(theme: String) {
+        val bytes = ApplicationProvider.getApplicationContext<android.content.Context>().assets.open("reader/preview.png").use { it.readBytes() }
+        val row = JSONObject("""{"id":"image-prompt","role":"user","text":"Revisa la captura del lector","attachments":[{"id":"reader-shot","type":"image","name":"Vista previa del lector.png","mimeType":"image/png"}]}""")
+        snapshot("image-preview", themes = listOf(theme), beforeCapture = {
+            composeRule.waitUntil(5_000) { composeRule.onAllNodesWithContentDescription("Vista previa del lector.png").fetchSemanticsNodes().isNotEmpty() }
+        }) {
+            androidx.compose.runtime.CompositionLocalProvider(LocalReaderImages provides ReaderImages("fixture") { bytes }) {
+                TimelineReader(JSONObject().put("timeline", org.json.JSONArray().put(row)), emptyList())
+            }
+        }
+    }
+
     @Test fun unifiedDiff() {
         val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
         snapshot("diff") { DiffLines(view) }
         composeRule.onNodeWithText("+renderNativeBlocks()").assertIsDisplayed()
         composeRule.onNodeWithText("Binary file — metadata only").assertIsDisplayed()
         composeRule.onNodeWithText("Patch unavailable for this file.").assertIsDisplayed()
+    }
+
+    @Test fun selectedDiffFile() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        snapshot("diff-navigation") { DiffFileBrowser(view, "reader.kt", {}) }
+        composeRule.onNodeWithText("+renderNativeBlocks()").assertIsDisplayed()
+        composeRule.onNodeWithText("Binary file — metadata only").assertDoesNotExist()
+    }
+
+    @Test @org.robolectric.annotation.Config(qualifiers = "w891dp-h411dp-land-xhdpi")
+    fun wideNativeSplit() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        snapshot("diff-split", screen = true, beforeCapture = {
+            composeRule.mainClock.autoAdvance = true
+            val layout = composeRule.onNodeWithTag("thread_diff_layout")
+            // Capture the settled layout, not a frame of Material's transient touch feedback.
+            // Actual header/layout touches are covered by DiffHunkFoldDeviceTest.
+            if (layout.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text].any { it.text == "Split" }) {
+                layout.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
+            }
+            composeRule.waitForIdle()
+            composeRule.onNodeWithTag("thread_diff_layout").assertTextContains("Unified")
+            composeRule.onNodeWithTag("thread_diff_cell_0_3_1").assertTextContains("+renderNativeBlocks()")
+            composeRule.mainClock.autoAdvance = false
+        }) { ThreadDiffDialog(JSONObject(), { _, _ -> view }, {}) }
+    }
+
+    @Test fun diffReadingControls() {
+        val view = JSONObject(checkNotNull(javaClass.getResource("/timeline/diff.view.json")).readText())
+        snapshot("diff-controls", screen = true) {
+            ThreadDiffDialog(JSONObject("""{"fromTurnCount":2,"toTurnCount":3}"""), { _, _ -> view }, {})
+        }
+        composeRule.onNodeWithTag("thread_diff_wrap").assertIsDisplayed()
+        composeRule.onNodeWithTag("thread_diff_file_picker").assertIsDisplayed()
     }
 
     @Test fun compactPromptAndOutsideActions() {

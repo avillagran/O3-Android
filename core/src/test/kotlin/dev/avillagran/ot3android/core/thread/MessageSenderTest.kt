@@ -128,6 +128,26 @@ class MessageSenderTest {
     }
 
     @Test
+    fun queueEndReorderUsesNativeNullTargetAndRetriesTheSameDurableId() = runTest {
+        assumeHostJni()
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        var attempt = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (attempt++ == 0) throw T3Exception("rpc_outcome_unknown")
+            JSONObject().put("sequence", 9)
+        }
+        assertEquals(SendResult.OutcomeUnknown("ot3a-1"), sender.queue(connected(), "env-1", "t1",
+            JSONObject().put("action", "reorder").put("runId", "queued").put("beforeRunId", JSONObject.NULL)))
+        val first = fake.calls.single().args
+        assertEquals("queued-run.reorder", first.getString("type"))
+        assertTrue(first.isNull("beforeRunId"))
+        assertEquals(SendResult.Accepted("ot3a-1", 9), sender.retry(fake, "ot3a-1"))
+        assertEquals(first.toString(), fake.calls.last().args.toString())
+        assertEquals(1, counter)
+        assertTrue(dao.rows.value.isEmpty())
+    }
+
+    @Test
     fun queueRejectsInvalidRustCommandBeforePersistingOrDispatching() = runTest {
         assumeHostJni()
         val sender = MessageSender(OutboxRepository(dao), this, ids)

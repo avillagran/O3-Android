@@ -1,0 +1,644 @@
+{
+  "date": "2026-10-27",
+  "api": "36.1",
+  "serial": "emulator-5580",
+  "provenance": "real MainActivity/AppGraph/Room/Keystore/ThreadFollowService/native v0.3.5 JNI; synthetic servers in separate host JVM",
+  "initialColdSnapshot": {
+    "pid": "3871",
+    "targetUid": 10236,
+    "helperUid": 10226,
+    "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+    "foregroundService": true,
+    "stopIfKilled": true,
+    "startCommandResult2": true,
+    "packageStopped": false,
+    "deepIdle": "ACTIVE",
+    "nativeTitle": "4 need you",
+    "nativeStatus": "Approval",
+    "visibility": "PRIVATE",
+    "publicVersionPresent": true,
+    "alertUpdateTimes": {}
+  },
+  "processCases": {
+    "status": {
+      "requestedSignal": "SIGKILL (9), verified debug-package PID via isolated UiAutomation helper",
+      "before": {
+        "pid": "3871",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": "2 need you",
+        "nativeStatus": "Approval",
+        "visibility": "PRIVATE",
+        "publicVersionPresent": true,
+        "alertUpdateTimes": {
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"44baa47c-c231-4178-9f13-33b75238e5a8\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075011195,
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"d3da26b0-8ccd-4ca8-89bd-5bef60bf796c\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793074980276
+        }
+      },
+      "dead": {
+        "pid": "",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": false,
+        "stopIfKilled": false,
+        "startCommandResult2": false,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": null,
+        "nativeStatus": null,
+        "visibility": null,
+        "publicVersionPresent": null,
+        "alertUpdateTimes": {
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"44baa47c-c231-4178-9f13-33b75238e5a8\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075011195,
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"d3da26b0-8ccd-4ca8-89bd-5bef60bf796c\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793074980276
+        }
+      },
+      "visibleRecovery": {
+        "pid": "15470",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": "2 need you",
+        "nativeStatus": "Approval",
+        "visibility": "PRIVATE",
+        "publicVersionPresent": true,
+        "alertUpdateTimes": {
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"44baa47c-c231-4178-9f13-33b75238e5a8\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075011195,
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"d3da26b0-8ccd-4ca8-89bd-5bef60bf796c\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793074980276
+        }
+      },
+      "noAutomaticRestartObservedSeconds": 5.31758800894022,
+      "coldChildAlertsNotReposted": true
+    },
+    "full": {
+      "requestedSignal": "SIGKILL (9), verified debug-package PID via isolated UiAutomation helper",
+      "before": {
+        "pid": "15762",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": "2 need you",
+        "nativeStatus": "Approval",
+        "visibility": "PUBLIC",
+        "publicVersionPresent": false,
+        "alertUpdateTimes": {
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"44baa47c-c231-4178-9f13-33b75238e5a8\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075172375,
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"d3da26b0-8ccd-4ca8-89bd-5bef60bf796c\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075172382
+        }
+      },
+      "dead": {
+        "pid": "",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": false,
+        "stopIfKilled": false,
+        "startCommandResult2": false,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": null,
+        "nativeStatus": null,
+        "visibility": null,
+        "publicVersionPresent": null,
+        "alertUpdateTimes": {
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"44baa47c-c231-4178-9f13-33b75238e5a8\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075172375,
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"d3da26b0-8ccd-4ca8-89bd-5bef60bf796c\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075172382
+        }
+      },
+      "visibleRecovery": {
+        "pid": "17231",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": "2 need you",
+        "nativeStatus": "Approval",
+        "visibility": "PUBLIC",
+        "publicVersionPresent": false,
+        "alertUpdateTimes": {
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"44baa47c-c231-4178-9f13-33b75238e5a8\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075172375,
+          "0|dev.avillagran.ot3android|1|ot3-alert:[\"d3da26b0-8ccd-4ca8-89bd-5bef60bf796c\",\"review-one\",\"waiting_for_approval\",\"800857d597f241ab292f7e8e18f6ef3e58e57cf2cecbb45500e41c8caebcf3ae\"]|10236": 1793075172382
+        }
+      },
+      "noAutomaticRestartObservedSeconds": 5.109959959983826,
+      "coldChildAlertsNotReposted": true
+    }
+  },
+  "forcedDoze": {
+    "stages": {
+      "forcedIdleBeforeOutage": {
+        "pid": "3871",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "IDLE",
+        "nativeTitle": "6 working",
+        "nativeStatus": "Working",
+        "visibility": "PRIVATE",
+        "publicVersionPresent": true,
+        "alertUpdateTimes": {}
+      },
+      "forcedIdleAfterOutage": {
+        "pid": "3871",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "IDLE",
+        "nativeTitle": "6 working",
+        "nativeStatus": "Waiting",
+        "visibility": "PRIVATE",
+        "publicVersionPresent": true,
+        "alertUpdateTimes": {}
+      },
+      "idleExitBeforeRecovery": {
+        "pid": "3871",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": "6 working",
+        "nativeStatus": "Waiting",
+        "visibility": "PRIVATE",
+        "publicVersionPresent": true,
+        "alertUpdateTimes": {}
+      },
+      "afterIdleRecovery": {
+        "pid": "3871",
+        "targetUid": 10236,
+        "helperUid": 10226,
+        "instrumentationTargetPackage": "dev.avillagran.ot3android.followlab.test",
+        "foregroundService": true,
+        "stopIfKilled": true,
+        "startCommandResult2": true,
+        "packageStopped": false,
+        "deepIdle": "ACTIVE",
+        "nativeTitle": "6 working",
+        "nativeStatus": "Working",
+        "visibility": "PRIVATE",
+        "publicVersionPresent": true,
+        "alertUpdateTimes": {}
+      }
+    },
+    "targetAppIdNotInObservedAllowlists": 10236,
+    "observedAllowlists": {
+      "mDeviceIdleAllowlist": [
+        2000,
+        10102,
+        10114,
+        10121,
+        10144,
+        10152,
+        10198,
+        10205,
+        10222,
+        10223
+      ],
+      "mDeviceIdleExceptIdleAllowlist": [
+        2000,
+        10102,
+        10106,
+        10113,
+        10114,
+        10121,
+        10144,
+        10149,
+        10152,
+        10172,
+        10198,
+        10205,
+        10222,
+        10223
+      ],
+      "mDeviceIdleTempAllowlist": [
+        10153
+      ]
+    },
+    "networkEnforcementOnLoopbackProven": false,
+    "naturalMaintenanceWindowsProven": false
+  },
+  "wakeChronology": {
+    "resume": {
+      "trigger": "resume",
+      "targetPid": "17231",
+      "timeline": [
+        {
+          "event": "armBlackholeStarted",
+          "elapsedMs": 0
+        },
+        {
+          "event": "armBlackholeAcknowledged",
+          "elapsedMs": 51
+        },
+        {
+          "event": "freshFrameSendStarted",
+          "elapsedMs": 51
+        },
+        {
+          "event": "freshFrameSendAcknowledged",
+          "elapsedMs": 101
+        },
+        {
+          "event": "triggerStarted",
+          "elapsedMs": 102,
+          "trigger": "resume"
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 153,
+          "source": {
+            "a": {
+              "disconnectedPeers": 11,
+              "subscriptions": 12,
+              "failures": [],
+              "active": 1,
+              "pings": 167,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 11,
+              "subscriptions": 12,
+              "failures": [],
+              "active": 1,
+              "pings": 157,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "1d82443f-e167-47d0-8933-221d384bd934",
+            "ok": true
+          }
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 605,
+          "source": {
+            "a": {
+              "disconnectedPeers": 11,
+              "subscriptions": 12,
+              "failures": [],
+              "active": 1,
+              "pings": 168,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 11,
+              "subscriptions": 12,
+              "failures": [],
+              "active": 1,
+              "pings": 158,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "68fcf08a-a0e9-4ec7-8d9d-7333a76ea8b4",
+            "ok": true
+          }
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 3620,
+          "source": {
+            "a": {
+              "disconnectedPeers": 12,
+              "subscriptions": 12,
+              "failures": [],
+              "active": 0,
+              "pings": 168,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 12,
+              "subscriptions": 12,
+              "failures": [],
+              "active": 0,
+              "pings": 158,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "bc0b1ceb-0939-44e5-8595-a8380fc32dcf",
+            "ok": true
+          }
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 4524,
+          "source": {
+            "a": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 168,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 158,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "8f48c17f-87d9-4298-906c-31fe4ad71024",
+            "ok": true
+          }
+        },
+        {
+          "event": "firstSuccessorObserved",
+          "elapsedMs": 4525
+        },
+        {
+          "event": "triggerReturned",
+          "elapsedMs": 11642
+        }
+      ],
+      "interpretation": "Source reconnection observed before native20s silence timeout. Network trigger may also break TCP; not exclusive wake attribution."
+    },
+    "network": {
+      "trigger": "network",
+      "targetPid": "17231",
+      "timeline": [
+        {
+          "event": "armBlackholeStarted",
+          "elapsedMs": 0
+        },
+        {
+          "event": "armBlackholeAcknowledged",
+          "elapsedMs": 51
+        },
+        {
+          "event": "freshFrameSendStarted",
+          "elapsedMs": 51
+        },
+        {
+          "event": "freshFrameSendAcknowledged",
+          "elapsedMs": 101
+        },
+        {
+          "event": "triggerStarted",
+          "elapsedMs": 101,
+          "trigger": "network"
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 152,
+          "source": {
+            "a": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 170,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 159,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "59af7676-6481-4e43-bd7d-1869152f7aa6",
+            "ok": true
+          }
+        },
+        {
+          "event": "wifiDisabledObserved",
+          "elapsedMs": 230
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 453,
+          "source": {
+            "a": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 171,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 159,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "8861e7d9-1df2-444b-9bfe-68306828013c",
+            "ok": true
+          }
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 604,
+          "source": {
+            "a": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 172,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 12,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 1,
+              "pings": 160,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "6b5081d3-f60a-46f4-a5ba-127b36a197ea",
+            "ok": true
+          }
+        },
+        {
+          "event": "wifiEnabledObserved",
+          "elapsedMs": 620
+        },
+        {
+          "event": "triggerReturned",
+          "elapsedMs": 620
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 3462,
+          "source": {
+            "a": {
+              "disconnectedPeers": 13,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 0,
+              "pings": 172,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 13,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 0,
+              "pings": 160,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "0dcea673-b1c0-4128-85ab-6dc5d3ed2646",
+            "ok": true
+          }
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 4816,
+          "source": {
+            "a": {
+              "disconnectedPeers": 13,
+              "subscriptions": 14,
+              "failures": [],
+              "active": 1,
+              "pings": 172,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 13,
+              "subscriptions": 13,
+              "failures": [],
+              "active": 0,
+              "pings": 160,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "1410d6b8-7522-48ad-98c4-42a6418f84f0",
+            "ok": true
+          }
+        },
+        {
+          "event": "sourceObserved",
+          "elapsedMs": 5418,
+          "source": {
+            "a": {
+              "disconnectedPeers": 13,
+              "subscriptions": 14,
+              "failures": [],
+              "active": 1,
+              "pings": 172,
+              "writes": 0,
+              "url": "http://127.0.0.1:40045"
+            },
+            "b": {
+              "disconnectedPeers": 13,
+              "subscriptions": 14,
+              "failures": [],
+              "active": 1,
+              "pings": 160,
+              "writes": 0,
+              "url": "http://127.0.0.1:34033"
+            },
+            "id": "c7b62951-9083-463b-a1b7-effda04c4afe",
+            "ok": true
+          }
+        },
+        {
+          "event": "firstSuccessorObserved",
+          "elapsedMs": 5418
+        }
+      ],
+      "interpretation": "Source reconnection observed before native20s silence timeout. Network trigger may also break TCP; not exclusive wake attribution."
+    }
+  },
+  "steadySourceAtEnd": {
+    "a": {
+      "disconnectedPeers": 13,
+      "subscriptions": 14,
+      "failures": [],
+      "active": 1,
+      "pings": 185,
+      "writes": 0,
+      "url": "http://127.0.0.1:40045"
+    },
+    "b": {
+      "disconnectedPeers": 13,
+      "subscriptions": 14,
+      "failures": [],
+      "active": 1,
+      "pings": 173,
+      "writes": 0,
+      "url": "http://127.0.0.1:34033"
+    },
+    "id": "5454f888-3191-4e05-8893-0b98a88ecba4",
+    "ok": true
+  },
+  "cleanup": {
+    "ownedEnvironmentsRemoved": true,
+    "preferencesRestored": true,
+    "permissionInitiallyGranted": true
+  },
+  "permissionRestoration": {
+    "restoredGranted": true,
+    "ok": true
+  },
+  "labResults": {
+    "prepare": "1/1,3.055s",
+    "selectFull": "1/1,3.159s",
+    "cleanup": "1/1,0.128s",
+    "isolatedController": "1/1,918.336s",
+    "externalHostFixture": "1/1,19min",
+    "focusedJvm": "app54/core14,0skips"
+  },
+  "notAccepted": [
+    "LMK/OOM or OEM process management",
+    "unbounded automatic restart guarantees",
+    "natural15-minute idle/card expiration",
+    "API24/25 expiration after service stop",
+    "real Doze network/CPU suspension over loopback",
+    "automatic remote revocation"
+  ],
+  "appRuntimeBase": "221aeaa",
+  "mainIntegratedAfterMeasurements": "78f8137",
+  "childAlertsUnchangedThroughFinalProbeRecovery": true
+}

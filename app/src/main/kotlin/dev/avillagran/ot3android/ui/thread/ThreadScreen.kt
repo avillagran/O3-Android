@@ -1,5 +1,7 @@
 package dev.avillagran.ot3android.ui.thread
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -54,6 +57,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,32 +104,39 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ThreadContent(
-        state = state,
-        onDraftChange = viewModel::onDraftChange,
-        onSend = viewModel::send,
-        onInterrupt = viewModel::interrupt,
-        onResend = viewModel::retry,
-        onDiscard = viewModel::discard,
-        onRetryStream = viewModel::retryStream,
-        onDismissNotice = viewModel::dismissNotice,
-        onBack = onBack,
-        modifier = modifier,
-        onInspect = viewModel::inspect,
-        onReadDiff = viewModel::readDiff,
-        onQueueCommand = viewModel::queueCommand,
-        onEditQueued = viewModel::editQueued,
-        onCancelQueueEdit = viewModel::cancelQueueEdit,
-        onRefreshModels = viewModel::refreshModels,
-        onSelectModel = viewModel::selectModel,
-        onSelectModelOption = viewModel::selectModelOption,
-        onFavoriteModel = viewModel::favoriteModel,
-        onApprovalDecision = viewModel::respondApproval,
-        onQuestionResponse = viewModel::respondQuestion,
-        onRuntimeMode = viewModel::selectRuntimeMode,
-    )
+    val imageConnection by viewModel.imageConnection.collectAsStateWithLifecycle()
+    androidx.compose.runtime.CompositionLocalProvider(LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
+        ThreadContent(
+            state = state,
+            editorIdentity = viewModel.editorIdentity,
+            quotaStrip = quotaStrip,
+            onDraftChange = viewModel::onDraftChange,
+            onDraftChangeTagged = { text, token -> viewModel.onDraftChange(text, token) },
+            onReadingPosition = viewModel::saveReadingPosition,
+            onSend = viewModel::send,
+            onInterrupt = viewModel::interrupt,
+            onResend = viewModel::retry,
+            onDiscard = viewModel::discard,
+            onRetryStream = viewModel::retryStream,
+            onDismissNotice = viewModel::dismissNotice,
+            onBack = onBack,
+            modifier = modifier,
+            onInspect = viewModel::inspect,
+            onReadDiff = viewModel::readDiff,
+            onQueueCommand = viewModel::queueCommand,
+            onEditQueued = viewModel::editQueued,
+            onCancelQueueEdit = viewModel::cancelQueueEdit,
+            onRefreshModels = viewModel::refreshModels,
+            onSelectModel = viewModel::selectModel,
+            onSelectModelOption = viewModel::selectModelOption,
+            onFavoriteModel = viewModel::favoriteModel,
+            onApprovalDecision = viewModel::respondApproval,
+            onQuestionResponse = viewModel::respondQuestion,
+            onRuntimeMode = viewModel::selectRuntimeMode,
+        )
+    }
 }
 
 /** Stateless thread screen: top bar, banners, the timeline (newest at the bottom) and the composer. */
@@ -153,6 +165,10 @@ fun ThreadContent(
     onApprovalDecision: (String, String) -> Unit = { _, _ -> },
     onQuestionResponse: (String, String, org.json.JSONObject) -> Unit = { _, _, _ -> },
     onRuntimeMode: (String) -> Unit = {},
+    quotaStrip: @Composable () -> Unit = {},
+    editorIdentity: String = state.view.threadId,
+    onDraftChangeTagged: ((String, String) -> Unit)? = null,
+    onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -171,6 +187,37 @@ fun ThreadContent(
         onDismissNotice()
     }
 
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable(editorIdentity) { mutableStateOf(false) }
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val availableEditorHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp -
+        with(density) { WindowInsets.ime.getBottom(this).toDp() }
+    val compactEditorToolbar = expanded && availableEditorHeight < 220.dp
+    val editKey = state.queueEdit?.let { org.json.JSONObject(it).getString("runId") }
+    val editors = androidx.compose.runtime.saveable.rememberSaveable(editorIdentity, saver = ComposerEditors.StateSaver) { ComposerEditors() }
+    val editor = editors.editor(editKey, state.draft)
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    LaunchedEffect(state.draft, state.draftToken, editor) { editor.synchronize(state.draft, state.draftToken) }
+    val hasQuestion = (state.view.timeline?.optJSONArray("questions")?.length() ?: 0) > 0
+    LaunchedEffect(hasQuestion) { if (hasQuestion) expanded = false }
+    fun toggleEditor() {
+        editor.newSurface()
+        if (expanded) { editor.releaseFocus(); keyboard?.hide(); focus.clearFocus() }
+        else editor.requestFocus = true
+        expanded = !expanded
+    }
+    val edit: (String, String) -> Unit = { text, token -> if (onDraftChangeTagged != null) onDraftChangeTagged(text, token) else onDraftChange(text) }
+    fun submit() { if (state.canSend && !state.sending) { editor.submitted(); onSend() } }
+    androidx.activity.compose.BackHandler(enabled = expanded) { toggleEditor() }
+    val timelineState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    val toolbar: @Composable () -> Unit = {
+        ComposerModels(state.modelCatalog, state.modelSelection, state.modelsLoading,
+            state.connected && !state.sending && state.queueEdit == null,
+            onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel) {
+            ComposerPermissions(state.modelCatalog, state.modelSelection, state.view.runtimeMode,
+                state.connected && !state.view.stale && !state.sending && state.queueEdit == null && state.unconfirmed.isEmpty(), onRefreshModels, onRuntimeMode)
+        }
+    }
     Scaffold(
         modifier = modifier.testTag(ThreadScreenTags.ROOT),
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -183,7 +230,7 @@ fun ThreadContent(
                 title = {
                     Column {
                         Text(
-                            state.title ?: stringResource(R.string.sidebar_untitled),
+                            if (expanded) stringResource(R.string.ot3_composer_edit) else state.title ?: stringResource(R.string.sidebar_untitled),
                             style = MaterialTheme.typography.titleSmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -199,11 +246,20 @@ fun ThreadContent(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
+                    IconButton(onClick = { if (expanded) toggleEditor() else onBack() }, modifier = Modifier.testTag("composer_back")) {
+                        Icon(painterResource(R.drawable.ic_arrow_back), stringResource(if (expanded) R.string.ot3_composer_back else R.string.action_back))
                     }
                 },
                 actions = {
+                    if (expanded) Ot3IconButton("arrow-up", stringResource(R.string.thread_send), ::submit, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = state.canSend && !state.sending, tint = Ot3Theme.colors.accent)
+                    var quotaMenu by remember { mutableStateOf(false) }
+                    Box {
+                        Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { quotaMenu = true }, modifier = Modifier.testTag("thread_overflow"))
+                        androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
+                            if (expanded) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
+                            dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { quotaMenu = false }
+                        }
+                    }
 
                     if (state.view.working) {
                         IconButton(
@@ -221,13 +277,18 @@ fun ThreadContent(
             )
         },
         bottomBar = {
-            Column(Modifier.navigationBarsPadding().imePadding()) {
+            if (!expanded) Column(Modifier.navigationBarsPadding().imePadding()) {
                 ThreadQueue(
                     state.view.timeline?.optJSONObject("queue"),
-                    state.connected && !state.queueBusy && state.unconfirmed.isEmpty(),
+                    state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
                     onQueueCommand,
                     onEditQueued,
                     editingRunId = state.queueEdit?.let { org.json.JSONObject(it).optString("runId") },
+                    dragOwner = state.view.threadId to state.queueConnection,
+                    feedback = {
+                        state.notice?.let { Text(noticeText(it), Modifier.padding(horizontal = 16.dp), color = Ot3Theme.colors.failed) }
+                        state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
+                    },
                 )
                 if (state.queueEdit != null) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -244,41 +305,41 @@ fun ThreadContent(
                 QuestionCard(state.view.timeline?.optJSONArray("questions"),
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
                     state.respondingRequest, state.answeredRequests, onResponse = onQuestionResponse)
-                if ((state.view.timeline?.optJSONArray("questions")?.length() ?: 0) == 0) Composer(
-                draft = state.draft,
-                canSend = state.canSend,
-                sending = state.sending,
-                onDraftChange = onDraftChange,
-                onSend = onSend,
-                toolbar = {
-                    ComposerModels(state.modelCatalog, state.modelSelection, state.modelsLoading,
-                        state.connected && !state.sending && state.queueEdit == null,
-                        onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel) {
-                        ComposerPermissions(state.modelCatalog, state.modelSelection, state.view.runtimeMode,
-                            state.connected && !state.view.stale && !state.sending && state.queueEdit == null && state.unconfirmed.isEmpty(),
-                            onRefreshModels, onRuntimeMode)
-                    }
-                },
-            )
+                if (!hasQuestion) ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = toolbar)
             }
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
-            StreamState(state.view.connectionState, state.view.stale, onRetryStream)
-            state.view.pendingRequests.filter { state.view.timeline?.has(if (it.kind == "user_input") "questions" else "approvals") != true }
-                .forEach { PendingRequestBanner(it) }
-            state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                when {
-                    !state.view.loaded -> Ot3Spinner(
-                        Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp,
-                    )
-                    (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(
-                        stringResource(R.string.thread_empty),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY),
-                    )
-                    else -> TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff)
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).then(if (expanded) Modifier.imePadding() else Modifier)) {
+            if (expanded) androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+                val feedbackHeight = (maxHeight * .25f).coerceAtMost(120.dp)
+                Column(Modifier.fillMaxSize()) {
+                    Column(Modifier.fillMaxWidth().heightIn(max = feedbackHeight).then(Modifier.verticalScroll(rememberScrollState()))) {
+                        StreamState(state.view.connectionState, state.view.stale, onRetryStream)
+                        state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
+                        if (state.queueEdit != null) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(R.string.queue_editing), Modifier.weight(1f), color = Ot3Theme.colors.dim)
+                            TextButton(onClick = onCancelQueueEdit, enabled = !state.queueBusy) { Text(stringResource(R.string.queue_cancel_edit)) }
+                        }
+                        state.notice?.let { if (it is ThreadNotice.Failed) Text(noticeText(it), color = Ot3Theme.colors.failed, modifier = Modifier.padding(horizontal = 12.dp)) }
+                        ApprovalCard(state.view.timeline?.optJSONArray("approvals"), state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(), state.respondingRequest, state.answeredRequests, onApprovalDecision)
+                    }
+                    ComposerEditor(editor, true, state.canSend, state.sending, edit, ::submit, ::toggleEditor,
+                        Modifier.weight(1f).testTag("composer_expanded"), toolbar = { if (!compactEditorToolbar) toolbar() })
+                }
+            } else {
+                quotaStrip()
+                StreamState(state.view.connectionState, state.view.stale, onRetryStream)
+                state.view.pendingRequests.filter { state.view.timeline?.has(if (it.kind == "user_input") "questions" else "approvals") != true }
+                    .forEach { PendingRequestBanner(it) }
+                state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    when {
+                        !state.view.loaded -> Ot3Spinner(Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp)
+                        (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(stringResource(R.string.thread_empty), modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY))
+                        else -> if (state.readingPositionLoaded) timelineState.SaveableStateProvider(editorIdentity) {
+                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition)
+                        }
+                    }
                 }
             }
         }
@@ -315,7 +376,7 @@ private fun StreamState(connection: ThreadConnection, stale: Boolean, onRetry: (
     ) {
         if (stale) {
             StatusLabel(
-                stringResource(R.string.thread_stale),
+                stringResource(if (connection == ThreadConnection.Waiting) R.string.thread_cache_offline else R.string.thread_stale),
                 colors.secondaryContainer,
                 colors.onSecondaryContainer,
                 Modifier.testTag(ThreadScreenTags.STALE),
@@ -385,57 +446,6 @@ private fun UnconfirmedRow(
                 modifier = Modifier.testTag(ThreadScreenTags.resend(command.commandId)),
             ) { Text(stringResource(R.string.thread_resend)) }
             TextButton(onClick = { onDiscard(command.commandId) }) { Text(stringResource(R.string.thread_discard)) }
-        }
-    }
-}
-
-@Composable
-private fun Composer(
-    draft: String,
-    canSend: Boolean,
-    sending: Boolean,
-    onDraftChange: (String) -> Unit,
-    onSend: () -> Unit,
-    modifier: Modifier = Modifier,
-    toolbar: @Composable () -> Unit = {},
-) {
-    val colors = Ot3Theme.colors
-    val interaction = remember { MutableInteractionSource() }
-    val focused by interaction.collectIsFocusedAsState()
-    val border by animateColorAsState(if (focused) colors.composerFocus else colors.composerBorder,
-        Ot3Theme.motion.colorChange(), label = "composerBorder")
-    Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
-        Column {
-        Row(
-            verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                .border(1.dp, border, RoundedCornerShape(17.dp))
-                .background(colors.surface, RoundedCornerShape(17.dp)).padding(4.dp),
-        ) {
-            BasicTextField(
-                value = draft,
-                onValueChange = onDraftChange,
-                enabled = !sending,
-                interactionSource = interaction,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foreground),
-                cursorBrush = SolidColor(colors.accent),
-                maxLines = 6,
-                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag(ThreadScreenTags.COMPOSER),
-                decorationBox = { inner ->
-                    Box(Modifier.padding(horizontal = 10.dp, vertical = 12.dp)) {
-                        if (draft.isEmpty()) Text(stringResource(R.string.thread_composer_hint),
-                            style = MaterialTheme.typography.bodyMedium, color = colors.dim)
-                        inner()
-                    }
-                },
-            )
-            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                if (sending) Ot3Spinner(Modifier.testTag(ThreadScreenTags.SENDING), size = 24.dp)
-                else Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend,
-                    modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = colors.accent)
-            }
-        }
-        toolbar()
         }
     }
 }

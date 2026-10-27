@@ -1,5 +1,9 @@
 # UI-N handoff to root
 
+**Historical preparation handoff (2026-10-26).** Current runtime and bounded
+acceptance are described in [system lab](system-lab/README.md) and
+[resilience lab](resilience/README.md); the original U28 blocker below is closed in035.
+
 - Máquina: node; checkout T3 propio `t3-be03606f`, rama `ui-n-notifications-live-updates`,
   base `origin/feat/ui-1` `726ff02` (PR24 integrado; PR23 no tocado). Sin subdelegación,
   sin worktrees/top-levels nuevos, sin tocar UI1g ni el agente bridge, sin emulador.
@@ -59,7 +63,7 @@ Real native awareness output is committed as the presentation fixture; cold/dedu
 on-screen tests invoke Rust itself. Deadline omission is accepted and alert.status/
 summary.body are consumed. New UI strings are mobile-only English fallback.
 
-This is an unaccepted runtime increment: full service lifecycle/revocation/Doze tests,
+At that earlier runtime checkpoint this was an unaccepted increment: full service lifecycle/revocation/Doze tests,
 API36.1 chip/lockscreen/shade captures and release validation remain pending. A low
 foreground-service tracking notice is currently separate from the native activity card
 so Done/Failed are normal expiring cards. Its duplicate-notice UX needs review.
@@ -94,8 +98,12 @@ prove immediate revocation detection on an already established stream.
   QA environment deleted, service absent, harness inactive and emulator stopped. No Xiaomi
   operation, message submission or productive environment change.
 
-Still missing: actual lock-screen capture, grouped transition alerts, Doze, process death,
-multiple environments, natural expiry/idle timeout and automatic revocation detection.
+At this earlier live-NODE checkpoint, lockscreen/grouped/multi-environment and
+resilience evidence was still missing. Subsequent [system lab](system-lab/README.md)
+verified secure lockscreen/grouped/multi-environment behavior; the later
+[resilience lab](resilience/README.md) covers forced Doze and controlled process
+termination within explicit limits. Natural expiry/idle timeout, OEM/LMK behavior and
+automatic remote revocation detection remain pending.
 The QA environment was explicitly seeded: **this is not automatic bridge NODE/VQ discovery**.
 UI-N and desktop parity remain open.
 

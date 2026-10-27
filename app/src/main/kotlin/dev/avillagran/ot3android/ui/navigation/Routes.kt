@@ -56,7 +56,7 @@ data object CommandPalette
 data object PullRequests
 
 @Serializable
-data class PullRequest(val environmentId: String, val projectId: String, val repository: String, val number: Int)
+data class PullRequest(val environmentId: String, val projectId: String, val repository: String, val number: Int, val host: String? = null)
 
 @Serializable
 data class PullRequestFile(val environmentId: String, val projectId: String, val repository: String, val number: Int, val path: String)
@@ -122,3 +122,6 @@ data object ThreadListOptionsSheet
 /** Snooze presets for a thread (from the swipe's secondary action or the thread menu). */
 @Serializable
 data class SnoozeUntilSheet(val environmentId: String, val threadId: String)
+
+@kotlinx.serialization.Serializable
+data class QuotaLimits(val environmentId: String? = null)

@@ -1,0 +1,5 @@
+<resources>
+    <string name="limits_empty">Geen gebruikslimieten beschikbaar.</string>
+    <string name="limits_used">%1$s gebruikt</string>
+    <string name="limits_checked">Gecontroleerd op %1$s</string>
+</resources>

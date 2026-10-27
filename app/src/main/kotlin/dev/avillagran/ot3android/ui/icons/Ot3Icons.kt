@@ -19,6 +19,10 @@ import dev.avillagran.ot3android.R
  * that folder's NOTICE.md and add the icon here.
  */
 object Ot3Icons {
+    @DrawableRes val ZoomIn: Int = R.drawable.ic_zoom_in
+    @DrawableRes val ZoomOut: Int = R.drawable.ic_zoom_out
+    @DrawableRes val RotateCcw: Int = R.drawable.ic_rotate_ccw
+    @DrawableRes val GripVertical: Int = R.drawable.ic_grip_vertical
     @DrawableRes val Lock: Int = R.drawable.ic_lock
     @DrawableRes val LockOpen: Int = R.drawable.ic_lock_open
     @DrawableRes val Sparkles: Int = R.drawable.ic_sparkles
@@ -82,8 +86,22 @@ object Ot3Icons {
     @DrawableRes val Undo2: Int = R.drawable.ic_undo_2
     @DrawableRes val X: Int = R.drawable.ic_x
 
+    @DrawableRes val ProviderNativeA: Int = R.drawable.ic_provider_openai
+    @DrawableRes val ProviderNativeB: Int = R.drawable.ic_provider_claude
+    @DrawableRes val ProviderTerminal: Int = R.drawable.ic_provider_opencode
+    @DrawableRes val ProviderEditor: Int = R.drawable.ic_provider_cursor
+    @DrawableRes val ProviderAcp: Int = R.drawable.ic_provider_acp
+
     /** Every icon, keyed by its ot3 / Lucide name (`"git-pull-request"`). */
     val byName: Map<String, Int> = mapOf(
+        "zoom-in" to ZoomIn,
+        "zoom-out" to ZoomOut,
+        "rotate-ccw" to RotateCcw,
+        "provider-openai" to ProviderNativeA,
+        "provider-claude" to ProviderNativeB,
+        "provider-opencode" to ProviderTerminal,
+        "provider-cursor" to ProviderEditor,
+        "provider-acp" to ProviderAcp,
         "alarm-clock" to AlarmClock,
         "arrow-up" to ArrowUp,
         "bot" to Bot,
@@ -130,6 +148,7 @@ object Ot3Icons {
         "server" to Server,
         "settings" to Settings,
         "shield-question" to ShieldQuestion,
+        "grip-vertical" to GripVertical,
         "lock" to Lock,
         "lock-open" to LockOpen,
         "sparkles" to Sparkles,

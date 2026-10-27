@@ -1136,3 +1136,144 @@ consumed directly by OmaBridge; Android's v0.3.5 C ABI does not expose
 connectionCatalog.reconcileBridge (unknown_function). See the sanitized
 `docs/bridge/evidence/2026-10-26/delegated/clock-reconcile.json`. The764ms marker
 includes transport latency and is not an exact host/device clock-offset measurement.
+### U31. Shared PR page ordering/merge and authenticated diff read (2026-10-26)
+
+Pinned v0.3.5 provides `pullRequests.request`, `sidebarBadge`, `payload` and typed
+`pullRequests.list/detail/checks/activity`. The page recipe builds list filters and
+opaque cursors; typed LIST additionally supports `projectId`/`projectIds`/`filters`.
+Android consumes those documented inputs directly, with native typed validation.
+
+Still missing: a shared `pullRequests.listView {pages}` (or stateful reducer) defining
+cross-page duplicate precedence, updatedAt ordering and native row presentation. ot3
+`7b5b1de`, `T3PullRequests.qml:48` replaces matching host/repository/number entries and
+sorts newest first in QML. Android must not reproduce that domain rule. For now it
+appends the returned pages verbatim with page-position UI keys, preserving server
+order and possible repeated rows. Request fixtures for overlap/revision, multiple
+projects/hosts, invalid dates and refreshed/replaced cursor sequences.
+
+`pullRequests.request {action:"diff",reference,cursor?}` returns method `diff`, an
+HTTP recipe for `/api/pull-requests/diff`, not a typed RPC. Android's pinned AAR and
+`T3Transport` expose no authenticated PR diff read binding. Request a native
+`pullRequestDiff(reference,cursor?)` returning the existing patch envelope and opaque
+next cursor, with credentials/URL construction and bounds in Rust. Android can then
+feed patches to the existing native diff renderer and expose Code/file navigation.
+Until then Overview displays `changedFiles` and explicitly says patches unavailable;
+there is no nonfunctional Code tab or invented RPC/HTTP URL builder.
+
+This request does not block list, Overview, Checks or the available Conversation
+comments/review threads. Full activity timeline projection (commits/reviews ordering),
+relative dates and cross-page discussion pagination remain future common-view work.
+No write, review, merge, label or thread-link actions are exposed in this increment.
+
+## 2026-10-26 — U30: Android Markdown image binary contract (v0.3.5)
+
+Reader attachment previews now consume `T3Client.image(id, name, mimeType)` unchanged.
+The pinned v0.3.5 sources expose `Connection::media_image(thread, path)` in `src/lib.rs`,
+but `src/ffi.rs:t3_client_image` only accepts attachment metadata (no `op`),
+`assetBytes`, and `projectFavicon`. The Android `T3Client.kt` has no `mediaImage` or
+Markdown descriptor resolver. `timeline.view` supplies `markdownImages` with opaque
+`markdown-…` ids and `source`; these ids are not attachment ids.
+
+Requested: a typed binary Android operation accepting the native Markdown descriptor
+and thread scope, with source classification/resolution, relative workspace handling,
+same-origin signed grant checks, MIME/magic validation and the image 10 MiB limit in
+Rust. Reuse `media_image` internally where applicable; explicitly reject unsupported
+remote sources. Do not require Android to derive resource tags or interpret paths/URLs.
+Until released, Android retains Markdown image alt text and does not request its URLs
+or pass descriptor ids to `image`. This is a binding/domain gap, not a failed live grant.
+
+Cancellation limitation: v0.3.5's synchronous binary JNI call has no per-read cancellation
+handle. UI cancellation discards the result and connection-generation guards prevent
+stale publication; an in-flight read may occupy its native thread until its native
+30-second GET/RPC deadlines. Request a cancellable binary read handle if immediate
+network abortion is required. Android does not disconnect a shared transport to cancel
+one thumbnail.
+
+## 2026-10-26 — U32: Shared new-thread defaults and creation recipe
+
+Tracked in https://github.com/avillagran/lib-t3-rust/issues/17. This is not a missing
+launch transport: v0.3.5 exposes typed `orchestration.launchThread`, `thread.create`,
+`models.catalog` and branch helpers. The missing common policy remains in ot3
+`7b5b1de`: `T3SidebarActions.qml:84–89` resolves model/runtime defaults from source,
+project, sibling, catalog and draft; `T3Backend.qml:beginNewThread` resolves explicit
+root, automatic route and workspace preference/confirmation; `src/write.rs:228–235`
+chooses metadata creation versus workspace launch before typed validation/persistence.
+
+Request a shared creation view/defaults from authorized projects/environments,
+catalogs, source context, preferences and query, plus a request recipe from explicit
+choices and caller-persisted ids. It should expose missing choices/confirmation
+reasons and preserve durable retries, coordinating initial-message and plan follow-up
+with the existing composer builder request. Reuse existing typed operations rather
+than introduce another transport. Android owns editing, navigation, confirmation
+and durable storage; it must not port fallback/search/routing rules to Kotlin.
+
+UI_SPEC §4.7 and the NewThread route remain unimplemented; this request is not
+acceptance of that flow. No library checkout or production configuration was changed.
+
+### U33 — common composer edit transforms (does not block UI-N)
+
+Own-lib [issue18](https://github.com/avillagran/lib-t3-rust/issues/18) requests recall
+candidates, completion trigger/replacement and list continuation from ot3 `7b5b1de`
+T3Composer.qml:131,139–153,194–219. Existing035 `composer.paths/catalog/fileLink/
+attachmentReference` and timeline `recallableText` do not expose these policies.
+Define selection/replacement offsets as UTF-16 code units (or explicit conversion)
+for Compose/QML, including astral/combining text and stale ranges. Android owns
+selection, IME locks and scratch recall UI; it must not port QML regex/domain rules.
+
+## 2026-10-26 — U34: Bounded provider registry icon bytes
+
+Checked against v0.3.5 `src/models.rs` and binary operations: `models.catalog`
+already validates and supplies `registryIcon`, `driverKind` and `instanceId`.
+Android can render bundled desktop provider marks from exact driver identity,
+with the desktop ACP mark for custom/unknown providers. It must not infer identity
+from model names or instance display names.
+
+Missing for complete registry parity: a native bounded/cancellable icon byte read,
+for example `models.registryIconBytes(catalogProvider) -> {mimeType,bytes}` via the
+binary ABI. Reuse catalog URL validation; allow only its official registry source,
+validate redirects/content/size, no bearer credentials, and expose cancellation.
+The Android consumer renders/caches returned bytes and retains the bundled fallback
+while loading or on error. The current attachment image API cannot fetch this URL.
+No Kotlin HTTP/protocol implementation or library checkout change is introduced.
+
+## 2026-10-26 — U18 follow-up: Historical page integration into a live cached view
+
+U18's `history.path` and `history.envelope` are available in v0.3.5; this is not a
+request to reintroduce those primitives. Checked `src/history.rs` and
+`src/domain/mod.rs` at the tag: the envelope converts page presentation rows,
+while `projection.apply` consumes orchestration events. There is no shared
+history-page merge operation for the live projection/view.
+
+The thread cache therefore persists the exact current bounded projection and its
+opaque cursor/history fields. Older history remains explicitly outside that window;
+Android does not fabricate events from historical rows or merge/order/dedupe them
+in Kotlin. Request a native `history.merge(projection, pageEnvelope, historyState)`
+(or a separate common paged-view state) returning the presentation state and next
+cursor/boundary metadata. Preserve current live controls, validate source thread ids,
+and cover overlapping/replayed pages, concurrent streaming revisions and missing
+ranges with shared fixtures. No protocol or library checkout was changed here.
+
+### U35. Reader reference routing and scoped document read (2026-10-27)
+
+Tracked in [lib issue19](https://github.com/avillagran/lib-t3-rust/issues/19).
+The pinned v0.3.5 `markdown.link` classifies destinations but returns the original
+href without resolving thread/environment or file paths. Desktop
+`T3Backend.qml:1100–1113` resolves thread references against connected environments
+(prefer the selected environment), decodes file paths and strips location suffixes
+before its scoped document-open. Android currently opens HTTP(S) only.
+
+Request native `reader.reference {href, environmentId, threadId, environments}`
+(or equivalent) returning a tagged external URL, thread route, scoped document
+resource or anchor/unsupported result. Rust owns destination validation, environment
+selection and path normalization; Android owns navigation/loading/error UI. Never
+expand Android HOME for a remote path. Define shared behavior where classification
+and desktop routing differ, including colon suffixes and malformed encodings.
+
+`documents::resource` and `Connection::document` already exist in Rust; expose the
+bounded authenticated document read through Android/JNI instead of constructing
+signed asset URLs in Kotlin. Coordinate image bytes with U30. Tests must cover
+mixed-case web schemes, encoded/duplicate/missing thread IDs, remote/offline hosts,
+relative/absolute/file paths, spaces/unicode/location suffixes, unsafe schemes,
+malformed encoding, read bounds and stale results after environment changes.
+No Kotlin reference parser or shared-library checkout change was made. This remains
+an open reader parity requirement, not acceptance of file/thread navigation.

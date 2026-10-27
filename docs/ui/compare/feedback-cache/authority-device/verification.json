@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-27",
+  "mainIntegrated": "4045127",
+  "coreFocused": {
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "native": "host JNI v0.3.5"
+  },
+  "appFocused": {
+    "CachedThreadActionsTest": 1,
+    "failed": 0
+  },
+  "lint": "PASS",
+  "debugAppAndTestApk": "PASS",
+  "device": {
+    "serial": "emulator-5580",
+    "api": 34,
+    "passed": 1,
+    "failed": 0,
+    "durationSeconds": 7.51,
+    "test": "ThreadCacheDeviceTest",
+    "provenance": "synthetic WorkspaceFixture transport, actual JNI; fixture constant cache authority",
+    "scope": "offline reopening, reading position within1px, draft retained, reconnect resume, recreation and fresh fixture/cache/Room wrappers; no extra bounded reads",
+    "codeAtDeviceRun": "31e0250",
+    "finalUuidKeyRefinement": "covered by42 focused core tests; synthetic device authority is unchanged"
+  },
+  "notAccepted": [
+    "natural idle authorization expiry without a signal/read",
+    "arbitrary previously unobserved standalone Connection credential attestation",
+    "Android process death",
+    "production/OEM/physical credential-pairing acceptance"
+  ],
+  "productionDispatches": 0
+}

@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.core.data.prefs
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -17,6 +18,12 @@ enum class AppearanceMode { FOLLOW_SYSTEM, DARK, LIGHT }
 /** ot3's "Animated starfield" preference (`ot3:ui/qml/T3Preferences.qml:260`). */
 enum class AnimationPreference { AUTO, FULL, LIGHT, OFF }
 
+/** Duration multiplier only for T3Reveal show/hide (ot3 T3Motion.qml:10–11). */
+enum class RevealPace(val multiplier: Float) { SLOW(1.6f), NORMAL(1f), FAST(0.6f) }
+
+/** T3Motion.qml show/hide style; unknown persisted values retain the default Nebula. */
+enum class RevealStyle { NEBULA, WARP, FOLD, SPRING, INSTANT }
+
 /** One Omarchy theme id per appearance, or [AppearanceSettings.MATERIAL_YOU]. */
 data class ThemePair(val dark: String, val light: String)
 
@@ -25,6 +32,9 @@ data class AppearanceSettings(
     val darkThemeId: String = DEFAULT_THEMES.dark,
     val lightThemeId: String = DEFAULT_THEMES.light,
     val animation: AnimationPreference = AnimationPreference.AUTO,
+    val providerUsage: Boolean = false,
+    val revealPace: RevealPace = RevealPace.NORMAL,
+    val revealStyle: RevealStyle = RevealStyle.NEBULA,
 ) {
     companion object {
         /** The default themes, in one place (UI_SPEC 3.1.3). */
@@ -46,8 +56,22 @@ class AppearancePreferences(private val dataStore: DataStore<Preferences>) {
             mode = enumOrDefault(prefs[Keys.MODE], defaults.mode),
             darkThemeId = prefs[Keys.DARK_THEME] ?: defaults.darkThemeId,
             lightThemeId = prefs[Keys.LIGHT_THEME] ?: defaults.lightThemeId,
+            providerUsage = prefs[Keys.PROVIDER_USAGE] ?: false,
             animation = enumOrDefault(prefs[Keys.ANIMATION], defaults.animation),
+            revealPace = enumOrDefault(prefs[Keys.REVEAL_PACE], defaults.revealPace),
+            revealStyle = enumOrDefault(prefs[Keys.REVEAL_STYLE], defaults.revealStyle),
         )
+    }
+
+    suspend fun setRevealStyle(style: RevealStyle) { dataStore.edit { it[Keys.REVEAL_STYLE] = style.name } }
+
+    suspend fun setRevealPace(pace: RevealPace) { dataStore.edit { it[Keys.REVEAL_PACE] = pace.name } }
+
+    suspend fun setProviderUsage(shown: Boolean) { dataStore.edit { it[Keys.PROVIDER_USAGE] = shown } }
+
+    /** Read and invert inside the transaction, independently of a menu's collected snapshot. */
+    suspend fun toggleProviderUsage() {
+        dataStore.edit { it[Keys.PROVIDER_USAGE] = !(it[Keys.PROVIDER_USAGE] ?: false) }
     }
 
     suspend fun setMode(mode: AppearanceMode) {
@@ -70,9 +94,12 @@ class AppearancePreferences(private val dataStore: DataStore<Preferences>) {
         stored?.let { name -> enumValues<E>().firstOrNull { it.name == name } } ?: default
 
     object Keys {
+        val PROVIDER_USAGE = booleanPreferencesKey("provider_usage")
         val MODE = stringPreferencesKey("mode")
         val DARK_THEME = stringPreferencesKey("dark_theme")
         val LIGHT_THEME = stringPreferencesKey("light_theme")
+        val REVEAL_STYLE = stringPreferencesKey("reveal_style")
+        val REVEAL_PACE = stringPreferencesKey("reveal_pace")
         val ANIMATION = stringPreferencesKey("animation")
     }
 }
