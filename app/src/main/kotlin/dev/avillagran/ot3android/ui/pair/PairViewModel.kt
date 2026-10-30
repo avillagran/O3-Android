@@ -80,7 +80,7 @@ class PairViewModel(
                     bridge.value = if (approved) "approved" else "pending"
                     if (approved) link.value = ""
                 } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
-                catch (_: Exception) { bridge.value = "failed" }
+                catch (error: Exception) { bridge.value = BridgeInvitation.failureStatus(error) }
             }
             return
         }
