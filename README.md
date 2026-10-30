@@ -1,4 +1,4 @@
-# ot3-Android
+# O3-Android
 
 **T3 Code on Android, natively.** Kotlin + Jetpack Compose on top of
 [`lib-t3-rust`](https://github.com/avillagran/lib-t3-rust), the same Rust core that
