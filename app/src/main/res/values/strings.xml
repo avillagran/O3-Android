@@ -169,6 +169,8 @@
     <string name="bridge_revoked">Bridge access revoked</string>
     <string name="bridge_expired">Bridge catalog or session expired — reconnect bridge</string>
     <string name="bridge_authorized">Authorized by bridge</string>
+    <string name="bridge_full_access">Full access by bridge</string>
+    <string name="bridge_full_access_ended">Full access ended — waiting for bridge</string>
     <string name="bridge_needs_authority">Discovered — waiting for T3 authority</string>
     <string name="bridge_offline">Bridge offline — saved catalog retained</string>
     <string name="bridge_available">Bridge connected</string>
