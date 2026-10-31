@@ -27,9 +27,9 @@ class SharedDraftRepository(
     suspend fun cached(): JSONObject = mutex.withLock { read() }
 
     /** Persist the exact base and branch even when disconnected. Null expected is create-only. */
-    suspend fun stage(command: JSONObject): String = mutex.withLock {
+    suspend fun stage(command: JSONObject, originalCursor: String? = null): String = mutex.withLock {
         val state = read()
-        val cursor = state.getString("cursor")
+        val cursor = originalCursor ?: state.getString("cursor")
         val frozen = JSONObject(command.toString())
         require(frozen.optString("op") in setOf("put", "delete", "transfer"))
         val id = cursor.substringAfterLast(':') + "." + UUID.randomUUID()

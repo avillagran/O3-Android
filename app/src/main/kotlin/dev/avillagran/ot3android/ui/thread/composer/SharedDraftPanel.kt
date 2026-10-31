@@ -21,6 +21,8 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
     onAdopt: (ComposerSnapshot, String) -> Unit, onClose: () -> Unit) {
     val worker = rememberCoroutineScope()
     val opening = remember { snapshot }
+    var originalCursor by remember { mutableStateOf<String?>(null) }
+    var originalRevision by remember { mutableStateOf<Any?>(null) }
     var state by remember { mutableStateOf<JSONObject?>(null) }
     var busy by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
@@ -30,7 +32,7 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
         busy = true; failed = false
         worker.launch {
             try {
-                if (command != null) repository.stage(command)
+                if (command != null) repository.stage(command, if (command.optString("op") == "put") originalCursor else null)
                 state = repository.cached()
                 repository.synchronize()
                 state = repository.synchronize()
@@ -39,7 +41,14 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
             finally { busy = false }
         }
     }
-    LaunchedEffect(repository) { state = repository.cached() }
+    LaunchedEffect(repository) {
+        val cached = repository.cached()
+        state = cached
+        originalCursor = cached.optString("cursor").takeIf { it.isNotEmpty() }
+        val rows = cached.getJSONArray("documents")
+        originalRevision = (0 until rows.length()).map { rows.getJSONObject(it) }
+            .firstOrNull { matches(it.getJSONObject("scope"), scope) }?.opt("revision")
+    }
     val docs = state?.optJSONArray("documents") ?: JSONArray()
     val thread = (0 until docs.length()).map { docs.getJSONObject(it) }.firstOrNull { matches(it.getJSONObject("scope"), scope) }
     val conflicts = state?.optJSONArray("conflicts") ?: JSONArray()
@@ -53,7 +62,7 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
             if (pending > 0) Text(stringResource(R.string.shared_draft_pending, pending))
             TextButton(enabled = !busy && state?.has("cursor") == true && opening.attachments.isEmpty() && pending == 0 && conflicts.length() == 0,
                 onClick = { run(JSONObject().put("op", "put").put("scope", scope)
-                    .put("expected", thread?.opt("revision") ?: JSONObject.NULL)
+                    .put("expected", originalRevision ?: JSONObject.NULL)
                     .put("payload", JSONObject().put("schema", 1).put("text", opening.text).put("attachments", JSONArray())
                         .put("selection", JSONArray().put(opening.selection.start).put(opening.selection.end)))) }) { Text(stringResource(R.string.shared_draft_save)) }
             if (thread != null && !thread.optBoolean("deleted")) {

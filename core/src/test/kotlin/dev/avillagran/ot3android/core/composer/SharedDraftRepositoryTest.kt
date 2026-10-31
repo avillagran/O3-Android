@@ -66,6 +66,20 @@ class SharedDraftRepositoryTest {
         assertNull(disk)
     }
 
+    @Test fun refreshingSnapshotCannotReanchorAnAlreadyEditedBranch() = runBlocking {
+        var disk: String? = null
+        var cursor = "owner:7"
+        val repo = SharedDraftRepository("authority", { disk }, { disk = it }) { page().put("cursor", cursor) }
+        repo.synchronize()
+        cursor = "owner:12"
+        repo.synchronize()
+        val id = repo.stage(put("original branch"), originalCursor = "owner:7")
+        assertTrue(id.startsWith("7."))
+        val pending = repo.cached().getJSONArray("pending").getJSONObject(0)
+        assertEquals("owner:7", pending.getString("baseCursor"))
+        assertTrue(pending.isNull("expected"))
+    }
+
     @Test fun queueScopeCannotEnterSharedStore() {
         try { SharedDraftRepository.scope(ComposerScope("env", "project", "thread", "queue")); fail() }
         catch (_: IllegalArgumentException) { }
