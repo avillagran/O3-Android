@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">Anbieter</string>
+    <string name="providers_back">Zurück</string>
+    <string name="providers_refresh">Aktualisieren</string>
+    <string name="providers_update">Aktualisieren</string>
+    <string name="providers_install">Installieren</string>
+    <string name="providers_sign_in">Anmelden</string>
+    <string name="providers_sign_out">Abmelden</string>
+    <string name="providers_cancel">Abbrechen</string>
+    <string name="providers_continue">Weiter</string>
+    <string name="providers_open_sign_in">Anmeldeseite öffnen</string>
+    <string name="providers_auth_status">Status aktualisieren</string>
+    <string name="providers_install_status">Status prüfen</string>
+    <string name="providers_terminal_input">Eingabe</string>
+    <string name="providers_interaction_unavailable">Nicht verfügbar</string>
+    <string name="providers_configuration_unbound">Die Konfiguration ist in dieser Version nicht verfügbar.</string>
+    <string name="providers_modes_unavailable">Dieser Anbieter meldet keine Berechtigungsoptionen.</string>
+    <string name="providers_unknown_result">Ergebnis unbekannt. Aktualisiere zur Prüfung, bevor du dieselbe Aktion erneut versuchst.</string>
+    <string name="providers_unavailable_value">Auswahl nicht verfügbar: %1$s</string>
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">Live-uitvoer is niet beschikbaar in deze bibliotheekversie. Vernieuw om de nieuwste uitvoer te lezen.</string>
+</resources>

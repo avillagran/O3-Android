@@ -39,7 +39,7 @@ internal fun ComposerPermissions(
     Ot3IconButton(icon, label, { onRefresh(); open = true }, enabled = enabled,
         modifier = Modifier.testTag("composer_permissions"))
     if (open) Ot3Sheet(onDismissRequest = { open = false }, title = stringResource(R.string.ot3_permission_permissions)) {
-        if (modes.isEmpty()) Text(stringResource(R.string.composer_no_models), Modifier.padding(16.dp), color = Ot3Theme.colors.dim)
+        if (modes.isEmpty()) Text(stringResource(R.string.providers_modes_unavailable), Modifier.padding(16.dp), color = Ot3Theme.colors.dim)
         modes.forEach { choice ->
             val definition = definitions[choice]
             Row(Modifier.fillMaxWidth().testTag("permission_$choice").clickable(enabled) {

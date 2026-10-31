@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">Wyjście na żywo jest niedostępne w tej wersji biblioteki. Odśwież, aby odczytać najnowsze dane.</string>
+</resources>

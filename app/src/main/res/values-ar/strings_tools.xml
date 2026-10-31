@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">الإخراج المباشر غير متاح في إصدار المكتبة هذا. حدّث لقراءة أحدث إخراج.</string>
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">Вывод в реальном времени недоступен в этой версии библиотеки. Обновите, чтобы прочитать последний вывод.</string>
+</resources>

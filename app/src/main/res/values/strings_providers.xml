@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">Providers</string>
+    <string name="providers_back">Back</string>
+    <string name="providers_refresh">Refresh</string>
+    <string name="providers_update">Update</string>
+    <string name="providers_install">Install</string>
+    <string name="providers_sign_in">Sign in</string>
+    <string name="providers_sign_out">Sign out</string>
+    <string name="providers_cancel">Cancel</string>
+    <string name="providers_continue">Continue</string>
+    <string name="providers_open_sign_in">Open sign-in page</string>
+    <string name="providers_auth_status">Refresh status</string>
+    <string name="providers_install_status">Check status</string>
+    <string name="providers_terminal_input">Input</string>
+    <string name="providers_interaction_unavailable">Unavailable</string>
+    <string name="providers_configuration_unbound">Configuration is unavailable in this version.</string>
+    <string name="providers_modes_unavailable">This provider does not advertise permission choices.</string>
+    <string name="providers_unknown_result">Outcome unknown. Refresh to check before retrying the same action.</string>
+    <string name="providers_unavailable_value">Unavailable selection: %1$s</string>
+</resources>

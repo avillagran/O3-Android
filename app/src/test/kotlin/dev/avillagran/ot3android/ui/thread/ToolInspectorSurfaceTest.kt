@@ -202,4 +202,41 @@ class ToolInspectorSurfaceTest {
         rule.onNodeWithTag("thread_inspector").assertDoesNotExist()
     }
 
+    @Test fun hostAndViewerSwitchCancelReadAndResetTabState() {
+        val owner = mutableStateOf(dev.avillagran.ot3android.core.tools.ToolInspectorOwner("host-a", "viewer-a"))
+        val pending = CompletableDeferred<JSONObject>()
+        val ref = JSONObject().put("sourceThreadId", "source").put("sourceItemId", "item")
+            .put("type", "command_execution").put("revision", "live")
+        fun scoped(title: String, host: String, thread: String) = view(title).put("scope",
+            JSONObject(ref.toString()).put("environment", host).put("threadId", thread))
+        rule.setContent { Ot3Theme {
+            val captured = owner.value
+            ToolInspectorSurface(ref, {
+                if (captured.environment == "host-a") withContext(NonCancellable) { pending.await() }
+                else scoped("Current tool", captured.environment, captured.threadId)
+            }, owner = captured)
+        } }
+        rule.runOnIdle { owner.value = dev.avillagran.ot3android.core.tools.ToolInspectorOwner("host-b", "viewer-a") }
+        rule.onNodeWithText("Current tool").assertExists()
+        rule.onNodeWithTag("thread_inspector_tab_raw").performClick()
+        rule.runOnIdle { owner.value = dev.avillagran.ot3android.core.tools.ToolInspectorOwner("host-b", "viewer-b") }
+        rule.onNodeWithTag("thread_inspector_section_output").assertExists()
+        rule.runOnIdle { pending.complete(scoped("Stale tool", "host-a", "viewer-a")) }
+        rule.onNodeWithText("Stale tool").assertDoesNotExist()
+        rule.onNodeWithTag("thread_inspector_live_unavailable").assertExists()
+    }
+
+    @Test fun dialogDismissesBeforeReadingOldItemOnAnotherHost() {
+        val owner = mutableStateOf(dev.avillagran.ot3android.core.tools.ToolInspectorOwner("a", "viewer"))
+        var reads = 0
+        var closes = 0
+        val pending = CompletableDeferred<JSONObject>()
+        rule.setContent { Ot3Theme {
+            ToolInspectorDialog(JSONObject(), { reads++; pending.await() }, owner.value) { closes++ }
+        } }
+        rule.runOnIdle { assertEquals(1, reads); owner.value = dev.avillagran.ot3android.core.tools.ToolInspectorOwner("b", "viewer") }
+        rule.onNodeWithTag("thread_inspector_window").assertDoesNotExist()
+        rule.runOnIdle { assertEquals(1, reads); assertEquals(1, closes) }
+    }
+
 }
