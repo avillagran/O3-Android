@@ -22,7 +22,7 @@ class PullRequestsViewModelTest {
     @After fun teardown() = Dispatchers.resetMain()
     private val environments = MutableStateFlow(listOf(Environment("a", "NODE", "http://node.test", createdAt = 0), Environment("b", "VQ", "http://vq.test", createdAt = 0)))
     @Test fun debounceCancellationReconnectAndOfflineDoNotLeakOldScope() = runTest(dispatcher) {
-        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
         val saved = SavedStateHandle()
         var cancelled = false
         val requests = mutableListOf<Pair<Int, String>>()
@@ -38,14 +38,14 @@ class PullRequestsViewModelTest {
         advanceTimeBy(2); runCurrent(); assertTrue(cancelled)
         assertEquals("fix", saved.get<String>("query"))
         assertEquals(1, model.state.value.entries.single().getInt("number"))
-        connection.value = Connection(FakeT3Transport(), 2); runCurrent()
+        connection.value = Connection(transportFixture(), 2); runCurrent()
         assertEquals(2, model.state.value.entries.single().getInt("number"))
         connection.value = null; runCurrent()
         assertTrue(model.state.value.offline); assertTrue(model.state.value.entries.isEmpty())
         assertEquals(listOf(1 to "", 1 to "fix", 2 to "fix"), requests)
     }
     @Test fun paginationScopeFailureRetryAndSavedFilters() = runTest(dispatcher) {
-        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
         val saved = SavedStateHandle(mapOf("environment" to "b", "project" to "p", "state" to "merged", "involvement" to "authored", "query" to "test"))
         val cursors = mutableListOf<Boolean>()
         var fail = false
@@ -60,14 +60,14 @@ class PullRequestsViewModelTest {
         advanceTimeBy(301); runCurrent()
         assertEquals("b", model.state.value.environmentId)
         model.loadMore(); runCurrent()
-        assertEquals(listOf(8, 3, 8, 9), model.state.value.entries.map { it.getInt("number") })
-        assertEquals("Updated", model.state.value.entries[2].getString("title"))
+        assertEquals(listOf(3, 8, 9), model.state.value.entries.map { it.getInt("number") })
+        assertEquals("Updated", model.state.value.entries[1].getString("title"))
         assertEquals(listOf(false, true), cursors)
         fail = true; model.refresh(); runCurrent(); assertTrue(model.state.value.failed)
         fail = false; model.refresh(); runCurrent(); assertFalse(model.state.value.failed)
     }
     @Test fun missingMetadataNeverBroadensExplicitProjectOrSwitchesEnvironment() = runTest(dispatcher) {
-        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
         val options = MutableStateFlow<List<ShellProject>>(emptyList())
         val saved = SavedStateHandle(mapOf("environment" to "b", "project" to "removed-project"))
         val reads = mutableListOf<String?>()
@@ -88,7 +88,7 @@ class PullRequestsViewModelTest {
         assertNull(reads.last())
     }
     @Test fun pageTwoSurvivesInactiveReturnWithoutReadAndOffscreenMoreIsIgnored() = runTest(dispatcher) {
-        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
         val pages = mutableListOf<Boolean>()
         var collectors = 0
         val model = PullRequestsViewModel(environments, { connection.onStart { collectors++ }.onCompletion { collectors-- } }, read = { _, _, _, _, _, cursor ->
@@ -108,12 +108,12 @@ class PullRequestsViewModelTest {
         runCurrent()
         assertEquals(1, collectors)
         assertEquals(listOf(false, true), pages)
-        assertEquals(listOf(42, 36), model.state.value.entries.map { it.getInt("number") })
+        assertEquals(listOf(36, 42), model.state.value.entries.map { it.getInt("number") })
         assertEquals("page3", model.state.value.result!!.getJSONObject("nextCursors").getString("p"))
         collector.cancel()
     }
     @Test fun moreBetweenPublicationAndCollectorRegistrationIsBufferedOnce() = runTest(dispatcher) {
-        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
         var reads = 0
         val model = PullRequestsViewModel(environments, { connection }, read = { _, _, _, _, _, cursor ->
             reads++
@@ -125,10 +125,10 @@ class PullRequestsViewModelTest {
         } }
         runCurrent()
         assertEquals(2, reads)
-        assertEquals(listOf(42, 36), model.state.value.entries.map { it.getInt("number") })
+        assertEquals(listOf(36, 42), model.state.value.entries.map { it.getInt("number") })
     }
     @Test fun retainedRowsArePrivateUntilConnectionValidatedAndReconnectInvalidates() = runTest(dispatcher) {
-        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
         var hold = false
         val release = CompletableDeferred<Unit>()
         var reads = 0
@@ -144,7 +144,7 @@ class PullRequestsViewModelTest {
         assertEquals(14, model.listState.firstVisibleItemIndex)
         collector.cancel(); runCurrent()
         hold = true
-        connection.value = Connection(FakeT3Transport(), 2)
+        connection.value = Connection(transportFixture(), 2)
         collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
         runCurrent()
         assertTrue(model.state.value.awaitingConnection); assertTrue(model.state.value.entries.isEmpty())
@@ -153,7 +153,7 @@ class PullRequestsViewModelTest {
         assertEquals(0, model.listState.firstVisibleItemScrollOffset)
         assertEquals(2, reads); assertEquals(2, model.state.value.entries.single().getInt("number"))
         collector.cancel(); runCurrent()
-        connection.value = Connection(FakeT3Transport(), 2) // Same epoch, replaced transport.
+        connection.value = Connection(transportFixture(), 2) // Same epoch, replaced transport.
         collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
         runCurrent(); assertEquals(3, reads)
         collector.cancel(); runCurrent(); connection.value = null
@@ -161,13 +161,13 @@ class PullRequestsViewModelTest {
         runCurrent(); assertTrue(model.state.value.offline); assertTrue(model.state.value.entries.isEmpty())
         assertEquals(3, reads)
         collector.cancel(); runCurrent()
-        connection.value = Connection(FakeT3Transport(), 3) // Reconnect while unobserved.
+        connection.value = Connection(transportFixture(), 3) // Reconnect while unobserved.
         collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect() }
         runCurrent(); assertEquals(4, reads); assertEquals(3, model.state.value.entries.single().getInt("number"))
         collector.cancel()
     }
     @Test fun refreshAndFilterChangesOffscreenDiscardCacheAndDefaultEnvironmentCannotFallback() = runTest(dispatcher) {
-        val current = Connection(FakeT3Transport(), 1)
+        val current = Connection(transportFixture(), 1)
         val requests = mutableListOf<String>()
         val model = PullRequestsViewModel(environments, { flowOf(current) }, read = { _, state, _, query, _, _ ->
             requests += "$state:$query"; JSONObject().put("entries", JSONArray().put(entry(requests.size)))
@@ -190,7 +190,7 @@ class PullRequestsViewModelTest {
         collector.cancel()
     }
     @Test fun detailTabsCancelAndNewEpochDropsPreviousOverview() = runTest(dispatcher) {
-        val connection = MutableStateFlow<Connection?>(Connection(FakeT3Transport(), 1))
+        val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
         var checksCancelled = false
         val saved = SavedStateHandle()
         val model = PullRequestViewModel("a", JSONObject(), { connection }, saved) { current, action, _ ->
@@ -202,10 +202,13 @@ class PullRequestsViewModelTest {
         model.selectTab("checks"); runCurrent(); assertTrue(model.state.value.busy)
         model.selectTab("activity"); runCurrent(); assertTrue(checksCancelled)
         assertEquals("activity", model.state.value.content!!.getString("action"))
-        connection.value = Connection(FakeT3Transport(), 2); runCurrent()
+        connection.value = Connection(transportFixture(), 2); runCurrent()
         assertEquals(2, model.state.value.detail!!.getInt("epoch"))
         assertEquals("activity", saved.get<String>("tab"))
         connection.value = null; runCurrent(); assertNull(model.state.value.detail); assertTrue(model.state.value.offline)
+    }
+    private fun transportFixture() = FakeT3Transport().apply {
+        onDomain("pullRequests.listView") { args -> dev.avillagran.t3.T3Client().use { it.domain("pullRequests.listView", args) } }
     }
     private fun entry(number: Int) = JSONObject().put("host", "git.example").put("projectId", "p").put("repository", "o/r").put("number", number)
 }

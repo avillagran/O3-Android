@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="bridge_admin_title">OmaBridge administration</string>
+    <string name="bridge_admin_local_note">Identity, pairing files, administrator and service grants, bridge consent, all-hosts approvals, gateway domain policy and local relay settings must be changed on the owner device. Remote access requires a separate management grant.</string>
+    <string name="bridge_admin_name">Device name</string>
+    <string name="bridge_admin_rename">Rename</string>
+    <string name="bridge_admin_invite">Create invitation</string>
+    <string name="bridge_admin_endpoints">Read endpoints</string>
+    <string name="bridge_admin_failed">Request unavailable or refused. Check the management grant on the owner device.</string>
+    <string name="bridge_admin_confirm">Confirm device change</string>
+    <string name="pr_diff">Diff</string>
+    <string name="pr_diff_more_pending">More diff pages are available; full diff pagination is pending.</string>
+</resources>

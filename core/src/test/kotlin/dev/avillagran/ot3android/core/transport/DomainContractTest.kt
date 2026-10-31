@@ -141,7 +141,7 @@ class DomainContractTest {
     @Test
     fun u18HistoryPath() = runBlocking {
         assertEquals(
-            "/api/orchestration/threads/t1/history?cursor=c-1",
+            "/api/orchestration/threads/t1/history?cursor=c-1&compactIds=1",
             call("history.path", JSONObject().put("threadId", "t1").put("cursor", "c-1")),
         )
     }
@@ -266,7 +266,7 @@ class DomainContractTest {
         assertEquals(setOf("locale", "language", "rtl"), arabic.keyNames())
         assertTrue(arabic.getBoolean("rtl"))
         val catalog = call("i18n.catalog", JSONObject().put("locale", "es")) as JSONObject
-        assertEquals(1804, catalog.getJSONObject("strings").length())
+        assertEquals(2027, catalog.getJSONObject("strings").length())
     }
 
     @Test

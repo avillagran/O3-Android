@@ -66,6 +66,13 @@ interface T3Transport : DomainCalls, Closeable {
     suspend fun mediaImage(threadId: String, path: String): ByteArray =
         throw UnsupportedOperationException("mediaImage")
 
+    suspend fun registryIconBytes(url: String, requestId: String): ByteArray = throw UnsupportedOperationException("registryIconBytes")
+    suspend fun cancelRegistryIcon(requestId: String) { }
+    suspend fun historyPage(threadId: String, cursor: String): JSONObject = throw UnsupportedOperationException("historyPage")
+    suspend fun pullRequestDiff(reference: JSONObject, cursor: String? = null): JSONObject = throw UnsupportedOperationException("pullRequestDiff")
+    suspend fun document(resource: JSONObject): JSONObject = throw UnsupportedOperationException("document")
+    fun commandOutput(reference: JSONObject): Flow<T3Batch> = throw UnsupportedOperationException("commandOutput")
+
     /**
      * The environment's shell (projects and thread rows) as one HTTP snapshot, with the
      * orchestration protocol header the lib adds. [shellStream] keeps it current.

@@ -1,3 +1,13 @@
+# Adopted release: v0.3.6
+
+Current consumer pin: `86819eb442ae4a8635cb21206f2195343c75b094`, ABI 3.
+Release AAR SHA-256: `5e44c1ef846f27b7f131ca3bbacb771f21ce70028f061014904064e4caf9e21d`.
+Use `scripts/fetch-or-build-lib.sh --release --host-jni` with a checkout at this
+source commit. Regenerate `strings_ot3.xml` with `tools/import-ot3-strings`.
+The older version examples below describe the build pipeline's history; the lock
+is authoritative. New consumer contracts are documented in the lib's
+`docs/ANDROID_PARITY.md` at the pinned source.
+
 # Building the lib-t3-rust AAR
 
 ot3-Android consumes [lib-t3-rust](https://github.com/avillagran/lib-t3-rust) as an

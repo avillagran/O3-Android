@@ -80,7 +80,13 @@ class PublicMarkdownImageTest {
                 } } catch (error: Throwable) { failure.set(error) }
             }.apply { isDaemon = true; start() }
             // Exercise the real connector with a test-only supplied loopback address.
-            val reply = PublicImageHttp.exchange(URI("http://never-resolve.invalid:${server.localPort}/image"), listOf(InetAddress.getLoopbackAddress()), 5000)
+            val reply = try {
+                PublicImageHttp.exchange(URI("http://never-resolve.invalid:${server.localPort}/image"), listOf(InetAddress.getLoopbackAddress()), 5000)
+            } catch (error: Throwable) {
+                worker.join(5000)
+                failure.get()?.let(error::addSuppressed)
+                throw error
+            }
             assertArrayEquals("PNG".toByteArray(), reply.bytes)
             worker.join(5000)
             assertFalse(worker.isAlive)
