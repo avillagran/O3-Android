@@ -1,5 +1,13 @@
 package dev.avillagran.ot3android.ui.sky
 
+import android.animation.ValueAnimator
+import android.os.Build
+import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import dev.avillagran.ot3android.core.data.prefs.AnimationPreference
+import dev.avillagran.ot3android.ui.theme.rememberOt3Motion
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -39,27 +47,35 @@ fun O3BrandMark(
     elapsedMs: Long? = null,
 ) {
     val motion = LocalOt3Motion.current
-    val effective = config.copy(reducedMotion = config.reducedMotion || motion.level == Ot3MotionLevel.OFF)
+    val systemMotion = rememberOt3Motion(AnimationPreference.FULL)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val effective = config.copy(reducedMotion = config.reducedMotion ||
+        motion.level == Ot3MotionLevel.OFF || systemMotion.level == Ot3MotionLevel.OFF)
     var elapsed by remember(effective) { mutableLongStateOf(0L) }
     var replay by remember { mutableIntStateOf(0) }
-    LaunchedEffect(effective, elapsedMs, replay) {
+    LaunchedEffect(effective, elapsedMs, replay, lifecycle) {
         elapsed = if (replay == 0) 0 else 2400
         if (elapsedMs == null && effective.running && !effective.reducedMotion) {
-            var last = withFrameNanos { it }
-            while (true) {
-                val frame = brandFrame(elapsed, effective)
-                // Plain holds do not schedule GPU frames, just like Desktop's Timer.
-                if (frame.scene == -1 || frame.scene == 4 || (frame.scene == 1 && frame.time > 2200)) {
-                    val remaining = when(frame.scene) {
-                        -1 -> 2400L - elapsed
-                        1 -> ((7*95+900)*effective.effectivePace).roundToLong()+3600L-(frame.time*effective.effectivePace).roundToLong()
-                        else -> 7000L-(frame.time*effective.effectivePace).roundToLong()
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                if (!brandAnimatorsEnabled()) return@repeatOnLifecycle
+                // Infinite decorative frames participate in Compose's animation policy.
+                // Reset the frame origin on resume: background time does not advance scenes.
+                var last = withInfiniteAnimationFrameNanos { it }
+                while (brandAnimatorsEnabled()) {
+                    val frame = brandFrame(elapsed, effective)
+                    // Plain holds do not schedule GPU frames, just like Desktop's Timer.
+                    if (frame.scene == -1 || frame.scene == 4 || (frame.scene == 1 && frame.time > 2200)) {
+                        val remaining = when(frame.scene) {
+                            -1 -> 2400L - elapsed
+                            1 -> ((7*95+900)*effective.effectivePace).roundToLong()+3600L-(frame.time*effective.effectivePace).roundToLong()
+                            else -> 7000L-(frame.time*effective.effectivePace).roundToLong()
+                        }
+                        delay(remaining.coerceAtLeast(1))
                     }
-                    delay(remaining.coerceAtLeast(1))
+                    val now = withInfiniteAnimationFrameNanos { it }
+                    elapsed += (now-last)/1_000_000
+                    last = now
                 }
-                val now = withFrameNanos { it }
-                elapsed += (now-last)/1_000_000
-                last = now
             }
         }
     }
@@ -162,6 +178,10 @@ fun O3BrandMark(
         }
     }
 }
+
+// API 24–25 use the observed animator scale through systemMotion above.
+private fun brandAnimatorsEnabled(): Boolean =
+    Build.VERSION.SDK_INT < 26 || ValueAnimator.areAnimatorsEnabled()
 
 private fun DrawScope.drawGlyph(m: Float, color: Color, unit: Float) {
     translate(-15.5309f*unit,-37*unit) { scale(unit,pivot=Offset.Zero) {
