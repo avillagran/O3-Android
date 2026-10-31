@@ -85,10 +85,13 @@ class PullRequestsViewModel(
                         try {
                             val result = read(current, scope.filter, scope.involvement, scope.query, scope.projectId, cursor)
                             currentCoroutineContext().ensureActive()
-                            val received = result.optJSONArray("entries")
-                            val entries = if (cursor == null) mutableListOf() else page.entries.toMutableList()
-                            // Append server pages verbatim: no client precedence, sort or domain merge.
-                            for (i in 0 until (received?.length() ?: 0)) entries.add(received!!.getJSONObject(i))
+                            val received = result.optJSONArray("entries") ?: org.json.JSONArray()
+                            val pages = org.json.JSONArray()
+                            if (cursor != null) pages.put(JSONObject().put("items", org.json.JSONArray(page.entries)))
+                            pages.put(JSONObject().put("items", received))
+                            val merged = current.transport.domain("pullRequests.listView", JSONObject().put("pages", pages)) as JSONObject
+                            val items = merged.getJSONArray("items")
+                            val entries = (0 until items.length()).map { items.getJSONObject(it) }
                             page = scope.copy(entries = entries, result = result)
                             retained = Retained(identity, current, page)
                         } catch (cancelled: CancellationException) { throw cancelled }
@@ -184,6 +187,6 @@ class PullRequestViewModel(
         }
     }.combine(writeState) { page, writing -> page.copy(writing = writing.first, writeUnknown = writing.second) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), PullRequestState())
-    fun selectTab(value: String) { if (value in listOf("detail", "checks", "activity")) saved["tab"] = value }
+    fun selectTab(value: String) { if (value in listOf("detail", "checks", "activity", "diff")) saved["tab"] = value }
     fun refresh() { refresh.update { it + 1 } }
 }

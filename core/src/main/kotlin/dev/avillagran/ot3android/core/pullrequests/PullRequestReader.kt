@@ -25,6 +25,7 @@ class PullRequestReader(private val domain: DomainCalls = DomainEngine.shared) {
     }
 
     suspend fun read(transport: T3Transport, action: String, reference: JSONObject): JSONObject? {
+        if (action == "diff") return transport.pullRequestDiff(reference)
         require(action in listOf("detail", "checks", "activity"))
         val recipe = if (reference.optString("host").isNotEmpty()) domain.domain("pullRequests.request", JSONObject().put("action", action).put("reference", reference)) as JSONObject
             else JSONObject().put("method", "pullRequests.$action").put("payload", reference)

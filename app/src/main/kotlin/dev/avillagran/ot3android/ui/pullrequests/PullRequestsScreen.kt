@@ -108,7 +108,7 @@ fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, 
                 if (detail.optBoolean("isDraft")) Text(stringResource(R.string.ot3_pr_draft))
             } }
             item { Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("detail" to R.string.ot3_pr_overview, "checks" to R.string.ot3_pr_checks, "activity" to R.string.ot3_pr_conversation).forEach { (id, label) ->
+                listOf("detail" to R.string.ot3_pr_overview, "checks" to R.string.ot3_pr_checks, "activity" to R.string.ot3_pr_conversation, "diff" to R.string.pr_diff).forEach { (id, label) ->
                     FilterChip(state.tab == id, { onTab(id) }, label = { Text(stringResource(label)) }, modifier = Modifier.testTag("pr_tab_$id"))
                 }
             } }
@@ -157,6 +157,14 @@ fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, 
                     item { MarkdownBlocks(content.optJSONArray("blocks")) }
                     item { Text(stringResource(R.string.pr_changed_files, content.optInt("changedFiles")), color = Ot3Theme.colors.dim) }
                     item { Text(stringResource(R.string.pr_code_pending), style = MaterialTheme.typography.bodySmall, color = Ot3Theme.colors.dim) }
+                }
+                "diff" -> {
+                    val files = content.optJSONArray("files").objects()
+                    items(files) { file ->
+                        Text(file.optString("path"), style = MaterialTheme.typography.titleSmall)
+                        androidx.compose.foundation.text.selection.SelectionContainer { Text(file.optString("patch"), fontFamily = dev.avillagran.ot3android.ui.theme.FiraCode) }
+                    }
+                    if (!content.isNull("nextCursor")) item { Text(stringResource(R.string.pr_diff_more_pending)) }
                 }
                 "checks" -> {
                     val checks = content.optJSONArray("checks").objects()
