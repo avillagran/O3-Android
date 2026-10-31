@@ -7,14 +7,8 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -24,27 +18,43 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.avillagran.ot3android.core.data.prefs.AnimationPreference
+import dev.avillagran.ot3android.ui.theme.Ot3Colors
+import dev.avillagran.ot3android.ui.theme.Ot3MotionLevel
+import dev.avillagran.ot3android.ui.theme.Ot3MotionPolicy
 
 object SkyDefaults {
     /** ot3's brand row height, the part of the header the sky stays solid behind (`T3Panel.qml:1135`). */
     val BrandHeight: Dp = SkyMath.BRAND_HEIGHT.dp
 }
 
+/** The theme's motion policy as the sky's level (UI_SPEC 3.4). */
+val Ot3MotionPolicy.skyMotion: SkyMotion
+    get() = when (level) {
+        Ot3MotionLevel.FULL -> SkyMotion.Full
+        Ot3MotionLevel.LIGHT -> SkyMotion.Light
+        Ot3MotionLevel.OFF -> SkyMotion.Off
+    }
+
+/** Whether the preference is Auto, which may drop the sky to Light on its own (3.4). */
+val Ot3MotionPolicy.skyAuto: Boolean
+    get() = preference == AnimationPreference.AUTO
+
 /**
  * ot3's sidebar header sky (UI_SPEC 3.5): the procedural starfield behind [content],
- * solid behind the brand row and fading out below it. AGSL on API 33+, Canvas below.
+ * solid behind the brand row and fading out below it. AGSL on API 33+, Canvas below. The
+ * clock is the screen's [SkyField], so the band dissolves into the panel sky behind it
+ * (`ot3:ui/qml/T3Panel.qml:1121-1128`).
  *
  * @param energy 0 idle … 1 something works; drift eases between 5 and 42 dp/s over
  *   1 600 ms and comets appear only above 0.
  * @param brandHeight height of the brand row; the sky fades over the rest
  *   (`fade = 1 − brandHeight × 0.85 / height`).
- * @param onAutoDegrade non-null when [motion] is the Auto preference: the header watches
- *   its ticks and, after 90 slow ones while working, drops to [SkyMotion.Light] for the
- *   rest of its life and calls this once so the preference can remember it.
+ * @param onAutoDegrade non-null while the header watches its ticks: after 90 slow ones
+ *   while working it drops to [SkyMotion.Light] for the rest of the screen's life and
+ *   calls this once so the preference can remember it.
  */
 @Composable
 fun SkyHeader(
@@ -57,67 +67,107 @@ fun SkyHeader(
     onAutoDegrade: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
-    val system by rememberSystemMotionLimits()
-    var degraded by remember { mutableStateOf(false) }
-    val requested = if (degraded && motion == SkyMotion.Full) SkyMotion.Light else motion
-    val effective = requested.limitedBy(system.animatorScale, system.powerSave)
-    val auto = onAutoDegrade != null && !degraded
-    val animated = effective != SkyMotion.Off
+    val field = rememberSkyField(motion, onAutoDegrade = onAutoDegrade)
+    SkyWorking(field, energy > 0f)
+    // The header is the brightest of ot3's skies, so it sets the pace for comets.
+    SideEffect { field.clock.meteorReach = palette.meteorRate }
+    SkySurface(
+        field = field,
+        palette = palette,
+        header = true,
+        brandHeightDp = brandHeight.value,
+        opaqueBase = true,
+        forceCanvas = forceCanvas,
+        modifier = modifier,
+        content = content,
+    )
+}
 
-    val sky = remember { SkyClock() }
-    var tick by remember { mutableIntStateOf(0) }
-    var visible by remember { mutableStateOf(false) }
-    SideEffect {
-        sky.meteorReach = palette.meteorRate
-        sky.setEnergyTarget(if (animated) energy else 0f)
-    }
+/**
+ * ot3's panel sky: the starfield that fills the whole card behind the chat and the
+ * sidebar (`ot3:ui/qml/T3Panel.qml:842-856`), at brightness 0.5 and meteor rate 0.3, with
+ * no nebula and no fade, over the theme surface. Content on top must not paint an opaque
+ * background of its own.
+ *
+ * @param opaque draws the theme's background under the stars, for a surface that has to
+ *   hide what is behind it (the phone's sidebar drawer) while keeping the same field.
+ */
+@Composable
+fun SkyBackdrop(
+    palette: SkyPalette,
+    motion: SkyMotion,
+    modifier: Modifier = Modifier,
+    opaque: Boolean = false,
+    forceCanvas: Boolean = false,
+    content: @Composable BoxScope.() -> Unit = {},
+) {
+    val field = rememberSkyField(motion)
+    SkySurface(
+        field = field,
+        palette = palette.panel(),
+        header = false,
+        brandHeightDp = 0f,
+        opaqueBase = opaque,
+        forceCanvas = forceCanvas,
+        modifier = modifier,
+        content = content,
+    )
+}
 
-    val currentMotion by rememberUpdatedState(effective)
-    val currentAuto by rememberUpdatedState(auto)
-    val currentOnDegrade by rememberUpdatedState(onAutoDegrade)
-    var interval by remember { mutableIntStateOf(if (energy > 0f) 33 else 125) }
-    val frame by dev.avillagran.ot3android.ui.theme.rememberOt3Tick(animated && visible, interval)
-    LaunchedEffect(frame.nanos, animated, visible, effective) {
-        if (animated && visible && frame.nanos > 0L) {
-            val wasDegraded = sky.degraded
-            if (sky.onFrame(frame.nanos, currentMotion, currentAuto, frame.seconds).ticked) tick++
-            interval = sky.intervalMs(currentMotion, currentAuto).toInt()
-            if (!wasDegraded && sky.degraded) {
-                degraded = true
-                currentOnDegrade?.invoke()
-            }
-        } else sky.resetTiming()
-    }
-
+/**
+ * One region of the field. [header] selects ot3's two looks: the header's darker, brighter
+ * band that fades out below the brand row, or the panel's dim field with no fade.
+ */
+@Composable
+private fun SkySurface(
+    field: SkyField,
+    palette: SkyPalette,
+    header: Boolean,
+    brandHeightDp: Float,
+    opaqueBase: Boolean,
+    forceCanvas: Boolean,
+    modifier: Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
     // Typed as Shader so nothing below API 33 touches RuntimeShader.
-    val shader: Shader? = if (!forceCanvas && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) remember { runCatching { StarfieldShaders.create() }.getOrNull() } else null
+    val shaderFailure = remember { booleanArrayOf(false) }
+    val shader: Shader? = if (!forceCanvas && !shaderFailure[0] && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        remember { runCatching { StarfieldShaders.create() }.getOrNull() }
+    } else {
+        null
+    }
     Box(
-        modifier
-            .onGloballyPositioned { visible = it.boundsInWindow().let { b -> b.width > 0f && b.height > 0f } }
-            .drawWithCache {
-                val brush = shader?.let { ShaderBrush(it) }
-                onDrawBehind {
-                    // Reading tick redraws on every tick.
-                    if (tick < 0 || size.width <= 0f || size.height <= 0f) return@onDrawBehind
-                    val u = SkyMath.uniforms(
-                        palette = palette,
-                        motion = effective,
-                        clock = sky.clock,
-                        drift = sky.drift,
-                        energy = sky.energy,
-                        widthDp = size.width / density,
-                        heightDp = size.height / density,
-                        pixelDensity = density,
-                        brandHeightDp = brandHeight.value,
-                    )
-                    if (shader != null && brush != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        StarfieldShaders.apply(shader, u)
-                        drawRect(brush)
-                    } else {
-                        drawSkyCanvas(SkyCanvasPlan.build(u))
-                    }
+        modifier.drawWithCache {
+            val brush = shader?.let { ShaderBrush(it) }
+            val brand = brandHeightDp
+            onDrawBehind {
+                // Reading the field's tick redraws on every tick.
+                if (field.tick < 0 || size.width <= 0f || size.height <= 0f) return@onDrawBehind
+                val height = size.height / density
+                val u = SkyMath.uniforms(
+                    palette = palette,
+                    motion = field.motion,
+                    clock = field.clock.clock,
+                    drift = field.clock.drift,
+                    energy = field.clock.energy,
+                    widthDp = size.width / density,
+                    heightDp = height,
+                    pixelDensity = density,
+                    brandHeightDp = brand,
+                    header = header,
+                    fade = if (header) SkyMath.fade(height, brand) else 0f,
+                ).let { if (header) it else it.copy(base = SkyMath.panelBase(palette.background.toSkyRgba(), opaqueBase)) }
+                // A driver that cannot take the uniforms or draw the shader (Mali on some
+                // Android 16 builds) keeps the whole region on the Canvas fallback instead
+                // of leaving a blank sky; nothing is drawn twice.
+                val drawn = shader != null && brush != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    runCatching { StarfieldShaders.apply(shader, u); drawRect(brush) }.isSuccess
+                if (!drawn) {
+                    if (shader != null) shaderFailure[0] = true
+                    drawSkyCanvas(SkyCanvasPlan.build(u))
                 }
-            },
+            }
+        },
         content = content,
     )
 }
@@ -135,7 +185,10 @@ internal object StarfieldShaders {
 /** Draws a [SkyCanvasPlan] (dp) into this scope (px). */
 internal fun DrawScope.drawSkyCanvas(plan: SkyCanvasPlan) {
     val base = plan.base.toColor()
-    drawRect(Brush.verticalGradient(*plan.baseStops.map { (y, a) -> y to base.copy(alpha = a) }.toTypedArray()))
+    // The panel sky has no base of its own: the theme surface behind it shows through.
+    if (plan.base.a > 0f) {
+        drawRect(Brush.verticalGradient(*plan.baseStops.map { (y, a) -> y to base.copy(alpha = a) }.toTypedArray()))
+    }
     scale(density, pivot = Offset.Zero) {
         for (s in plan.stars) {
             val color = s.color.toColor()
@@ -184,3 +237,15 @@ private fun DrawScope.drawHalo(color: Color, center: Offset, radius: Float, alph
         previous = profile
     }
 }
+
+/** The theme's colours as the palette both skies take. */
+fun Ot3Colors.skyPalette(): SkyPalette = SkyPalette(
+    background = background,
+    foreground = foreground,
+    accent = accent,
+    lightSky = sky.lightSky,
+    brightness = sky.brightness,
+    nebula = sky.nebula,
+    meteorRate = sky.meteorRate,
+    ink = sky.ink,
+)

@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import dev.avillagran.ot3android.ui.sky.*
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
-import dev.avillagran.ot3android.ui.theme.Ot3MotionLevel
 import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.ui.kit.Ot3TextField
 import dev.avillagran.ot3android.ui.kit.CountPills
@@ -50,6 +49,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -122,59 +123,65 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
         onIntent(HomeIntent.ClearSearch)
         focusManager.clearFocus()
     }
-    Scaffold(
-        modifier = modifier.testTag(HomeTags.ROOT),
-        contentWindowInsets = WindowInsets(0),
-    ) { padding ->
-        Column(Modifier.padding(padding).consumeWindowInsets(padding)
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).fillMaxSize()) {
-            val colors = Ot3Theme.colors
-            val motion = Ot3Theme.motion
-            SkyHeader(
-                palette = SkyPalette(colors.background, colors.foreground, colors.accent, colors.sky.lightSky,
-                    colors.sky.brightness, colors.sky.nebula, colors.sky.meteorRate, colors.sky.ink),
-                motion = when (motion.level) {
-                    Ot3MotionLevel.FULL -> SkyMotion.Full
-                    Ot3MotionLevel.LIGHT -> SkyMotion.Light
-                    Ot3MotionLevel.OFF -> SkyMotion.Off
-                },
-                energy = if ((state?.header?.counts?.working ?: 0) > 0) 1f else 0f,
-                onAutoDegrade = if (motion.preference == dev.avillagran.ot3android.core.data.prefs.AnimationPreference.AUTO) ({}) else null,
-                modifier = Modifier.fillMaxWidth().testTag("home_sky"),
-            ) {
-                if (LocalConfiguration.current.screenHeightDp < 480) {
-                    Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { Header(state, onIntent) }
-                        Box(Modifier.weight(1f)) {
+    val colors = Ot3Theme.colors
+    val palette = remember(colors) { colors.skyPalette() }
+    val motion = Ot3Theme.motion.skyMotion
+    // Inside the chat the workspace already draws one sky behind chat and sidebar
+    // (`ot3:ui/qml/T3Panel.qml:842-856`); alone, Home draws that same panel itself.
+    val alone = LocalSkyField.current == null
+    val sky = rememberSkyField(motion)
+    CompositionLocalProvider(LocalSkyField provides sky) {
+        Box(Modifier.fillMaxSize()) {
+            if (alone) SkyBackdrop(palette, motion, Modifier.matchParentSize().testTag(HomeTags.SKY))
+            Scaffold(
+                modifier = modifier.testTag(HomeTags.ROOT),
+                contentWindowInsets = WindowInsets(0),
+                containerColor = Color.Transparent,
+            ) { padding ->
+                Column(Modifier.padding(padding).consumeWindowInsets(padding)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).fillMaxSize()) {
+                    SkyHeader(
+                        palette = palette,
+                        motion = motion,
+                        energy = if ((state?.header?.counts?.working ?: 0) > 0) 1f else 0f,
+                        onAutoDegrade = if (Ot3Theme.motion.skyAuto) ({}) else null,
+                        modifier = Modifier.fillMaxWidth().testTag("home_sky"),
+                    ) {
+                        if (LocalConfiguration.current.screenHeightDp < 480) {
+                            Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.weight(1f)) { Header(state, onIntent) }
+                                Box(Modifier.weight(1f)) {
+                                    SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
+                                }
+                            }
+                        } else Column(Modifier.statusBarsPadding()) {
+                            Header(state, onIntent)
                             SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                         }
                     }
-                } else Column(Modifier.statusBarsPadding()) {
-                    Header(state, onIntent)
-                    SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
-                }
-            }
-            val content = state?.content ?: HomeContent.Connecting
-            if (content == HomeContent.List && state != null) ThreadList(state, onIntent, quotaStrip)
-            else LazyColumn(Modifier.fillMaxSize()) {
-                item("provider_usage") { quotaStrip() }
-                item("home_message") { Box(Modifier.fillParentMaxHeight()) {
-                        when (content) {
-                HomeContent.NoEnvironments -> Message(stringResource(R.string.mobile_no_environments), HomeTags.NO_ENVIRONMENTS) {
-                    Button(onClick = { onIntent(HomeIntent.AddEnvironment) }) { Text(stringResource(R.string.environments_add)) }
-                }
-                HomeContent.Connecting -> Message(stringResource(R.string.mobile_connecting_environment), HomeTags.CONNECTING)
-                HomeContent.Loading -> Message(stringResource(R.string.mobile_loading_threads), HomeTags.LOADING)
-                is HomeContent.Unauthorized -> Message(stringResource(R.string.connect_error_unauthorized), HomeTags.UNAUTHORIZED) {
-                    Button(onClick = { onIntent(HomeIntent.EditEnvironment(content.environmentId)) }) {
-                        Text(stringResource(R.string.sidebar_edit_token))
+                    val content = state?.content ?: HomeContent.Connecting
+                    if (content == HomeContent.List && state != null) ThreadList(state, onIntent, quotaStrip)
+                    else LazyColumn(Modifier.fillMaxSize()) {
+                        item("provider_usage") { quotaStrip() }
+                        item("home_message") { Box(Modifier.fillParentMaxHeight()) {
+                                when (content) {
+                        HomeContent.NoEnvironments -> Message(stringResource(R.string.mobile_no_environments), HomeTags.NO_ENVIRONMENTS) {
+                            Button(onClick = { onIntent(HomeIntent.AddEnvironment) }) { Text(stringResource(R.string.environments_add)) }
+                        }
+                        HomeContent.Connecting -> Message(stringResource(R.string.mobile_connecting_environment), HomeTags.CONNECTING)
+                        HomeContent.Loading -> Message(stringResource(R.string.mobile_loading_threads), HomeTags.LOADING)
+                        is HomeContent.Unauthorized -> Message(stringResource(R.string.connect_error_unauthorized), HomeTags.UNAUTHORIZED) {
+                            Button(onClick = { onIntent(HomeIntent.EditEnvironment(content.environmentId)) }) {
+                                Text(stringResource(R.string.sidebar_edit_token))
+                            }
+                        }
+                        HomeContent.Empty -> Message(stringResource(R.string.ot3_home_empty), HomeTags.EMPTY)
+                        HomeContent.NoResults -> Message(stringResource(R.string.ot3_home_no_results), HomeTags.NO_RESULTS)
+                        HomeContent.List -> Unit
+                    }
+                        } }
                     }
                 }
-                HomeContent.Empty -> Message(stringResource(R.string.ot3_home_empty), HomeTags.EMPTY)
-                HomeContent.NoResults -> Message(stringResource(R.string.ot3_home_no_results), HomeTags.NO_RESULTS)
-                HomeContent.List -> Unit
-            }
-                } }
             }
         }
     }
@@ -412,6 +419,7 @@ private fun MessageRow(item: HomeItem.Message, onIntent: (HomeIntent) -> Unit) {
 
 object HomeTags {
     const val ROOT = "home"
+    const val SKY = "home_panel_sky"
     const val SEARCH = "home_search"
     const val SEARCH_CLEAR = "home_search_clear"
     const val FILTER = "home_filter"

@@ -24,6 +24,17 @@ data class SkyPalette(
     val meteorRate: Float,
     val ink: Float,
 ) {
+    /**
+     * The same theme as the panel sky draws it (`ot3:ui/qml/T3Panel.qml:842-856`): the header
+     * keeps its darker base, brightness and nebula, while the full-panel field is dim
+     * (brightness 0.5), has no nebula and rates comets at 0.3.
+     */
+    fun panel(): SkyPalette = copy(
+        brightness = SkyMath.PANEL_BRIGHTNESS,
+        nebula = SkyMath.PANEL_NEBULA,
+        meteorRate = SkyMath.PANEL_METEOR_RATE,
+    )
+
     companion object {
         /** The palette ot3 would derive for a header sky over [background]. */
         fun derive(background: Color, foreground: Color, accent: Color): SkyPalette {
@@ -53,8 +64,8 @@ enum class SkyMotion {
 
     /**
      * ot3's light mode: comets stay only in the header sky
-     * (`ot3:ui/qml/T3Starfield.qml:47-48`), which is the only sky on Android, and the sky
-     * ticks at 25 fps at most (`ot3:ui/qml/T3Starfield.qml:99`).
+     * (`ot3:ui/qml/T3Starfield.qml:47-48`), and the sky ticks at 25 fps at most
+     * (`ot3:ui/qml/T3Starfield.qml:99`).
      */
     Light,
 

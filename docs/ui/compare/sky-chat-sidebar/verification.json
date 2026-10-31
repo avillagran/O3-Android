@@ -1,0 +1,74 @@
+{
+  "tranche": "sky-chat-sidebar",
+  "date": "2026-10-27",
+  "reference": "/home/node/Work/omarchy-t3-code-ref @ 7b5b1de (read-only)",
+  "changed": "ot3 panel sky behind the reader and the whole sidebar; sidebar header band kept over the same field",
+  "jvm": {
+    "note": "Robolectric native graphics + Roborazzi, 411x891 dp phone (822x1782 px). Not a device; no system bars, no IME, no compositor.",
+    "goldens": [
+      "SkySurfaceScreenshotTest/home-panel.{tokyo-night,catppuccin-latte}.png",
+      "SkySurfaceScreenshotTest/workspace-panel.{tokyo-night,catppuccin-latte}.png",
+      "SkySurfaceScreenshotTest/drawer-panel.{tokyo-night,catppuccin-latte}.png"
+    ],
+    "updated_goldens": [
+      "QuotaStripScreenshotTest/home-{before,after}.{tokyo-night,catppuccin-latte}.png",
+      "ReaderScreenshotTest/markdown.{tokyo-night,catppuccin-latte}.png"
+    ],
+    "tests": ":app:testDebugUnitTest, :app:verifyRoborazziDebug (346 tests, 5 re-recorded goldens, 0 failures)"
+  },
+  "unit": {
+    "SkyPanelTest": "6/6: panel constants (0.5 / 0 / 0.3), no fade, transparent and opaque base, stars lit in the sidebar and chat columns, field reaching the bottom rows, comets crossing the chat column"
+  },
+  "emulator": {
+    "avd": "ot3a-sky (private COW clone: qcow2 overlays backed by ot3a's images; originals never opened read-write)",
+    "port": 5580,
+    "image": "system-images;android-34;google_apis;x86_64, pixel_6 1080x2400 @ 420 dpi",
+    "renderer": "-gpu swiftshader_indirect, -no-window, -no-snapshot",
+    "guest": "hw.cpu.ncore=4 (clone only), hw.ramSize=2048",
+    "launcher": "device_list -> device_open failed to start the AVD (hub launcher exited 1, userdata size check with 2.6 GiB free); started with scripts/emulator.sh start --headless (OT3A_EMU_AVD=ot3a-sky)",
+    "animator_scale_for_stills": "0.0 (system default on this AVD): every still is one static frame of the same field",
+    "animator_scale_for_video": "1.0 (set for the recordings, restored to 0.0 afterwards)",
+    "transport": "debug WorkspaceFixtureActivity: real graph, screens, view models and Rust views over a deterministic fixture transport, no network",
+    "tests": [
+      "SkyRegionsDeviceTest 3/3: panel sky behind the chat and the sidebar (landscape, empty fixture so text cannot satisfy it); drawer draws the field and hides the chat (no magenta pixel); Home draws the panel behind its list",
+      "SkyRenderingTest 2/2, SystemReducedMotionTest 2/2, StarfieldShaderCompileTest 1/1, VerticalWorkspaceLayoutTest 2/2"
+    ],
+    "pixel_measurements_empty_regions": {
+      "metric": "pixels differing from the region median by more than 5 of 255 (star dots) in an empty band of the 1080x2400 capture",
+      "tokyo-night home list 1400-2000 px": {
+        "before": 0,
+        "after": 1796
+      },
+      "tokyo-night drawer 1400-1950 px": {
+        "before": 0,
+        "after": 698
+      },
+      "catppuccin-latte home list 1400-2000 px": {
+        "before": 0,
+        "after": 2861
+      },
+      "catppuccin-latte drawer 1400-1950 px": {
+        "before": 0,
+        "after": 1046
+      }
+    },
+    "baseline_apk": "debug APK built from main 106f692 before any edit (sha256 3f58c78d65f43470559291cee13729ede0dcf2842398ebcac0417c1203d7aeca)",
+    "video": "screenrecord 720x1600, 6 Mbps, 7.6-8 fps in the guest (SwiftShader, no display), converted to VP9/CRF40 WebM",
+    "code_caveat": "Device runs used the same sources as the commit; later edits are an import tidy-up, comments, the private composable name and a guard against redundant energy-map writes. The AVD could not be rebooted afterwards (host at 1.8 GiB free, below the emulator disk check).",
+    "rebase_note": "Stills and clips captured before rebasing onto origin/main 88692ce (PR69/PR70); that rebase only adds the reader's conversation follow. JVM suite, goldens, lint and both APKs re-run after it.",
+    "clone_removed": "ot3a-sky.avd removed after the session to free 723 MB; the documented recipe recreates it in about a minute"
+  },
+  "not_verified": [
+    "physical Xiaomi 23090RA98G (Android 16 / Mali): no run in this tranche; the AGSL guard and the Canvas fallback are unchanged and covered by the device tests here",
+    "real server transport or a live desktop environment",
+    "scroll parallax, Star speed and Shooting stars preferences, FPS meter (not ported)",
+    "aesthetic acceptance: the stills and clips are reproducible evidence, not sign-off"
+  ],
+  "ci": {
+    "build": "success on 5dd318f",
+    "instrumented": "failed twice at ThreadCacheDeviceTest's collector wait (race against WhileSubscribed(5_000), cause recorded in docs/ui/compare/ui-3/expanded-editor/input-transition-diagnostics.md); deadline widened to 15 s with the same assertion; second attempt then cancelled by the job's 40-minute timeout after the suite stopped reporting",
+    "sky_tests_in_ci": "SkyRegionsDeviceTest 3 cases 2.1/2.9/4.1 s, SkyRenderingTest 2 cases ~1.8 s: all passed",
+    "final": "Both checks green on 3a9b350: build and instrumented (99 app tests, 8 skipped)",
+    "infra_failure": "A rerun failed before any test: the runner's API34 system image extracted corrupt ('Error reading Zip content from a SeekableByteChannel'), so no emulator was on 5554. The following attempt passed."
+  }
+}
