@@ -30,6 +30,27 @@ abstract class ThreadActionsComposeContract {
     )
 
 
+    @Test fun archiveConfirmationCannotSubmitWorkingThread() {
+        var confirmed = 0
+        rule.setContent { Ot3Theme { ThreadManagementDialog(row.copy(working = true), ThreadAction.Archive, {}, { confirmed++ }) } }
+        rule.onNodeWithTag("thread_action_confirm").assertIsNotEnabled().performClick()
+        assertEquals(0, confirmed)
+    }
+
+    @Test fun confirmationDispatchesOnlyOnceEvenBeforeDismissal() {
+        var confirmed = 0
+        rule.setContent { Ot3Theme { ThreadManagementDialog(row, ThreadAction.Delete, {}, { confirmed++ }) } }
+        rule.onNodeWithTag("thread_action_confirm").performClick()
+        rule.onNodeWithTag("thread_action_confirm").assertIsNotEnabled().performClick()
+        assertEquals(1, confirmed)
+    }
+
+    @Test fun projectMenuKeepsUnavailableActionsVisible() {
+        rule.setContent { Ot3Theme { ProjectActionsContent("Project", ThreadActions.projectMenu("/w", ActionContext.Interim)) {} } }
+        rule.onNodeWithTag(SheetTags.project(ProjectAction.GroupInto)).assertIsDisplayed().assertIsNotEnabled()
+        rule.onNodeWithTag(SheetTags.project(ProjectAction.Remove)).assertIsDisplayed().assertIsNotEnabled()
+    }
+
     @Test fun menuOffersPinAndDisablesUnsupportedReorderAndReadOnlyMutations() {
         val actions = mutableListOf<ThreadAction>()
         val target = ThreadMenuTarget(row.copy(pinned = true), false, false)

@@ -19,6 +19,10 @@ data class ActionContext(
     val projectSettingsAvailable: Boolean = false,
     /** A management request is in flight. */
     val busy: Boolean = false,
+    /** A released native project mutation builder and its integration are both present. */
+    val projectMutationsAvailable: Boolean = false,
+    /** Local grouping controls and persistence have been registered by the shell. */
+    val projectGroupingAvailable: Boolean = false,
 ) {
     /** ot3 `actionCanOperate && !busy`, plus the builders that send it. */
     val canOperate: Boolean get() = canWrite && buildersAvailable && !busy
@@ -98,7 +102,7 @@ object ThreadActions {
         val settlement = context.has(ServerCapability.ThreadSettlement)
         val snooze = context.has(ServerCapability.ThreadSnooze)
         val autoSettle = context.has(ServerCapability.ThreadAutoSettleOptOut)
-        val branch = row.branch?.takeIf { it.isNotEmpty() }
+        val branch = row.branch?.takeIf { it.isNotBlank() }
         return listOf(
             MenuEntry(ThreadAction.NewThreadOnBranch, branch != null, operate && context.newThreadAvailable, 0),
             MenuEntry(if (row.pinned) ThreadAction.Unpin else ThreadAction.Pin, pinning, operate && pinning, 0),
@@ -143,7 +147,7 @@ object ThreadActions {
                 ),
             ),
             MenuEntry(ThreadAction.ProjectSettings, true, row.projectKey != null && context.projectSettingsAvailable, 2),
-            MenuEntry(ThreadAction.Archive, true, operate && !target.working, 3),
+            MenuEntry(ThreadAction.Archive, true, operate && !target.working && !row.working, 3),
             MenuEntry(ThreadAction.Delete, true, operate, 3),
         )
     }
@@ -172,12 +176,12 @@ object ThreadActions {
 
     /** ot3's project menu (`ot3:ui/qml/T3ProjectMenu.qml:62-72`). */
     fun projectMenu(workspaceRoot: String?, context: ActionContext): List<ProjectMenuEntry> = listOf(
-        ProjectMenuEntry(ProjectAction.Rename, context.canOperate, 0),
+        ProjectMenuEntry(ProjectAction.Rename, context.canOperate && context.projectMutationsAvailable, 0),
         // Grouping is ot3's local project model (`ui/js/ProjectModel.js`), U2.
-        ProjectMenuEntry(ProjectAction.GroupInto, false, 0),
+        ProjectMenuEntry(ProjectAction.GroupInto, context.projectGroupingAvailable && !context.busy, 0),
         ProjectMenuEntry(ProjectAction.CopyPath, !workspaceRoot.isNullOrEmpty(), 0),
         ProjectMenuEntry(ProjectAction.ProjectSettings, context.projectSettingsAvailable, 0),
-        ProjectMenuEntry(ProjectAction.Remove, context.canOperate, 1),
+        ProjectMenuEntry(ProjectAction.Remove, context.canOperate && context.projectMutationsAvailable, 1),
     )
 
     /**

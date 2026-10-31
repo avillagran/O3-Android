@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Näytä koodi</string>
+    <string name="ot3_render_show_preview">Näytä esikatselu</string>
+    <string name="ot3_render_run">Suorita päätteessä</string>
+    <string name="ot3_render_open">Avaa esikatselu</string>
+    <string name="ot3_render_offline">Esikatselu ei ole käytettävissä offline-tilassa</string>
+    <string name="ot3_render_expired">Esikatselun käyttöoikeus vanhentui</string>
+    <string name="ot3_render_unsupported">Visuaalinen hahmontaja ei ole käytettävissä</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P13 connection and invitation safety copy. -->
+<resources>
+    <string name="connections_title">Tilkoblinger</string>
+    <string name="connections_peer_review">Kontroller hele motpartens ID før sammenkobling.</string>
+    <string name="connections_all_hosts_warning">Denne invitasjonen kan gi tilgang til alle verter. Kontroller omfanget med utstederen før du fortsetter.</string>
+    <string name="connections_peer_confirm">Jeg har kontrollert denne nøyaktige ID-en og godtar tilgangsomfanget.</string>
+    <string name="connections_pair_pending">Godkjenning skjer på den autoriserte verten. Importer invitasjonen på nytt etter godkjenningen.</string>
+    <string name="connections_host_authority">Dette mobile SDK-et tilbyr ikke administrasjon. Administrer ruter, deling, klienter, sky, nettverk, publisering, samtykke, gateways, relé og installasjon på den autoriserte verten.</string>
+    <string name="connections_local_id">Denne enhetens ID</string>
+    <string name="connections_bridge_id">Valgt bros ID</string>
+</resources>

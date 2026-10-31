@@ -21,6 +21,8 @@ import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
 
+data class BridgeDeviceIdentity(val clientId: String, val bridgeId: String?)
+
 /** Host lifecycle and Room adapter for the native manager; never mints credentials. */
 class BridgeCatalogController(
     private val database: Ot3Database,
@@ -39,6 +41,8 @@ class BridgeCatalogController(
     private var clientId: String? = null
     private var stateDirectory: String? = null
     private var polling: Job? = null
+    private val mutableIdentity = MutableStateFlow<BridgeDeviceIdentity?>(null)
+    val identity = mutableIdentity.asStateFlow()
     private val mutableStatus = MutableStateFlow("not_loaded")
     val status = mutableStatus.asStateFlow()
 
@@ -50,6 +54,7 @@ class BridgeCatalogController(
         val result = native(JSONObject().put("op", "open").put("stateDir", privateStateDirectory).put("directOnly", directOnly))
         handle = result.getLong("handle")
         clientId = result.getString("clientId")
+        mutableIdentity.value = BridgeDeviceIdentity(checkNotNull(clientId), result.optString("bridgeId").takeIf { !result.isNull("bridgeId") })
         stateDirectory = privateStateDirectory
         selected = !result.isNull("bridgeId")
         if (selected) mutableStatus.value = invoke("cached").getString("status")
@@ -62,7 +67,9 @@ class BridgeCatalogController(
     }
 
     suspend fun selectBridge(bridgeId: String) = mutex.withLock {
+        require(bridgeId.length == 64 && bridgeId.all { it in '0'..'9' || it in 'a'..'f' }) { "invalid_peer_id" }
         invoke("selectBridge", JSONObject().put("bridgeId", bridgeId))
+        mutableIdentity.value = BridgeDeviceIdentity(checkNotNull(clientId), bridgeId)
         mutableStatus.value = invoke("cached").getString("status")
         selected = true
         if (foreground) setForeground(true)
@@ -228,6 +235,7 @@ class BridgeCatalogController(
             if (handle != null) invoke("close")
             handle = null
             clientId = null
+            mutableIdentity.value = null
             stateDirectory = null
             selected = false
         }

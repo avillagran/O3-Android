@@ -79,6 +79,10 @@ class AppearanceSettingsViewModel(
 
     fun setProviderUsage(shown: Boolean) = edit { preferences.appearance.setProviderUsage(shown) }
 
+    fun setLocal(field: dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference, value: String) =
+        edit { preferences.appearance.setLocal(field, value) }
+    fun resetLocal() = edit { preferences.appearance.resetLocal() }
+
     fun refresh() = source.refresh()
 
     private fun edit(block: suspend () -> Unit) {

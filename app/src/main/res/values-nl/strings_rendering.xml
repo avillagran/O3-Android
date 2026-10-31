@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Code tonen</string>
+    <string name="ot3_render_show_preview">Voorbeeld tonen</string>
+    <string name="ot3_render_run">Uitvoeren in terminal</string>
+    <string name="ot3_render_open">Voorbeeld openen</string>
+    <string name="ot3_render_offline">Voorbeeld offline niet beschikbaar</string>
+    <string name="ot3_render_expired">Toestemming voor voorbeeld verlopen</string>
+    <string name="ot3_render_unsupported">Visuele renderer niet beschikbaar</string>
+</resources>

@@ -21,9 +21,16 @@ class EnvironmentsViewModel(
     private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
 
+    private val ticks = kotlinx.coroutines.flow.flow {
+        while (true) {
+            emit(clock())
+            kotlinx.coroutines.delay(1_000)
+        }
+    }
+
     val items: StateFlow<List<EnvironmentItem>?> =
-        combine(repository.environments, connections.states, repository.bridgeStates) { environments, states, origins ->
-            environments.map { environment -> EnvironmentItem(environment, states[environment.id], origins.find { it.id == environment.id }?.effectiveStatus(clock())) }
+        combine(repository.environments, connections.states, repository.bridgeStates, ticks) { environments, states, origins, now ->
+            environments.map { environment -> EnvironmentItem(environment, states[environment.id], origins.find { it.id == environment.id }?.effectiveStatus(now)) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun delete(environmentId: String) {

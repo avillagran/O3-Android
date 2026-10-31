@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Показати код</string>
+    <string name="ot3_render_show_preview">Показати попередній перегляд</string>
+    <string name="ot3_render_run">Запустити в терміналі</string>
+    <string name="ot3_render_open">Відкрити попередній перегляд</string>
+    <string name="ot3_render_offline">Перегляд недоступний без мережі</string>
+    <string name="ot3_render_expired">Дозвіл перегляду минув</string>
+    <string name="ot3_render_unsupported">Візуальний рендерер недоступний</string>
+</resources>

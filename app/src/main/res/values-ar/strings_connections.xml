@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P13 connection and invitation safety copy. -->
+<resources>
+    <string name="connections_title">الاتصالات</string>
+    <string name="connections_peer_review">تحقق من معرّف النظير بالكامل قبل الاقتران.</string>
+    <string name="connections_all_hosts_warning">قد تسمح هذه الدعوة بالوصول إلى جميع المضيفين. راجع النطاق مع مُصدرها قبل المتابعة.</string>
+    <string name="connections_peer_confirm">تحققت من معرّف النظير هذا بالضبط وأوافق على نطاق الوصول.</string>
+    <string name="connections_pair_pending">تتم الموافقة على المضيف المخوّل. بعد الموافقة استورد الدعوة مجددًا.</string>
+    <string name="connections_host_authority">لا توفر حزمة SDK المحمولة هذه الإدارة. أدر المسارات والمشاركة والعملاء والسحابة والشبكة والنشر والموافقة والبوابات والترحيل والتثبيت على المضيف المخوّل.</string>
+    <string name="connections_local_id">معرّف هذا الجهاز</string>
+    <string name="connections_bridge_id">معرّف الجسر المحدد</string>
+</resources>

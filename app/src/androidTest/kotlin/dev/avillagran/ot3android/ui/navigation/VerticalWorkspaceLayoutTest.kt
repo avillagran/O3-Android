@@ -25,6 +25,12 @@ class VerticalWorkspaceLayoutTest {
             .getInsets(androidx.core.view.WindowInsetsCompat.Type.statusBars()).top + density))
         assertEquals("No reserved gap below header", sky.bottom, list.top, density)
         android.util.Log.i("UI1iMeasures", "density=$density sky=$sky brand=$brand list=$list")
+        // P04 controls remain reachable without reserving a permanent toolbar row.
+        rule.onNodeWithTag("home_sidebar_controls").assertDoesNotExist()
+        rule.onNodeWithTag(HomeTags.OVERFLOW).performClick()
+        rule.onNodeWithTag("home_sidebar_controls").assertIsDisplayed()
+        androidx.test.espresso.Espresso.pressBack()
+        rule.onNodeWithTag("home_sidebar_controls").assertDoesNotExist()
         rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
         rule.waitUntil(15000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()

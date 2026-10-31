@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P13 connection and invitation safety copy. -->
+<resources>
+    <string name="connections_title">З’єднання</string>
+    <string name="connections_peer_review">Перевірте повний ID вузла перед сполученням.</string>
+    <string name="connections_all_hosts_warning">Це запрошення може надати доступ до всіх хостів. Перед продовженням уточніть обсяг доступу у відправника.</string>
+    <string name="connections_peer_confirm">Я перевірив цей точний ID і приймаю обсяг доступу.</string>
+    <string name="connections_pair_pending">Схвалення виконується на уповноваженому хості. Потім імпортуйте запрошення знову.</string>
+    <string name="connections_host_authority">Цей мобільний SDK не підтримує адміністрування. Керуйте маршрутами, спільним доступом, клієнтами, хмарою, мережею, публікацією, згодою, шлюзами, ретранслятором та встановленням на уповноваженому хості.</string>
+    <string name="connections_local_id">ID цього пристрою</string>
+    <string name="connections_bridge_id">ID вибраного мосту</string>
+</resources>

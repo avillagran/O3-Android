@@ -75,6 +75,29 @@ class ThreadActionsTest {
     }
 
     @Test
+    fun busyDisablesEveryMutationIncludingNestedChoices() {
+        val full = ActionContext(ServerCapability.entries.toSet(), true, true, true, true, busy = true)
+        val menu = ThreadActions.menu(target(row.copy(pinned = true)).copy(canSnooze = true), full)
+        (menu + menu.flatMap { it.children }).filter { it.action.mutates }.forEach { assertFalse(it.action.name, it.enabled) }
+    }
+
+    @Test
+    fun authoritativeWorkingRowCannotBeArchivedByStaleTarget() {
+        val menu = ThreadActions.menu(target(row.copy(working = true)), ActionContext(canWrite = true, buildersAvailable = true))
+        assertFalse(menu.single { it.action == ThreadAction.Archive }.enabled)
+    }
+
+    @Test
+    fun regeneratingTitleAndAutoSettleStateFollowNativeFixture() {
+        val full = ActionContext(ServerCapability.entries.toSet(), true, true)
+        val menu = ThreadActions.menu(target().copy(titleRegenerating = true, autoSettleDisabled = true), full)
+        assertFalse(menu.single { it.action == ThreadAction.RegenerateTitle }.enabled)
+        val choices = menu.single { it.action == ThreadAction.AutoSettle }.children
+        assertEquals(false, choices.single { it.action == ThreadAction.AutoSettleEnabled }.checked)
+        assertEquals(true, choices.single { it.action == ThreadAction.AutoSettleDisabled }.checked)
+    }
+
+    @Test
     fun swipeFollowsT3Mobile() {
         val settlement = ActionContext(capabilities = setOf(ServerCapability.ThreadSettlement, ServerCapability.ThreadSnooze), canWrite = true, buildersAvailable = true)
         assertEquals(SwipeActions(SwipeAction.Settle, SwipeAction.Snooze, true), ThreadActions.swipe(row.copy(canSnooze = true), settlement))
@@ -89,6 +112,16 @@ class ThreadActionsTest {
         assertEquals(listOf(ProjectAction.Rename, ProjectAction.GroupInto, ProjectAction.CopyPath, ProjectAction.ProjectSettings, ProjectAction.Remove), menu.map { it.action })
         assertEquals(listOf(ProjectAction.CopyPath), menu.filter { it.enabled }.map { it.action })
         assertTrue(ThreadActions.projectMenu(null, ActionContext.Interim).none { it.enabled })
+    }
+
+    @Test
+    fun projectMutationsFailClosedWithoutNativeBuilderButLocalGroupingCanBeRegistered() {
+        val full = ActionContext(ServerCapability.entries.toSet(), true, true, projectGroupingAvailable = true)
+        val menu = ThreadActions.projectMenu("/workspace", full)
+        assertFalse(menu.single { it.action == ProjectAction.Rename }.enabled)
+        assertFalse(menu.single { it.action == ProjectAction.Remove }.enabled)
+        assertTrue(menu.single { it.action == ProjectAction.GroupInto }.enabled)
+        assertFalse(ThreadActions.projectMenu("/workspace", full.copy(busy = true)).single { it.action == ProjectAction.GroupInto }.enabled)
     }
 
     @Test
