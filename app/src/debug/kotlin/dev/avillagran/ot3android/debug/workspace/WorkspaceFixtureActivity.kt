@@ -278,6 +278,8 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         } }
         onDomain("timeline.view") { DomainEngine.shared.domain("timeline.view", it) }
         onDomain("projection.apply") { DomainEngine.shared.domain("projection.apply", it) }
+        onDomain("pullRequests.listView") { DomainEngine.shared.domain("pullRequests.listView", it) }
+        onDomain("models.permissionView") { DomainEngine.shared.domain("models.permissionView", it) }
         onCall("orchestration.getTurnDiff") { args ->
             JSONObject().put("threadId", args.getString("threadId"))
                 .put("fromTurnCount", args.getInt("fromTurnCount")).put("toTurnCount", args.getInt("toTurnCount"))

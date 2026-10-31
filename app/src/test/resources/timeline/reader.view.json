@@ -14,13 +14,14 @@
     "mergeBackTargetThreadId": null,
     "startedAt": 0,
     "working": false,
+    "guestShare": null,
     "mergeBackRunId": null,
     "activeRunId": null,
     "status": "idle"
   },
   "timeline": [{
     "fileReferences": [],
-    "rev": "331acb2b81ea4ddc",
+    "rev": "72d9e7ddc7b29ce1",
     "attachments": [],
     "role": "assistant",
     "blocks": [
@@ -104,6 +105,7 @@
     "searchText": "Native reader\nBold and emphasis with reference\nFirst\nSecond\nval answer = 42\n\n",
     "streaming": false,
     "tables": [],
+    "showMessageActions": true,
     "attribution": null,
     "inputIntent": null,
     "forkRunId": null,
@@ -112,7 +114,8 @@
     "id": "answer",
     "senderThreadId": null,
     "text": "# Native reader\n\n**Bold** and *emphasis* with [reference](https://example.org)\n\n- First\n- Second\n\n```kotlin\nval answer = 42\n```",
-    "markdownImages": []
+    "markdownImages": [],
+    "commentary": false
   }],
   "queue": {
     "hiddenMessageIds": [],

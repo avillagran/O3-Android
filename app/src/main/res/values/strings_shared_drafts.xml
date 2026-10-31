@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="shared_draft_title">Shared drafts</string>
     <string name="shared_draft_note">Explicitly save or adopt text. Unsynced commands stay on this device. Attachments require durable host uploads and are not transferred here. Queue edits and send attempts stay local.</string>
     <string name="shared_draft_failed">Synchronization failed. Local branches and exact pending commands are preserved.</string>

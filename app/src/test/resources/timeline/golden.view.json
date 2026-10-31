@@ -14,6 +14,7 @@
     "mergeBackTargetThreadId": null,
     "startedAt": 0,
     "working": false,
+    "guestShare": null,
     "mergeBackRunId": null,
     "activeRunId": null,
     "status": "idle"
@@ -21,7 +22,7 @@
   "timeline": [
     {
       "fileReferences": [],
-      "rev": "ed70e34cfd62688b",
+      "rev": "28f6c629aa826997",
       "attachments": [],
       "role": "user",
       "canRewindMessage": false,
@@ -30,6 +31,7 @@
       "searchText": "Keep the native reader close to OT3.",
       "streaming": false,
       "tables": [],
+      "showMessageActions": true,
       "attribution": null,
       "inputIntent": null,
       "forkRunId": null,
@@ -38,11 +40,12 @@
       "id": "question",
       "senderThreadId": null,
       "text": "Keep the native reader close to OT3.",
-      "markdownImages": []
+      "markdownImages": [],
+      "commentary": false
     },
     {
       "fileReferences": [],
-      "rev": "e28cb5f2f368a686",
+      "rev": "31b8d8e0c60fbe06",
       "attachments": [],
       "role": "assistant",
       "blocks": [
@@ -133,6 +136,7 @@
       "searchText": "Native reader\nRust supplies every block. Reference\nSelect prose\nCopy code\nval thread = session.view.value\nprintln(thread.title)\n\nReading position stays anchored.\n",
       "streaming": false,
       "tables": [],
+      "showMessageActions": true,
       "attribution": null,
       "inputIntent": null,
       "forkRunId": null,
@@ -141,7 +145,8 @@
       "id": "answer",
       "senderThreadId": null,
       "text": "# Native reader\n\n**Rust** supplies *every block*. [Reference](https://example.org)\n\n- Select prose\n- Copy code\n\n```kotlin\nval thread = session.view.value\nprintln(thread.title)\n```\n\nReading position stays anchored.",
-      "markdownImages": []
+      "markdownImages": [],
+      "commentary": false
     }
   ],
   "queue": {

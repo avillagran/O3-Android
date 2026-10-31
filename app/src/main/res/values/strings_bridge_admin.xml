@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="bridge_admin_title">OmaBridge administration</string>
     <string name="bridge_admin_local_note">Identity, pairing files, administrator and service grants, bridge consent, all-hosts approvals, gateway domain policy and local relay settings must be changed on the owner device. Remote access requires a separate management grant.</string>
     <string name="bridge_admin_name">Device name</string>

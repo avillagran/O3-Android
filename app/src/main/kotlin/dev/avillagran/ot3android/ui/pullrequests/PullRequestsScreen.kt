@@ -156,7 +156,6 @@ fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, 
                 "detail" -> {
                     item { MarkdownBlocks(content.optJSONArray("blocks")) }
                     item { Text(stringResource(R.string.pr_changed_files, content.optInt("changedFiles")), color = Ot3Theme.colors.dim) }
-                    item { Text(stringResource(R.string.pr_code_pending), style = MaterialTheme.typography.bodySmall, color = Ot3Theme.colors.dim) }
                 }
                 "diff" -> {
                     val files = content.optJSONArray("files").objects()

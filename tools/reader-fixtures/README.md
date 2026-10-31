@@ -1,3 +1,8 @@
+Re-exported for v0.3.6 / 86819eb442ae4a8635cb21206f2195343c75b094,
+ABI 3, 124 domain functions, using the release AAR and matching host JNI.
+Added native commentary/showMessageActions and guestShare fields; row fingerprints
+changed with the native presentation contract. Historical exporter notes follow.
+
 # Reader fixture export
 
 `Export.java` calls the AAR's JNI `T3Client.domain("timeline.view", …)` offline for each

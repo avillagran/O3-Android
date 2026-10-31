@@ -190,7 +190,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
                             }
                         }
                         if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
-                            Text(stringResource(R.string.transcript_history_unavailable), style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.ot3_pr_more), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     if (away) TextButton(onClick = { scope.launch { followingLatest = true; list.animateScrollToItem(0) } },

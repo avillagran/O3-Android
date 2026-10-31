@@ -108,7 +108,7 @@ class PullRequestsViewModelTest {
         runCurrent()
         assertEquals(1, collectors)
         assertEquals(listOf(false, true), pages)
-        assertEquals(listOf(42, 36), model.state.value.entries.map { it.getInt("number") })
+        assertEquals(listOf(36, 42), model.state.value.entries.map { it.getInt("number") })
         assertEquals("page3", model.state.value.result!!.getJSONObject("nextCursors").getString("p"))
         collector.cancel()
     }
@@ -125,7 +125,7 @@ class PullRequestsViewModelTest {
         } }
         runCurrent()
         assertEquals(2, reads)
-        assertEquals(listOf(42, 36), model.state.value.entries.map { it.getInt("number") })
+        assertEquals(listOf(36, 42), model.state.value.entries.map { it.getInt("number") })
     }
     @Test fun retainedRowsArePrivateUntilConnectionValidatedAndReconnectInvalidates() = runTest(dispatcher) {
         val connection = MutableStateFlow<Connection?>(Connection(transportFixture(), 1))
