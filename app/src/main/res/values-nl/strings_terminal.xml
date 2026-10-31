@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Sluiten</string>
+    <string name="terminal_disconnected">Verbinding verbroken. Open opnieuw nadat de host is verbonden.</string>
+    <string name="terminal_bindings_missing">Externe terminal niet beschikbaar: native bindings voor map en uitvoerverwerking ontbreken in AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Alleen-lezen token: deze host vereist terminal:operate ook voor verbinden. Geen alleen-lezen stream beschikbaar.</string>
+</resources>

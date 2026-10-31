@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Kapat</string>
+    <string name="terminal_disconnected">Bağlantı kesildi. Ana bilgisayar bağlanınca yeniden açın.</string>
+    <string name="terminal_bindings_missing">Uzak terminal kullanılamıyor: AAR 0.3.6 içinde dizin ve çıktı işleme yerel bağları eksik.</string>
+    <string name="terminal_read_only_unavailable">Salt okunur belirteç: bu ana bilgisayar bağlanmak için bile terminal:operate gerektirir. Salt okunur akış yok.</string>
+</resources>

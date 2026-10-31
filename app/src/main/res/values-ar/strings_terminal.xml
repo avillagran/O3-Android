@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">الطرفية</string>
+    <string name="terminal_close">إغلاق</string>
+    <string name="terminal_disconnected">غير متصل. أعد الفتح بعد اتصال المضيف.</string>
+    <string name="terminal_bindings_missing">الطرفية البعيدة غير متاحة: روابط الدليل ومعالجة المخرجات الأصلية مفقودة في AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">رمز للقراءة فقط: يتطلب المضيف terminal:operate حتى للاتصال. لا يتوفر تدفق للقراءة فقط.</string>
+</resources>

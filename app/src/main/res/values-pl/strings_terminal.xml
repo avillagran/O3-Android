@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Zamknij</string>
+    <string name="terminal_disconnected">Rozłączono. Otwórz ponownie po połączeniu hosta.</string>
+    <string name="terminal_bindings_missing">Terminal zdalny niedostępny: w AAR 0.3.6 brakuje natywnych powiązań katalogu i przetwarzania wyjścia.</string>
+    <string name="terminal_read_only_unavailable">Token tylko do odczytu: host wymaga terminal:operate także do podłączenia. Strumień tylko do odczytu jest niedostępny.</string>
+</resources>

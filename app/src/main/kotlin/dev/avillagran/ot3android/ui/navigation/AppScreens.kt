@@ -185,11 +185,17 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 )
             },
             onBack = { navigator.back() },
+            onTerminal = { navigator.push(ThreadTerminal(route.environmentId, route.threadId)) },
             onGit = { navigator.push(ThreadGit(route.environmentId, route.threadId)) },
             onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) },
             onOpenThread = { navigator.openThread(route.environmentId, it) },
             quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, compact = false, onOpenLimits = { navigator.push(QuotaLimits(route.environmentId)) }) },
         )
+    }
+
+    @Composable
+    override fun Terminal(route: ThreadTerminal) {
+        dev.avillagran.ot3android.ui.terminal.TerminalPage(route.environmentId, route.threadId) { navigator.back() }
     }
 
     @Composable

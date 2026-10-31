@@ -111,7 +111,7 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null, onTerminal: (() -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val checkpoint by viewModel.checkpoint.collectAsStateWithLifecycle()
     val checkpointMessages by viewModel.checkpointMessages.collectAsStateWithLifecycle()
@@ -161,6 +161,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             onQuestionResponse = viewModel::respondQuestion,
             onRuntimeMode = viewModel::selectRuntimeMode,
             composerSlot = if (viewModel.durableComposerAvailable) ({ ConnectedComposer(viewModel, state) }) else null,
+            onTerminal = onTerminal,
             onGit = onGit,
             onChanges = onChanges,
             onOpenThread = onOpenThread,
@@ -204,6 +205,7 @@ fun ThreadContent(
     editorIdentity: String = state.view.threadId,
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
     onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
+    onTerminal: (() -> Unit)? = null,
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -310,6 +312,9 @@ fun ThreadContent(
                         }, modifier = Modifier.testTag("thread_overflow"))
                         androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
                             if (showComposerOptions) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
+                            if (onTerminal != null) androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.terminal_title)) },
+                                onClick = { quotaMenu = false; onTerminal() })
                             if (onGit != null) androidx.compose.material3.DropdownMenuItem(
                                 text = { Text(stringResource(R.string.ot3_git_title)) },
                                 onClick = { quotaMenu = false; onGit() })

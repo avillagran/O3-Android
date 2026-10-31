@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminale</string>
+    <string name="terminal_close">Chiudi</string>
+    <string name="terminal_disconnected">Disconnesso. Riapri dopo la riconnessione del server.</string>
+    <string name="terminal_bindings_missing">Terminale remoto non disponibile: mancano i binding nativi per directory ed elaborazione output in AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Token di sola lettura: il server richiede terminal:operate anche per collegarsi. Nessun flusso di sola lettura disponibile.</string>
+</resources>

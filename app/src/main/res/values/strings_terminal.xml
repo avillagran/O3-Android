@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Close</string>
+    <string name="terminal_disconnected">Disconnected. Reopen after the host reconnects.</string>
+    <string name="terminal_bindings_missing">Remote terminal unavailable: native cwd resolution and output reduction bindings are missing in AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Read-only token: this host requires terminal:operate even to attach. A read-only stream is unavailable.</string>
+</resources>

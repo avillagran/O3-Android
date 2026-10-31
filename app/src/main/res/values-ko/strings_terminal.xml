@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">터미널</string>
+    <string name="terminal_close">닫기</string>
+    <string name="terminal_disconnected">연결이 끊겼습니다. 호스트가 다시 연결되면 여세요.</string>
+    <string name="terminal_bindings_missing">원격 터미널을 사용할 수 없습니다. AAR 0.3.6에 디렉터리 및 출력 처리 네이티브 바인딩이 없습니다.</string>
+    <string name="terminal_read_only_unavailable">읽기 전용 토큰: 이 호스트는 연결에도 terminal:operate를 요구합니다. 읽기 전용 스트림은 없습니다.</string>
+</resources>

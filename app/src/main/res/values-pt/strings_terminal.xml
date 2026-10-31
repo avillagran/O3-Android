@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Fechar</string>
+    <string name="terminal_disconnected">Desconectado. Reabra após a reconexão do host.</string>
+    <string name="terminal_bindings_missing">Terminal remoto indisponível: faltam os bindings nativos de diretório e processamento de saída no AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Token somente leitura: este host exige terminal:operate até para conectar. Não há fluxo somente leitura.</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Терминал</string>
+    <string name="terminal_close">Закрыть</string>
+    <string name="terminal_disconnected">Отключено. Откройте снова после подключения хоста.</string>
+    <string name="terminal_bindings_missing">Удалённый терминал недоступен: в AAR 0.3.6 отсутствуют нативные привязки каталога и обработки вывода.</string>
+    <string name="terminal_read_only_unavailable">Токен только для чтения: хост требует terminal:operate даже для подключения. Поток только для чтения недоступен.</string>
+</resources>

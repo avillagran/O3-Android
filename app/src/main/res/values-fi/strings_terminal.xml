@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Pääte</string>
+    <string name="terminal_close">Sulje</string>
+    <string name="terminal_disconnected">Yhteys katkennut. Avaa uudelleen isännän yhdistettyä.</string>
+    <string name="terminal_bindings_missing">Etäpääte ei ole käytettävissä: hakemiston ja tulosteen käsittelyn natiivisidokset puuttuvat AAR 0.3.6:sta.</string>
+    <string name="terminal_read_only_unavailable">Vain luku -tunniste: isäntä vaatii terminal:operate-oikeuden myös liittymiseen. Vain luku -virtaa ei ole.</string>
+</resources>

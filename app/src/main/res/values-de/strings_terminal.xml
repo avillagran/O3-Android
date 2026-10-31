@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Schließen</string>
+    <string name="terminal_disconnected">Getrennt. Nach der Hostverbindung erneut öffnen.</string>
+    <string name="terminal_bindings_missing">Remote-Terminal nicht verfügbar: Native Bindings für Verzeichnis und Ausgabeverarbeitung fehlen in AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Token mit Lesezugriff: Der Host verlangt terminal:operate auch zum Verbinden. Ein reiner Lesestream ist nicht verfügbar.</string>
+</resources>

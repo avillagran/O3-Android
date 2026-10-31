@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">ターミナル</string>
+    <string name="terminal_close">閉じる</string>
+    <string name="terminal_disconnected">切断されました。ホストの再接続後に開き直してください。</string>
+    <string name="terminal_bindings_missing">リモートターミナルを利用できません。AAR 0.3.6 にはディレクトリ解決と出力処理のネイティブバインディングがありません。</string>
+    <string name="terminal_read_only_unavailable">読み取り専用トークン：このホストは接続にも terminal:operate を要求します。読み取り専用ストリームは利用できません。</string>
+</resources>

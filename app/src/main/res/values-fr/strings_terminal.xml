@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Fermer</string>
+    <string name="terminal_disconnected">Déconnecté. Rouvrez après la reconnexion de l’hôte.</string>
+    <string name="terminal_bindings_missing">Terminal distant indisponible : les liaisons natives du répertoire et du traitement de sortie manquent dans AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Jeton en lecture seule : cet hôte exige terminal:operate même pour se connecter. Aucun flux en lecture seule disponible.</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Stäng</string>
+    <string name="terminal_disconnected">Frånkopplad. Öppna igen när värden är ansluten.</string>
+    <string name="terminal_bindings_missing">Fjärrterminal är inte tillgänglig: inbyggda bindningar för katalog och utdatahantering saknas i AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Skrivskyddad token: värden kräver terminal:operate även för anslutning. Ingen skrivskyddad ström är tillgänglig.</string>
+</resources>

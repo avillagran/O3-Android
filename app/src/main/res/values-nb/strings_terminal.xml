@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_close">Lukk</string>
+    <string name="terminal_disconnected">Frakoblet. Åpne igjen etter at verten er tilkoblet.</string>
+    <string name="terminal_bindings_missing">Ekstern terminal er utilgjengelig: native bindinger for mappe og utdatahåndtering mangler i AAR 0.3.6.</string>
+    <string name="terminal_read_only_unavailable">Skrivebeskyttet token: verten krever terminal:operate også for tilkobling. Ingen skrivebeskyttet strøm er tilgjengelig.</string>
+</resources>

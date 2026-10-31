@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P15 strings. -->
+<resources>
+    <string name="terminal_title">Terminál</string>
+    <string name="terminal_close">Zavřít</string>
+    <string name="terminal_disconnected">Odpojeno. Otevřete znovu po připojení hostitele.</string>
+    <string name="terminal_bindings_missing">Vzdálený terminál není dostupný: v AAR 0.3.6 chybí nativní vazby pro adresář a zpracování výstupu.</string>
+    <string name="terminal_read_only_unavailable">Token pouze pro čtení: hostitel vyžaduje terminal:operate i pro připojení. Proud pouze pro čtení není dostupný.</string>
+</resources>
