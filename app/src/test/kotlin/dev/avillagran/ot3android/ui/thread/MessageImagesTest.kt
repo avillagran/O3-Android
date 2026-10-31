@@ -175,6 +175,29 @@ class MessageImagesTest {
         rule.runOnIdle { assertEquals(1, reads) }
     }
 
+    @Test fun narrowInlineImageHasNoOverlayOrExtraHeight() {
+        val image = Bitmap.createBitmap(480, 52, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { image.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        image.recycle()
+        rule.setContent { Ot3Theme {
+            CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(3.4f),
+                LocalReaderImages provides ReaderImages("tray") { bytes }
+            ) {
+                Box(Modifier.requiredWidth(360.dp).testTag("tray_container")) {
+                    AttachmentImage(JSONObject().put("id", "tray").put("name", "Tray").put("source", "/tray.png"), markdown = true)
+                }
+            }
+        } }
+        rule.waitUntil(5000) { rule.onAllNodesWithContentDescription("Tray").fetchSemanticsNodes().isNotEmpty() }
+        val imageBounds = rule.onNodeWithContentDescription("Tray").fetchSemanticsNode().boundsInRoot
+        val container = rule.onNodeWithTag("tray_container").fetchSemanticsNode().boundsInRoot
+        assertEquals(133f, imageBounds.height, 0f)
+        assertEquals(imageBounds.height, container.height, 0f)
+        rule.onNodeWithTag("thread_image_copy_thumbnail").assertDoesNotExist()
+        rule.onNodeWithTag("thread_image_copy_menu").assertDoesNotExist()
+    }
+
     @Test fun inlineSamplingPreservesPhysicalDisplayPixelsWithinBudget() {
         assertEquals(1, readerInlineImageSample(962, 622, 1510))
         assertEquals(1, readerInlineImageSample(962, 622, 640))
@@ -264,14 +287,16 @@ class MessageImagesTest {
         }) { TimelineReader(JSONObject().put("timeline", org.json.JSONArray().put(row)), emptyList()) } } }
         rule.waitUntil(5000) { reads == 1 }
         rule.runOnIdle { assertEquals("unchanged", clipboard.primaryClip!!.getItemAt(0).text.toString()) }
-        rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()
+        rule.onNodeWithTag("thread_image_shot_640").performTouchInput { longClick() }
+        rule.onNodeWithTag("thread_image_copy_menu").performClick()
         rule.waitUntil(5000) { copyStarted.isCompleted }
-        rule.onNodeWithTag("thread_image_copy_thumbnail").assertIsNotEnabled()
+        rule.onNodeWithTag("thread_image_copy_menu").assertIsNotEnabled()
         rule.runOnIdle { generation = "new" }
         rule.waitForIdle()
         rule.waitUntil(5000) { cancelled.isCompleted }
         rule.runOnIdle { assertEquals("unchanged", clipboard.primaryClip!!.getItemAt(0).text.toString()) }
-        rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()
+        rule.onNodeWithTag("thread_image_shot_640").performTouchInput { longClick() }
+        rule.onNodeWithTag("thread_image_copy_menu").performClick()
         rule.waitUntil(5000) { rule.waitForIdle(); clipboard.primaryClip?.getItemAt(0)?.uri != null }
         rule.onNodeWithContentDescription("Copied!").assertIsDisplayed()
         rule.runOnIdle {
