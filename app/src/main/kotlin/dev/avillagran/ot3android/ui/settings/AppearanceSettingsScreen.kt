@@ -26,6 +26,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -35,8 +37,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
-import dev.avillagran.ot3android.core.data.prefs.RevealPace
-import dev.avillagran.ot3android.core.data.prefs.RevealStyle
 import dev.avillagran.ot3android.core.data.prefs.AppearanceMode
 import dev.avillagran.ot3android.core.theme.FallbackReason
 import dev.avillagran.ot3android.core.theme.ThemeSelection
@@ -126,30 +126,7 @@ fun AppearanceSettingsScreen(
                 }
                 Choice(stringResource(label), settings.manual.mode == mode, AppearanceSettingsTags.mode(mode)) { if (settings.followEnvironment) viewModel.setFallbackMode(mode) else viewModel.setMode(mode) }
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.ot3_home_show_provider_usage), Modifier.weight(1f))
-                Switch(checked = settings.manual.providerUsage, onCheckedChange = viewModel::setProviderUsage, modifier = Modifier.testTag("appearance_provider_usage"))
-            }
-            Header(R.string.ot3_show_and_hide)
-            RevealStyle.entries.forEach { style ->
-                val label = when (style) {
-                    RevealStyle.NEBULA -> R.string.ot3_reveal_nebula
-                    RevealStyle.WARP -> R.string.ot3_reveal_warp
-                    RevealStyle.FOLD -> R.string.ot3_reveal_fold
-                    RevealStyle.SPRING -> R.string.ot3_reveal_spring
-                    RevealStyle.INSTANT -> R.string.ot3_reveal_instant
-                }
-                Choice(stringResource(label), settings.manual.revealStyle == style, "appearance_reveal_style_${style.name}") { viewModel.setRevealStyle(style) }
-            }
-            Header(R.string.ot3_transition_speed)
-            RevealPace.entries.forEach { pace ->
-                val label = when (pace) {
-                    RevealPace.SLOW -> R.string.ot3_pace_slow
-                    RevealPace.NORMAL -> R.string.ot3_pace_normal
-                    RevealPace.FAST -> R.string.ot3_pace_fast
-                }
-                Choice(stringResource(label), settings.manual.revealPace == pace, "appearance_reveal_pace_${pace.name}") { viewModel.setRevealPace(pace) }
-            }
+            LocalAppearanceOptions(settings.manual, viewModel::setLocal, viewModel::setProviderUsage, viewModel::resetLocal)
             Header(R.string.appearance_dark_theme)
             ThemeGrid(current.darkThemes, settings.manual.darkThemeId.takeUnless { settings.manual.mode == AppearanceMode.LIGHT }, AppearanceSettingsTags::dark) { if (settings.followEnvironment) viewModel.setFallbackDarkTheme(it) else viewModel.setDarkTheme(it) }
             Header(R.string.appearance_light_theme)
@@ -233,4 +210,107 @@ private fun ThemeGrid(options: List<ManualThemeOption>, selected: String?, tag: 
             }
         }
     }
+}
+
+/** Local persisted configuration is consumed by P01/P04; animation settings survive master off. */
+@Composable
+internal fun LocalAppearanceOptions(
+    settings: dev.avillagran.ot3android.core.data.prefs.AppearanceSettings,
+    select: (dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference, String) -> Unit,
+    setProviderUsage: (Boolean) -> Unit,
+    reset: () -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val home = androidx.compose.runtime.remember(context) { dev.avillagran.ot3android.core.data.prefs.HomePreferences(context) }
+    val shelves by home.shelves.collectAsStateWithLifecycle(dev.avillagran.ot3android.core.home.ShelfState())
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var query by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    androidx.compose.material3.OutlinedTextField(
+        value = query, onValueChange = { query = it },
+        label = { Text(stringResource(R.string.preferences_search_settings)) },
+        modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("appearance_search"),
+        singleLine = true,
+    )
+    Header(R.string.preferences_local_appearance_options)
+    var matches = 0
+    localAppearanceLabels.forEach { (field, descriptor) ->
+        val label = stringResource(descriptor.label)
+        val choices = descriptor.choices.map { stringResource(it) }
+        if (preferenceMatches(query, label, *choices.toTypedArray())) {
+            matches++
+            val value = settings.localValue(field)
+            val enabled = settings.animationsEnabled || field.ordinal < dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.STARFIELD_MODE.ordinal
+            if (descriptor.choices.isEmpty()) {
+                ListItem(headlineContent = { Text(label) }, trailingContent = {
+                    Switch(value == "true", { select(field, it.toString()) }, enabled = enabled,
+                        modifier = Modifier.testTag("preference_${field.id}"))
+                })
+            } else {
+                Text(label, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.titleSmall)
+                field.choices.forEachIndexed { index, option ->
+                    ListItem(headlineContent = { Text(choices[index]) }, leadingContent = {
+                        RadioButton(value == option, null, enabled = enabled)
+                    }, modifier = Modifier.selectable(value == option, enabled = enabled, role = Role.RadioButton) {
+                        select(field, option)
+                    }.testTag("preference_${field.id}_$option"))
+                }
+            }
+        }
+    }
+    val languageLabel = stringResource(R.string.preferences_language)
+    val languageNames = preferenceLanguages.map { stringResource(it.second) }
+    if (android.os.Build.VERSION.SDK_INT >= 33 && preferenceMatches(query, languageLabel, *languageNames.toTypedArray())) {
+        matches++
+        LanguageOption(languageLabel)
+    }
+    val usageLabel = stringResource(R.string.ot3_home_show_provider_usage)
+    if (preferenceMatches(query, usageLabel)) {
+        matches++
+        ListItem(headlineContent = { Text(usageLabel) }, trailingContent = {
+            Switch(settings.providerUsage, setProviderUsage, modifier = Modifier.testTag("appearance_provider_usage"))
+        })
+    }
+    val groupingLabel = stringResource(R.string.preferences_grouping)
+    if (preferenceMatches(query, groupingLabel)) {
+        matches++
+        ListItem(headlineContent = { Text(groupingLabel) }, trailingContent = {
+            Switch(shelves.grouped, { grouped -> scope.launch { home.update { it.copy(grouped = grouped) } } },
+                modifier = Modifier.testTag("appearance_grouping"))
+        })
+    }
+    if (matches == 0) Text(stringResource(R.string.preferences_no_results), Modifier.padding(16.dp))
+    TextButton(onClick = {
+        reset()
+        scope.launch { home.update { it.copy(grouped = false) } }
+    }, modifier = Modifier.testTag("appearance_reset")) {
+        Text(stringResource(R.string.preferences_reset_appearance_options))
+    }
+}
+
+/** LocaleManager owns persistence and recreates the activity; no parallel language preference. */
+@androidx.annotation.RequiresApi(33)
+@Composable
+private fun LanguageOption(label: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val manager = context.getSystemService(android.app.LocaleManager::class.java)
+    val current = manager.applicationLocales.toLanguageTags().substringBefore(",").substringBefore("-")
+        .let { if (it == "nb") "no" else it }.ifEmpty { "system" }
+    var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    ListItem(headlineContent = { Text(label) }, trailingContent = {
+        Box {
+            TextButton(onClick = { expanded = true }, modifier = Modifier.testTag("appearance_language")) {
+                Text(stringResource(preferenceLanguages.firstOrNull { it.first == current }?.second
+                    ?: R.string.preferences_language_system))
+            }
+            androidx.compose.material3.DropdownMenu(expanded, { expanded = false }) {
+                preferenceLanguages.forEach { (id, resource) ->
+                    androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(resource)) }, onClick = {
+                        expanded = false
+                        manager.applicationLocales = if (id == "system") android.os.LocaleList.getEmptyLocaleList()
+                            else android.os.LocaleList.forLanguageTags(if (id == "no") "nb" else id)
+                    })
+                }
+            }
+        }
+    })
 }
