@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Attach files</string>
+    <string name="composer_paste">Paste</string>
+    <string name="composer_undo">Undo</string>
+    <string name="composer_redo">Redo</string>
+    <string name="composer_history">History</string>
+    <string name="composer_continue_list">Continue list</string>
+    <string name="composer_stash">Stash</string>
+    <string name="composer_project_drafts">Project drafts</string>
+    <string name="composer_quick_replies">Quick replies</string>
+    <string name="composer_build">Build</string>
+    <string name="composer_plan">Plan</string>
+    <string name="composer_implement">Implement plan</string>
+    <string name="composer_feedback">Plan feedback</string>
+    <string name="composer_opposite">Opposite delivery once</string>
+    <string name="composer_background">Send in background</string>
+    <string name="composer_send_new">Send and start new thread</string>
+    <string name="composer_remove">Remove</string>
+    <string name="composer_restore">Restore</string>
+    <string name="composer_delete">Delete</string>
+    <string name="composer_refresh">Refresh</string>
+    <string name="composer_uncertain">Send outcome unknown. Reconcile the existing command before editing or sending again.</string>
+    <string name="composer_uploading">Uploading %1$s…</string>
+    <string name="composer_upload_failed">Upload failed: %1$s</string>
+    <string name="composer_attachment_count">Attachments: %1$d</string>
+</resources>

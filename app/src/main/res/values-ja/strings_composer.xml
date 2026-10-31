@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">ファイルを添付</string>
+    <string name="composer_paste">貼り付け</string>
+    <string name="composer_undo">元に戻す</string>
+    <string name="composer_redo">やり直す</string>
+    <string name="composer_history">履歴</string>
+    <string name="composer_continue_list">リストを続ける</string>
+    <string name="composer_stash">下書きを保存</string>
+    <string name="composer_project_drafts">プロジェクトの下書き</string>
+    <string name="composer_quick_replies">クイック返信</string>
+    <string name="composer_build">実装</string>
+    <string name="composer_plan">計画</string>
+    <string name="composer_implement">計画を実行</string>
+    <string name="composer_feedback">計画への意見</string>
+    <string name="composer_opposite">今回のみ別の送信方法</string>
+    <string name="composer_background">バックグラウンドで送信</string>
+    <string name="composer_send_new">送信して新しいスレッドを開始</string>
+    <string name="composer_remove">取り除く</string>
+    <string name="composer_restore">復元</string>
+    <string name="composer_delete">削除</string>
+    <string name="composer_refresh">更新</string>
+    <string name="composer_uncertain">送信結果が不明です。編集や再送信の前に既存のコマンドを確認してください。</string>
+    <string name="composer_uploading">%1$s をアップロード中…</string>
+    <string name="composer_upload_failed">アップロード失敗: %1$s</string>
+    <string name="composer_attachment_count">添付ファイル: %1$d</string>
+</resources>
