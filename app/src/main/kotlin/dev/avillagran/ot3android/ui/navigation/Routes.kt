@@ -125,3 +125,16 @@ data class SnoozeUntilSheet(val environmentId: String, val threadId: String)
 
 @kotlinx.serialization.Serializable
 data class QuotaLimits(val environmentId: String? = null)
+
+@Serializable
+data object GeneralPreferences
+@Serializable
+data object ConnectionsPreferences
+@Serializable
+data class ProjectPreferences(val environmentId: String? = null, val projectId: String? = null)
+
+@Serializable
+data object SourceControlPreferences
+
+@Serializable
+data object ProvidersPreferences

@@ -323,10 +323,22 @@ class Ot3NavigationTest {
     }
 
     @Test
+    fun parityPagesDispatchAndChangesKeepTheirHostAndThread() {
+        launch()
+        onUi { navigator.selectTab(TopTab.Settings) }
+        listOf(GeneralPreferences to "general", ConnectionsPreferences to "connections", ProjectPreferences("e2", "p2") to "projects_e2_p2").forEach { (route, tag) ->
+            onUi { navigator.push(route) }
+            composeRule.onNodeWithTag("fake_$tag").assertIsDisplayed()
+            pressBack()
+        }
+        onUi { navigator.selectTab(TopTab.Chats); navigator.push(ThreadChanges("e2", "t2", "working-tree")) }
+        composeRule.onNodeWithTag("fake_changes_e2_t2").assertIsDisplayed()
+    }
+
+    @Test
     fun everyUnbuiltDestinationRoutesToThePlaceholder() {
         launch()
         listOf(
-            ThreadChanges("e1", "t1", "turn") to "ThreadChanges",
             AddProject() to "AddProject",
             CommandPalette to "CommandPalette",
         ).forEach { (route, name) ->
@@ -350,6 +362,11 @@ class Ot3NavigationTest {
 
 /** Screens that only show where navigation went; Home is the real stateless screen. */
 private class FakeScreens : Ot3Screens {
+    @Composable override fun GeneralPreferences() { Tagged("fake_general") }
+    @Composable override fun ConnectionsPreferences() { Tagged("fake_connections") }
+    @Composable override fun ProjectPreferences(route: ProjectPreferences) { Tagged("fake_projects_${route.environmentId}_${route.projectId}") }
+    @Composable override fun Changes(route: ThreadChanges) { Tagged("fake_changes_${route.environmentId}_${route.threadId}") }
+
     var query by mutableStateOf("")
 
     @Composable override fun Usage(initialTab: String, environmentId: String?) {

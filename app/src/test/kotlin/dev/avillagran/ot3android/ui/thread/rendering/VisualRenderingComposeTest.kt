@@ -27,7 +27,7 @@ import java.io.ByteArrayOutputStream
 class VisualRenderingComposeTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
-    @Test fun codeCopyIsExactAndPreviewToggleIsExplicit() {
+    @Test fun codeCopyIsExactAndUnsupportedPreviewIsHidden() {
         var copied: (() -> String?)? = null
         val code = "graph TD; A[\"<literal>\"]-->B\n"
         rule.setContent { Ot3Theme {
@@ -37,10 +37,7 @@ class VisualRenderingComposeTest {
         } }
         rule.onNodeWithTag("thread_copy_code_3").performClick()
         rule.runOnIdle { assertEquals(code, copied?.invoke()) }
-        rule.onNodeWithTag("visual_toggle_3").performClick()
-        rule.onNodeWithText("Visual renderer unavailable").assertExists()
-        rule.onNodeWithTag("thread_code_3").assertDoesNotExist()
-        rule.onNodeWithTag("visual_toggle_3").performClick()
+        rule.onNodeWithTag("visual_toggle_3").assertDoesNotExist()
         rule.onNodeWithTag("thread_code_3").assertExists()
     }
     @Test fun streamingNeverOffersPreviewOrRun() {

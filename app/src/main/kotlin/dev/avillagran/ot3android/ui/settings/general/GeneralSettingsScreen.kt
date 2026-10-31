@@ -41,7 +41,7 @@ fun GeneralSettingsScreen(
     val page = remember(state.page) { JSONObject(state.page) }
     var localError by remember { mutableStateOf(false) }
     val serverFields = page.optJSONArray("fields").objects().filter { it.optString("key") in GeneralSettingsFields.keys }
-    val localFields = clientPreferences.fields(client).objects()
+    val localFields = clientPreferences.fields(client).objects().filter { it.optString("key") != "planModeEnabled" }
     // Never show a stale scope while LaunchedEffect is waiting to run.
     val current = state.scope == signature
     val writable = current && !state.busy && !state.failed && page.optBoolean("writable")

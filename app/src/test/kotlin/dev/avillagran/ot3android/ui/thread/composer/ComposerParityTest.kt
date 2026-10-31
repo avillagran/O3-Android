@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.TextRange
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.avillagran.ot3android.core.composer.*
+import dev.avillagran.ot3android.ui.thread.ComposerEditor
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.junit.Assert.*
 import org.junit.Rule
@@ -24,6 +25,27 @@ class ComposerParityTest {
     private val scope = ComposerScope("host", "project", "thread")
     private fun initial() = ComposerSnapshot(scope, text = "Look at the file", selection = ComposerSelection(16, 16),
         attachments = listOf(ComposerAttachment("file", "notes.md", UploadStatus.Ready, "descriptor")))
+    @Test fun losingFocusPublishesCommittedCompositionWithoutChangingText() {
+        val editor = dev.avillagran.ot3android.ui.thread.ComposerEditorState("Compose")
+        lateinit var focus: androidx.compose.ui.focus.FocusManager
+        var committed: androidx.compose.ui.text.input.TextFieldValue? = null
+        rule.setContent { Ot3Theme {
+            focus = androidx.compose.ui.platform.LocalFocusManager.current
+            ComposerEditor(editor, false, false, false, { _, _ -> }, {}, {}, onEditorValue = { committed = it })
+        } }
+        rule.onNodeWithTag("thread_composer").performClick()
+        rule.runOnIdle {
+            editor.edit(androidx.compose.ui.text.input.TextFieldValue("Compose", TextRange(1, 5), TextRange(0, 7)))
+            committed = null
+        }
+        rule.runOnIdle { focus.clearFocus(force = true) }
+        rule.runOnIdle {
+            assertNotNull("Blur must notify the owner, not just clear the local range", committed)
+            assertEquals("Compose", committed!!.text)
+            assertNull(committed!!.composition)
+        }
+    }
+
     @Test fun selectionAndChipsSurviveSavedStateRestoration() {
         val session = ComposerSession(initial()); var state by mutableStateOf(session.snapshot)
         val restoration = StateRestorationTester(rule)

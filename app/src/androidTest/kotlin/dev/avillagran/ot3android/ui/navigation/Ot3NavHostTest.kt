@@ -34,7 +34,8 @@ class Ot3NavHostTest {
         composeRule.setContent { Ot3Theme { Ot3NavHost() } }
 
         composeRule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
-        composeRule.onNodeWithTag(SettingsTags.entry(SettingsEntry.Environments)).performClick()
+        composeRule.onNodeWithTag("settings_page_connections").performClick()
+        composeRule.onNodeWithTag("connections_environments").performClick()
         composeRule.onNodeWithTag(EnvironmentsScreenTags.ROOT).assertIsDisplayed()
         composeRule.onNodeWithTag(EnvironmentsScreenTags.ADD).assertIsDisplayed()
     }

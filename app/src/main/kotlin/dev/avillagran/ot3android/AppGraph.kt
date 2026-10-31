@@ -1,5 +1,7 @@
 package dev.avillagran.ot3android
 
+import kotlinx.coroutines.flow.asStateFlow
+
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -47,10 +49,39 @@ import kotlinx.coroutines.sync.withLock
  */
 class AppGraph(
     context: Context,
-    val transportFactory: T3TransportFactory = NativeT3TransportFactory(),
+    val transportFactory: T3TransportFactory = T3TransportFactory { ConnectedAppTransport() },
 ) {
-    val providerRefreshGate = dev.avillagran.ot3android.ui.usage.ProviderRefreshGate()
     private val appContext = context.applicationContext
+    val gitJournal by lazy { dev.avillagran.ot3android.core.git.GitJournal(appContext.noBackupFilesDir.resolve("git-journal-v1")) }
+    init {
+        // El grafo se crea antes de aceptar selecciones; limpia archivos de procesos interrumpidos.
+        appContext.cacheDir.listFiles { file -> file.name.startsWith("composer-") && file.name.endsWith(".upload") }?.forEach { it.delete() }
+    }
+    private val threadMenuOwners = mutableMapOf<String, Pair<dev.avillagran.ot3android.core.transport.T3Transport, dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations>>()
+    @Synchronized fun threadMenuOwner(environment: String, thread: String, transport: dev.avillagran.ot3android.core.transport.T3Transport): dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations {
+        val key = org.json.JSONArray().put(environment).put(thread).toString()
+        val previous = threadMenuOwners[key]
+        if (previous != null && (previous.first === transport || previous.second.state.value.retryCommandId != null)) return previous.second
+        return dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations(transport, messageSender).also { threadMenuOwners[key] = transport to it }
+    }
+    private val diffPreferences by lazy { appContext.getSharedPreferences("diff-review", Context.MODE_PRIVATE) }
+    private val mutableDiffSettings by lazy { kotlinx.coroutines.flow.MutableStateFlow(dev.avillagran.ot3android.ui.git.DiffReviewSettings(
+        diffPreferences.getBoolean("split", false), diffPreferences.getBoolean("wrap", true), diffPreferences.getBoolean("context", true))) }
+    val diffReviewSettings by lazy { mutableDiffSettings.asStateFlow() }
+    fun setDiffReviewSettings(settings: dev.avillagran.ot3android.ui.git.DiffReviewSettings) {
+        check(diffPreferences.edit().putBoolean("split", settings.split).putBoolean("wrap", settings.wordWrap).putBoolean("context", settings.showContext).commit())
+        mutableDiffSettings.value = settings
+    }
+    private val readerPreferences by lazy { appContext.getSharedPreferences("reader-preferences", Context.MODE_PRIVATE) }
+    private val mutableMathRendering by lazy { kotlinx.coroutines.flow.MutableStateFlow(readerPreferences.getBoolean("math", true)) }
+    val mathRenderingEnabled by lazy { mutableMathRendering.asStateFlow() }
+    fun setMathRenderingEnabled(enabled: Boolean) {
+        check(readerPreferences.edit().putBoolean("math", enabled).commit())
+        mutableMathRendering.value = enabled
+    }
+    val generalClientPreferences by lazy { dev.avillagran.ot3android.core.settings.GeneralClientPreferences(appContext) }
+    val scopedSettings by lazy { dev.avillagran.ot3android.core.settings.ScopedSettings(connections = dev.avillagran.ot3android.core.settings.SettingsConnections { id -> connectionManager.supervisor(id)?.connection?.value?.transport }) }
+    val providerRefreshGate = dev.avillagran.ot3android.ui.usage.ProviderRefreshGate()
     val applicationContext: Context get() = appContext
 
     /**
@@ -214,4 +245,15 @@ class AppGraph(
             return if (model.isEmpty()) "ot3-Android" else "ot3-Android · $model"
         }
     }
+}
+
+/** One handle per supervisor: binary uploads use the same authenticated session as RPCs. */
+class ConnectedAppTransport private constructor(
+    val nativeClient: dev.avillagran.t3.T3Client,
+    private val delegate: dev.avillagran.ot3android.core.transport.NativeT3Transport,
+) : dev.avillagran.ot3android.core.transport.T3Transport by delegate,
+    dev.avillagran.ot3android.ui.thread.composer.ComposerBinaryUpload {
+    constructor(client: dev.avillagran.t3.T3Client = dev.avillagran.t3.T3Client()) : this(client, dev.avillagran.ot3android.core.transport.NativeT3Transport(client))
+    override suspend fun upload(fd: Int, name: String, mimeType: String, sizeBytes: Long): org.json.JSONObject =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { nativeClient.upload(fd, name, mimeType, sizeBytes) }
 }

@@ -33,6 +33,7 @@ internal fun VisualCodeBlock(block: JSONObject, index: Int, streaming: Boolean =
     val kind = when (language.lowercase()) { "mermaid" -> VisualKind.Mermaid; "qml" -> VisualKind.Qml; else -> null }
     var preview by remember(code, language) { mutableStateOf(false) }
     val actions = LocalCodeActions.current
+    val supported = LocalVisualRenderer.current.availability != VisualAvailability.Unsupported
     Surface(color = Ot3Theme.colors.surface, shape = RoundedCornerShape(10.dp)) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -40,7 +41,7 @@ internal fun VisualCodeBlock(block: JSONObject, index: Int, streaming: Boolean =
                 CopyText(code, "code_$index")
             }
             Row {
-                if (kind != null && !streaming) TextButton(onClick = { preview = !preview }, modifier = Modifier.testTag("visual_toggle_$index")) {
+                if (kind != null && !streaming && supported) TextButton(onClick = { preview = !preview }, modifier = Modifier.testTag("visual_toggle_$index")) {
                     Text(stringResource(if (preview) R.string.ot3_render_show_code else R.string.ot3_render_show_preview))
                 }
                 if (actions.run != null && block.opt("command") is String && !streaming) TextButton(onClick = { actions.run.invoke(block) }) {

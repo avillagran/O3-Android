@@ -8,7 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import androidx.lifecycle.viewModelScope
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import dev.avillagran.ot3android.debug.workspace.WorkspaceFixtureActivity
@@ -84,9 +84,13 @@ class PullRequestsReturnDeviceTest {
     }
     private fun waitForPosition(scenario: ActivityScenario<WorkspaceFixtureActivity>, expected: Pair<Int, Int>) {
         var actual: Pair<Int, Int>? = null
-        rule.waitUntil(15_000) {
-            scenario.onActivity { activity -> activity.fixture.prListState?.let { actual = it.firstVisibleItemIndex to it.firstVisibleItemScrollOffset } }
-            actual == expected
+        try {
+            rule.waitUntil(15_000) {
+                scenario.onActivity { activity -> activity.fixture.prListState?.let { actual = it.firstVisibleItemIndex to it.firstVisibleItemScrollOffset } }
+                actual == expected
+            }
+        } catch (error: androidx.compose.ui.test.ComposeTimeoutException) {
+            throw AssertionError("Expected PR anchor $expected, actual $actual", error)
         }
         assertEquals(expected, actual)
     }

@@ -51,3 +51,10 @@ internal fun bounce(t: Float): Float = when {
     t < 2.5f/2.75f -> { val u=t-2.25f/2.75f; 7.5625f*u*u+.9375f }
     else -> { val u=t-2.625f/2.75f; 7.5625f*u*u+.984375f }
 }
+
+/** P02 preferences and the effective system motion policy feed the production header. */
+internal fun homeBrandConfig(settings: dev.avillagran.ot3android.core.data.prefs.AppearanceSettings, motionOff: Boolean) = O3BrandConfig(
+    glyph = if (settings.brandGlyph == "omarchy") O3BrandGlyph.OMARCHY else O3BrandGlyph.O,
+    sober = settings.sidebarStyle != "vivid",
+    reducedMotion = !settings.animationsEnabled || motionOff,
+)

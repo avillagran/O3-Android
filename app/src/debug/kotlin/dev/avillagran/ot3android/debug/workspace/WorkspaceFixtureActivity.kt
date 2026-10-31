@@ -125,9 +125,10 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                                 fixture.drafts, fixture.outbox, fixture.sender, fixture.viewModelScope,
                                 preferences = if (fixture.caching) (application as dev.avillagran.ot3android.Ot3Application).graph.composerPreferences else null,
                                 threadCache = fixture.cache,
-                                cacheAuthority = { "fixture-server" })
+                                cacheAuthority = { "fixture-server" },
+                                attachmentDirectory = if (intent.getBooleanExtra("parity", false)) noBackupFilesDir.resolve("fixture-composer-attachments") else null)
                         }
-                        ThreadScreen(vm, { navigator.back() }, quotaStrip = {
+                        ThreadScreen(vm, { navigator.back() }, onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) }, quotaStrip = {
                             dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, false, fixture.quotas, fixture.repository.environments,
                                 onOpenLimits = { navigator.push(dev.avillagran.ot3android.ui.navigation.QuotaLimits(route.environmentId)) })
                         })

@@ -16,6 +16,19 @@ import org.junit.Test
 class SettingsNavigationDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
 
+    @Test fun providersContributionOpensFromProductionSettingsAndReturns() {
+        ActivityScenario.launch(dev.avillagran.ot3android.MainActivity::class.java).use {
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(NavTags.tab(TopTab.Settings)).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+            rule.onNodeWithTag("settings_page_providers").performScrollTo().performClick()
+            rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+            rule.onAllNodesWithText("All environments").onFirst().assertIsDisplayed()
+            rule.onNodeWithText("All projects").assertDoesNotExist()
+            rule.onNodeWithText("Back").performClick()
+            rule.onNodeWithTag(SettingsTags.ROOT).assertIsDisplayed()
+        }
+    }
+
     @Test fun settingsAndNestedPagesHaveBackWithoutFooter() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->
@@ -26,12 +39,20 @@ class SettingsNavigationDeviceTest {
             // P02 exposes delivered pages only; placeholders must not become dead navigation.
             rule.onNodeWithTag("settings_Archive").assertDoesNotExist()
             rule.onNodeWithTag("settings_Licenses").assertDoesNotExist()
-            listOf("Appearance", "Notifications", "Environments", "Usage").forEach { page ->
+            listOf("Appearance", "Notifications", "Usage").forEach { page ->
                 rule.onNodeWithTag("settings_$page").performScrollTo().performClick()
                 rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
                 val back = hasContentDescription("Back") or hasText("Back")
                 try { rule.waitUntil(10_000) { rule.onAllNodes(back).fetchSemanticsNodes().isNotEmpty() } }
                 catch (error: Throwable) { throw AssertionError("Page $page: " + rule.onRoot().printToString(), error) }
+                rule.onAllNodes(back).onFirst().performClick()
+                rule.onNodeWithTag(SettingsTags.ROOT).assertIsDisplayed()
+            }
+            listOf("general", "projects", "connections", "source-control").forEach { page ->
+                rule.onNodeWithTag("settings_page_$page").performScrollTo().performClick()
+                rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+                val back = hasText("Back") or hasContentDescription("Back")
+                rule.waitUntil(10_000) { rule.onAllNodes(back).fetchSemanticsNodes().isNotEmpty() }
                 rule.onAllNodes(back).onFirst().performClick()
                 rule.onNodeWithTag(SettingsTags.ROOT).assertIsDisplayed()
             }
