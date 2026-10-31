@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P13 connection and invitation safety copy. -->
+<resources>
+    <string name="connections_title">Connexions</string>
+    <string name="connections_peer_review">Vérifiez l’identifiant complet du pair avant l’association.</string>
+    <string name="connections_all_hosts_warning">Cette invitation peut autoriser l’accès à tous les hôtes. Vérifiez sa portée avec son émetteur avant de continuer.</string>
+    <string name="connections_peer_confirm">J’ai vérifié cet identifiant exact et j’accepte la portée de l’accès.</string>
+    <string name="connections_pair_pending">L’approbation reste sur l’hôte autorisé. Importez à nouveau l’invitation après approbation.</string>
+    <string name="connections_host_authority">Ce SDK mobile ne permet pas l’administration. Gérez les routes, le partage, les clients, le cloud, le réseau, la publication, le consentement, les passerelles, le relais et l’installation sur l’hôte autorisé.</string>
+    <string name="connections_local_id">ID de cet appareil</string>
+    <string name="connections_bridge_id">ID du pont sélectionné</string>
+</resources>

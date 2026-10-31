@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P13 connection and invitation safety copy. -->
+<resources>
+    <string name="connections_title">连接</string>
+    <string name="connections_peer_review">配对前请核对完整的对等端 ID。</string>
+    <string name="connections_all_hosts_warning">此邀请可能允许访问所有主机。继续前请与签发者确认访问范围。</string>
+    <string name="connections_peer_confirm">我已核对这一准确的对等端 ID，并接受访问范围。</string>
+    <string name="connections_pair_pending">审批须在有权限的主机上进行。批准后请重新导入邀请。</string>
+    <string name="connections_host_authority">此移动 SDK 不提供管理功能。请在有权限的主机上管理路由、共享、客户端、云、网络、发布、同意、网关、中继和安装。</string>
+    <string name="connections_local_id">此设备 ID</string>
+    <string name="connections_bridge_id">所选网桥 ID</string>
+</resources>
