@@ -39,18 +39,17 @@ internal fun MarkdownTable(block: JSONObject, index: Int) {
                         val cells = if (row == -1) header else rows.optJSONArray(row) ?: JSONArray()
                         Row(Modifier.height(IntrinsicSize.Min)) {
                             for (column in 0 until columns) {
-                                Text(
-                                    inlineSpans(cells.optJSONArray(column)),
-                                    modifier = Modifier.width(columnWidth).padding(horizontal = 12.dp, vertical = 7.dp),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (row == -1) FontWeight.Bold else FontWeight.Normal,
-                                    textAlign = when (alignments?.optString(column)) {
-                                        "center" -> TextAlign.Center
-                                        "right" -> TextAlign.Right
-                                        else -> TextAlign.Left
-                                    },
-                                )
+                                Box(Modifier.width(columnWidth).padding(horizontal = 12.dp, vertical = 7.dp)) {
+                                    MarkdownInlineContent(cells.optJSONArray(column), style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 12.sp,
+                                        fontWeight = if (row == -1) FontWeight.Bold else FontWeight.Normal,
+                                        textAlign = when (alignments?.optString(column)) {
+                                            "center" -> TextAlign.Center
+                                            "right" -> TextAlign.Right
+                                            else -> TextAlign.Left
+                                        },
+                                    ))
+                                }
                             }
                         }
                         HorizontalDivider(Modifier.width(columnWidth * columns), color = Ot3Theme.colors.divider)

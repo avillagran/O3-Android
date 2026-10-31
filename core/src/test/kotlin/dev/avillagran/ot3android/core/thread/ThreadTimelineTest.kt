@@ -24,6 +24,20 @@ import org.junit.Test
  */
 class ThreadTimelineTest {
 
+    @Test fun markdownImagesParseInsideListsTablesAndReferenceSyntax() = runBlocking {
+        val source = "Before\n\n![Controlando el otro equipo](/home/avillagran/Work/gliff-fork.VaT72V/.github/assets/screenshots/control-driving.png)\n\n- ![List](assets/list.png)\n\n| Image |\n| --- |\n| ![Table](table.png) |\n\n![Again][ref]\n\n[ref]: file:///tmp/second.png"
+        val blocks = domain.domain("markdown.blocks", JSONObject().put("markdown", source)) as JSONArray
+        val image = blocks.getJSONObject(1)
+        assertEquals("image", image.getString("type"))
+        assertEquals("Controlando el otro equipo", image.getString("alt"))
+        assertTrue(image.getString("id").startsWith("markdown-"))
+        assertEquals("assets/list.png", blocks.getJSONObject(2).getJSONArray("items").getJSONObject(0)
+            .getJSONArray("blocks").getJSONObject(0).getString("url"))
+        assertEquals("table.png", blocks.getJSONObject(3).getJSONArray("rows").getJSONArray(0)
+            .getJSONArray(0).getJSONObject(0).getString("url"))
+        assertEquals("file:///tmp/second.png", blocks.getJSONObject(4).getString("url"))
+    }
+
     private val domain = TestDomain
 
     @Before

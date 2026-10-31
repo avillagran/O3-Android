@@ -264,4 +264,5 @@
     <string name="ot3_new_chat_title">Název vlákna</string>
     <string name="ot3_new_chat_no_projects">Nenalezeny žádné projekty</string>
     <string name="ot3_new_chat_current_checkout">Aktuální pracovní kopie</string>
+    <string name="ot3_image_label">Obrázek</string>
 </resources>

@@ -431,7 +431,20 @@ class ThreadViewModel(
     suspend fun readImage(attachment: org.json.JSONObject): ByteArray? {
         val owner = supervisor.value ?: return null
         val current = owner.connection.value ?: return null
-        val bytes = current.transport.image(attachment.getString("id"), attachment.optString("name"), attachment.getString("mimeType"))
+        val source = attachment.optString("source")
+        val playable = source.isEmpty() && dev.avillagran.ot3android.core.thread.MessageMedia.mime(attachment.optString("name"), attachment.optString("mimeType")) != null
+        val bytes = if (playable) {
+            current.transport.mediaAttachment(attachment.getString("id"), attachment.optString("name"), attachment.optString("mimeType"))
+        } else if (source.isEmpty()) {
+            current.transport.image(attachment.getString("id"), attachment.optString("name"), attachment.getString("mimeType"))
+        } else if (dev.avillagran.ot3android.core.thread.PublicMarkdownImage.isPublic(source)) {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                dev.avillagran.ot3android.core.thread.PublicMarkdownImage.read(source)
+            }
+        } else {
+            current.transport.mediaImage(threadId, dev.avillagran.ot3android.core.thread.MarkdownImageSource.hostPath(source))
+        }
+        if (!playable) dev.avillagran.ot3android.core.thread.PublicMarkdownImage.mime(bytes)
         return bytes.takeIf { supervisor.value === owner && owner.connection.value === current }
     }
 

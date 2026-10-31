@@ -50,23 +50,33 @@ internal data class ReaderImages(val generation: Any?, val isCurrent: () -> Bool
 private val imageReads = Semaphore(2)
 internal val LocalReaderImages = compositionLocalOf { ReaderImages(null) { null } }
 
-/** Only native attachment descriptors enter the binary image API; sources/URLs never do. */
+/** Attachments and Markdown share the bounded reader, viewer and clipboard. */
 @Composable
 internal fun MessageAttachments(row: JSONObject) {
     row.optJSONArray("attachments").objects().forEach { attachment ->
         if (attachment.optString("type") == "image") AttachmentImage(attachment)
-        else Text(attachment.optString("name"), style = MaterialTheme.typography.bodySmall)
+        else if (dev.avillagran.ot3android.core.thread.MessageMedia.mime(attachment.optString("name"), attachment.optString("mimeType")) != null) {
+            val open = LocalOpenReaderImage.current
+            TextButton(onClick = { open(attachment) }) { Text(attachment.optString("name")) }
+        } else Text(attachment.optString("name"), style = MaterialTheme.typography.bodySmall)
     }
 }
 
 /** Bounds are read before decoding. Neither compressed bytes nor full-size pixels are cached. */
-internal fun decodeReaderImage(bytes: ByteArray, maxEdge: Int): Bitmap {
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-    require(bounds.outWidth > 0 && bounds.outHeight > 0) { "image_decode_failed" }
+internal fun decodeReaderImage(bytes: ByteArray, maxEdge: Int, onNaturalWidth: (Int) -> Unit = {}): Bitmap {
+    val bounds = readerImageBounds(bytes, 40_000_000)
+    onNaturalWidth(bounds.outWidth)
     val sample = readerImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
     val options = BitmapFactory.Options().apply { inSampleSize = sample }
     return requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)) { "image_decode_failed" }
+}
+
+private fun readerImageBounds(bytes: ByteArray, pixelLimit: Long): BitmapFactory.Options {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    require(bounds.outWidth > 0 && bounds.outHeight > 0) { "image_decode_failed" }
+    require(bounds.outWidth.toLong() * bounds.outHeight <= pixelLimit) { "invalid_image" }
+    return bounds
 }
 
 internal fun readerImageSample(width: Int, height: Int, maxEdge: Int): Int {
@@ -80,15 +90,16 @@ internal fun readerImageSample(width: Int, height: Int, maxEdge: Int): Int {
 internal val LocalOpenReaderImage = compositionLocalOf<(JSONObject) -> Unit> { {} }
 
 @Composable
-private fun AttachmentImage(attachment: JSONObject) {
+internal fun AttachmentImage(attachment: JSONObject, markdown: Boolean = false) {
     val source = LocalReaderImages.current
     val open = LocalOpenReaderImage.current
     val lifecycle by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
     if (!lifecycle.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return
     key(attachment.toString(), source.generation) {
-        Box(Modifier.size(220.dp, 160.dp)) {
+        var naturalWidth by remember { mutableIntStateOf(0) }
+        Box(if (markdown) Modifier.widthIn(max = if (naturalWidth > 0) naturalWidth.dp else androidx.compose.ui.unit.Dp.Infinity).fillMaxWidth() else Modifier.size(220.dp, 160.dp)) {
             ImageRead(attachment, attachment.toString(), source, 640,
-                Modifier.size(220.dp, 160.dp).clickable(onClickLabel = attachment.optString("name")) { open(attachment) })
+                (if (markdown) Modifier.fillMaxWidth() else Modifier.size(220.dp, 160.dp)).clickable(onClickLabel = attachment.optString("name")) { open(attachment) }, onNaturalWidth = { naturalWidth = it })
             Box(Modifier.align(Alignment.TopEnd)) {
                 ImageCopyButton(attachment, source, "thumbnail", Modifier
                     .background(Ot3Theme.colors.surface.copy(alpha = 0.95f), RoundedCornerShape(6.dp)))
@@ -99,6 +110,10 @@ private fun AttachmentImage(attachment: JSONObject) {
 
 @Composable
 internal fun ReaderImageDialog(attachment: JSONObject, close: () -> Unit) {
+    if (!attachment.has("source") && dev.avillagran.ot3android.core.thread.MessageMedia.mime(attachment.optString("name"), attachment.optString("mimeType")) != null) {
+        ReaderMediaDialog(attachment, close)
+        return
+    }
     val source = LocalReaderImages.current
     val owner = source.owner ?: LocalSelectedThreadKey.current
     val savedIdentity = org.json.JSONArray().put(attachment.toString()).put(owner)
@@ -130,17 +145,20 @@ internal fun ReaderImageDialog(attachment: JSONObject, close: () -> Unit) {
 }
 
 @Composable
-private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null) {
+private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}) {
     var retry by remember(identity, source.generation) { mutableIntStateOf(0) }
     var complete by remember(identity, source.generation, retry) { mutableStateOf(false) }
     val bitmap by produceState<Bitmap?>(null, identity, source.generation, retry) {
         try {
+            var naturalWidth = 0
             val decoded = if (source.generation == null) null else imageReads.withPermit {
                 val bytes = source.read(attachment)
-                if (bytes == null) null else withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge) }
+                if (bytes == null) null else withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge) { naturalWidth = it } }
             }
             // Native callbacks may resume on a worker. Publish Compose/Bitmap state on Main.
-            withContext(Dispatchers.Main.immediate) { if (source.isCurrent()) value = decoded }
+            withContext(Dispatchers.Main.immediate) {
+                if (source.isCurrent()) { onNaturalWidth(naturalWidth); value = decoded }
+            }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { /* Native validation/decode failure: an explicit retry starts a new read. */ }
         finally { withContext(Dispatchers.Main.immediate) { complete = true } }
@@ -148,13 +166,16 @@ private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderIm
     Surface(shape = RoundedCornerShape(8.dp), modifier = modifier.testTag("thread_image_${attachment.optString("id")}_$maxEdge"), color = MaterialTheme.colorScheme.surfaceVariant) {
         val decoded = bitmap
         if (decoded != null) {
-            if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, modifier = if (attachment.has("source")) Modifier.fillMaxWidth().aspectRatio(decoded.width.toFloat() / decoded.height) else Modifier.fillMaxSize())
             else ZoomedReaderImage(decoded, attachment.optString("name"), zoom)
         }
         else Column(Modifier.padding(12.dp)) {
             Text(attachment.optString("name"), style = MaterialTheme.typography.bodySmall)
             if (!complete) Ot3Spinner(size = 16.dp)
-            else TextButton(onClick = { retry++ }) { Text(stringResource(R.string.ot3_dialog_retry)) }
+            else {
+                Text(stringResource(R.string.ot3_usage_unavailable), color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = { retry++ }) { Text(stringResource(R.string.ot3_dialog_retry)) }
+            }
         }
     }
 }
@@ -178,7 +199,8 @@ private fun ImageCopyButton(attachment: JSONObject, source: ReaderImages, locati
                 try {
                     imageReads.withPermit {
                         val bytes = requireNotNull(source.read(attachment))
-                        ImageClipboard.copy(context, bytes, attachment.getString("mimeType"), label) {
+                        withContext(Dispatchers.Default) { readerImageBounds(bytes, 16_000_000) }
+                        ImageClipboard.copy(context, bytes, attachment.optString("mimeType").ifEmpty { dev.avillagran.ot3android.core.thread.PublicMarkdownImage.mime(bytes) }, label) {
                             latest.generation == source.generation && source.isCurrent()
                         }
                     }
@@ -219,5 +241,65 @@ private fun ZoomedReaderImage(bitmap: Bitmap, name: String, zoom: ReaderImageZoo
                 scaleX = zoom.scale; scaleY = zoom.scale
                 translationX = zoom.translation.x; translationY = zoom.translation.y
             })
+    }
+}
+
+/** Media uses the same authenticated reader and dialog owner; only the decoder is platform media. */
+@Composable
+private fun ReaderMediaDialog(attachment: JSONObject, close: () -> Unit) {
+    val source = LocalReaderImages.current
+    val context = LocalContext.current
+    val lifecycle by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+    if (!lifecycle.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return
+    var retry by remember(attachment.toString(), source.generation) { mutableIntStateOf(0) }
+    var failed by remember(attachment.toString(), source.generation, retry) { mutableStateOf(false) }
+    var prepared by remember(attachment.toString(), source.generation, retry) { mutableStateOf(false) }
+    val file by produceState<java.io.File?>(null, attachment.toString(), source.generation, retry) {
+        var created: java.io.File? = null
+        try {
+            val bytes = imageReads.withPermit { requireNotNull(source.read(attachment)) }
+            require(bytes.isNotEmpty() && bytes.size <= 50 * 1024 * 1024 && source.isCurrent())
+            withContext(Dispatchers.IO) {
+                val directory = java.io.File(context.cacheDir, "reader-media").apply { check(mkdirs() || isDirectory) }
+                created = java.io.File.createTempFile("media-", ".bin", directory)
+                created!!.outputStream().use { it.write(bytes) }
+            }
+            if (source.isCurrent()) value = created
+            kotlinx.coroutines.awaitCancellation()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { failed = true }
+        finally {
+            withContext(kotlinx.coroutines.NonCancellable + Dispatchers.IO) { created?.delete() }
+        }
+    }
+    Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(attachment.optString("name"), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    TextButton(onClick = close) { Text(stringResource(R.string.ot3_dialog_close)) }
+                }
+                if (failed) TextButton(onClick = { retry++ }) { Text(stringResource(R.string.ot3_dialog_retry)) }
+                else {
+                    if (!prepared) Ot3Spinner(size = 16.dp)
+                    file?.let { local ->
+                        key(local.path) {
+                            androidx.compose.ui.viewinterop.AndroidView(
+                                modifier = Modifier.fillMaxWidth().weight(1f),
+                                factory = { viewContext ->
+                                    android.widget.VideoView(viewContext).apply {
+                                        setMediaController(android.widget.MediaController(viewContext).also { it.setAnchorView(this) })
+                                        setOnPreparedListener { prepared = true; start() }
+                                        setOnErrorListener { _, _, _ -> failed = true; true }
+                                        setVideoURI(android.net.Uri.fromFile(local))
+                                    }
+                                },
+                                onRelease = { it.stopPlayback() },
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

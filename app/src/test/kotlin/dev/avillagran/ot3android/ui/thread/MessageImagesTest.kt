@@ -25,6 +25,45 @@ class MessageImagesTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
     private val row = JSONObject("""{"id":"prompt","role":"user","text":"Revisa la captura","attachments":[{"id":"shot","name":"Captura.png","type":"image","mimeType":"image/png"}]}""")
 
+    @Test fun markdownImagesInListsTablesAndTextReuseTheReaderAndViewer() {
+        val bitmap = Bitmap.createBitmap(100, 20, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        bitmap.recycle()
+        val destinations = mutableSetOf<String>()
+        val blocks = org.json.JSONArray("""[
+          {"type":"list","items":[{"blocks":[{"type":"image","id":"list","url":"assets/list.png","alt":"List image"}]}]},
+          {"type":"table","header":[[{"type":"text","text":"Photo"}]],"rows":[[[{"type":"image","id":"table","url":"/host/table.png","alt":"Table image"}]]]},
+          {"type":"paragraph","spans":[{"type":"text","text":"Before inline"},{"type":"image","id":"inline","url":"https://example.org/image.png","alt":"Inline image"},{"type":"text","text":"After inline"}]}
+        ]""")
+        rule.setContent { Ot3Theme { CompositionLocalProvider(LocalReaderImages provides ReaderImages("markdown") { descriptor ->
+            destinations.add(descriptor.getString("source"))
+            bytes
+        }) { TimelineReader(JSONObject().put("timeline", org.json.JSONArray().put(JSONObject()
+            .put("id", "markdown").put("role", "assistant").put("blocks", blocks))), emptyList()) } } }
+        rule.waitUntil(5000) { destinations.size == 3 }
+        rule.onNodeWithContentDescription("List image").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Table image").assertIsDisplayed()
+        rule.onNodeWithText("Before inline").assertIsDisplayed()
+        rule.onNodeWithText("After inline").assertIsDisplayed()
+        rule.onNodeWithTag("thread_image_inline_640").performClick()
+        rule.onNodeWithTag("thread_image_inline_2048").assertIsDisplayed()
+        assertEquals(setOf("assets/list.png", "/host/table.png", "https://example.org/image.png"), destinations)
+    }
+
+    @Test fun mediaAttachmentUsesTheSharedDialogAndRetriesFailedReads() {
+        var reads = 0
+        val mediaRow = JSONObject("""{"id":"media","role":"assistant","attachments":[{"id":"clip","name":"Clip.mp4","type":"file","mimeType":"video/mp4"}]}""")
+        rule.setContent { Ot3Theme { CompositionLocalProvider(LocalReaderImages provides ReaderImages("media") {
+            reads++
+            error("asset_unavailable")
+        }) { TimelineReader(JSONObject().put("timeline", org.json.JSONArray().put(mediaRow)), emptyList()) } } }
+        rule.onNodeWithText("Clip.mp4").performClick()
+        rule.onNodeWithText("Retry").performClick()
+        rule.waitUntil(5000) { reads == 2 }
+        rule.onNodeWithText("Close").performClick()
+        rule.onNodeWithText("Retry").assertDoesNotExist()
+    }
+
     @Test fun extremeDimensionsStayInsidePixelBudgetAndInvalidDataFails() {
         for ((w, h) in listOf(100000 to 1, 1 to 100000, Int.MAX_VALUE to Int.MAX_VALUE, 8192 to 4096)) {
             val sample = readerImageSample(w, h, 640)
@@ -34,7 +73,9 @@ class MessageImagesTest {
         val original = Bitmap.createBitmap(4096, 2048, Bitmap.Config.ARGB_8888)
         val bytes = ByteArrayOutputStream().also { original.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
         original.recycle()
-        val preview = decodeReaderImage(bytes, 640)
+        var naturalWidth = 0
+        val preview = decodeReaderImage(bytes, 640) { naturalWidth = it }
+        assertEquals(4096, naturalWidth)
         assertEquals(512, preview.width)
         assertEquals(256, preview.height)
         preview.recycle()

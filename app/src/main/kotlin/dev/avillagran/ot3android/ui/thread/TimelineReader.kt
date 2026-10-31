@@ -258,10 +258,10 @@ internal fun MarkdownBlocks(blocks: JSONArray?) {
                 "quote" -> Row { Text("│ ", color = Ot3Theme.colors.dim); Box(Modifier.weight(1f)) { MarkdownBlocks(block.optJSONArray("blocks")) } }
                 "rule" -> HorizontalDivider()
                 "table" -> MarkdownTable(block, index)
-                "image" -> Text("Image · ${block.optString("alt")}", color = Ot3Theme.colors.dim)
+                "image" -> MarkdownImage(block)
                 "math" -> SelectionContainer { Text(block.optString("tex"), fontFamily = FiraCode) }
                 else -> SelectionContainer {
-                    Text(inlineSpans(block.optJSONArray("spans")), style = if (block.optString("type") == "heading") when (block.optInt("level")) {
+                    MarkdownInlineContent(block.optJSONArray("spans"), style = if (block.optString("type") == "heading") when (block.optInt("level")) {
                         1 -> MaterialTheme.typography.headlineSmall
                         2 -> MaterialTheme.typography.titleLarge
                         else -> MaterialTheme.typography.titleMedium
@@ -295,5 +295,29 @@ internal fun CopyText(text: String, id: String) {
     val clipboard = LocalClipboardManager.current
     TextButton(onClick = { clipboard.setText(AnnotatedString(text)) }, enabled = text.isNotEmpty(), modifier = Modifier.testTag("thread_copy_$id")) {
         Text(stringResource(R.string.ot3_reader_copy), style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable
+internal fun MarkdownImage(image: JSONObject) {
+    val fallbackName = stringResource(R.string.ot3_image_label)
+    val descriptor = remember(image.toString(), fallbackName) { JSONObject().put("id", image.getString("id"))
+        .put("type", "image").put("source", image.getString("url")).put("name", image.optString("alt").ifEmpty { fallbackName }) }
+    AttachmentImage(descriptor, markdown = true)
+}
+
+/** Text runs retain their order around media; phone-width images get their own line. */
+@Composable
+internal fun MarkdownInlineContent(spans: JSONArray?, style: TextStyle = MaterialTheme.typography.bodyMedium) {
+    var run = JSONArray()
+    Column(Modifier.fillMaxWidth()) {
+        spans.objects().forEach { span ->
+            if (span.optString("type") == "image") {
+                if (run.length() > 0) Text(inlineSpans(run), style = style, modifier = Modifier.fillMaxWidth())
+                run = JSONArray()
+                MarkdownImage(span)
+            } else run.put(span)
+        }
+        if (run.length() > 0) Text(inlineSpans(run), style = style, modifier = Modifier.fillMaxWidth())
     }
 }

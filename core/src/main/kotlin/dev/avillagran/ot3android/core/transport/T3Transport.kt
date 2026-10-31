@@ -58,6 +58,14 @@ interface T3Transport : DomainCalls, Closeable {
     suspend fun image(id: String, name: String, mimeType: String): ByteArray =
         throw UnsupportedOperationException("image")
 
+    /** Video/audio attachment, bounded to Desktop's 50 MiB. */
+    suspend fun mediaAttachment(id: String, name: String, mimeType: String): ByteArray =
+        throw UnsupportedOperationException("mediaAttachment")
+
+    /** Host Markdown image via the existing authenticated signed-asset channel. */
+    suspend fun mediaImage(threadId: String, path: String): ByteArray =
+        throw UnsupportedOperationException("mediaImage")
+
     /**
      * The environment's shell (projects and thread rows) as one HTTP snapshot, with the
      * orchestration protocol header the lib adds. [shellStream] keeps it current.
