@@ -15,6 +15,11 @@ class NativeBridgeLinkageTest {
             .any { File(it, System.mapLibraryName("omabridge_jni")).isFile }
         if (System.getProperty("ot3a.requireBridgeSdk") == "true") assertTrue("Bridge host JNI is required", present)
         else assumeTrue("Bridge host JNI not installed", present)
+        val capabilities = runBlocking { NativeBridge.request(JSONObject().put("op", "capabilities")) }
+        assertEquals(1, capabilities.getInt("abi"))
+        val features = capabilities.getJSONArray("features")
+        assertTrue((0 until features.length()).any { features.getString(it) == "shared-drafts-v1" })
+        assertTrue((0 until features.length()).any { features.getString(it) == "mobile-admin-v1" })
         // Exercises the actual native symbol without creating a peer, runtime or credential.
         val error = assertThrows(IllegalStateException::class.java) {
             runBlocking { NativeBridge.request(JSONObject().put("op", "cached").put("handle", -1)) }

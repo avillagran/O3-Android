@@ -68,6 +68,7 @@ fun EnvironmentsScreen(
     onRefreshBridge: (() -> Unit)? = null,
     onBack: () -> Unit = {},
     onPairBridge: (() -> Unit)? = null,
+    onAdministerBridge: (() -> Unit)? = null,
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
@@ -90,6 +91,8 @@ fun EnvironmentsScreen(
                 Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
             }
         }, actions = {
+            if (onAdministerBridge != null) TextButton(onClick = onAdministerBridge) { Text(stringResource(R.string.bridge_admin_title)) }
+
             TextButton(onClick = onAppearance, modifier = Modifier.testTag(EnvironmentsScreenTags.APPEARANCE)) {
                 Text(stringResource(R.string.appearance_title))
             }

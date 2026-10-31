@@ -358,6 +358,8 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val graph = LocalContext.current.appGraph
         val bridgeStatus by graph.bridgeCatalog.status.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
+        var administration by remember { mutableStateOf(false) }
+        if (administration) dev.avillagran.ot3android.ui.environments.BridgeAdministration(graph.bridgeCatalog) { administration = false }
         EnvironmentsScreen(
             onBack = { navigator.back() },
             viewModel = appViewModel { graph -> EnvironmentsViewModel(graph.environmentRepository, graph.connectionManager) },
@@ -368,6 +370,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             onAppearance = { navigator.push(Appearance) },
             bridgeStatus = bridgeStatus,
             onRefreshBridge = { scope.launch { graph.bridgeCatalog.reconnect() } },
+            onAdministerBridge = { administration = true },
             onPairBridge = { navigator.push(PairEnvironment) },
         )
     }

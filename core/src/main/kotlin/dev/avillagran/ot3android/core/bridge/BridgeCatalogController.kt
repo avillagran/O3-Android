@@ -62,6 +62,19 @@ class BridgeCatalogController(
         checkNotNull(clientId)
     }
 
+    suspend fun capabilities(): JSONObject = native(JSONObject().put("op", "capabilities"))
+
+    suspend fun peers(): JSONObject = mutex.withLock { invoke("peers") }
+
+    /** The native receiver authorizes each request. Selection never confers a grant. */
+    suspend fun manage(peer: String, command: JSONObject, confirmed: Boolean = false): JSONObject = mutex.withLock {
+        invoke("manage", JSONObject().put("peer", peer).put("command", command).put("confirmed", confirmed))
+    }
+
+    suspend fun drafts(authority: String, command: JSONObject): JSONObject = mutex.withLock {
+        invoke("drafts", JSONObject().put("peer", authority).put("command", command))
+    }
+
     suspend fun pair(invitation: JSONObject): Boolean = mutex.withLock {
         invoke("pair", JSONObject().put("invitation", invitation)).getBoolean("approved")
     }
