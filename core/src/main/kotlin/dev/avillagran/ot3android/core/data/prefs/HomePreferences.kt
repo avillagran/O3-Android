@@ -5,6 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.avillagran.ot3android.core.home.ShelfState
 import kotlinx.coroutines.flow.Flow
@@ -43,7 +45,30 @@ class HomePreferences(private val dataStore: DataStore<Preferences>) : ShelfStor
         settledExpanded = this[Keys.SETTLED_EXPANDED] ?: false,
     )
 
+    val hostStyles: Flow<Map<String, String>> = dataStore.data.map { prefs ->
+        prefs.asMap().entries.filter { it.key.name.startsWith("host_style:") && it.value is String }
+            .associate { it.key.name.removePrefix("host_style:") to it.value as String }
+    }
+    suspend fun setHostStyle(host: String, icon: String, color: String, showName: Boolean) {
+        require(icon in setOf("server", "cloud", "linux", "monitor", "laptop", "mac-mini", "mac-studio"))
+        require(color in setOf("", "#e06c75", "#e5a050", "#d8c35a", "#8fc46a", "#4fb8a8", "#5aa2e6", "#9a7be6", "#d877b8"))
+        dataStore.edit { it[stringPreferencesKey("host_style:$host")] = "$icon|$color|$showName" }
+    }
+
+    /** UI-only tree folds and bounded shelves; independent of native membership/filter state. */
+    val sidebarCollapsed: Flow<Set<String>> = dataStore.data.map { it[Keys.SIDEBAR_COLLAPSED].orEmpty() }
+    val sidebarUnlimited: Flow<Set<String>> = dataStore.data.map { it[Keys.SIDEBAR_UNLIMITED].orEmpty() }
+    suspend fun toggleSidebarSection(key: String, limit: Boolean = false) {
+        dataStore.edit { prefs ->
+            val field = if (limit) Keys.SIDEBAR_UNLIMITED else Keys.SIDEBAR_COLLAPSED
+            val current = prefs[field].orEmpty()
+            prefs[field] = if (key in current) current - key else current + key
+        }
+    }
+
     object Keys {
+        val SIDEBAR_COLLAPSED = stringSetPreferencesKey("sidebar_collapsed")
+        val SIDEBAR_UNLIMITED = stringSetPreferencesKey("sidebar_unlimited")
         val GROUPED = booleanPreferencesKey("sidebar_grouped")
         val WORKING_EXPANDED = booleanPreferencesKey("working_expanded")
         val SNOOZED_EXPANDED = booleanPreferencesKey("snoozed_expanded")

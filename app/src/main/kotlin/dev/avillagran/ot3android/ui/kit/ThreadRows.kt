@@ -1,7 +1,11 @@
 package dev.avillagran.ot3android.ui.kit
 
+import androidx.core.graphics.toColorInt
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.MarqueeAnimationMode
+import dev.avillagran.ot3android.ui.home.layouts.LocalSidebarRows
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +26,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -102,7 +108,7 @@ fun ThreadCardRow(
             ) {
                 Text(
                     row.title,
-                    Modifier.weight(1f),
+                    Modifier.weight(1f).sidebarMarquee(selected),
                     style = type.bodyMedium.copy(fontWeight = if (row.receding) FontWeight.Normal else FontWeight.Medium),
                     color = if (row.receding) colors.dim else colors.foreground,
                     maxLines = 1,
@@ -161,7 +167,7 @@ fun ThreadSlimRow(
             CaptionLine(row, slim = true, onSubagentsClick = onSubagentsClick, onUnpin = onUnpin) {
                 Text(
                     row.title,
-                    Modifier.weight(1f),
+                    Modifier.weight(1f).sidebarMarquee(selected),
                     style = Ot3Theme.typography.material.bodyMedium,
                     color = if (row.receding) Ot3Theme.colors.dim else Ot3Theme.colors.foreground,
                     maxLines = 1,
@@ -169,7 +175,7 @@ fun ThreadSlimRow(
                 )
                 row.pullRequest?.let { PrBadge(it, onClick = onPullRequestClick) }
             }
-            val metadata = listOfNotNull(row.environmentName, row.branch).joinToString(" · ")
+            val metadata = listOfNotNull(row.projectName.takeIf { LocalSidebarRows.current.enabled && it.isNotEmpty() }, row.environmentName, row.branch).joinToString(" · ")
             if (metadata.isNotEmpty()) Text(
                 metadata,
                 style = Ot3Theme.typography.material.bodySmall,
@@ -202,6 +208,7 @@ private fun RowFrame(
             pressed -> colors.rowPressed
             selected -> colors.rowSelected
             row.draft -> colors.rowDraft
+            LocalSidebarRows.current.enabled && !LocalSidebarRows.current.sober && LocalSidebarRows.current.projectColors -> row.project?.color?.copy(alpha = .08f) ?: Color.Transparent
             else -> Color.Transparent
         },
         Ot3Theme.motion.colorChange(),
@@ -241,7 +248,10 @@ private fun RowFrame(
                 .background(fill, shape)
                 .then(if (focused) Modifier.border(Ot3Sizes.border, colors.accent, shape) else Modifier),
         ) {
-            ThreadAura(row, slim, Modifier.matchParentSize())
+            if (!LocalSidebarRows.current.sober) ThreadAura(row, slim, Modifier.matchParentSize())
+            val hostColor = LocalSidebarRows.current.host.color.takeIf { it.matches(Regex("#[0-9a-fA-F]{6}")) }
+                ?.let { Color(it.toColorInt()) }
+            if (hostColor != null && !LocalSidebarRows.current.sober) Box(Modifier.width(if (LocalSidebarRows.current.sober) 2.dp else 4.dp).fillMaxHeight().background(hostColor))
             content()
         }
     }
@@ -263,7 +273,8 @@ private fun CaptionLine(
     middle: @Composable RowScope.() -> Unit,
 ) {
     val colors = Ot3Theme.colors
-    val trailing = rowTrailing(row, slim)
+    val captionSlim = slim && (!LocalSidebarRows.current.enabled || LocalSidebarRows.current.shelved)
+    val trailing = rowTrailing(row, captionSlim)
     Row(
         Modifier.heightIn(min = CAPTION_LINE),
         horizontalArrangement = Arrangement.spacedBy(Ot3Spacing.md),
@@ -283,8 +294,17 @@ private fun CaptionLine(
                 val gesture = onChipLongClick?.let { (longClick, click) ->
                     Modifier.combinedClickable(onClick = click, onLongClick = longClick)
                 } ?: Modifier
-                ProjectChip(chip, gesture.alpha(if (slim) SLIM_CHIP_ALPHA else 1f))
+                if (LocalSidebarRows.current.enabled && LocalSidebarRows.current.sober) {
+                    Box(gesture.size(16.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(6.dp).background(if (LocalSidebarRows.current.projectColors) chip.color else colors.dim, CircleShape))
+                    }
+                } else ProjectChip(if (LocalSidebarRows.current.projectColors) chip else chip.copy(color = colors.dim), gesture.alpha(if (slim) SLIM_CHIP_ALPHA else 1f))
             }
+        }
+        if (slim && LocalSidebarRows.current.enabled) row.machineIcon?.let {
+            val color = LocalSidebarRows.current.host.color.takeIf { it.matches(Regex("#[0-9a-fA-F]{6}")) }
+                ?.let { value -> Color(value.toColorInt()) } ?: colors.dim
+            Ot3Icon(it, null, tint = color, size = 12.dp)
         }
         middle()
         if (row.pinned) {
@@ -297,7 +317,7 @@ private fun CaptionLine(
             }
         }
         row.subagents?.let { SubagentsToggle(it, onSubagentsClick) }
-        if (row.status != null && !slim && trailing?.role == TrailingRole.STATUS) {
+        if (row.status != null && !captionSlim && trailing?.role == TrailingRole.STATUS) {
             StatusIcon(row.status)
         }
         if (trailing != null) {
@@ -362,3 +382,12 @@ private const val WORKSPACE_ALPHA = 0.4f
 private const val SLIM_CHIP_ALPHA = 0.4f
 private const val SUBAGENTS_FILL = 0.04f
 private const val RECEDING_WORKING_ALPHA = 0.7f
+
+
+/** Selection/focus replaces hover on touch; reduced motion always leaves an ellipsis. */
+@Composable
+private fun Modifier.sidebarMarquee(selected: Boolean): Modifier =
+    if (LocalSidebarRows.current.marquee && Ot3Theme.motion.animates && selected)
+        basicMarquee(iterations = Int.MAX_VALUE, animationMode = MarqueeAnimationMode.Immediately,
+            initialDelayMillis = 700, repeatDelayMillis = 1100)
+    else this

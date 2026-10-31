@@ -1,6 +1,15 @@
 package dev.avillagran.ot3android.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import dev.avillagran.ot3android.core.data.prefs.AppearancePreferences
+import dev.avillagran.ot3android.core.data.prefs.AppearanceSettings
+import dev.avillagran.ot3android.ui.home.layouts.*
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -114,9 +123,24 @@ sealed interface HomeIntent {
  * Home and the keyboard take back first (§2.3).
  */
 @Composable
-fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}) {
+fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, appearance: AppearanceSettings? = null, metadata: SidebarMetadata = SidebarMetadata()) {
+    val context = LocalContext.current
+    val preferences = remember(context) { AppearancePreferences(context) }
+    val persisted by preferences.settings.collectAsState(AppearanceSettings())
+    val settings = appearance ?: persisted
+    val homePreferences = remember(context) { dev.avillagran.ot3android.core.data.prefs.HomePreferences(context) }
+    val savedHostStyles by homePreferences.hostStyles.collectAsState(emptyMap())
+    val looks = savedHostStyles.mapValues { (_, value) -> val fields = value.split('|')
+        HostStyle(fields.getOrElse(0) { "server" }, fields.getOrElse(1) { "" }, fields.getOrElse(2) { "false" } == "true") }
+    val effectiveMetadata = metadata.copy(clocks = (if (appearance == null) observedSidebarClocks() else emptyMap()) + metadata.clocks,
+        hostStyles = looks + metadata.hostStyles)
+    val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var searchFocused by remember { mutableStateOf(false) }
+    var sidebarChip by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.PROJECT_CHIPS)) {
+        if (settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.PROJECT_CHIPS) != "true") sidebarChip = null
+    }
     val query = state?.query.orEmpty()
     BackHandler(enabled = isTop && (query.isNotEmpty() || searchFocused)) {
         onIntent(HomeIntent.ClearSearch)
@@ -155,7 +179,19 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
                 }
             }
             val content = state?.content ?: HomeContent.Connecting
-            if (content == HomeContent.List && state != null) ThreadList(state, onIntent, quotaStrip)
+            if (content == HomeContent.List && state != null) CompositionLocalProvider(LocalSidebarRows provides SidebarRowAppearance(
+                enabled = true,
+                sober = settings.interfaceLayout != "classic" || settings.sidebarStyle != "vivid",
+                compact = settings.threadRowSize == "compact",
+                marquee = settings.threadTitleOverflow == "marquee",
+                projectColors = settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.PROJECT_COLORS) == "true",
+                hostStyles = effectiveMetadata.hostStyles,
+            )) { Column(Modifier.fillMaxSize()) {
+                SidebarControls(state, settings, effectiveMetadata, sidebarChip, { layout -> scope.launch {
+                    preferences.setLocal(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.INTERFACE_LAYOUT, layout)
+                } }, { host, style -> scope.launch { homePreferences.setHostStyle(host, style.icon, style.color, style.showName) } }) { chip -> sidebarChip = chip }
+                ThreadList(state, onIntent, quotaStrip, settings, effectiveMetadata, sidebarChip)
+            } }
             else LazyColumn(Modifier.fillMaxSize()) {
                 item("provider_usage") { quotaStrip() }
                 item("home_message") { Box(Modifier.fillParentMaxHeight()) {
@@ -297,9 +333,23 @@ internal fun homeListSections(items: List<HomeItem>): HomeListSections {
 }
 
 @Composable
-private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quotaStrip: @Composable () -> Unit) {
+private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quotaStrip: @Composable () -> Unit,
+    settings: AppearanceSettings, metadata: SidebarMetadata, chip: String?) {
     val motion = Ot3Theme.motion
-    val sections = remember(state.items) { homeListSections(state.items) }
+    val context = LocalContext.current
+    val viewPreferences = remember(context) { dev.avillagran.ot3android.core.data.prefs.HomePreferences(context) }
+    val collapsed by viewPreferences.sidebarCollapsed.collectAsState(emptySet())
+    val unlimited by viewPreferences.sidebarUnlimited.collectAsState(emptySet())
+    val scope = rememberCoroutineScope()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val selectedKey = LocalSelectedThreadKey.current
+    val layoutItems = remember(state.items, state.rows, state.filter, state.query, settings.interfaceLayout) {
+        if (settings.interfaceLayout != "classic" && !state.filter.active && state.query.isBlank()) {
+            state.rows.values.filterNot { it.subagent }.map { HomeItem.Row(it) } +
+                state.items.filter { it is HomeItem.ShowMoreSettled || it is HomeItem.Message || it is HomeItem.MessagesHeader }
+        } else state.items
+    }
+    val sections = remember(layoutItems) { homeListSections(layoutItems) }
     Column(Modifier.fillMaxSize().alpha(if (state.stale) 0.6f else 1f)) {
         if (state.offline) {
             Text(
@@ -314,10 +364,36 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
             // bounded; the main list owns all remaining space even with no active rows.
             val bodyLimit = ((maxHeight - 48.dp * sections.bottom.size).coerceAtLeast(0.dp) * .3f)
             Column(Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag(HomeTags.LIST)) {
+                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag(HomeTags.LIST), state = listState) {
                     item("provider_usage") { quotaStrip() }
-                    items(sections.main, key = { it.key }, contentType = { it::class }) { HomeListItem(it, onIntent, Modifier.animateItem(
-                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                    val entries = sidebarEntries(sections.main, settings, state.shelves.grouped, metadata, chip)
+                    val limited = entries.filterIsInstance<SidebarEntry.Header>().filter { it.count > 5 }.map { it.key }.toSet()
+                    val shown = mutableMapOf<String, Int>()
+                    entries.forEach { entry ->
+                        fun hidden(section: String): Boolean = collapsed.any { section == it || section.startsWith("$it/") }
+                        when (entry) {
+                            is SidebarEntry.Header -> if (!collapsed.any { entry.key.startsWith("$it/") }) item(entry.key) {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f)) {
+                                        Text("${if (entry.key in collapsed) "▸" else "▾"} ${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
+                                            modifier = Modifier.fillMaxWidth(), color = Ot3Theme.colors.dim,
+                                            style = MaterialTheme.typography.labelLarge)
+                                    }
+                                    if (entry.count > 5) TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key, true) } }) {
+                                        Text(stringResource(if (entry.key in unlimited) R.string.sidebar_limit_less else R.string.sidebar_limit_more))
+                                    }
+                                }
+                            }
+                            is SidebarEntry.Item -> {
+                                val position = shown.getOrDefault(entry.section, 0)
+                                shown[entry.section] = position + 1
+                                val selected = (entry.value as? HomeItem.Row)?.row?.key == selectedKey
+                                if (!hidden(entry.section) && (entry.section !in limited || entry.section in unlimited || position < 5 || selected))
+                                    item(entry.value.key) { HomeListItem(entry.value, onIntent, Modifier.animateItem(
+                                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                            }
+                        }
+                    }
                 }
                 sections.bottom.forEach { (header, members) ->
                     androidx.compose.runtime.key(header.shelf) {
@@ -325,7 +401,9 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                         if (header.expanded && members.isNotEmpty()) {
                             LazyColumn(Modifier.fillMaxWidth().heightIn(max = bodyLimit)
                                 .testTag("home_shelf_list_${header.shelf.name}")) {
-                                items(members, key = { it.key }, contentType = { it::class }) { HomeListItem(it, onIntent, Modifier.animateItem(
+                                items((sidebarSections(members.filterIsInstance<HomeItem.Row>().map { it.row }, "classic", false, metadata,
+                                    settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.THREAD_ORDER) == "reply")
+                                    .flatMap { it.rows }.filter { matchesChip(it, chip, metadata) }.map { HomeItem.Row(it) } + members.filterNot { it is HomeItem.Row }), key = { it.key }, contentType = { it::class }) { HomeListItem(it, onIntent, Modifier.animateItem(
                         fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
                             }
                         }
@@ -377,11 +455,13 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
         null
     }
     val modifier = animatedModifier.graphicsLayer { translationX = drift.value * density * direction }.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
+    CompositionLocalProvider(LocalSidebarRows provides LocalSidebarRows.current.copy(shelved = row.slim, host = LocalSidebarRows.current.hostStyles[row.environmentId] ?: HostStyle())) {
     ThreadSwipeActions(row, { onIntent(HomeIntent.Swipe(row, it)) }, modifier) { contentModifier ->
-    if (row.slim) {
+    if (row.slim || LocalSidebarRows.current.compact) {
         ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
     } else {
         ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
+    }
     }
     }
 }
