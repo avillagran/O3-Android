@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">Administracja OmaBridge</string>
+    <string name="bridge_admin_local_note">Funkcje właściciela pozostają na jego urządzeniu. Zdalna administracja wymaga osobnego uprawnienia zarządzania.</string>
+    <string name="bridge_admin_name">Nazwa urządzenia</string>
+    <string name="bridge_admin_rename">Zmień nazwę</string>
+    <string name="bridge_admin_invite">Utwórz zaproszenie</string>
+    <string name="bridge_admin_endpoints">Odczytaj punkty końcowe</string>
+    <string name="bridge_admin_failed">Żądanie odrzucone lub niedostępne. Sprawdź uprawnienie zarządzania na urządzeniu właściciela.</string>
+    <string name="bridge_admin_confirm">Potwierdź zmianę urządzenia</string>
+    <string name="pr_diff">Różnice</string>
+    <string name="pr_diff_more_pending">Dostępne są kolejne strony różnic.</string>
+    <string name="bridge_admin_publish">Opublikuj</string>
+    <string name="bridge_admin_unpublish">Cofnij publikację</string>
+    <string name="bridge_admin_service">Usługa</string>
+    <string name="bridge_admin_ttl">Ważność (sekundy)</string>
+    <string name="bridge_admin_all_hosts">Wszystkie hosty</string>
+    <string name="bridge_admin_relay">Publiczny adres HTTPS przekaźnika</string>
+    <string name="bridge_admin_relay_set">Ustaw przekaźnik</string>
+    <string name="bridge_admin_relay_start">Uruchom hosting przekaźnika</string>
+    <string name="bridge_admin_relay_stop">Zatrzymaj hosting przekaźnika</string>
+    <string name="bridge_admin_gateway">Nazwa hosta bramy</string>
+    <string name="bridge_admin_port">Port (opcjonalny)</string>
+    <string name="bridge_admin_gateway_start">Włącz bramę</string>
+    <string name="bridge_admin_gateway_stop">Wyłącz bramę</string>
+    <string name="bridge_admin_revoke">Cofnij dostęp</string>
+    <string name="bridge_admin_share">Udostępnij zaproszenie</string>
+</resources>

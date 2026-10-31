@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">実行ファイルのパス</string>
+    <string name="provider_field_home_path">ホームディレクトリのパス</string>
+    <string name="provider_field_shadow_home_path">代替ホームディレクトリのパス</string>
+    <string name="provider_field_launch_args">起動引数</string>
+    <string name="provider_field_auto_compact_window">自動圧縮のしきい値</string>
+    <string name="provider_field_server_url">サーバーURL</string>
+    <string name="provider_field_server_password">サーバーパスワード</string>
+    <string name="provider_field_auth_method">ログイン方法</string>
+    <string name="provider_field_api_key">APIキー</string>
+    <string name="provider_field_gcp_project">GCPプロジェクト</string>
+    <string name="provider_field_gcp_location">GCPロケーション</string>
+    <string name="provider_field_source">ACPの取得元</string>
+    <string name="provider_field_agent_id">レジストリエージェントID</string>
+    <string name="provider_field_command_path">代替実行ファイル</string>
+    <string name="provider_field_auth_method_id">認証方法ID</string>
+    <string name="provider_field_environment">環境変数</string>
+    <string name="provider_field_name">名前</string>
+    <string name="provider_field_value">値</string>
+    <string name="provider_field_sensitive">機密</string>
+    <string name="provider_field_distribution">配布形式</string>
+    <string name="provider_field_command_args">コマンド引数（1行に1つ）</string>
+    <string name="provider_field_add_variable">変数を追加</string>
+    <string name="provider_field_remove_variable">変数を削除</string>
+    <string name="provider_field_automatic">自動</string>
+    <string name="provider_field_binary_distribution">実行ファイル</string>
+</resources>

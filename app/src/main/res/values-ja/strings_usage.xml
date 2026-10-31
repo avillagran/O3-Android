@@ -8,6 +8,6 @@
     <string name="usage_mode_off">オフ</string>
     <string name="usage_sound_policy">バッチごとにチャンネル音を1回再生します。バックグラウンド追跡は無音の通知を維持します。</string>
     <string name="usage_channel_denied">Androidの設定で通知がブロックされています。</string>
-    <string name="usage_pool_unavailable">個別のレポートのみです。正確な共有枠、曖昧なIDの処理、リセットクレジット操作には新しい共有ライブラリが必要です。</string>
+    <string name="usage_pool_unavailable">アカウント別のレポートです。共有上限は使用状況バーに表示されます。</string>
     <string name="usage_auth_required">ホストでこのプロバイダーにログインしてから更新してください。</string>
 </resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Paylaşılan taslaklar</string>
+    <string name="shared_draft_note">Metin otomatik eşitlenir. Eklere erişim kaynak ana makineyi gerektirir. Kuyruk düzenlemeleri ve gönderim girişimleri yerel kalır.</string>
+    <string name="shared_draft_failed">Eşitleme başarısız. Yerel kopyalar ve bekleyen komutlar korundu.</string>
+    <string name="shared_draft_pending">Bekleyen komutlar: %1$d</string>
+    <string name="shared_draft_save">Metni yetkili depoya kaydet</string>
+    <string name="shared_draft_adopt">Metni düzenleyicide kullan</string>
+    <string name="shared_draft_restore">Hedef yedeğiyle geri yükle</string>
+    <string name="shared_draft_conflict">Çakışma: çözmeden önce iki kopyayı da incele.</string>
+    <string name="shared_draft_authority">Taslak yetkili deposunun uç nokta kimliği</string>
+    <string name="shared_draft_select">Taslak yetkili deposunu seç</string>
+    <string name="shared_draft_keep_remote">Uzak kopyayı koru</string>
+    <string name="shared_draft_keep_local">Yerel işlemi koru</string>
+</resources>

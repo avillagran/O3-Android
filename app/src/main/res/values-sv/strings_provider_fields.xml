@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Programsökväg</string>
+    <string name="provider_field_home_path">Hemkatalog</string>
+    <string name="provider_field_shadow_home_path">Alternativ hemkatalog</string>
+    <string name="provider_field_launch_args">Startargument</string>
+    <string name="provider_field_auto_compact_window">Komprimera automatiskt efter</string>
+    <string name="provider_field_server_url">Serveradress</string>
+    <string name="provider_field_server_password">Serverlösenord</string>
+    <string name="provider_field_auth_method">Inloggningsmetod</string>
+    <string name="provider_field_api_key">API-nyckel</string>
+    <string name="provider_field_gcp_project">GCP-projekt</string>
+    <string name="provider_field_gcp_location">GCP-plats</string>
+    <string name="provider_field_source">ACP-källa</string>
+    <string name="provider_field_agent_id">Registeragent-ID</string>
+    <string name="provider_field_command_path">Alternativt program</string>
+    <string name="provider_field_auth_method_id">Autentiseringsmetod-ID</string>
+    <string name="provider_field_environment">Miljövariabler</string>
+    <string name="provider_field_name">Namn</string>
+    <string name="provider_field_value">Värde</string>
+    <string name="provider_field_sensitive">Känslig</string>
+    <string name="provider_field_distribution">Distribution</string>
+    <string name="provider_field_command_args">Kommandoargument (ett per rad)</string>
+    <string name="provider_field_add_variable">Lägg till variabel</string>
+    <string name="provider_field_remove_variable">Ta bort variabel</string>
+    <string name="provider_field_automatic">Automatisk</string>
+    <string name="provider_field_binary_distribution">Körbar fil</string>
+</resources>

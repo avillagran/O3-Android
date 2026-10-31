@@ -15,6 +15,7 @@ import org.json.JSONObject
 @Composable
 fun ProjectSettingsScreen(state: ProjectConfigurationState, onRefresh: () -> Unit,
     onUpdate: (key: String, value: Any?, clear: Boolean) -> Unit,
+    onMutation: ((JSONObject) -> Unit)? = null, onRetryMutation: (() -> Unit)? = null,
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.ot3_action_project_settings), style = MaterialTheme.typography.headlineSmall)
@@ -22,6 +23,36 @@ fun ProjectSettingsScreen(state: ProjectConfigurationState, onRefresh: () -> Uni
         if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
         if (state.needsRefresh) Text(stringResource(R.string.thread_menus_refresh_required))
         TextButton(onClick = onRefresh, enabled = !state.busy) { Text(stringResource(R.string.thread_menus_refresh)) }
+        if (onRetryMutation != null) TextButton(onClick = onRetryMutation, enabled = !state.busy) { Text(stringResource(R.string.thread_resend)) }
+        if (onMutation != null && state.metadata != null) {
+            val metadataEnabled = state.canMutate && !state.busy && !state.needsRefresh
+            var title by remember(state.metadata.toString()) { mutableStateOf(state.metadata.optString("title")) }
+            var remove by remember { mutableStateOf(false) }
+            OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.ot3_project_rename)) }, enabled = metadataEnabled)
+            TextButton(enabled = metadataEnabled && title.isNotBlank(), onClick = { onMutation(JSONObject().put("action", "project-rename").put("title", title)) }) { Text(stringResource(R.string.ot3_dialog_save)) }
+            TextButton(enabled = metadataEnabled, onClick = { onMutation(JSONObject().put("action", "project-settings").put("patch", JSONObject().put("autoPull", !state.metadata.optBoolean("autoPull")))) }) { Text(stringResource(R.string.ot3_project_auto_pull)) }
+            listOf("local", "worktree").forEach { mode ->
+                TextButton(enabled = metadataEnabled, onClick = { onMutation(JSONObject().put("action", "project-settings").put("patch", JSONObject().put("defaultThreadEnvMode", mode))) }) { Text(stringResource(if (mode == "worktree") R.string.general_text_55 else R.string.ot3_new_chat_current_checkout)) }
+            }
+            var modelQuery by remember { mutableStateOf("") }
+            OutlinedTextField(modelQuery, { modelQuery = it }, label = { Text(stringResource(R.string.composer_search_models)) }, enabled = metadataEnabled)
+            state.metadata.optJSONObject("defaultModelSelection")?.let { selection -> Text(selection.optString("instanceId") + " · " + selection.optString("model")) }
+            val choices = state.view?.optJSONObject("catalog")?.optJSONArray("models")
+            (0 until (choices?.length() ?: 0)).map { choices!!.getJSONObject(it) }
+                .filter { it.optString("name").contains(modelQuery, ignoreCase = true) && it.optBoolean("available", true) }.take(40).forEach { model ->
+                    TextButton(enabled = metadataEnabled, onClick = {
+                        val selection = JSONObject().put("instanceId", model.getString("instanceId")).put("model", model.getString("model")).put("options", org.json.JSONArray())
+                        onMutation(JSONObject().put("action", "project-settings").put("patch", JSONObject().put("defaultModelSelection", selection)))
+                    }) { Text(model.optString("name", model.optString("model"))) }
+                }
+            TextButton(enabled = metadataEnabled && state.metadata.optJSONObject("defaultModelSelection") != null, onClick = {
+                onMutation(JSONObject().put("action", "project-settings").put("patch", JSONObject().put("defaultModelSelection", JSONObject.NULL)))
+            }) { Text(stringResource(R.string.thread_menus_inherit)) }
+            TextButton(enabled = metadataEnabled, onClick = { remove = true }) { Text(stringResource(R.string.ot3_project_remove)) }
+            if (remove) AlertDialog(onDismissRequest = { remove = false }, title = { Text(stringResource(R.string.ot3_project_remove)) }, text = { Text(stringResource(R.string.ot3_project_remove_body)) },
+                confirmButton = { TextButton(onClick = { remove = false; onMutation(JSONObject().put("action", "project-remove").put("confirmed", true)) }) { Text(stringResource(R.string.ot3_project_remove)) } },
+                dismissButton = { TextButton(onClick = { remove = false }) { Text(stringResource(R.string.ot3_dialog_cancel)) } })
+        }
         val fields = state.view?.optJSONArray("fields")
         for (index in 0 until (fields?.length() ?: 0)) {
             val field = fields!!.getJSONObject(index)

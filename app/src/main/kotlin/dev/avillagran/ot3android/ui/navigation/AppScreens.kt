@@ -2,6 +2,8 @@ package dev.avillagran.ot3android.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import android.content.ClipData
+import androidx.compose.ui.res.stringResource
+import dev.avillagran.ot3android.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -190,6 +192,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             onGit = { navigator.push(ThreadGit(route.environmentId, route.threadId)) },
             onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) },
             onOpenThread = { navigator.openThread(route.environmentId, it) },
+            onOpenReferenceThread = { environment, thread -> navigator.openThread(environment, thread) },
             quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, compact = false, onOpenLimits = { navigator.push(QuotaLimits(route.environmentId)) }) },
         )
     }
@@ -338,7 +341,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 writeReceipt = { graph.setPullRequestWriteUnresolved(route, it) })
         }
         val state by model.state.collectAsStateWithLifecycle()
-        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state, model::selectTab, model::refresh, { navigator.back() }, onWrite = model::write)
+        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state, model::selectTab, model::refresh, { navigator.back() }, onWrite = model::write, onMoreDiff = model::moreDiff)
     }
 
     @Composable
@@ -462,6 +465,63 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         ProjectGroupMenu(graph.projectPresentation.names(),
             org.json.JSONObject(presentation).optJSONObject("threadGroups")?.optString(row.key)?.takeIf { it.isNotBlank() }, true) { name ->
             graph.updateProjectPresentation { it.setThreadGroup(row.key, name) }
+        }
+        val writeRevision by graph.consumerWrites.changes.collectAsStateWithLifecycle()
+        var pinBusy by remember { mutableStateOf(false) }
+        var pinFailed by remember { mutableStateOf(false) }
+        val pinPending = remember(writeRevision, row.environmentId) { graph.consumerWrites.pending(row.environmentId) != null }
+        if (pinFailed) androidx.compose.material3.Text(stringResource(R.string.thread_menus_refresh_required))
+        if (pinPending) androidx.compose.material3.TextButton(enabled = !pinBusy && live != null, onClick = {
+            pinBusy = true
+            graph.appScope.launch {
+                try { live?.let { connection -> graph.checkoutAdmission.command(row.environmentId) { graph.consumerWrites.retry(row.environmentId, connection.transport) } }; pinFailed = false }
+                catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                catch (_: Exception) { pinFailed = true }
+                finally { pinBusy = false }
+            }
+        }) { androidx.compose.material3.Text(stringResource(R.string.thread_resend)) }
+        val pinIds by androidx.compose.runtime.produceState<List<String>>(emptyList(), shell, row.environmentId) {
+            value = try {
+                val source = shell
+                if (source == null) emptyList() else dev.avillagran.ot3android.core.shell.SidebarView.build(
+                    dev.avillagran.ot3android.core.transport.DomainEngine.shared,
+                    listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment(row.environmentId, shell = source)), System.currentTimeMillis())
+                    .active.filter { it.pinned }.map { it.threadId }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+            catch (_: Exception) { emptyList() }
+        }
+        if (row.pinned && current.actionContexts[row.environmentId]?.canOperate == true &&
+            current.actionContexts[row.environmentId]?.has(dev.avillagran.ot3android.core.home.ServerCapability.ThreadPinning) == true) {
+            listOf(-1, 1).forEach { direction ->
+                androidx.compose.material3.TextButton(enabled = !pinBusy && !pinPending && live != null && shell != null && pinIds.indexOf(row.threadId).let { it >= 0 && it + direction in pinIds.indices }, onClick = {
+                    val captured = live ?: return@TextButton
+                    val source = shell ?: return@TextButton
+                    pinBusy = true
+                    graph.appScope.launch {
+                        try {
+                            val access = dev.avillagran.ot3android.core.home.ThreadManagement.access(captured.transport)
+                            check(access.canOperate && access.has(dev.avillagran.ot3android.core.home.ServerCapability.ThreadPinning))
+                            val view = dev.avillagran.ot3android.core.shell.SidebarView.build(dev.avillagran.ot3android.core.transport.DomainEngine.shared,
+                                listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment(row.environmentId, shell = source)), System.currentTimeMillis())
+                            val ids = view.active.filter { it.pinned }.map { it.threadId }.toMutableList()
+                            val index = ids.indexOf(row.threadId)
+                            val destination = index + direction
+                            if (index >= 0 && destination in ids.indices) {
+                                java.util.Collections.swap(ids, index, destination)
+                                val keys = org.json.JSONObject()
+                                source.threads.forEach { thread -> thread.pinOrderKey?.let { keys.put(thread.id, it) } }
+                                val commandIds = org.json.JSONObject()
+                                ids.forEach { commandIds.put(it, "ot3a-" + java.util.UUID.randomUUID()) }
+                                val commands = dev.avillagran.ot3android.core.transport.NativeParity().pins(org.json.JSONArray(ids), keys, row.threadId, commandIds)
+                                graph.checkoutAdmission.command(row.environmentId) { graph.consumerWrites.submit(row.environmentId, captured.transport, "orchestration.dispatchCommand", commands) }
+                            }
+                            pinFailed = false
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                        catch (_: Exception) { pinFailed = true }
+                        finally { pinBusy = false }
+                    }
+                }) { androidx.compose.material3.Text(stringResource(if (direction < 0) R.string.ot3_action_move_up else R.string.ot3_action_move_down)) }
+            }
         }
         ThreadActionsContent(row, ThreadActions.menu(target, (current.actionContexts[row.environmentId] ?: ActionContext.Interim).copy(projectSettingsAvailable = row.projectId != null, newThreadAvailable = row.projectId != null, busy = current.actionContexts[row.environmentId]?.busy == true || operationState.busy || operationState.retryCommandId != null || operations == null)).filter { it.action !in setOf(ThreadAction.MoveUp, ThreadAction.MoveDown) }) { action ->
             if (action in setOf(ThreadAction.Rename, ThreadAction.Archive, ThreadAction.Delete)) {

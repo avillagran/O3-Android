@@ -52,6 +52,14 @@ class QuotaStripDeviceTest {
         rule.waitUntil(15_000) { rule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("quota_toggle").assertIsEnabled().assertIsDisplayed().performClick()
     }
+    private fun awaitQuotaEnabled() {
+        // DataStore publishes after its asynchronous write; Compose idle is not that receipt.
+        rule.waitUntil(15_000) {
+            rule.onAllNodes(hasTestTag("appearance_provider_usage") and SemanticsMatcher.expectValue(
+                androidx.compose.ui.semantics.SemanticsProperties.ToggleableState,
+                androidx.compose.ui.state.ToggleableState.On)).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
     @Before fun resetPreference() = runBlocking { context.appGraph.appearancePreferences.setProviderUsage(false) }
     @After fun restorePreference() = resetPreference()
 
@@ -64,9 +72,12 @@ class QuotaStripDeviceTest {
             rule.onNodeWithTag("nav_tab_Settings").performClick()
             rule.onNodeWithTag("settings_Appearance").performClick()
             rule.onNodeWithTag("appearance_provider_usage").performScrollTo().performClick()
+            awaitQuotaEnabled()
             rule.onNodeWithTag("appearance_provider_usage").assertIsOn()
             scenario.recreate()
-            rule.onNodeWithTag("appearance_provider_usage").performScrollTo().assertIsOn()
+            rule.onNodeWithTag("appearance_provider_usage").performScrollTo()
+            awaitQuotaEnabled()
+            rule.onNodeWithTag("appearance_provider_usage").assertIsOn()
             rule.onNodeWithContentDescription("Back").performClick()
             rule.onNodeWithTag(dev.avillagran.ot3android.ui.settings.SettingsTags.BACK).performClick()
             lateinit var fixture: dev.avillagran.ot3android.debug.workspace.WorkspaceFixture

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge-beheer</string>
+    <string name="bridge_admin_local_note">Eigenaarsfuncties blijven op het apparaat van de eigenaar. Beheer op afstand vereist afzonderlijke beheertoestemming.</string>
+    <string name="bridge_admin_name">Apparaatnaam</string>
+    <string name="bridge_admin_rename">Hernoemen</string>
+    <string name="bridge_admin_invite">Uitnodiging maken</string>
+    <string name="bridge_admin_endpoints">Eindpunten lezen</string>
+    <string name="bridge_admin_failed">Verzoek geweigerd of niet beschikbaar. Controleer de beheertoestemming op het eigenaarsapparaat.</string>
+    <string name="bridge_admin_confirm">Apparaatwijziging bevestigen</string>
+    <string name="pr_diff">Verschillen</string>
+    <string name="pr_diff_more_pending">Er zijn meer pagina’s met verschillen beschikbaar.</string>
+    <string name="bridge_admin_publish">Publiceren</string>
+    <string name="bridge_admin_unpublish">Publicatie intrekken</string>
+    <string name="bridge_admin_service">Dienst</string>
+    <string name="bridge_admin_ttl">Geldigheid (seconden)</string>
+    <string name="bridge_admin_all_hosts">Alle hosts</string>
+    <string name="bridge_admin_relay">Openbare HTTPS-relay-URL</string>
+    <string name="bridge_admin_relay_set">Relay instellen</string>
+    <string name="bridge_admin_relay_start">Relayhosting starten</string>
+    <string name="bridge_admin_relay_stop">Relayhosting stoppen</string>
+    <string name="bridge_admin_gateway">Gatewayhostnaam</string>
+    <string name="bridge_admin_port">Poort (optioneel)</string>
+    <string name="bridge_admin_gateway_start">Gateway inschakelen</string>
+    <string name="bridge_admin_gateway_stop">Gateway uitschakelen</string>
+    <string name="bridge_admin_revoke">Toegang intrekken</string>
+    <string name="bridge_admin_share">Uitnodiging delen</string>
+</resources>

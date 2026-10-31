@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge-hallinta</string>
+    <string name="bridge_admin_local_note">Omistajan hallintatoiminnot pysyvät omistajan laitteella. Etähallinta vaatii erillisen hallintaoikeuden.</string>
+    <string name="bridge_admin_name">Laitteen nimi</string>
+    <string name="bridge_admin_rename">Nimeä uudelleen</string>
+    <string name="bridge_admin_invite">Luo kutsu</string>
+    <string name="bridge_admin_endpoints">Lue päätepisteet</string>
+    <string name="bridge_admin_failed">Pyyntö hylättiin tai ei ole käytettävissä. Tarkista hallintaoikeus omistajan laitteella.</string>
+    <string name="bridge_admin_confirm">Vahvista laitteen muutos</string>
+    <string name="pr_diff">Erot</string>
+    <string name="pr_diff_more_pending">Lisää erosivuja on saatavilla.</string>
+    <string name="bridge_admin_publish">Julkaise</string>
+    <string name="bridge_admin_unpublish">Peru julkaisu</string>
+    <string name="bridge_admin_service">Palvelu</string>
+    <string name="bridge_admin_ttl">Voimassaolo (sekuntia)</string>
+    <string name="bridge_admin_all_hosts">Kaikki isännät</string>
+    <string name="bridge_admin_relay">Julkinen HTTPS-välitysosoite</string>
+    <string name="bridge_admin_relay_set">Aseta välitys</string>
+    <string name="bridge_admin_relay_start">Käynnistä välityspalvelin</string>
+    <string name="bridge_admin_relay_stop">Pysäytä välityspalvelin</string>
+    <string name="bridge_admin_gateway">Yhdyskäytävän isäntänimi</string>
+    <string name="bridge_admin_port">Portti (valinnainen)</string>
+    <string name="bridge_admin_gateway_start">Ota yhdyskäytävä käyttöön</string>
+    <string name="bridge_admin_gateway_stop">Poista yhdyskäytävä käytöstä</string>
+    <string name="bridge_admin_revoke">Peru käyttöoikeus</string>
+    <string name="bridge_admin_share">Jaa kutsu</string>
+</resources>

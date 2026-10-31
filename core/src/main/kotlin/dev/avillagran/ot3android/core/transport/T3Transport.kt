@@ -17,6 +17,8 @@ import java.io.Closeable
  *
  * Results are the lib's own JSON (`org.json`); `describe()` documents every function.
  */
+data class DraftAttachmentBytes(val bytes: ByteArray, val mimeType: String)
+
 interface T3Transport : DomainCalls, Closeable {
 
     /**
@@ -65,6 +67,9 @@ interface T3Transport : DomainCalls, Closeable {
     /** Host Markdown image via the existing authenticated signed-asset channel. */
     suspend fun mediaImage(threadId: String, path: String): ByteArray =
         throw UnsupportedOperationException("mediaImage")
+
+    suspend fun draftAttachmentBytes(id: String, name: String): DraftAttachmentBytes = throw UnsupportedOperationException("draftAttachmentBytes")
+    suspend fun draftAttachment(id: String, name: String): JSONObject = throw UnsupportedOperationException("draftAttachment")
 
     suspend fun registryIconBytes(url: String, requestId: String): ByteArray = throw UnsupportedOperationException("registryIconBytes")
     suspend fun cancelRegistryIcon(requestId: String) { }

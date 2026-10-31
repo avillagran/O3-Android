@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">共享草稿</string>
+    <string name="shared_draft_note">文本会自动同步。访问附件需要源主机。队列编辑和发送尝试保留在本机。</string>
+    <string name="shared_draft_failed">同步失败。已保留本地副本和待处理命令。</string>
+    <string name="shared_draft_pending">待处理命令：%1$d</string>
+    <string name="shared_draft_save">将文本保存到授权存储</string>
+    <string name="shared_draft_adopt">在编辑器中使用文本</string>
+    <string name="shared_draft_restore">恢复并备份目标</string>
+    <string name="shared_draft_conflict">冲突：解决前请查看两个副本。</string>
+    <string name="shared_draft_authority">草稿授权存储端点 ID</string>
+    <string name="shared_draft_select">选择草稿授权存储</string>
+    <string name="shared_draft_keep_remote">保留远程副本</string>
+    <string name="shared_draft_keep_local">保留本地操作</string>
+</resources>

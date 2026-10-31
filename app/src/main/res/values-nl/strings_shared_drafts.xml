@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Gedeelde concepten</string>
+    <string name="shared_draft_note">Tekst synchroniseert automatisch. Toegang tot bijlagen vereist de bronhost. Wachtrijwijzigingen en verzendpogingen blijven lokaal.</string>
+    <string name="shared_draft_failed">Synchronisatie mislukt. Lokale kopieën en openstaande opdrachten blijven bewaard.</string>
+    <string name="shared_draft_pending">Openstaande opdrachten: %1$d</string>
+    <string name="shared_draft_save">Tekst bij autoriteit opslaan</string>
+    <string name="shared_draft_adopt">Tekst in editor overnemen</string>
+    <string name="shared_draft_restore">Herstellen met back-up van doel</string>
+    <string name="shared_draft_conflict">Conflict: bekijk beide kopieën voordat je dit oplost.</string>
+    <string name="shared_draft_authority">Eindpunt-ID van conceptautoriteit</string>
+    <string name="shared_draft_select">Conceptautoriteit kiezen</string>
+    <string name="shared_draft_keep_remote">Externe kopie behouden</string>
+    <string name="shared_draft_keep_local">Lokale bewerking behouden</string>
+</resources>

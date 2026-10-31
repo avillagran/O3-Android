@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge yönetimi</string>
+    <string name="bridge_admin_local_note">Sahibe özel kontroller sahibin cihazında kalır. Uzaktan yönetim ayrı bir yönetim izni gerektirir.</string>
+    <string name="bridge_admin_name">Cihaz adı</string>
+    <string name="bridge_admin_rename">Yeniden adlandır</string>
+    <string name="bridge_admin_invite">Davet oluştur</string>
+    <string name="bridge_admin_endpoints">Uç noktaları oku</string>
+    <string name="bridge_admin_failed">İstek reddedildi veya kullanılamıyor. Sahibin cihazındaki yönetim iznini kontrol et.</string>
+    <string name="bridge_admin_confirm">Cihaz değişikliğini onayla</string>
+    <string name="pr_diff">Farklar</string>
+    <string name="pr_diff_more_pending">Daha fazla fark sayfası var.</string>
+    <string name="bridge_admin_publish">Yayımla</string>
+    <string name="bridge_admin_unpublish">Yayından kaldır</string>
+    <string name="bridge_admin_service">Hizmet</string>
+    <string name="bridge_admin_ttl">Geçerlilik (saniye)</string>
+    <string name="bridge_admin_all_hosts">Tüm ana makineler</string>
+    <string name="bridge_admin_relay">Genel HTTPS aktarıcı URL’si</string>
+    <string name="bridge_admin_relay_set">Aktarıcıyı ayarla</string>
+    <string name="bridge_admin_relay_start">Aktarıcı barındırmayı başlat</string>
+    <string name="bridge_admin_relay_stop">Aktarıcı barındırmayı durdur</string>
+    <string name="bridge_admin_gateway">Ağ geçidi ana makine adı</string>
+    <string name="bridge_admin_port">Bağlantı noktası (isteğe bağlı)</string>
+    <string name="bridge_admin_gateway_start">Ağ geçidini etkinleştir</string>
+    <string name="bridge_admin_gateway_stop">Ağ geçidini devre dışı bırak</string>
+    <string name="bridge_admin_revoke">Erişimi iptal et</string>
+    <string name="bridge_admin_share">Daveti paylaş</string>
+</resources>

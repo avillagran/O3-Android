@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Programmpfad</string>
+    <string name="provider_field_home_path">Home-Verzeichnis</string>
+    <string name="provider_field_shadow_home_path">Alternatives Home-Verzeichnis</string>
+    <string name="provider_field_launch_args">Startargumente</string>
+    <string name="provider_field_auto_compact_window">Automatisch komprimieren nach</string>
+    <string name="provider_field_server_url">Server-URL</string>
+    <string name="provider_field_server_password">Serverpasswort</string>
+    <string name="provider_field_auth_method">Anmeldemethode</string>
+    <string name="provider_field_api_key">API-Schlüssel</string>
+    <string name="provider_field_gcp_project">GCP-Projekt</string>
+    <string name="provider_field_gcp_location">GCP-Standort</string>
+    <string name="provider_field_source">ACP-Quelle</string>
+    <string name="provider_field_agent_id">Registry-Agent-ID</string>
+    <string name="provider_field_command_path">Alternatives Programm</string>
+    <string name="provider_field_auth_method_id">Authentifizierungsmethoden-ID</string>
+    <string name="provider_field_environment">Umgebungsvariablen</string>
+    <string name="provider_field_name">Name</string>
+    <string name="provider_field_value">Wert</string>
+    <string name="provider_field_sensitive">Vertraulich</string>
+    <string name="provider_field_distribution">Distribution</string>
+    <string name="provider_field_command_args">Befehlsargumente (eines pro Zeile)</string>
+    <string name="provider_field_add_variable">Variable hinzufügen</string>
+    <string name="provider_field_remove_variable">Variable entfernen</string>
+    <string name="provider_field_automatic">Automatisch</string>
+    <string name="provider_field_binary_distribution">Programmdatei</string>
+</resources>

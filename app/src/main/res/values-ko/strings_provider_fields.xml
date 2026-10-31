@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">실행 파일 경로</string>
+    <string name="provider_field_home_path">홈 디렉터리 경로</string>
+    <string name="provider_field_shadow_home_path">대체 홈 디렉터리 경로</string>
+    <string name="provider_field_launch_args">실행 인수</string>
+    <string name="provider_field_auto_compact_window">자동 압축 기준</string>
+    <string name="provider_field_server_url">서버 URL</string>
+    <string name="provider_field_server_password">서버 비밀번호</string>
+    <string name="provider_field_auth_method">로그인 방식</string>
+    <string name="provider_field_api_key">API 키</string>
+    <string name="provider_field_gcp_project">GCP 프로젝트</string>
+    <string name="provider_field_gcp_location">GCP 위치</string>
+    <string name="provider_field_source">ACP 소스</string>
+    <string name="provider_field_agent_id">레지스트리 에이전트 ID</string>
+    <string name="provider_field_command_path">대체 실행 파일</string>
+    <string name="provider_field_auth_method_id">인증 방식 ID</string>
+    <string name="provider_field_environment">환경 변수</string>
+    <string name="provider_field_name">이름</string>
+    <string name="provider_field_value">값</string>
+    <string name="provider_field_sensitive">기밀</string>
+    <string name="provider_field_distribution">배포 방식</string>
+    <string name="provider_field_command_args">명령 인수(줄마다 하나)</string>
+    <string name="provider_field_add_variable">변수 추가</string>
+    <string name="provider_field_remove_variable">변수 제거</string>
+    <string name="provider_field_automatic">자동</string>
+    <string name="provider_field_binary_distribution">실행 파일</string>
+</resources>

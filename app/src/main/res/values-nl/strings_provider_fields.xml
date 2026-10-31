@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Programmapad</string>
+    <string name="provider_field_home_path">Pad naar thuismap</string>
+    <string name="provider_field_shadow_home_path">Pad naar alternatieve thuismap</string>
+    <string name="provider_field_launch_args">Startargumenten</string>
+    <string name="provider_field_auto_compact_window">Automatisch comprimeren na</string>
+    <string name="provider_field_server_url">Server-URL</string>
+    <string name="provider_field_server_password">Serverwachtwoord</string>
+    <string name="provider_field_auth_method">Aanmeldmethode</string>
+    <string name="provider_field_api_key">API-sleutel</string>
+    <string name="provider_field_gcp_project">GCP-project</string>
+    <string name="provider_field_gcp_location">GCP-locatie</string>
+    <string name="provider_field_source">ACP-bron</string>
+    <string name="provider_field_agent_id">Registry-agent-ID</string>
+    <string name="provider_field_command_path">Alternatief programma</string>
+    <string name="provider_field_auth_method_id">Authenticatiemethode-ID</string>
+    <string name="provider_field_environment">Omgevingsvariabelen</string>
+    <string name="provider_field_name">Naam</string>
+    <string name="provider_field_value">Waarde</string>
+    <string name="provider_field_sensitive">Vertrouwelijk</string>
+    <string name="provider_field_distribution">Distributie</string>
+    <string name="provider_field_command_args">Opdrachtargumenten (één per regel)</string>
+    <string name="provider_field_add_variable">Variabele toevoegen</string>
+    <string name="provider_field_remove_variable">Variabele verwijderen</string>
+    <string name="provider_field_automatic">Automatisch</string>
+    <string name="provider_field_binary_distribution">Uitvoerbaar bestand</string>
+</resources>

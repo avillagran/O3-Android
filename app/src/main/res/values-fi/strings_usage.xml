@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Pois</string>
     <string name="usage_sound_policy">Yksi kanavaääni erää kohti. Taustaseuranta säilyttää hiljaisen ilmoituksensa.</string>
     <string name="usage_channel_denied">Ilmoitukset on estetty Android-asetuksissa.</string>
-    <string name="usage_pool_unavailable">Vain yksittäiset raportit. Tarkat jaetut kiintiöt, epäselvät tunnisteet ja nollaushyvitysten toiminnot vaativat uudemman jaetun kirjaston.</string>
+    <string name="usage_pool_unavailable">Yksittäisten tilien raportit. Jaetut kiintiöt näkyvät käyttöpalkissa.</string>
     <string name="usage_auth_required">Kirjaudu palveluntarjoajalle isännällä ja päivitä.</string>
 </resources>

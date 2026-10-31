@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">المسودات المشتركة</string>
+    <string name="shared_draft_note">تتم مزامنة النص تلقائيًا. يتطلب الوصول إلى المرفقات المضيف المصدر. تبقى تعديلات قائمة الانتظار ومحاولات الإرسال محلية.</string>
+    <string name="shared_draft_failed">فشلت المزامنة. تم حفظ النسخ المحلية والأوامر المعلقة.</string>
+    <string name="shared_draft_pending">الأوامر المعلقة: %1$d</string>
+    <string name="shared_draft_save">حفظ النص لدى الجهة المعتمدة</string>
+    <string name="shared_draft_adopt">استخدام النص في المحرر</string>
+    <string name="shared_draft_restore">استعادة مع نسخة احتياطية للهدف</string>
+    <string name="shared_draft_conflict">تعارض: راجع النسختين قبل الحل.</string>
+    <string name="shared_draft_authority">معرّف نقطة نهاية جهة المسودات المعتمدة</string>
+    <string name="shared_draft_select">اختيار جهة المسودات المعتمدة</string>
+    <string name="shared_draft_keep_remote">الاحتفاظ بالنسخة البعيدة</string>
+    <string name="shared_draft_keep_local">الاحتفاظ بالعملية المحلية</string>
+</resources>

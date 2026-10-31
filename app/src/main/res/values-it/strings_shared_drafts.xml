@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Bozze condivise</string>
+    <string name="shared_draft_note">Il testo si sincronizza automaticamente. L’accesso agli allegati richiede l’host di origine. Le modifiche alla coda e i tentativi di invio restano locali.</string>
+    <string name="shared_draft_failed">Sincronizzazione non riuscita. Copie locali e comandi in sospeso conservati.</string>
+    <string name="shared_draft_pending">Comandi in sospeso: %1$d</string>
+    <string name="shared_draft_save">Salva testo presso l’autorità</string>
+    <string name="shared_draft_adopt">Usa testo nell’editor</string>
+    <string name="shared_draft_restore">Ripristina con backup della destinazione</string>
+    <string name="shared_draft_conflict">Conflitto: esamina entrambe le copie prima di risolvere.</string>
+    <string name="shared_draft_authority">ID endpoint dell’autorità delle bozze</string>
+    <string name="shared_draft_select">Seleziona autorità delle bozze</string>
+    <string name="shared_draft_keep_remote">Mantieni copia remota</string>
+    <string name="shared_draft_keep_local">Mantieni operazione locale</string>
+</resources>

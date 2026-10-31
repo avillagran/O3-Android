@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge-administration</string>
+    <string name="bridge_admin_local_note">Ejerkontroller forbliver på ejerens enhed. Fjernadministration kræver særskilt administrationstilladelse.</string>
+    <string name="bridge_admin_name">Enhedsnavn</string>
+    <string name="bridge_admin_rename">Omdøb</string>
+    <string name="bridge_admin_invite">Opret invitation</string>
+    <string name="bridge_admin_endpoints">Læs slutpunkter</string>
+    <string name="bridge_admin_failed">Anmodning afvist eller utilgængelig. Kontroller administrationstilladelsen på ejerens enhed.</string>
+    <string name="bridge_admin_confirm">Bekræft enhedsændring</string>
+    <string name="pr_diff">Forskelle</string>
+    <string name="pr_diff_more_pending">Flere sider med forskelle er tilgængelige.</string>
+    <string name="bridge_admin_publish">Udgiv</string>
+    <string name="bridge_admin_unpublish">Fjern udgivelse</string>
+    <string name="bridge_admin_service">Tjeneste</string>
+    <string name="bridge_admin_ttl">Gyldighed (sekunder)</string>
+    <string name="bridge_admin_all_hosts">Alle værter</string>
+    <string name="bridge_admin_relay">Offentlig HTTPS-relæadresse</string>
+    <string name="bridge_admin_relay_set">Angiv relæ</string>
+    <string name="bridge_admin_relay_start">Start relæhosting</string>
+    <string name="bridge_admin_relay_stop">Stop relæhosting</string>
+    <string name="bridge_admin_gateway">Gatewayværtsnavn</string>
+    <string name="bridge_admin_port">Port (valgfri)</string>
+    <string name="bridge_admin_gateway_start">Aktivér gateway</string>
+    <string name="bridge_admin_gateway_stop">Deaktivér gateway</string>
+    <string name="bridge_admin_revoke">Tilbagekald adgang</string>
+    <string name="bridge_admin_share">Del invitation</string>
+</resources>

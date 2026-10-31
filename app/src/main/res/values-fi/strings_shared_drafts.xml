@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Jaetut luonnokset</string>
+    <string name="shared_draft_note">Teksti synkronoituu automaattisesti. Liitteiden käyttö vaatii lähdeisännän. Jonon muutokset ja lähetysyritykset pysyvät paikallisina.</string>
+    <string name="shared_draft_failed">Synkronointi epäonnistui. Paikalliset kopiot ja odottavat komennot säilytettiin.</string>
+    <string name="shared_draft_pending">Odottavia komentoja: %1$d</string>
+    <string name="shared_draft_save">Tallenna teksti auktoriteetille</string>
+    <string name="shared_draft_adopt">Käytä tekstiä editorissa</string>
+    <string name="shared_draft_restore">Palauta kohteen varmuuskopiolla</string>
+    <string name="shared_draft_conflict">Ristiriita: tarkista molemmat kopiot ennen ratkaisua.</string>
+    <string name="shared_draft_authority">Luonnosauktoriteetin päätepisteen tunnus</string>
+    <string name="shared_draft_select">Valitse luonnosauktoriteetti</string>
+    <string name="shared_draft_keep_remote">Säilytä etäkopio</string>
+    <string name="shared_draft_keep_local">Säilytä paikallinen toiminto</string>
+</resources>

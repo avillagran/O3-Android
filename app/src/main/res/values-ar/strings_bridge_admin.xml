@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">إدارة OmaBridge</string>
+    <string name="bridge_admin_local_note">تبقى أدوات المالك على جهازه. تتطلب الإدارة عن بُعد إذن إدارة منفصلًا.</string>
+    <string name="bridge_admin_name">اسم الجهاز</string>
+    <string name="bridge_admin_rename">إعادة التسمية</string>
+    <string name="bridge_admin_invite">إنشاء دعوة</string>
+    <string name="bridge_admin_endpoints">قراءة نقاط النهاية</string>
+    <string name="bridge_admin_failed">الطلب مرفوض أو غير متاح. تحقق من إذن الإدارة على جهاز المالك.</string>
+    <string name="bridge_admin_confirm">تأكيد تغيير الجهاز</string>
+    <string name="pr_diff">الفروق</string>
+    <string name="pr_diff_more_pending">تتوفر صفحات فروق إضافية.</string>
+    <string name="bridge_admin_publish">نشر</string>
+    <string name="bridge_admin_unpublish">إلغاء النشر</string>
+    <string name="bridge_admin_service">الخدمة</string>
+    <string name="bridge_admin_ttl">مدة الصلاحية (ثوانٍ)</string>
+    <string name="bridge_admin_all_hosts">جميع المضيفين</string>
+    <string name="bridge_admin_relay">عنوان HTTPS عام للمرحل</string>
+    <string name="bridge_admin_relay_set">تعيين المرحل</string>
+    <string name="bridge_admin_relay_start">بدء استضافة المرحل</string>
+    <string name="bridge_admin_relay_stop">إيقاف استضافة المرحل</string>
+    <string name="bridge_admin_gateway">اسم مضيف البوابة</string>
+    <string name="bridge_admin_port">المنفذ (اختياري)</string>
+    <string name="bridge_admin_gateway_start">تمكين البوابة</string>
+    <string name="bridge_admin_gateway_stop">تعطيل البوابة</string>
+    <string name="bridge_admin_revoke">إلغاء الوصول</string>
+    <string name="bridge_admin_share">مشاركة الدعوة</string>
+</resources>

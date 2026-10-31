@@ -24,6 +24,7 @@ import dev.avillagran.ot3android.ui.navigation.VerticalReveal
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import dev.avillagran.ot3android.ui.thread.objects
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.text.NumberFormat
@@ -41,7 +42,7 @@ fun QuotaStripHost(environmentId: String? = null, compact: Boolean = true,
         if (!settings.providerUsage) flowOf(emptyList()) else environmentFlow.flatMapLatest { all ->
             val selected = all.filter { environmentId == null || it.id == environmentId }
             if (selected.isEmpty()) flowOf(emptyList()) else combine(selected.map { env ->
-                quotaSource.observe(env.id).map { env.label to it }
+                quotaSource.observe(env.id).map { env.label to it.copy(environmentId = env.id) }
             }) { it.toList() }
         }
     }
@@ -49,7 +50,7 @@ fun QuotaStripHost(environmentId: String? = null, compact: Boolean = true,
     // Keep the departing content measurable during Ot3Reveal; no departing subscription.
     var last by remember { mutableStateOf<List<Pair<String, QuotaState>>>(emptyList()) }
     if (settings.providerUsage) last = states
-    QuotaStrip(if (settings.providerUsage) states else last, settings.providerUsage, compact, onOpenLimits)
+    PooledQuotaStrip(if (settings.providerUsage) states else last, settings.providerUsage, compact, onOpenLimits)
 }
 
 @Composable
@@ -155,4 +156,71 @@ private fun quotaProviderLabel(driver: String): String = when (driver) {
     "grok" -> "Grok"
     "pi" -> "Pi"
     else -> driver
+}
+
+/** Native owns pooling, workspace ambiguity, pace, account order and weekly exhaustion. */
+@Composable
+private fun PooledQuotaStrip(states: List<Pair<String, QuotaState>>, enabled: Boolean, compact: Boolean, onOpenLimits: () -> Unit) {
+    var presentation by remember { mutableStateOf<JSONObject?>(null) }
+    LaunchedEffect(states) {
+        while (kotlinx.coroutines.currentCoroutineContext().isActive) {
+            try {
+                val environments = org.json.JSONArray(states.mapIndexed { index, (host, state) ->
+                    JSONObject().put("id", state.environmentId ?: "quota-$index").put("name", host).put("state", state.limits ?: JSONObject())
+                        .put("connected", !state.offline).put("refreshFailed", state.failed)
+                })
+                presentation = dev.avillagran.ot3android.core.usage.QuotaReader().present(environments, System.currentTimeMillis())
+            } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+            catch (_: Exception) { presentation = null }
+            kotlinx.coroutines.delay(60_000)
+        }
+    }
+    val providers = presentation?.optJSONArray("providers").objects()
+    val notices = presentation?.optJSONArray("notices").objects()
+    VerticalReveal(enabled && (providers.isNotEmpty() || notices.isNotEmpty()), Modifier.fillMaxWidth().testTag("quota_reveal")) {
+        Column((if (compact) Modifier else Modifier.heightIn(max = 200.dp).verticalScroll(rememberScrollState())).fillMaxWidth().padding(12.dp).testTag("quota_strip"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            notices.forEach { notice ->
+                val resource = when (notice.optString("key")) {
+                    "Disconnected; readings may be outdated" -> R.string.ot3_usage_offline
+                    "Access denied" -> R.string.usage_auth_required
+                    else -> R.string.ot3_usage_unavailable
+                }
+                Text(notice.optString("host") + " · " + stringResource(resource), style = MaterialTheme.typography.labelSmall)
+            }
+            providers.forEach { provider ->
+                Surface(onClick = onOpenLimits, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("quota_group_${states.map { it.first }.distinct().joinToString(", ")}_${provider.getString("label")}"), color = Ot3Theme.colors.foreground.copy(alpha = .025f)) {
+                    Column(Modifier.padding(6.dp)) {
+                        Text(provider.getString("label"), style = MaterialTheme.typography.labelMedium)
+                        val windows = provider.optJSONArray("windows").objects()
+                        (if (compact) windows.take(2) else windows).forEach { window ->
+                            Text(window.optString("label"), style = MaterialTheme.typography.labelSmall)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                window.optJSONArray("segments")?.let { segments ->
+                                    for (i in 0 until segments.length()) {
+                                        val segment = segments.optJSONObject(i)
+                                        val available = segment?.optDouble("availablePercent")?.div(100)?.toFloat()?.coerceIn(0f, 1f)
+                                        Box(Modifier.weight(1f).height(6.dp).background(Ot3Theme.colors.foreground.copy(alpha = .12f))) {
+                                            if (available != null) Box(Modifier.fillMaxWidth(available).fillMaxHeight().background(Ot3Theme.colors.accent).progressSemantics(available))
+                                        }
+                                    }
+                                }
+                            }
+                            val percent = NumberFormat.getPercentInstance(LocalConfiguration.current.locales[0]).format((100 - window.optDouble("availablePercent", 100.0)) / 100)
+                            Text(stringResource(R.string.limits_used, percent), style = MaterialTheme.typography.labelSmall)
+                            if (!window.isNull("pace")) Text(stringResource(when (window.optString("pace")) { "ahead" -> R.string.ot3_pace_fast; "under" -> R.string.ot3_pace_slow; else -> R.string.ot3_pace_normal }), style = MaterialTheme.typography.labelSmall)
+                            window.optJSONArray("segments").objects().mapNotNull { segment ->
+                                val raw = segment.optString("resetsAt")
+                                limitDate(raw)?.time?.let { it to raw }
+                            }.minByOrNull { it.first }?.second?.let { reset ->
+                                formatLimitTime(reset)?.let { Text(stringResource(R.string.ot3_usage_resets_at, it), style = MaterialTheme.typography.labelSmall) }
+                            }
+                        }
+                        if (!compact) provider.optJSONArray("accounts").objects().forEach { account ->
+                            Text(listOf(account.optString("label"), account.optString("plan"), account.optString("hosts")).filter { it.isNotBlank() && it != "null" }.joinToString(" · "), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

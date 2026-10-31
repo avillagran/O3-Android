@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge-administration</string>
+    <string name="bridge_admin_local_note">Ägarens kontroller finns kvar på ägarens enhet. Fjärradministration kräver separat hanteringsbehörighet.</string>
+    <string name="bridge_admin_name">Enhetsnamn</string>
+    <string name="bridge_admin_rename">Byt namn</string>
+    <string name="bridge_admin_invite">Skapa inbjudan</string>
+    <string name="bridge_admin_endpoints">Läs slutpunkter</string>
+    <string name="bridge_admin_failed">Begäran nekades eller är otillgänglig. Kontrollera hanteringsbehörigheten på ägarens enhet.</string>
+    <string name="bridge_admin_confirm">Bekräfta enhetsändring</string>
+    <string name="pr_diff">Skillnader</string>
+    <string name="pr_diff_more_pending">Fler sidor med skillnader finns tillgängliga.</string>
+    <string name="bridge_admin_publish">Publicera</string>
+    <string name="bridge_admin_unpublish">Avpublicera</string>
+    <string name="bridge_admin_service">Tjänst</string>
+    <string name="bridge_admin_ttl">Giltighet (sekunder)</string>
+    <string name="bridge_admin_all_hosts">Alla värdar</string>
+    <string name="bridge_admin_relay">Offentlig HTTPS-reläadress</string>
+    <string name="bridge_admin_relay_set">Ange relä</string>
+    <string name="bridge_admin_relay_start">Starta relävärd</string>
+    <string name="bridge_admin_relay_stop">Stoppa relävärd</string>
+    <string name="bridge_admin_gateway">Gatewayvärdnamn</string>
+    <string name="bridge_admin_port">Port (valfri)</string>
+    <string name="bridge_admin_gateway_start">Aktivera gateway</string>
+    <string name="bridge_admin_gateway_stop">Inaktivera gateway</string>
+    <string name="bridge_admin_revoke">Återkalla åtkomst</string>
+    <string name="bridge_admin_share">Dela inbjudan</string>
+</resources>
