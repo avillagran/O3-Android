@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">O aplikaci</string>
+    <string name="about_licenses">Licence otevřeného softwaru</string>
+    <string name="about_version">Verze %1$s</string>
+    <string name="about_description">O3 Android je mobilní klient pro O3 a T3 Code.</string>
+    <string name="about_translations">Překlady jsou pracovní verze a mohou vyžadovat kontrolu.</string>
+    <string name="about_source">Zdrojový kód aplikace</string>
+    <string name="about_search">Hledat licence</string>
+    <string name="about_unavailable">Oznámení nejsou dostupná.</string>
+    <string name="about_retry">Zkusit znovu</string>
+    <string name="about_loading">Načítání oznámení…</string>
+    <string name="about_count">Oznámení: %1$d / %2$d</string>
+    <string name="about_empty">Žádné licence neodpovídají hledání.</string>
+    <string name="about_expanded">Rozbaleno</string>
+    <string name="about_collapsed">Sbaleno</string>
+    <string name="about_project_source">Zdrojový kód projektu: %1$s</string>
+</resources>

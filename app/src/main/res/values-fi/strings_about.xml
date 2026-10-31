@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">Tietoja</string>
+    <string name="about_licenses">Avoimen lähdekoodin lisenssit</string>
+    <string name="about_version">Versio %1$s</string>
+    <string name="about_description">O3 Android on O3:n ja T3 Coden mobiiliasiakas.</string>
+    <string name="about_translations">Käännökset ovat luonnoksia ja saattavat vaatia tarkistusta.</string>
+    <string name="about_source">Sovelluksen lähdekoodi</string>
+    <string name="about_search">Hae lisenssejä</string>
+    <string name="about_unavailable">Ilmoituksia ei ole saatavilla.</string>
+    <string name="about_retry">Yritä uudelleen</string>
+    <string name="about_loading">Ladataan ilmoituksia…</string>
+    <string name="about_count">Ilmoitukset: %1$d / %2$d</string>
+    <string name="about_empty">Hakua vastaavia lisenssejä ei ole.</string>
+    <string name="about_expanded">Laajennettu</string>
+    <string name="about_collapsed">Supistettu</string>
+    <string name="about_project_source">Projektin lähdekoodi: %1$s</string>
+</resources>

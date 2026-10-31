@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">Om</string>
+    <string name="about_licenses">Licenser för öppen källkod</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_description">O3 Android är en mobilklient för O3 och T3 Code.</string>
+    <string name="about_translations">Översättningarna är utkast och kan behöva granskas.</string>
+    <string name="about_source">Appens källkod</string>
+    <string name="about_search">Sök licenser</string>
+    <string name="about_unavailable">Meddelanden är inte tillgängliga.</string>
+    <string name="about_retry">Försök igen</string>
+    <string name="about_loading">Läser in meddelanden…</string>
+    <string name="about_count">Meddelanden: %1$d / %2$d</string>
+    <string name="about_empty">Inga licenser matchar sökningen.</string>
+    <string name="about_expanded">Utökad</string>
+    <string name="about_collapsed">Hopfälld</string>
+    <string name="about_project_source">Projektets källkod: %1$s</string>
+</resources>

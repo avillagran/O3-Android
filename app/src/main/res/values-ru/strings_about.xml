@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">О приложении</string>
+    <string name="about_licenses">Лицензии открытого ПО</string>
+    <string name="about_version">Версия %1$s</string>
+    <string name="about_description">O3 Android — мобильный клиент для O3 и T3 Code.</string>
+    <string name="about_translations">Переводы являются черновиками и могут требовать проверки.</string>
+    <string name="about_source">Исходный код приложения</string>
+    <string name="about_search">Поиск лицензий</string>
+    <string name="about_unavailable">Уведомления недоступны.</string>
+    <string name="about_retry">Повторить</string>
+    <string name="about_loading">Загрузка уведомлений…</string>
+    <string name="about_count">Уведомления: %1$d / %2$d</string>
+    <string name="about_empty">Подходящие лицензии не найдены.</string>
+    <string name="about_expanded">Развёрнуто</string>
+    <string name="about_collapsed">Свёрнуто</string>
+    <string name="about_project_source">Исходный код проекта: %1$s</string>
+</resources>

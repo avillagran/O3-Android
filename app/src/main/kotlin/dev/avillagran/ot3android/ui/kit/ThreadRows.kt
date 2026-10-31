@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -292,13 +294,16 @@ private fun CaptionLine(
         } else {
             row.project?.let { chip ->
                 val gesture = onChipLongClick?.let { (longClick, click) ->
-                    Modifier.combinedClickable(onClick = click, onLongClick = longClick)
+                    Modifier.combinedClickable(role = Role.Button, onClick = click, onLongClick = longClick)
+                        .semantics { contentDescription = row.projectName.ifBlank { chip.label } }
                 } ?: Modifier
                 if (LocalSidebarRows.current.enabled && LocalSidebarRows.current.sober) {
-                    Box(gesture.size(16.dp), contentAlignment = Alignment.Center) {
+                    Box(gesture.size(if (onChipLongClick != null) Ot3Sizes.touchTarget else 16.dp), contentAlignment = Alignment.Center) {
                         Box(Modifier.size(6.dp).background(if (LocalSidebarRows.current.projectColors) chip.color else colors.dim, CircleShape))
                     }
-                } else ProjectChip(if (LocalSidebarRows.current.projectColors) chip else chip.copy(color = colors.dim), gesture.alpha(if (slim) SLIM_CHIP_ALPHA else 1f))
+                } else Box(gesture.then(if (onChipLongClick != null) Modifier.sizeIn(minWidth = Ot3Sizes.touchTarget, minHeight = Ot3Sizes.touchTarget) else Modifier), contentAlignment = Alignment.Center) {
+                    ProjectChip(if (LocalSidebarRows.current.projectColors) chip else chip.copy(color = colors.dim), Modifier.alpha(if (slim) SLIM_CHIP_ALPHA else 1f))
+                }
             }
         }
         if (slim && LocalSidebarRows.current.enabled) row.machineIcon?.let {
@@ -309,7 +314,7 @@ private fun CaptionLine(
         middle()
         if (row.pinned) {
             if (onUnpin != null) {
-                Box(Modifier.clickable(role = Role.Button, onClick = onUnpin)) {
+                Box(Modifier.size(Ot3Sizes.touchTarget).clickable(role = Role.Button, onClick = onUnpin), contentAlignment = Alignment.Center) {
                     Ot3Icon("pin", stringResource(R.string.ot3_row_unpin), tint = colors.dim)
                 }
             } else {
@@ -347,7 +352,8 @@ private fun SubagentsToggle(model: SubagentsModel, onClick: (() -> Unit)?) {
     )
     Row(
         Modifier
-            .height(CAPTION_LINE)
+            .heightIn(min = if (onClick != null) Ot3Sizes.touchTarget else CAPTION_LINE)
+            .then(if (onClick != null) Modifier.widthIn(min = Ot3Sizes.touchTarget) else Modifier)
             .background(colors.foreground.copy(alpha = SUBAGENTS_FILL), RoundedCornerShape(Ot3Radii.projectChip))
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClickLabel = name, onClick = onClick) else Modifier)
             .semantics { contentDescription = name }

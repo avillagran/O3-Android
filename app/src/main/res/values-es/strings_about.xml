@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">Acerca de</string>
+    <string name="about_licenses">Licencias de código abierto</string>
+    <string name="about_version">Versión %1$s</string>
+    <string name="about_description">O3 Android es un cliente móvil para O3 y T3 Code.</string>
+    <string name="about_translations">Las traducciones son borradores y pueden necesitar revisión.</string>
+    <string name="about_source">Código de la aplicación</string>
+    <string name="about_search">Buscar licencias</string>
+    <string name="about_unavailable">Los avisos no están disponibles.</string>
+    <string name="about_retry">Reintentar</string>
+    <string name="about_loading">Cargando avisos…</string>
+    <string name="about_count">Avisos: %1$d / %2$d</string>
+    <string name="about_empty">Ninguna licencia coincide con la búsqueda.</string>
+    <string name="about_expanded">Expandido</string>
+    <string name="about_collapsed">Contraído</string>
+    <string name="about_project_source">Código del proyecto: %1$s</string>
+</resources>

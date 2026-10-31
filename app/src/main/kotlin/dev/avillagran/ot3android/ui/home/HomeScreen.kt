@@ -1,5 +1,10 @@
 package dev.avillagran.ot3android.ui.home
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.expand
+import androidx.compose.ui.semantics.collapse
+import androidx.compose.ui.semantics.Role
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.CompositionLocalProvider
@@ -480,7 +485,12 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
 @Composable
 private fun ShelfHeader(item: HomeItem.ShelfHeader, onIntent: (HomeIntent) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onIntent(HomeIntent.ToggleShelf(item.shelf)) }
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { onIntent(HomeIntent.ToggleShelf(item.shelf)) }
+            .semantics(mergeDescendants = true) {
+                heading()
+                if (item.expanded) collapse { onIntent(HomeIntent.ToggleShelf(item.shelf)); true }
+                else expand { onIntent(HomeIntent.ToggleShelf(item.shelf)); true }
+            }
             .padding(horizontal = 16.dp).testTag(HomeTags.shelf(item.shelf)),
         verticalAlignment = Alignment.CenterVertically,
     ) {

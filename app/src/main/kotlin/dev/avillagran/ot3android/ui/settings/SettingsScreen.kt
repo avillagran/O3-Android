@@ -28,7 +28,7 @@ import androidx.compose.ui.res.stringResource
 import dev.avillagran.ot3android.R
 
 /** A Settings row and the destination it pushes. */
-enum class SettingsEntry { Environments, Appearance, Notifications, Usage, Archive, Licenses }
+enum class SettingsEntry { Environments, Appearance, Notifications, Usage, Archive, Licenses, About }
 
 /**
  * Preferences root: search translated pages and local appearance options.
@@ -55,8 +55,8 @@ fun SettingsScreen(
                 label = { Text(stringResource(R.string.preferences_search_settings)) }, singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("settings_search"))
             var matches = 0
-            // Archive/Licenses routes are placeholders until P17/P19 supply real modules.
-            listOf(SettingsEntry.Environments, SettingsEntry.Appearance, SettingsEntry.Notifications, SettingsEntry.Usage).forEach { entry ->
+            // Include APK-local information pages alongside the connected settings.
+            listOf(SettingsEntry.Environments, SettingsEntry.Appearance, SettingsEntry.Notifications, SettingsEntry.Usage, SettingsEntry.About, SettingsEntry.Licenses).forEach { entry ->
                 val label = when (entry) {
                     SettingsEntry.Environments -> R.string.preferences_connections
                     SettingsEntry.Appearance -> R.string.appearance_title
@@ -64,6 +64,7 @@ fun SettingsScreen(
                     SettingsEntry.Usage -> R.string.settings_usage
                     SettingsEntry.Archive -> R.string.settings_archive
                     SettingsEntry.Licenses -> R.string.settings_licenses
+                    SettingsEntry.About -> R.string.about_title
                 }
                 val text = stringResource(label)
                 val id = when (entry) {

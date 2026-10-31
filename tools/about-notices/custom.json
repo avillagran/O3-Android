@@ -1,0 +1,58 @@
+[
+  {
+    "name": "O3 Android",
+    "version": "0.1.0",
+    "license": "MIT",
+    "file": "o3-android-MIT.txt",
+    "source": "https://github.com/avillagran/O3-Android"
+  },
+  {
+    "name": "O3 Desktop",
+    "version": "",
+    "license": "MIT",
+    "file": "o3-desktop-MIT.txt",
+    "source": "https://github.com/avillagran/omarchy-t3-code"
+  },
+  {
+    "name": "T3 Code / T3 Mobile",
+    "version": "",
+    "license": "MIT",
+    "file": "t3code-MIT.txt",
+    "source": "https://github.com/pingdotgg/t3code"
+  },
+  {
+    "name": "Omarchy",
+    "version": "4.0.2",
+    "license": "MIT",
+    "file": "omarchy-MIT.txt",
+    "source": "https://github.com/basecamp/omarchy"
+  },
+  {
+    "name": "Fira Code",
+    "version": "6.2",
+    "license": "OFL-1.1",
+    "file": "fira-code-OFL.txt",
+    "source": "https://github.com/tonsky/FiraCode"
+  },
+  {
+    "name": "Lucide",
+    "version": "0.564.0",
+    "license": "ISC / MIT",
+    "file": "lucide.txt",
+    "source": "https://github.com/lucide-icons/lucide"
+  },
+  {
+    "name": "lib-t3-rust",
+    "version": "0.3.5",
+    "license": "MIT",
+    "file": "lib-t3-rust.txt",
+    "source": "https://github.com/avillagran/lib-t3-rust"
+  },
+  {
+    "name": "OmaBridge",
+    "version": "f7eef5c",
+    "license": "MIT",
+    "file": "omabridge-MIT.txt",
+    "source": "https://github.com/avillagran/omabridge"
+  }
+]

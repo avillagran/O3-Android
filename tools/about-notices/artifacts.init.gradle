@@ -1,0 +1,15 @@
+gradle.projectsEvaluated {
+    rootProject.project(':app') {
+        tasks.register('exportLicenseArtifacts') {
+            doLast {
+                def artifacts = configurations.releaseRuntimeClasspath.incoming.resolutionResult.allComponents.findAll { it.moduleVersion != null && it.moduleVersion.group != 'o3-android' }.collect {
+                    [group: it.moduleVersion.group, name: it.moduleVersion.name, version: it.moduleVersion.version]
+                }
+                new File(rootProject.buildDir, 'license-artifacts.json').with {
+                    parentFile.mkdirs()
+                    text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(artifacts))
+                }
+            }
+        }
+    }
+}

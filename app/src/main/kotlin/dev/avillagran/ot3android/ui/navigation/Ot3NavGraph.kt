@@ -65,6 +65,9 @@ interface Ot3Screens {
     fun Settings()
 
     @Composable
+    fun About(licenses: Boolean) {}
+
+    @Composable
     fun SettingsPlaceholder(name: String, title: Int) { NotYetScreen(name) }
 
     @Composable
@@ -156,7 +159,8 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<QuotaLimits> { val route = it.toRoute<QuotaLimits>(); screens.Usage("limits", route.environmentId) }
         composable<Archive> { screens.Maintenance(HostMaintenance("ARCHIVE")) }
         composable<HostMaintenance> { screens.Maintenance(it.toRoute()) }
-        composable<Licenses> { screens.SettingsPlaceholder("Licenses", R.string.settings_licenses) }
+        composable<Licenses> { screens.About(true) }
+        composable<About> { screens.About(false) }
     }
 }
 

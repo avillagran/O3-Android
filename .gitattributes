@@ -1,0 +1,2 @@
+# Preserve terminal blank lines in verbatim upstream legal notices.
+app/src/main/assets/licenses/*.txt whitespace=-blank-at-eof
