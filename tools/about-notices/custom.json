@@ -43,14 +43,14 @@
   },
   {
     "name": "lib-t3-rust",
-    "version": "0.3.5",
+    "version": "0.3.6",
     "license": "MIT",
     "file": "lib-t3-rust.txt",
     "source": "https://github.com/avillagran/lib-t3-rust"
   },
   {
     "name": "OmaBridge",
-    "version": "f7eef5c",
+    "version": "cd0de3a",
     "license": "MIT",
     "file": "omabridge-MIT.txt",
     "source": "https://github.com/avillagran/omabridge"
