@@ -59,7 +59,9 @@ class ThreadCachedSessionTest {
             connection.value = null
             withTimeout(5_000) { session.view.first { it.connectionState == ThreadConnection.Waiting } }
             connection.value = Connection(fake, 3)
-            // A quiet server sends no frame: bounded validation must still release stale UI.
+            // Cursor-only/idle frames must not consume the validation deadline.
+            withTimeout(5_000) { fake.collectors("t1").first { it > 0 } }
+            fake.emitThread("t1", ThreadUpdates.batch(cursor = 30, idle = true))
             withTimeout(8_000) { session.view.first { !it.stale } }
             assertEquals(2, snapshots)
         } finally { session.close(); scope.coroutineContext[Job]!!.cancelAndJoin() }

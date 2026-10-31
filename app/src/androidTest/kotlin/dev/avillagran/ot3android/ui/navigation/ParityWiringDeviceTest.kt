@@ -88,15 +88,21 @@ class ParityWiringDeviceTest {
                 rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement("Parity draft")
                 scenario.onActivity { it.currentFocus?.clearFocus() }
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
+                rule.onNodeWithTag("composer_actions").performClick()
                 awaitEnabled { rule.onNodeWithText("Undo") }.performClick()
+                rule.onNodeWithTag("composer_actions").performClick()
                 rule.onNodeWithText("Redo").performClick()
                 rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextEquals("Parity draft")
+                rule.onNodeWithTag("composer_actions").performClick()
                 rule.onNodeWithText("Quick replies").performClick()
                 rule.waitUntil(5_000) { rule.onAllNodesWithText("Continue.").fetchSemanticsNodes().isNotEmpty() }
                 rule.onNodeWithText("Continue.").performScrollTo().performClick()
                 rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextEquals("Continue.")
                 rule.onNodeWithTag("composer_expand").performClick()
-                rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertIsDisplayed()
+                rule.onNodeWithTag("composer_expanded").assertIsDisplayed()
+                rule.onNodeWithTag("composer_dialog_back").performClick()
+                rule.onNodeWithTag("composer_expanded").assertDoesNotExist()
+                rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextEquals("Continue.")
             }
         }
     }

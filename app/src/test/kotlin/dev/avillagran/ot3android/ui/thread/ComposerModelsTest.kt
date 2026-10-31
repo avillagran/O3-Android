@@ -39,7 +39,7 @@ class ComposerModelsTest {
         val changes = mutableListOf<Pair<String, Any>>()
         rule.setContent { Ot3Theme { ComposerModels(catalog, selection, false, true,
             {}, {}, { id, value -> changes += id to value }, { _, _ -> }) } }
-        rule.onNodeWithText("Model options").performClick()
+        rule.onNodeWithContentDescription("Model options").performClick()
         rule.onNodeWithText("High").performClick()
         rule.runOnIdle { assertEquals(listOf("effort" to "high"), changes) }
     }
@@ -73,7 +73,7 @@ class ComposerModelsTest {
         val changes = mutableListOf<Any>()
         rule.setContent { Ot3Theme { ComposerModels(data.toString(), selected.toString(), false, true,
             {}, {}, { _, value -> changes += value }, { _, _ -> }) } }
-        rule.onNodeWithText("Model options").performClick()
+        rule.onNodeWithContentDescription("Model options").performClick()
         rule.onNodeWithText("Unavailable selection: removed").assertExists()
         rule.onNode(isToggleable()).assertIsOff().performClick()
         rule.runOnIdle { assertEquals(listOf(true), changes) }

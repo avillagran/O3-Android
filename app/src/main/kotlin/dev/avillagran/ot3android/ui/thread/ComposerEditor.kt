@@ -126,6 +126,8 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
     toolbar: @Composable () -> Unit = {},
     onEditorValue: ((TextFieldValue) -> Unit)? = null,
     compact: Boolean = false,
+    enabled: Boolean = !sending,
+    actions: @Composable () -> Unit = {},
 ) {
     val colors = Ot3Theme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -167,13 +169,13 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
     }
     Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
         Column {
-            Row(Modifier.then(if (expanded) Modifier.weight(1f) else Modifier).padding(horizontal = 12.dp, vertical = 6.dp)
+            Row(Modifier.then(if (expanded) Modifier.weight(1f) else Modifier).padding(horizontal = 12.dp, vertical = if (compact && !expanded) 2.dp else 6.dp)
                 .border(1.dp, border, RoundedCornerShape(17.dp)).background(colors.surface, RoundedCornerShape(17.dp)).padding(4.dp), verticalAlignment = Alignment.Bottom) {
-                BasicTextField(value = editor.value, onValueChange = ::update, enabled = !sending, interactionSource = interaction,
+                BasicTextField(value = editor.value, onValueChange = ::update, enabled = enabled, interactionSource = interaction,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foreground), cursorBrush = SolidColor(colors.accent),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default), keyboardActions = KeyboardActions { newline() },
                     maxLines = if (expanded) Int.MAX_VALUE else if (compact) 2 else 6,
-                    modifier = Modifier.weight(1f).then(if (expanded) Modifier.fillMaxHeight() else Modifier.heightIn(min = 56.dp, max = if (compact) 56.dp else 130.dp))
+                    modifier = Modifier.weight(1f).then(if (expanded) Modifier.fillMaxHeight() else Modifier.heightIn(min = if (compact) 48.dp else 56.dp, max = if (compact) 48.dp else 130.dp))
                         .focusRequester(requester).onFocusChanged {
                             editor.focusWanted = it.isFocused
                             if (!it.isFocused && editor.value.composition != null) {
@@ -202,6 +204,7 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
                     } },
                 )
                 if (!expanded) {
+                    actions()
                     Ot3IconButton("square-pen", stringResource(R.string.ot3_composer_edit), onToggle, modifier = Modifier.testTag("composer_expand"))
                     Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                         if (sending) Ot3Spinner(Modifier.testTag(ThreadScreenTags.SENDING), size = 24.dp)

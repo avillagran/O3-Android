@@ -225,10 +225,11 @@ fun ThreadContent(
         with(density) { WindowInsets.ime.getBottom(this).toDp() }
     // Leave room for the reader when the IME occupies most of a landscape window.
     // The same options remain available from the header overflow.
-    val compactComposer = availableEditorHeight < 360.dp ||
+    val compactComposer = availableEditorHeight < 420.dp ||
         (androidx.compose.foundation.layout.WindowInsets.isImeVisible &&
             androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
     val compactEditorToolbar = expanded && availableEditorHeight < 220.dp
+    var findRequest by remember { mutableIntStateOf(0) }
     val editKey = state.queueEdit?.let { org.json.JSONObject(it).getString("runId") }
     val editors = androidx.compose.runtime.saveable.rememberSaveable(editorIdentity, saver = ComposerEditors.StateSaver) { ComposerEditors() }
     val editor = editors.editor(editKey, state.draft)
@@ -294,6 +295,7 @@ fun ThreadContent(
                     }
                 },
                 actions = {
+                    if (!expanded) Ot3IconButton("search", stringResource(R.string.transcript_find), { findRequest++ }, modifier = Modifier.testTag("transcript_find"))
                     if (expanded) Ot3IconButton("arrow-up", stringResource(R.string.thread_send), ::submit, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = state.canSend && !state.sending, tint = Ot3Theme.colors.accent)
                     var quotaMenu by remember { mutableStateOf(false) }
                     var showComposerOptions by remember { mutableStateOf(false) }
@@ -332,7 +334,7 @@ fun ThreadContent(
         },
         bottomBar = {
             if (!expanded) Column(Modifier.navigationBarsPadding().imePadding()
-                .then(if (compactComposer) Modifier.heightIn(max = 64.dp)
+                .then(if (compactComposer) Modifier.heightIn(max = availableEditorHeight * .30f)
                     .verticalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier)) {
                 ThreadQueue(
                     state.view.timeline?.optJSONObject("queue"),
@@ -406,7 +408,7 @@ fun ThreadContent(
                                         val appended = if (draft.isBlank()) "$quoted\n\n" else "$draft\n\n$quoted\n\n"
                                         edit(appended, java.util.UUID.randomUUID().toString())
                                     }) else null,
-                                ))
+                                ), findRequest = findRequest)
                         }
                     }
                 }
@@ -564,7 +566,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
     val pending by model.attachmentPending.collectAsStateWithLifecycle()
     val storageError by model.attachmentStorageError.collectAsStateWithLifecycle()
     if (storageError) Text(stringResource(R.string.composer_uncertain), color = MaterialTheme.colorScheme.error)
-    val displayed = snapshot.copy(attachments = attachments, loading = unavailable || storageError, uncertainCommand = pending)
+    val displayed = snapshot.copy(attachments = attachments, loading = unavailable || storageError, sending = state.sending, uncertainCommand = pending)
     if (pending != null) {
         Row {
             TextButton(onClick = { model.retry(pending!!) }, enabled = state.connected && !state.sending) { Text(stringResource(R.string.thread_resend)) }

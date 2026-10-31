@@ -58,6 +58,8 @@ android {
 val hostJniDir = rootProject.file("libs/host/linux-x86_64")
 val requireHostJniProperty = providers.gradleProperty("ot3a.requireHostJni").orElse("false")
 tasks.withType<Test>().configureEach {
+    // Native phone-size screenshot comparisons hold several 2712px image buffers.
+    maxHeapSize = "1g"
     providers.gradleProperty("ot3a.followLabDir").orNull?.let {
         systemProperty("ot3a.followLabDir", it)
         maxHeapSize = "256m"
