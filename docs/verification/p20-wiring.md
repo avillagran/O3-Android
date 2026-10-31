@@ -31,10 +31,15 @@ No phone or /home/node/Work/ot3-android working-tree changes.
   Timeline diffs use enhanced review controls with the same preferences.
 - Connections: environment manager, enrollment/pairing and full SDK identity.
 
+- Providers (merged PR85): Settings contribution and typed route, explicit host selection,
+  controller scoped to selected host/connected transport, ephemeral external auth URL callback.
+  No project scope or all-host mutation is offered; P07 binding limitations still apply.
+- Header (merged PR79): P02 brand glyph/sidebar style/master animations and effective
+  reduced-motion policy now reach the production Home header in both orientations.
+
 ## Hidden / incomplete
 
-- Providers/header/transcript: PR85/79/88 still open at last check. Existing exports
-  and typed routes remain separate seams; this branch does not cherry-pick them.
+- Transcript: PR88 remains a separate contribution; this pass does not integrate it.
 - Add project / command palette: no delivered page; remove Home's dead entry points.
 - Archive, licenses, shortcuts, integrations, storage, memory: no merged page module.
 - P05 named groups / physical grouping: native sidebar adapter integration remains
@@ -52,7 +57,9 @@ No phone or /home/node/Work/ot3-android working-tree changes.
 - Live host uploads, actual multi-host mutations and checkpoints require further
   acceptance. Fixture/device results do not prove live host behavior.
 
-## Verification
+## Initial wiring verification (before merged contributions)
+
+Current integration/repair results: [P20 instrumented repair](p20-instrumented-repair.md).
 
 - Core: 245 passed, 176 skipped, zero failures (421 total).
 - App: 441 passed, 16 skipped, zero failures (457 total).

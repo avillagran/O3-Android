@@ -91,3 +91,32 @@ internal fun SourceControlPreferencesPage(navigator: Ot3Navigator) {
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ProvidersPreferencesPage(navigator: Ot3Navigator) {
+    val graph = LocalContext.current.appGraph
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val environments by graph.environmentRepository.environments.collectAsStateWithLifecycle(initialValue = emptyList())
+    var environment by rememberSaveable { mutableStateOf<String?>(null) }
+    val supervisor by key(environment) {
+        produceState<dev.avillagran.ot3android.core.connection.ConnectionSupervisor?>(null) {
+            value = environment?.let { graph.connectionManager.supervisor(it)?.also(graph.connectionManager::startIfCurrent) }
+        }
+    }
+    val connection by key(environment, supervisor) {
+        (supervisor?.connection ?: kotlinx.coroutines.flow.flowOf(null)).collectAsStateWithLifecycle(initialValue = null)
+    }
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.preferences_providers)) },
+        navigationIcon = { TextButton(onClick = { navigator.back() }) { Text(stringResource(R.string.action_back)) } }) }) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            ScopeChoice(stringResource(R.string.preferences_all_environments), environment, environments.map { PreferencesScopeOption(it.id, it.label) }) { environment = it }
+            val selected = environment
+            val transport = connection?.transport
+            if (selected != null && transport != null) key(selected, connection) {
+                val controller = remember { dev.avillagran.ot3android.core.providers.ProviderAdministration(selected, transport) }
+                dev.avillagran.ot3android.ui.settings.providers.ProvidersRoute(controller, { navigator.back() }, uriHandler::openUri)
+            } else Text(stringResource(if (selected != null) R.string.ot3_git_offline else R.string.preferences_all_environments))
+        }
+    }
+}

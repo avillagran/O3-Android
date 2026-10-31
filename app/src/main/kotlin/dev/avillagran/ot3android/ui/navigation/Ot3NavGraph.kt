@@ -47,6 +47,9 @@ interface Ot3Screens {
     fun SourceControlPreferences() {}
 
     @Composable
+    fun ProvidersPreferences() {}
+
+    @Composable
     fun ProjectPreferences(route: ProjectPreferences) {}
 
     @Composable
@@ -135,6 +138,7 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<Settings> { screens.Settings() }
         composable<GeneralPreferences> { screens.GeneralPreferences() }
         composable<SourceControlPreferences> { screens.SourceControlPreferences() }
+        composable<ProvidersPreferences> { screens.ProvidersPreferences() }
         composable<ConnectionsPreferences> { screens.ConnectionsPreferences() }
         composable<ProjectPreferences> { screens.ProjectPreferences(it.toRoute()) }
         composable<Environments> { screens.Environments() }

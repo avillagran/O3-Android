@@ -16,6 +16,19 @@ import org.junit.Test
 class SettingsNavigationDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
 
+    @Test fun providersContributionOpensFromProductionSettingsAndReturns() {
+        ActivityScenario.launch(dev.avillagran.ot3android.MainActivity::class.java).use {
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(NavTags.tab(TopTab.Settings)).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+            rule.onNodeWithTag("settings_page_providers").performScrollTo().performClick()
+            rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+            rule.onAllNodesWithText("All environments").onFirst().assertIsDisplayed()
+            rule.onNodeWithText("All projects").assertDoesNotExist()
+            rule.onNodeWithText("Back").performClick()
+            rule.onNodeWithTag(SettingsTags.ROOT).assertIsDisplayed()
+        }
+    }
+
     @Test fun settingsAndNestedPagesHaveBackWithoutFooter() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->

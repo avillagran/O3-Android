@@ -183,13 +183,13 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
             ) {
                 if (LocalConfiguration.current.screenHeightDp < 480) {
                     Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { Header(state, onIntent, sidebarControls) }
+                        Box(Modifier.weight(1f)) { Header(state, onIntent, sidebarControls, dev.avillagran.ot3android.ui.sky.homeBrandConfig(settings, motion.level == Ot3MotionLevel.OFF)) }
                         Box(Modifier.weight(1f)) {
                             SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                         }
                     }
                 } else Column(Modifier.statusBarsPadding()) {
-                    Header(state, onIntent, sidebarControls)
+                    Header(state, onIntent, sidebarControls, dev.avillagran.ot3android.ui.sky.homeBrandConfig(settings, motion.level == Ot3MotionLevel.OFF))
                     SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                 }
             }
@@ -229,12 +229,12 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
 }
 
 @Composable
-private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarControls: @Composable () -> Unit) {
+private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarControls: @Composable () -> Unit, brandConfig: dev.avillagran.ot3android.ui.sky.O3BrandConfig) {
     val header = state?.header
     var menuOpen by remember { mutableStateOf(false) }
     val colors = Ot3Theme.colors
     SkyBrandRow(colors.foreground, colors.dim,
-        modifier = Modifier.testTag("home_brand"),
+        modifier = Modifier.testTag("home_brand"), brandConfig = brandConfig,
         logo = { Icon(painterResource(Ot3Icons.T3Logo), null, tint = colors.foreground) },
     ) {
         header?.counts?.let { counts ->

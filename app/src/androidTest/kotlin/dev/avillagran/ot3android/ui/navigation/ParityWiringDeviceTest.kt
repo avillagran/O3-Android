@@ -15,6 +15,16 @@ import org.junit.Test
 class ParityWiringDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
 
+    // Espresso's closeSoftKeyboard returns before the IME finish-composition callback
+    // is necessarily delivered to Compose. Wait for the real product gate; a control
+    // that stays disabled still fails within the bounded deadline.
+    private fun awaitEnabled(node: () -> SemanticsNodeInteraction): SemanticsNodeInteraction {
+        rule.waitUntil(5_000) {
+            !node().fetchSemanticsNode().config.contains(androidx.compose.ui.semantics.SemanticsProperties.Disabled)
+        }
+        return node().assertIsEnabled()
+    }
+
     @Test fun interruptedAttachmentCommandReopensWithoutReplayAndRetriesIdenticalBytes() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val directory = context.noBackupFilesDir.resolve("fixture-composer-attachments").apply { mkdirs() }
@@ -35,8 +45,9 @@ class ParityWiringDeviceTest {
                 openThread()
                 scenario.onActivity { it.fixture.queueUnknownFirst = true }
                 rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement("Attachment acceptance")
+                scenario.onActivity { it.currentFocus?.clearFocus() }
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
-                rule.onNodeWithTag(ThreadScreenTags.SEND).assertIsEnabled().performClick()
+                awaitEnabled { rule.onNodeWithTag(ThreadScreenTags.SEND) }.performClick()
                 rule.waitUntil(10_000) { var ready = false; scenario.onActivity { activity ->
                     val calls = activity.fixture.transport.calls.filter { it.fn == "orchestration.dispatchCommand" }
                     ready = calls.size == 1
@@ -70,13 +81,14 @@ class ParityWiringDeviceTest {
         }
         for (dark in listOf(false, true)) for (landscape in listOf(false, true)) {
             ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
-                .putExtra("parity", true).putExtra("request", "editor").putExtra("dark", dark).putExtra("landscape", landscape)).use {
+                .putExtra("parity", true).putExtra("request", "editor").putExtra("dark", dark).putExtra("landscape", landscape)).use { scenario ->
                 rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
                 rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
                 rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().isNotEmpty() }
                 rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement("Parity draft")
+                scenario.onActivity { it.currentFocus?.clearFocus() }
                 androidx.test.espresso.Espresso.closeSoftKeyboard()
-                rule.onNodeWithText("Undo").assertIsEnabled().performClick()
+                awaitEnabled { rule.onNodeWithText("Undo") }.performClick()
                 rule.onNodeWithText("Redo").performClick()
                 rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextEquals("Parity draft")
                 rule.onNodeWithText("Quick replies").performClick()

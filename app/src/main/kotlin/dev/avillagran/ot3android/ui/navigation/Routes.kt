@@ -135,3 +135,6 @@ data class ProjectPreferences(val environmentId: String? = null, val projectId: 
 
 @Serializable
 data object SourceControlPreferences
+
+@Serializable
+data object ProvidersPreferences

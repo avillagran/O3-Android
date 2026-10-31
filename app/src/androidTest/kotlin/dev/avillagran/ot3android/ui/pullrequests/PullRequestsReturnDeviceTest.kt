@@ -84,9 +84,13 @@ class PullRequestsReturnDeviceTest {
     }
     private fun waitForPosition(scenario: ActivityScenario<WorkspaceFixtureActivity>, expected: Pair<Int, Int>) {
         var actual: Pair<Int, Int>? = null
-        rule.waitUntil(15_000) {
-            scenario.onActivity { activity -> activity.fixture.prListState?.let { actual = it.firstVisibleItemIndex to it.firstVisibleItemScrollOffset } }
-            actual == expected
+        try {
+            rule.waitUntil(15_000) {
+                scenario.onActivity { activity -> activity.fixture.prListState?.let { actual = it.firstVisibleItemIndex to it.firstVisibleItemScrollOffset } }
+                actual == expected
+            }
+        } catch (error: androidx.compose.ui.test.ComposeTimeoutException) {
+            throw AssertionError("Expected PR anchor $expected, actual $actual", error)
         }
         assertEquals(expected, actual)
     }

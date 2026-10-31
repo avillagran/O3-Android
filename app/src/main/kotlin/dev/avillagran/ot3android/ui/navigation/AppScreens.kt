@@ -189,6 +189,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     @Composable
     override fun Settings() {
         SettingsScreen(onBack = { navigator.home() }, contributions = listOf(
+            dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "providers" }) { navigator.push(ProvidersPreferences) },
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "general" }) { navigator.push(GeneralPreferences) },
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "projects" }) { navigator.push(ProjectPreferences()) },
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "connections" }) { navigator.push(ConnectionsPreferences) },
@@ -204,6 +205,9 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             }
         })
     }
+
+    @Composable
+    override fun ProvidersPreferences() { ProvidersPreferencesPage(navigator) }
 
     @Composable
     override fun SourceControlPreferences() { SourceControlPreferencesPage(navigator) }
