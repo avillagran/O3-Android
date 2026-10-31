@@ -1,5 +1,4 @@
-<!-- Android read states absent from the pinned ot3 catalog; en/es, English fallback elsewhere. -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources xmlns:ns0="http://schemas.android.com/tools" ns0:ignore="MissingTranslation">
   <string name="pr_environment">Environment</string>
   <string name="pr_partial">Some projects could not be loaded. Refresh to retry.</string>
   <string name="pr_changed_files">%1$d changed files</string>
@@ -13,4 +12,17 @@
   <string name="pr_passing">Passing</string>
   <string name="pr_failing">Failing</string>
   <string name="pr_neutral">Neutral</string>
-<string name="pr_environment_unavailable">Selected environment unavailable</string><string name="pr_project_unavailable">Selected project unavailable</string></resources>
+  <string name="pr_environment_unavailable">Selected environment unavailable</string>
+  <string name="pr_project_unavailable">Selected project unavailable</string>
+  <string name="pr_confirm">Confirm</string>
+  <string name="pr_close">Close</string>
+  <string name="pr_reopen">Reopen</string>
+  <string name="pr_ready">Ready for review</string>
+  <string name="pr_draft">Convert to draft</string>
+  <string name="pr_reply">Leave a comment</string>
+  <string name="pr_comment">Comment</string>
+  <string name="pr_approve">Approve</string>
+  <string name="pr_request_changes">Request changes</string>
+  <string name="pr_write_unknown">The write result is unknown. Check the provider before taking another action.</string>
+  <string name="pr_merge">Merge</string>
+</resources>

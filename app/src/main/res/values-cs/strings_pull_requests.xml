@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Potvrdit</string>
+  <string name="pr_close">Zavřít</string>
+  <string name="pr_reopen">Znovu otevřít</string>
+  <string name="pr_ready">Připraveno ke kontrole</string>
+  <string name="pr_draft">Převést na koncept</string>
+  <string name="pr_reply">Napište komentář</string>
+  <string name="pr_comment">Komentovat</string>
+  <string name="pr_approve">Schválit</string>
+  <string name="pr_request_changes">Požádat o změny</string>
+  <string name="pr_write_unknown">Výsledek akce není znám. Před další akcí zkontrolujte poskytovatele.</string>
+  <string name="pr_merge">Sloučit</string>
+</resources>

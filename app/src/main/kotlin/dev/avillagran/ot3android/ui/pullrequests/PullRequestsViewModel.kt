@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import dev.avillagran.ot3android.core.connection.Connection
 import dev.avillagran.ot3android.core.domain.Environment
 import dev.avillagran.ot3android.core.pullrequests.PullRequestReader
+import dev.avillagran.ot3android.core.pullrequests.PullRequestWrites
+import dev.avillagran.ot3android.core.pullrequests.PullRequestWriteResult
 import dev.avillagran.ot3android.core.shell.ShellProject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -131,17 +133,38 @@ class PullRequestsViewModel(
     companion object { fun key(entry: JSONObject) = "${entry.optString("host")}/${entry.optString("projectId")}/${entry.optString("repository")}#${entry.optInt("number")}" }
 }
 
-data class PullRequestState(val tab: String = "detail", val busy: Boolean = false, val offline: Boolean = false, val failed: Boolean = false, val detail: JSONObject? = null, val content: JSONObject? = null)
+data class PullRequestState(val tab: String = "detail", val busy: Boolean = false, val offline: Boolean = false, val failed: Boolean = false, val detail: JSONObject? = null, val content: JSONObject? = null, val writing: Boolean = false, val writeUnknown: Boolean = false)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PullRequestViewModel(
-    environmentId: String, reference: JSONObject, connection: (String) -> Flow<Connection?>,
+    environmentId: String, private val reference: JSONObject, connection: (String) -> Flow<Connection?>,
     private val saved: SavedStateHandle = SavedStateHandle(),
     read: suspend (Connection, String, JSONObject) -> JSONObject? = { c, a, r -> PullRequestReader().read(c.transport, a, r) },
 ) : ViewModel() {
+    private var activeConnection: Connection? = null
+    private val writeState = MutableStateFlow(false to (saved.get<Boolean>("writeUnresolved") == true))
+    fun write(values: JSONObject) {
+        val current = activeConnection ?: return
+        if (writeState.value.first || writeState.value.second) return
+        saved["writeUnresolved"] = true
+        writeState.value = true to false
+        viewModelScope.launch {
+            try {
+                when (PullRequestWrites().write(current.transport, reference, values)) {
+                    is PullRequestWriteResult.Received -> {
+                        if (activeConnection !== current) writeState.value = false to true
+                        else { saved["writeUnresolved"] = false; writeState.value = false to false; refresh() }
+                    }
+                    PullRequestWriteResult.Unknown -> writeState.value = false to true
+                }
+            } catch (cancelled: CancellationException) { writeState.value = false to true; throw cancelled }
+            catch (_: Exception) { saved["writeUnresolved"] = false; writeState.value = false to false }
+        }
+    }
     private val tab = saved.getStateFlow("tab", "detail")
     private val refresh = MutableStateFlow(0)
     val state = connection(environmentId).flatMapLatest { current ->
+        activeConnection = current
         // Data cannot cross a connection epoch, even if an old request finishes late.
         if (current == null) tab.map { PullRequestState(tab = it, offline = true) }
         else channelFlow {
@@ -149,14 +172,15 @@ class PullRequestViewModel(
             combine(tab, refresh) { page, _ -> page }.collectLatest { page ->
                 send(PullRequestState(page, busy = true, detail = detail))
                 try {
-                    if (detail == null || page == "detail") detail = checkNotNull(read(current, "detail", reference))
+                    detail = checkNotNull(read(current, "detail", reference))
                     val content = if (page == "detail") detail else checkNotNull(read(current, page, reference))
                     send(PullRequestState(page, detail = detail, content = content))
                 } catch (cancelled: CancellationException) { throw cancelled }
                 catch (_: Exception) { send(PullRequestState(page, failed = true, detail = detail)) }
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), PullRequestState())
+    }.combine(writeState) { page, writing -> page.copy(writing = writing.first, writeUnknown = writing.second) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), PullRequestState())
     fun selectTab(value: String) { if (value in listOf("detail", "checks", "activity")) saved["tab"] = value }
     fun refresh() { refresh.update { it + 1 } }
 }
