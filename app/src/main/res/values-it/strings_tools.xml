@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">L’output in tempo reale non è disponibile in questa versione della libreria. Aggiorna per leggere l’output più recente.</string>
+</resources>

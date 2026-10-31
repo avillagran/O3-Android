@@ -28,6 +28,8 @@ import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.ui.theme.FiraCode
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import kotlinx.coroutines.CancellationException
+import dev.avillagran.ot3android.core.tools.ToolInspectorOwner
+import dev.avillagran.ot3android.core.tools.ToolInspectorRead
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import org.json.JSONObject
@@ -37,6 +39,18 @@ private data class InspectorRead(val loading: Boolean = true, val failed: Boolea
 /** Reader-owned window: lazy-row recycling cannot dispose its selected inspector. */
 @Composable
 internal fun ToolInspectorDialog(reference: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onClose: () -> Unit) {
+    ToolInspectorDialog(reference, onInspect, null, onClose)
+}
+
+/** P20 passes the viewer owner here so a host/thread switch disposes the previous read. */
+@Composable
+internal fun ToolInspectorDialog(reference: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, owner: ToolInspectorOwner?, onClose: () -> Unit) {
+    val openingOwner = remember { owner }
+    if (owner != openingOwner) {
+        // Do not send the previous host's item reference to the newly selected host.
+        LaunchedEffect(owner) { onClose() }
+        return
+    }
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
         val view = androidx.compose.ui.platform.LocalView.current
@@ -48,7 +62,7 @@ internal fun ToolInspectorDialog(reference: JSONObject, onInspect: suspend (JSON
             shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Ot3Theme.colors.divider)) {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(12.dp)
                 .testTag("thread_inspector_scroll")) {
-                ToolInspectorSurface(reference, onInspect, onClose)
+                ToolInspectorSurface(reference, onInspect, onClose, owner)
             }
         }
         }
@@ -57,11 +71,11 @@ internal fun ToolInspectorDialog(reference: JSONObject, onInspect: suspend (JSON
 
 /** Displays only native toolInspector.parse fields. Tabs and retry are local reading state. */
 @Composable
-internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onClose: (() -> Unit)? = null) {
+internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSONObject) -> JSONObject?, onClose: (() -> Unit)? = null, owner: ToolInspectorOwner? = null) {
     // A new reference owns a new state object as well as cancelling the previous effect.
     // Even a reader that returns after cancellation cannot publish into the new inspector.
     val identity = reference.toString()
-    key(identity) {
+    key(owner, identity) {
         var attempt by remember { mutableIntStateOf(0) }
         var mode by rememberSaveable { mutableStateOf("details") }
         var result by remember { mutableStateOf(InspectorRead()) }
@@ -71,7 +85,7 @@ internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSO
             // its inspector before the replacement read returns.
             result = result.copy(loading = true, failed = false)
             result = try {
-                val response = reader(JSONObject(identity))
+                val response = ToolInspectorRead.read(JSONObject(identity), owner, reader)
                 currentCoroutineContext().ensureActive()
                 InspectorRead(loading = false, view = response)
             } catch (cancelled: CancellationException) {
@@ -128,6 +142,9 @@ internal fun ToolInspectorContent(
                 if (status.isNotBlank() || !view.isNull("exitCode")) Text(
                     listOfNotNull(status.takeIf { it.isNotBlank() }?.let { inspectorLabel(it) }, if (view.isNull("exitCode")) null else stringResource(R.string.ot3_inspector_exit_code) + ": " + view.get("exitCode")).joinToString(" · "),
                     color = if (failure) colors.failed else colors.dim, modifier = Modifier.testTag("thread_inspector_status"), style = MaterialTheme.typography.bodySmall)
+                if (referenceType == "command_execution") Text(stringResource(R.string.tools_live_unavailable),
+                    color = colors.dim, style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.testTag("thread_inspector_live_unavailable"))
                 if (mode == "details" && view.optBoolean("emptyOutput")) Text(stringResource(R.string.ot3_inspector_empty_output), color = colors.dim, style = MaterialTheme.typography.bodySmall)
                 if (view.optBoolean("outputOmitted")) Text(stringResource(R.string.ot3_inspector_output_omitted), color = colors.dim, style = MaterialTheme.typography.bodySmall)
                 val sections = when (mode) {
@@ -135,7 +152,9 @@ internal fun ToolInspectorContent(
                     "metadata" -> listOf(JSONObject().put("key", "metadata").put("label", stringResource(R.string.ot3_inspector_metadata)).put("text", view.optString("metadata")).put("truncated", view.optBoolean("metadataTruncated")))
                     else -> view.optJSONArray("sections").objects()
                 }
-                sections.forEachIndexed { index, section ->
+                if (sections.size > 16) Text(stringResource(R.string.ot3_inspector_truncated),
+                    color = colors.failed, style = MaterialTheme.typography.labelSmall)
+                sections.take(16).forEachIndexed { index, section ->
                     key(mode, index, section.optString("key")) { InspectorSection(section) }
                 }
             }
@@ -146,13 +165,16 @@ internal fun ToolInspectorContent(
 @Composable
 private fun InspectorSection(section: JSONObject) {
     val sectionKey = section.optString("key")
+    val display = remember(section.optString("text"), sectionKey) {
+        ToolInspectorRead.display(section.optString("text"), if (sectionKey == "raw") 128 * 1024 else 64 * 1024)
+    }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(inspectorLabel(section.optString("label")), color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
-            CopyText(section.optString("text"), "inspector_$sectionKey")
+            CopyText(display.text, "inspector_$sectionKey")
         }
         SelectionContainer {
-            Text(section.optString("text"), fontFamily = FiraCode, style = MaterialTheme.typography.bodySmall,
+            Text(display.text, fontFamily = FiraCode, style = MaterialTheme.typography.bodySmall,
                 color = if (sectionKey == "input") Ot3Theme.colors.foreground else Ot3Theme.colors.dim,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 36.dp, max = 320.dp)
                     .clip(RoundedCornerShape(6.dp))
@@ -161,7 +183,7 @@ private fun InspectorSection(section: JSONObject) {
                     .verticalScroll(rememberScrollState()).padding(8.dp)
                     .testTag("thread_inspector_section_$sectionKey"))
         }
-        if (section.optBoolean("truncated")) Text(stringResource(R.string.ot3_inspector_truncated),
+        if (section.optBoolean("truncated") || display.truncated) Text(stringResource(R.string.ot3_inspector_truncated),
             style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.failed)
     }
 }

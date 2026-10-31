@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">Live output is unavailable in this library version. Refresh to read the latest output.</string>
+</resources>

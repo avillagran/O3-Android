@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">Liveutdata är inte tillgängliga i denna biblioteksversion. Uppdatera för att läsa senaste utdata.</string>
+</resources>

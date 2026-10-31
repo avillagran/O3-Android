@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">Bu kitaplık sürümünde canlı çıktı kullanılamıyor. En son çıktıyı okumak için yenileyin.</string>
+</resources>
