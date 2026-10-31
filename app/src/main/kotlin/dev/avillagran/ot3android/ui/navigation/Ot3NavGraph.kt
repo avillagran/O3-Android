@@ -53,7 +53,13 @@ interface Ot3Screens {
     fun ProjectPreferences(route: ProjectPreferences) {}
 
     @Composable
+    fun Git(route: ThreadGit) {}
+
+    @Composable
     fun Changes(route: ThreadChanges) {}
+
+    @Composable
+    fun Maintenance(route: HostMaintenance) {}
 
     @Composable
     fun Settings()
@@ -117,6 +123,7 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
                 }
             }
         }
+        composable<ThreadGit> { screens.Git(it.toRoute()) }
         composable<ThreadChanges> { screens.Changes(it.toRoute()) }
         composable<NewThread> { entry -> screens.NewChat(entry) }
         composable<NewThreadDraft> { entry -> screens.NewChatDraft(entry, entry.toRoute()) }
@@ -147,7 +154,8 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<ScanPairingCode> { screens.ScanPairingCode() }
         composable<Usage> { screens.Usage("usage", null) }
         composable<QuotaLimits> { val route = it.toRoute<QuotaLimits>(); screens.Usage("limits", route.environmentId) }
-        composable<Archive> { screens.SettingsPlaceholder("Archive", R.string.settings_archive) }
+        composable<Archive> { screens.Maintenance(HostMaintenance("ARCHIVE")) }
+        composable<HostMaintenance> { screens.Maintenance(it.toRoute()) }
         composable<Licenses> { screens.SettingsPlaceholder("Licenses", R.string.settings_licenses) }
     }
 }

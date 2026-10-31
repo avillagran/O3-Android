@@ -40,7 +40,8 @@ class CheckpointRollback(
         check(!restoreFiles || dirtyFilesConfirmed) { "revert_dirty_confirmation_required" }
         GitOperations.authorize(transport, "orchestration:operate")
         val reference = saved.getJSONObject("reference")
-        val scope = domain.domain("gitControls.scope", JSONObject(target.toString()).put("shell", transport.shell()).put("requestId", saved.getString("requestId"))) as JSONObject
+        val shell = transport.shell()
+        val scope = domain.domain("gitControls.scope", gitTarget(target, shell).put("shell", shell).put("requestId", saved.getString("requestId"))) as JSONObject
         val environment = scope.getString("environment")
         check(scope.getString("thread") == reference.getString("threadId")) { "revert_scope_mismatch" }
         val id = saved.getString("requestId")

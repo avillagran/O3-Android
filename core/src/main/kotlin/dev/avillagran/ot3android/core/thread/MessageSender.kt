@@ -43,6 +43,10 @@ class MessageSender(
     private val scope: CoroutineScope,
     private val newId: () -> String = { ID_PREFIX + UUID.randomUUID() },
 ) {
+    private var admission: dev.avillagran.ot3android.core.git.CheckoutAdmission? = null
+    constructor(outbox: OutboxRepository, scope: CoroutineScope, admission: dev.avillagran.ot3android.core.git.CheckoutAdmission) : this(outbox, scope) {
+        this.admission = admission
+    }
     /** Rust builds queue mutations; the host only assigns and durably stores the retry id. */
     suspend fun queue(
         transport: T3Transport?,
@@ -172,7 +176,15 @@ class MessageSender(
         }
     }
 
-    private suspend fun dispatch(transport: T3Transport, commandId: String, commandJson: String): SendResult = try {
+    private suspend fun dispatch(transport: T3Transport, commandId: String, commandJson: String): SendResult {
+        val gate = admission ?: return dispatchAdmitted(transport, commandId, commandJson)
+        val entry = outbox.find(commandId) ?: return SendResult.Failed(NOT_IN_OUTBOX)
+        return try { gate.command(entry.environmentId) { dispatchAdmitted(transport, commandId, commandJson) } }
+        catch (e: CancellationException) { throw e }
+        catch (_: IllegalStateException) { outbox.setState(commandId, OutboxEntity.STATE_UNKNOWN); SendResult.Failed(COMMAND_PENDING) }
+    }
+
+    private suspend fun dispatchAdmitted(transport: T3Transport, commandId: String, commandJson: String): SendResult = try {
         val stored = JSONObject(commandJson)
         val launch = stored.optJSONObject(LAUNCH_ENVELOPE)
         val response = if (launch == null) transport.call(DISPATCH, stored)

@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -105,14 +107,28 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onChanges: (() -> Unit)? = null) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val checkpoint by viewModel.checkpoint.collectAsStateWithLifecycle()
+    val checkpointMessages by viewModel.checkpointMessages.collectAsStateWithLifecycle()
+    if (checkpoint.open) androidx.compose.ui.window.Dialog(onDismissRequest = viewModel::closeCheckpoint,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        androidx.compose.material3.Surface(Modifier.fillMaxWidth().fillMaxHeight(.9f).safeDrawingPadding()) {
+            dev.avillagran.ot3android.ui.git.CheckpointRollbackSurface(
+                checkpoint.preview?.let { org.json.JSONObject(it) }, checkpoint.record?.let { org.json.JSONObject(it) },
+                state.connected && !checkpoint.busy, canRestoreFiles = checkpoint.canRestoreFiles,
+                recoveryPrepared = !checkpoint.busy && !checkpoint.failed,
+                onConfirm = viewModel::confirmCheckpoint, onRefresh = viewModel::refreshCheckpoint,
+                onRecover = viewModel::recoverCheckpoint, onClose = viewModel::closeCheckpoint,
+                errorText = if (checkpoint.failed) stringResource(R.string.ot3_git_checkpoint_unavailable) else null)
+        }
+    }
     val imageConnection by viewModel.imageConnection.collectAsStateWithLifecycle()
     val diffSettings by androidx.compose.ui.platform.LocalContext.current.devGraph().diffReviewSettings.collectAsStateWithLifecycle()
     val graph = androidx.compose.ui.platform.LocalContext.current.devGraph()
     val clientSettings by graph.generalClientPreferences.settings.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
     val mathRendering by androidx.compose.ui.platform.LocalContext.current.devGraph().mathRenderingEnabled.collectAsStateWithLifecycle()
-    androidx.compose.runtime.CompositionLocalProvider(LocalReaderTimeFormat provides clientSettings.optString("timestampFormat", "locale"), LocalReaderReview provides if (viewModel.durableComposerAvailable) ReaderReviewSettings(diffSettings, graph::setDiffReviewSettings) else ReaderReviewSettings(), LocalReaderMath provides mathRendering, LocalReaderStreaming provides state.view.working, LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalReaderCheckpoint provides ReaderCheckpoint(checkpointMessages, viewModel::previewCheckpoint), LocalReaderTimeFormat provides clientSettings.optString("timestampFormat", "locale"), LocalReaderReview provides if (viewModel.durableComposerAvailable) ReaderReviewSettings(diffSettings, graph::setDiffReviewSettings) else ReaderReviewSettings(), LocalReaderMath provides mathRendering, LocalReaderStreaming provides state.view.working, LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
         ThreadContent(
             state = state,
             editorIdentity = viewModel.editorIdentity,
@@ -141,6 +157,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             onQuestionResponse = viewModel::respondQuestion,
             onRuntimeMode = viewModel::selectRuntimeMode,
             composerSlot = if (viewModel.durableComposerAvailable) ({ ConnectedComposer(viewModel, state) }) else null,
+            onGit = onGit,
             onChanges = onChanges,
         )
     }
@@ -174,7 +191,7 @@ fun ThreadContent(
     onRuntimeMode: (String) -> Unit = {},
     quotaStrip: @Composable () -> Unit = {},
     composerSlot: (@Composable () -> Unit)? = null,
-    onChanges: (() -> Unit)? = null,
+    onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null,
     editorIdentity: String = state.view.threadId,
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
     onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
@@ -267,6 +284,9 @@ fun ThreadContent(
                         Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { quotaMenu = true }, modifier = Modifier.testTag("thread_overflow"))
                         androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
                             if (expanded) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
+                            if (onGit != null) androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.ot3_git_title)) },
+                                onClick = { quotaMenu = false; onGit() })
                             if (onChanges != null) androidx.compose.material3.DropdownMenuItem(
                                 text = { Text(stringResource(R.string.ot3_git_review)) },
                                 onClick = { quotaMenu = false; onChanges() })

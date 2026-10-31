@@ -53,6 +53,7 @@ class AppGraph(
 ) {
     private val appContext = context.applicationContext
     val gitJournal by lazy { dev.avillagran.ot3android.core.git.GitJournal(appContext.noBackupFilesDir.resolve("git-journal-v1")) }
+    val checkoutAdmission by lazy { dev.avillagran.ot3android.core.git.CheckoutAdmission(gitJournal) }
     init {
         // El grafo se crea antes de aceptar selecciones; limpia archivos de procesos interrumpidos.
         appContext.cacheDir.listFiles { file -> file.name.startsWith("composer-") && file.name.endsWith(".upload") }?.forEach { it.delete() }
@@ -64,6 +65,13 @@ class AppGraph(
         if (previous != null && (previous.first === transport || previous.second.state.value.retryCommandId != null)) return previous.second
         return dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations(transport, messageSender).also { threadMenuOwners[key] = transport to it }
     }
+    val projectPresentation by lazy { dev.avillagran.ot3android.ui.settings.projects.ProjectPresentation(appContext.getSharedPreferences("project-presentation", Context.MODE_PRIVATE)) }
+    private val mutableProjectPresentation by lazy { kotlinx.coroutines.flow.MutableStateFlow(projectPresentation.snapshot().toString()) }
+    val projectPresentationState by lazy { mutableProjectPresentation.asStateFlow() }
+    fun updateProjectPresentation(change: (dev.avillagran.ot3android.ui.settings.projects.ProjectPresentation) -> Unit) {
+        change(projectPresentation)
+        mutableProjectPresentation.value = projectPresentation.snapshot().toString()
+    }
     private val diffPreferences by lazy { appContext.getSharedPreferences("diff-review", Context.MODE_PRIVATE) }
     private val mutableDiffSettings by lazy { kotlinx.coroutines.flow.MutableStateFlow(dev.avillagran.ot3android.ui.git.DiffReviewSettings(
         diffPreferences.getBoolean("split", false), diffPreferences.getBoolean("wrap", true), diffPreferences.getBoolean("context", true))) }
@@ -71,6 +79,14 @@ class AppGraph(
     fun setDiffReviewSettings(settings: dev.avillagran.ot3android.ui.git.DiffReviewSettings) {
         check(diffPreferences.edit().putBoolean("split", settings.split).putBoolean("wrap", settings.wordWrap).putBoolean("context", settings.showContext).commit())
         mutableDiffSettings.value = settings
+    }
+    private val prWriteReceipts by lazy { appContext.getSharedPreferences("pr-write-receipts", Context.MODE_PRIVATE) }
+    private fun prWriteKey(route: dev.avillagran.ot3android.ui.navigation.PullRequest): String =
+        java.security.MessageDigest.getInstance("SHA-256").digest(org.json.JSONArray().put(route.environmentId).put(route.projectId)
+            .put(route.host).put(route.repository).put(route.number).toString().toByteArray()).joinToString("") { "%02x".format(it) }
+    fun pullRequestWriteUnresolved(route: dev.avillagran.ot3android.ui.navigation.PullRequest) = prWriteReceipts.getBoolean(prWriteKey(route), false)
+    fun setPullRequestWriteUnresolved(route: dev.avillagran.ot3android.ui.navigation.PullRequest, value: Boolean) {
+        check(prWriteReceipts.edit().putBoolean(prWriteKey(route), value).commit()) { "pr_receipt_storage_unavailable" }
     }
     private val readerPreferences by lazy { appContext.getSharedPreferences("reader-preferences", Context.MODE_PRIVATE) }
     private val mutableMathRendering by lazy { kotlinx.coroutines.flow.MutableStateFlow(readerPreferences.getBoolean("math", true)) }
@@ -82,6 +98,7 @@ class AppGraph(
     val generalClientPreferences by lazy { dev.avillagran.ot3android.core.settings.GeneralClientPreferences(appContext) }
     val scopedSettings by lazy { dev.avillagran.ot3android.core.settings.ScopedSettings(connections = dev.avillagran.ot3android.core.settings.SettingsConnections { id -> connectionManager.supervisor(id)?.connection?.value?.transport }) }
     val providerRefreshGate = dev.avillagran.ot3android.ui.usage.ProviderRefreshGate()
+    val maintenanceReceipts by lazy { dev.avillagran.ot3android.core.maintenance.FileMaintenanceReceipts(java.io.File(appContext.noBackupFilesDir, "maintenance-receipts")) }
     val applicationContext: Context get() = appContext
 
     /**
@@ -199,7 +216,7 @@ class AppGraph(
     val draftRepository: DraftRepository by lazy { DraftRepository(database.draftDao()) }
 
     /** Sends in [appScope], so a send survives its screen. */
-    val messageSender: MessageSender by lazy { MessageSender(outboxRepository, appScope) }
+    val messageSender: MessageSender by lazy { MessageSender(outboxRepository, appScope, admission = checkoutAdmission) }
 
     init {
         // A send cut by the previous process dying has an unknown outcome: offer Resend.
