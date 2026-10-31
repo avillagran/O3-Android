@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">제공자</string>
+    <string name="providers_back">뒤로</string>
+    <string name="providers_refresh">새로 고침</string>
+    <string name="providers_update">업데이트</string>
+    <string name="providers_install">설치</string>
+    <string name="providers_sign_in">로그인</string>
+    <string name="providers_sign_out">로그아웃</string>
+    <string name="providers_cancel">취소</string>
+    <string name="providers_continue">계속</string>
+    <string name="providers_open_sign_in">로그인 페이지 열기</string>
+    <string name="providers_auth_status">상태 새로고침</string>
+    <string name="providers_install_status">상태 확인</string>
+    <string name="providers_terminal_input">입력</string>
+    <string name="providers_interaction_unavailable">사용 불가</string>
+    <string name="providers_configuration_unbound">이 버전에서는 구성을 사용할 수 없습니다.</string>
+    <string name="providers_modes_unavailable">이 공급자는 권한 선택 항목을 제공하지 않습니다.</string>
+    <string name="providers_unknown_result">결과를 알 수 없습니다. 동일한 작업을 다시 시도하기 전에 새로고침하여 확인하세요.</string>
+    <string name="providers_unavailable_value">선택 항목을 사용할 수 없음: %1$s</string>
+</resources>

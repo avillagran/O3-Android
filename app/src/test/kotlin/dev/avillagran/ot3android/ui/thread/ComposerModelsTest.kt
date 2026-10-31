@@ -51,4 +51,42 @@ class ComposerModelsTest {
         rule.onNodeWithTag("composer_models").performClick()
         rule.onNodeWithContentDescription("Add to favorites").assertIsNotEnabled()
     }
+
+    @Test fun globalSearchFindsProviderSlugAndLegacyAcrossCurrentRail() {
+        val data = JSONObject(catalog)
+        data.getJSONArray("models").getJSONObject(1).put("isLegacy", true).put("model", "unique-slug")
+        rule.setContent { Ot3Theme { ComposerModels(data.toString(), selection, false, true,
+            {}, {}, { _, _ -> }, { _, _ -> }) } }
+        rule.onNodeWithTag("composer_models").performClick()
+        rule.onNodeWithText("Search models…").performTextInput("work unique")
+        rule.onNodeWithText("Work model").assertExists()
+        rule.onNodeWithTag("model_result_personal:same").assertDoesNotExist()
+    }
+
+    @Test fun booleanFalseIsAuthoritativeAndUnlistedChoiceIsVisible() {
+        val data = JSONObject(catalog)
+        data.getJSONArray("models").getJSONObject(0).getJSONArray("descriptors")
+            .getJSONObject(0).put("currentValue", "removed")
+        data.getJSONArray("models").getJSONObject(0).getJSONArray("descriptors").put(
+            JSONObject("""{"id":"fast","type":"boolean","label":"Fast","currentValue":true}"""))
+        val selected = JSONObject(selection).put("options", org.json.JSONArray("""[{"id":"fast","value":false}]"""))
+        val changes = mutableListOf<Any>()
+        rule.setContent { Ot3Theme { ComposerModels(data.toString(), selected.toString(), false, true,
+            {}, {}, { _, value -> changes += value }, { _, _ -> }) } }
+        rule.onNodeWithText("Model options").performClick()
+        rule.onNodeWithText("Unavailable selection: removed").assertExists()
+        rule.onNode(isToggleable()).assertIsOff().performClick()
+        rule.runOnIdle { assertEquals(listOf(true), changes) }
+        rule.onNode(isToggleable()).assertIsOff()
+    }
+
+    @Test fun customIconMetadataAlwaysUsesBoundedBundledFallbackWithoutFetching() {
+        val data = JSONObject(catalog)
+        data.getJSONArray("models").getJSONObject(0).put("driverKind", "acpRegistry")
+            .put("registryIcon", "https://untrusted.invalid/" + "x".repeat(100000))
+        rule.setContent { Ot3Theme { ComposerModels(data.toString(), selection, false, true,
+            {}, {}, { _, _ -> }, { _, _ -> }) } }
+        rule.onNodeWithTag("provider_icon_personal", useUnmergedTree = true).assertExists()
+        assertEquals(dev.avillagran.ot3android.R.drawable.ic_provider_acp, providerDrawable("acpRegistry"))
+    }
 }

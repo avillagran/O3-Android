@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">Udbydere</string>
+    <string name="providers_back">Tilbage</string>
+    <string name="providers_refresh">Opdater</string>
+    <string name="providers_update">Opdater</string>
+    <string name="providers_install">Installér</string>
+    <string name="providers_sign_in">Log ind</string>
+    <string name="providers_sign_out">Log ud</string>
+    <string name="providers_cancel">Annuller</string>
+    <string name="providers_continue">Fortsæt</string>
+    <string name="providers_open_sign_in">Åbn loginsiden</string>
+    <string name="providers_auth_status">Opdater status</string>
+    <string name="providers_install_status">Kontrollér status</string>
+    <string name="providers_terminal_input">Input</string>
+    <string name="providers_interaction_unavailable">Utilgængelig</string>
+    <string name="providers_configuration_unbound">Konfiguration er ikke tilgængelig i denne version.</string>
+    <string name="providers_modes_unavailable">Denne udbyder angiver ingen tilladelsesvalg.</string>
+    <string name="providers_unknown_result">Resultatet er ukendt. Opdater og tjek, før du prøver den samme handling igen.</string>
+    <string name="providers_unavailable_value">Valget er ikke tilgængeligt: %1$s</string>
+</resources>

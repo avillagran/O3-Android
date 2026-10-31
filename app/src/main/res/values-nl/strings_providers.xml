@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">Providers</string>
+    <string name="providers_back">Terug</string>
+    <string name="providers_refresh">Vernieuwen</string>
+    <string name="providers_update">Bijwerken</string>
+    <string name="providers_install">Installeren</string>
+    <string name="providers_sign_in">Aanmelden</string>
+    <string name="providers_sign_out">Afmelden</string>
+    <string name="providers_cancel">Annuleren</string>
+    <string name="providers_continue">Doorgaan</string>
+    <string name="providers_open_sign_in">Aanmeldpagina openen</string>
+    <string name="providers_auth_status">Status vernieuwen</string>
+    <string name="providers_install_status">Status controleren</string>
+    <string name="providers_terminal_input">Invoer</string>
+    <string name="providers_interaction_unavailable">Niet beschikbaar</string>
+    <string name="providers_configuration_unbound">Configuratie is niet beschikbaar in deze versie.</string>
+    <string name="providers_modes_unavailable">Deze provider geeft geen machtigingsopties door.</string>
+    <string name="providers_unknown_result">Uitkomst onbekend. Vernieuw eerst om dit te controleren voordat je dezelfde actie opnieuw probeert.</string>
+    <string name="providers_unavailable_value">Selectie niet beschikbaar: %1$s</string>
+</resources>

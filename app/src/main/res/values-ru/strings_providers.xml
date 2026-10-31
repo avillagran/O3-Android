@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">Провайдеры</string>
+    <string name="providers_back">Назад</string>
+    <string name="providers_refresh">Обновить</string>
+    <string name="providers_update">Обновить</string>
+    <string name="providers_install">Установить</string>
+    <string name="providers_sign_in">Войти</string>
+    <string name="providers_sign_out">Выйти</string>
+    <string name="providers_cancel">Отмена</string>
+    <string name="providers_continue">Продолжить</string>
+    <string name="providers_open_sign_in">Открыть страницу входа</string>
+    <string name="providers_auth_status">Обновить состояние</string>
+    <string name="providers_install_status">Проверить состояние</string>
+    <string name="providers_terminal_input">Входные данные</string>
+    <string name="providers_interaction_unavailable">Недоступно</string>
+    <string name="providers_configuration_unbound">Настройка недоступна в этой версии.</string>
+    <string name="providers_modes_unavailable">Этот провайдер не сообщает варианты разрешений.</string>
+    <string name="providers_unknown_result">Результат неизвестен. Обновите беседу для проверки перед повтором действия.</string>
+    <string name="providers_unavailable_value">Выбор недоступен: %1$s</string>
+</resources>
