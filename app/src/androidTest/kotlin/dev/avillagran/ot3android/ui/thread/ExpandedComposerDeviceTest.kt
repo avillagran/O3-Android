@@ -131,13 +131,23 @@ class ExpandedComposerDeviceTest {
     @Test fun unknownRetryAndExpandedQueueEditPreserveOriginalDraftRangeAndAttachments() = launch(false, "queue") { scenario ->
         val original = "Keep this original draft"
         field().performTextReplacement(original); field().performTextInputSelection(TextRange(3, 9))
-        rule.onNodeWithTag("thread_queue").performClick(); rule.onNodeWithTag("queue_edit_q1").performClick()
+        traceInputTransition(scenario, "queueOpen", rule.onNodeWithTag("thread_queue"), surface = {
+            "queueEditors=${rule.onAllNodesWithTag("queue_edit_q1").fetchSemanticsNodes().size}"
+        }) { click ->
+            click()
+            rule.onNodeWithTag("queue_edit_q1").assertIsDisplayed().performClick()
+        }
         rule.onNodeWithTag("composer_expand").performClick(); field().performTextReplacement("Revised expanded queue")
         rotate(scenario, true); field().assertTextContains("Revised expanded queue"); rotate(scenario, false)
         rule.onNodeWithText("Cancel edit").performScrollTo().performClick()
         field().assertTextContains(original); selection(3, 9)
         rule.onNodeWithTag("composer_back").performClick()
-        rule.onNodeWithTag("thread_queue").performClick(); rule.onNodeWithTag("queue_edit_q1").performClick()
+        traceInputTransition(scenario, "queueOpen", rule.onNodeWithTag("thread_queue"), surface = {
+            "queueEditors=${rule.onAllNodesWithTag("queue_edit_q1").fetchSemanticsNodes().size}"
+        }) { click ->
+            click()
+            rule.onNodeWithTag("queue_edit_q1").assertIsDisplayed().performClick()
+        }
         rule.onNodeWithTag("composer_expand").performClick(); field().performTextReplacement("Final expanded queue")
         rule.onNodeWithTag(ThreadScreenTags.SEND).performClick(); waitCalls(scenario, 1)
         rule.waitUntil(15_000) { text() == original }; selection(3, 9)

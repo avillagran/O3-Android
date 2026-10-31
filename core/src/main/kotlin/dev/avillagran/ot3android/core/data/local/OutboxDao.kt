@@ -35,6 +35,16 @@ interface OutboxDao {
 
 @Dao
 interface DraftDao {
+    /** Draft and consumed recovery id share one SQLite transaction. */
+    @androidx.room.Transaction
+    suspend fun recoverOnce(draft: DraftEntity, marker: DraftEntity): String {
+        val prior = find(marker.threadKey)
+        if (prior != null) return find(draft.threadKey)?.text.orEmpty()
+        upsert(draft)
+        upsert(marker)
+        return draft.text
+    }
+
     @Query("SELECT * FROM drafts WHERE threadKey = :threadKey")
     suspend fun find(threadKey: String): DraftEntity?
 

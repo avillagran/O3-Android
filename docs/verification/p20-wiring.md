@@ -1,5 +1,8 @@
 # P20: first wiring pass
 
+Historical first pass. Current wiring/results: [second pass](p20-wiring-2.md);
+current package checklist: [Desktop parity status](desktop-parity-status.md).
+
 Base: origin/main ce490a9. Checkout: /home/node/Work/ot3-android-all-hosts.
 Desktop reference: /home/node/Work/omarchy-t3-code feat/o3-brand (read only).
 No phone or /home/node/Work/ot3-android working-tree changes.

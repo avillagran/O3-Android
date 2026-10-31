@@ -331,6 +331,15 @@ class Ot3NavigationTest {
             composeRule.onNodeWithTag("fake_$tag").assertIsDisplayed()
             pressBack()
         }
+        onUi { navigator.push(Archive) }
+        composeRule.onNodeWithTag("fake_maintenance_ARCHIVE_null").assertIsDisplayed()
+        pressBack()
+        onUi { navigator.push(HostMaintenance("STORAGE", "e2", "p2")) }
+        composeRule.onNodeWithTag("fake_maintenance_STORAGE_e2").assertIsDisplayed()
+        pressBack()
+        onUi { navigator.selectTab(TopTab.Chats); navigator.push(ThreadGit("e2", "t2")) }
+        composeRule.onNodeWithTag("fake_git_e2_t2").assertIsDisplayed()
+        pressBack()
         onUi { navigator.selectTab(TopTab.Chats); navigator.push(ThreadChanges("e2", "t2", "working-tree")) }
         composeRule.onNodeWithTag("fake_changes_e2_t2").assertIsDisplayed()
     }
@@ -363,7 +372,7 @@ class Ot3NavigationTest {
         onUi { navigator.push(PullRequestFile("e1", "p1", "o/r", 3, "a.kt")) }
         composeRule.onNodeWithTag(NavTags.notYet("PullRequestFile")).assertIsDisplayed()
         onUi { navigator.selectTab(TopTab.Settings) }
-        listOf(Usage to "Usage", Archive to "Archive").forEach { (route, name) ->
+        listOf(Usage to "Usage").forEach { (route, name) ->
             onUi { navigator.push(route) }
             composeRule.onNodeWithTag(NavTags.notYet(name)).assertIsDisplayed()
             onUi { navController.popBackStack() }
@@ -376,6 +385,8 @@ private class FakeScreens : Ot3Screens {
     @Composable override fun GeneralPreferences() { Tagged("fake_general") }
     @Composable override fun ConnectionsPreferences() { Tagged("fake_connections") }
     @Composable override fun ProjectPreferences(route: ProjectPreferences) { Tagged("fake_projects_${route.environmentId}_${route.projectId}") }
+    @Composable override fun Maintenance(route: HostMaintenance) { Tagged("fake_maintenance_${route.page}_${route.environmentId}") }
+    @Composable override fun Git(route: ThreadGit) { Tagged("fake_git_${route.environmentId}_${route.threadId}") }
     @Composable override fun Changes(route: ThreadChanges) { Tagged("fake_changes_${route.environmentId}_${route.threadId}") }
 
     @Composable override fun About(licenses: Boolean) { Tagged(if (licenses) "fake_licenses" else "fake_about") }

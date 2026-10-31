@@ -68,7 +68,13 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             text = { androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(dev.avillagran.ot3android.R.string.home_action_unconfirmed)) },
             confirmButton = { androidx.compose.material3.TextButton(onClick = { viewModel.actionError.value = null }) {
                 androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(dev.avillagran.ot3android.R.string.ot3_dialog_close)) } }) }
-        HomeScreen(state, isTop, onIntent = { intent -> onHomeIntent(intent, viewModel) }, quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(onOpenLimits = { navigator.push(QuotaLimits()) }) })
+        val presentation by LocalContext.current.appGraph.projectPresentationState.collectAsStateWithLifecycle()
+        val metadata = remember(presentation) {
+            val value = org.json.JSONObject(presentation)
+            fun map(field: String): Map<String, String> = value.optJSONObject(field)?.let { obj -> obj.keys().asSequence().associateWith { obj.getString(it) } }.orEmpty()
+            dev.avillagran.ot3android.ui.home.layouts.SidebarMetadata(threadGroups = map("threadGroups"), projectGroups = map("groupProjects"))
+        }
+        HomeScreen(state, isTop, metadata = metadata, onIntent = { intent -> onHomeIntent(intent, viewModel) }, quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(onOpenLimits = { navigator.push(QuotaLimits()) }) })
     }
 
     @Composable
@@ -171,6 +177,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                     graph.appScope,
                     graph.composerPreferences,
                     graph.threadCache,
+                    gitJournal = graph.gitJournal, checkoutAdmission = graph.checkoutAdmission,
                     clientPreferences = graph.generalClientPreferences,
                     attachmentDirectory = graph.applicationContext.noBackupFilesDir.resolve("composer-attachments-v1"),
                     cacheAuthority = { graph.environmentRepository.cacheAuthority(route.environmentId) },
@@ -178,11 +185,15 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 )
             },
             onBack = { navigator.back() },
+            onGit = { navigator.push(ThreadGit(route.environmentId, route.threadId)) },
             onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) },
             onOpenThread = { navigator.openThread(route.environmentId, it) },
             quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, compact = false, onOpenLimits = { navigator.push(QuotaLimits(route.environmentId)) }) },
         )
     }
+
+    @Composable
+    override fun Git(route: ThreadGit) { GitOperationsPage(navigator, route) }
 
     @Composable
     override fun Changes(route: ThreadChanges) { WorkingChangesPage(navigator, route) }
@@ -195,7 +206,18 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "projects" }) { navigator.push(ProjectPreferences()) },
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "connections" }) { navigator.push(ConnectionsPreferences) },
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "source-control" }) { navigator.push(SourceControlPreferences) },
-        ), onOpen = { entry ->
+        ) + listOf(
+            "storage" to dev.avillagran.ot3android.R.string.maintenance_storage,
+            "archived" to dev.avillagran.ot3android.R.string.maintenance_archive,
+            "schedules" to dev.avillagran.ot3android.R.string.maintenance_schedules,
+            "sessions" to dev.avillagran.ot3android.R.string.maintenance_sessions,
+            "diagnostics" to dev.avillagran.ot3android.R.string.maintenance_diagnostics,
+        ).map { (id, label) ->
+            dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(
+                dev.avillagran.ot3android.ui.settings.PreferencesPage(id, label, "P17")) {
+                navigator.push(HostMaintenance(if (id == "archived") "ARCHIVE" else id.uppercase(java.util.Locale.ROOT)))
+            }
+        }, onOpen = { entry ->
             when (entry) {
                 SettingsEntry.Environments -> navigator.push(ConnectionsPreferences)
                 SettingsEntry.Appearance -> navigator.push(Appearance)
@@ -207,6 +229,9 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             }
         })
     }
+
+    @Composable
+    override fun Maintenance(route: HostMaintenance) { HostMaintenancePage(navigator, route) }
 
     @Composable
     override fun ProvidersPreferences() { ProvidersPreferencesPage(navigator) }
@@ -301,10 +326,12 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val model = viewModel {
             dev.avillagran.ot3android.ui.pullrequests.PullRequestViewModel(route.environmentId,
                 org.json.JSONObject().put("projectId", route.projectId).put("repository", route.repository).put("number", route.number).put("host", route.host),
-                graph.connectionManager::connectionFlow, createSavedStateHandle())
+                graph.connectionManager::connectionFlow, createSavedStateHandle(),
+                initiallyUnresolved = graph.pullRequestWriteUnresolved(route),
+                writeReceipt = { graph.setPullRequestWriteUnresolved(route, it) })
         }
         val state by model.state.collectAsStateWithLifecycle()
-        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state, model::selectTab, model::refresh, { navigator.back() })
+        dev.avillagran.ot3android.ui.pullrequests.PullRequestScreen(route.number, route.repository, state, model::selectTab, model::refresh, { navigator.back() }, onWrite = model::write)
     }
 
     @Composable
@@ -420,7 +447,13 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 pending = null
                 navigator.closeSheet(entry)
             }) }
-        ThreadActionsContent(row, ThreadActions.menu(target, (current.actionContexts[row.environmentId] ?: ActionContext.Interim).copy(projectSettingsAvailable = row.projectId != null, newThreadAvailable = row.projectId != null, busy = current.actionContexts[row.environmentId]?.busy == true || operationState.busy || operationState.retryCommandId != null || operations == null))) { action ->
+        val presentation by graph.projectPresentationState.collectAsStateWithLifecycle()
+        androidx.compose.foundation.layout.Column {
+        ProjectGroupMenu(graph.projectPresentation.names(),
+            org.json.JSONObject(presentation).optJSONObject("threadGroups")?.optString(row.key)?.takeIf { it.isNotBlank() }, true) { name ->
+            graph.updateProjectPresentation { it.setThreadGroup(row.key, name) }
+        }
+        ThreadActionsContent(row, ThreadActions.menu(target, (current.actionContexts[row.environmentId] ?: ActionContext.Interim).copy(projectSettingsAvailable = row.projectId != null, newThreadAvailable = row.projectId != null, busy = current.actionContexts[row.environmentId]?.busy == true || operationState.busy || operationState.retryCommandId != null || operations == null)).filter { it.action !in setOf(ThreadAction.MoveUp, ThreadAction.MoveDown) }) { action ->
             if (action in setOf(ThreadAction.Rename, ThreadAction.Archive, ThreadAction.Delete)) {
                 pending = action
                 return@ThreadActionsContent
@@ -455,6 +488,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             }
             navigator.closeSheet(entry)
         }
+        }
     }
 
     @Composable
@@ -464,7 +498,14 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val clipboard = LocalClipboard.current
         val scope = rememberCoroutineScope()
         val project = state?.projects?.get("${route.environmentId}/${route.projectId}")
-        ProjectActionsContent(project?.title, ThreadActions.projectMenu(project?.workspaceRoot, ActionContext.Interim.copy(projectSettingsAvailable = project != null))) { action ->
+        val graph = LocalContext.current.appGraph
+        val presentation by graph.projectPresentationState.collectAsStateWithLifecycle()
+        androidx.compose.foundation.layout.Column {
+        ProjectGroupMenu(graph.projectPresentation.names(),
+            org.json.JSONObject(presentation).optJSONObject("groupProjects")?.optString("${route.environmentId}/${route.projectId}")?.takeIf { it.isNotBlank() }, project != null) { name ->
+            graph.updateProjectPresentation { it.setProjectGroup("${route.environmentId}/${route.projectId}", name) }
+        }
+        ProjectActionsContent(project?.title, ThreadActions.projectMenu(project?.workspaceRoot, ActionContext.Interim.copy(projectSettingsAvailable = project != null)).filter { it.action in setOf(ProjectAction.CopyPath, ProjectAction.ProjectSettings) }) { action ->
             if (action == ProjectAction.ProjectSettings && project != null) {
                 navigator.closeSheet(entry)
                 navigator.push(ProjectPreferences(route.environmentId, route.projectId))
@@ -475,6 +516,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(root, root))) }
             }
             navigator.closeSheet(entry)
+        }
         }
     }
 

@@ -52,6 +52,9 @@ class OutboxRepository(private val dao: OutboxDao, private val clock: () -> Long
                 ?.optString("projectId") == projectId }.getOrDefault(false)
         }?.toPending() }
 
+    fun observeEnvironment(environmentId: String): Flow<List<PendingCommand>> =
+        dao.observeEnvironment(environmentId).map { rows -> rows.map { it.toPending() } }
+
     fun observeThread(environmentId: String, threadId: String): Flow<List<PendingCommand>> =
         dao.observeThread(environmentId, threadId).map { rows -> rows.map { it.toPending() } }
 }
@@ -68,6 +71,13 @@ class DraftRepository(private val dao: DraftDao, private val clock: () -> Long =
         val key = key(environmentId, threadId)
         if (text.isEmpty()) dao.delete(key) else dao.upsert(DraftEntity(key, text, clock()))
     }
+
+    suspend fun recoveryApplied(environmentId: String, threadId: String, id: String): Boolean =
+        dao.find("checkpoint/$environmentId/$threadId/$id") != null
+
+    suspend fun recoverOnce(environmentId: String, threadId: String, id: String, text: String): String =
+        dao.recoverOnce(DraftEntity(key(environmentId, threadId), text, clock()),
+            DraftEntity("checkpoint/$environmentId/$threadId/$id", "applied", clock()))
 
     suspend fun clear(environmentId: String, threadId: String) = dao.delete(key(environmentId, threadId))
 

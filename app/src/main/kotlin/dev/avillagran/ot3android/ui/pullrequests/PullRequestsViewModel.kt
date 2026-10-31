@@ -139,13 +139,16 @@ data class PullRequestState(val tab: String = "detail", val busy: Boolean = fals
 class PullRequestViewModel(
     environmentId: String, private val reference: JSONObject, connection: (String) -> Flow<Connection?>,
     private val saved: SavedStateHandle = SavedStateHandle(),
+    initiallyUnresolved: Boolean = false,
+    private val writeReceipt: ((Boolean) -> Unit)? = null,
     read: suspend (Connection, String, JSONObject) -> JSONObject? = { c, a, r -> PullRequestReader().read(c.transport, a, r) },
 ) : ViewModel() {
     private var activeConnection: Connection? = null
-    private val writeState = MutableStateFlow(false to (saved.get<Boolean>("writeUnresolved") == true))
+    private val writeState = MutableStateFlow(false to (initiallyUnresolved || saved.get<Boolean>("writeUnresolved") == true))
     fun write(values: JSONObject) {
         val current = activeConnection ?: return
         if (writeState.value.first || writeState.value.second) return
+        writeReceipt?.invoke(true)
         saved["writeUnresolved"] = true
         writeState.value = true to false
         viewModelScope.launch {
@@ -153,12 +156,12 @@ class PullRequestViewModel(
                 when (PullRequestWrites().write(current.transport, reference, values)) {
                     is PullRequestWriteResult.Received -> {
                         if (activeConnection !== current) writeState.value = false to true
-                        else { saved["writeUnresolved"] = false; writeState.value = false to false; refresh() }
+                        else { writeReceipt?.invoke(false); saved["writeUnresolved"] = false; writeState.value = false to false; refresh() }
                     }
                     PullRequestWriteResult.Unknown -> writeState.value = false to true
                 }
             } catch (cancelled: CancellationException) { writeState.value = false to true; throw cancelled }
-            catch (_: Exception) { saved["writeUnresolved"] = false; writeState.value = false to false }
+            catch (_: Exception) { writeReceipt?.invoke(false); saved["writeUnresolved"] = false; writeState.value = false to false }
         }
     }
     private val tab = saved.getStateFlow("tab", "detail")

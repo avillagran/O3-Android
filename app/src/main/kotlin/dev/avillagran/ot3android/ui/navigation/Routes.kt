@@ -141,3 +141,9 @@ data object ProvidersPreferences
 
 @kotlinx.serialization.Serializable
 data object About
+
+@Serializable
+data class HostMaintenance(val page: String, val environmentId: String? = null, val projectId: String? = null)
+
+@Serializable
+data class ThreadGit(val environmentId: String, val threadId: String)
