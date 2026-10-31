@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Kodu göster</string>
+    <string name="ot3_render_show_preview">Önizlemeyi göster</string>
+    <string name="ot3_render_run">Terminalde çalıştır</string>
+    <string name="ot3_render_open">Önizlemeyi aç</string>
+    <string name="ot3_render_offline">Çevrimdışıyken önizleme kullanılamaz</string>
+    <string name="ot3_render_expired">Önizleme izninin süresi doldu</string>
+    <string name="ot3_render_unsupported">Görsel oluşturucu kullanılamıyor</string>
+</resources>

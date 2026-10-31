@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Mostrar código</string>
+    <string name="ot3_render_show_preview">Mostrar prévia</string>
+    <string name="ot3_render_run">Executar no terminal</string>
+    <string name="ot3_render_open">Abrir prévia</string>
+    <string name="ot3_render_offline">Prévia indisponível sem conexão</string>
+    <string name="ot3_render_expired">A permissão da prévia expirou</string>
+    <string name="ot3_render_unsupported">Renderizador visual indisponível</string>
+</resources>

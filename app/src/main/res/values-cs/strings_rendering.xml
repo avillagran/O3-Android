@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Zobrazit kód</string>
+    <string name="ot3_render_show_preview">Zobrazit náhled</string>
+    <string name="ot3_render_run">Spustit v terminálu</string>
+    <string name="ot3_render_open">Otevřít náhled</string>
+    <string name="ot3_render_offline">Náhled není dostupný offline</string>
+    <string name="ot3_render_expired">Oprávnění náhledu vypršelo</string>
+    <string name="ot3_render_unsupported">Vizuální renderer není dostupný</string>
+</resources>

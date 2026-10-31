@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Pokaż kod</string>
+    <string name="ot3_render_show_preview">Pokaż podgląd</string>
+    <string name="ot3_render_run">Uruchom w terminalu</string>
+    <string name="ot3_render_open">Otwórz podgląd</string>
+    <string name="ot3_render_offline">Podgląd niedostępny offline</string>
+    <string name="ot3_render_expired">Uprawnienie podglądu wygasło</string>
+    <string name="ot3_render_unsupported">Renderer wizualny niedostępny</string>
+</resources>

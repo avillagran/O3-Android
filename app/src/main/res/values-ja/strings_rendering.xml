@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">コードを表示</string>
+    <string name="ot3_render_show_preview">プレビューを表示</string>
+    <string name="ot3_render_run">ターミナルで実行</string>
+    <string name="ot3_render_open">プレビューを開く</string>
+    <string name="ot3_render_offline">オフラインではプレビューできません</string>
+    <string name="ot3_render_expired">プレビューの権限が期限切れです</string>
+    <string name="ot3_render_unsupported">描画エンジンを利用できません</string>
+</resources>

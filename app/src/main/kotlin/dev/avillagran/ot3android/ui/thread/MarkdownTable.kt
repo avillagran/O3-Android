@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,12 +35,15 @@ internal fun MarkdownTable(block: JSONObject, index: Int) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val columnWidth = (maxWidth / columns).coerceIn(112.dp, 240.dp)
             SelectionContainer {
-                Column(Modifier.horizontalScroll(rememberScrollState()).testTag("thread_table_$index")) {
+                Column(Modifier.horizontalScroll(rememberScrollState()).testTag("thread_table_$index").semantics { collectionInfo = CollectionInfo(rows.length() + 1, columns) }) {
                     for (row in -1 until rows.length()) {
                         val cells = if (row == -1) header else rows.optJSONArray(row) ?: JSONArray()
                         Row(Modifier.height(IntrinsicSize.Min)) {
                             for (column in 0 until columns) {
-                                Box(Modifier.width(columnWidth).padding(horizontal = 12.dp, vertical = 7.dp)) {
+                                Box(Modifier.width(columnWidth).padding(horizontal = 12.dp, vertical = 7.dp).testTag("thread_table_${index}_${row}_$column").semantics {
+                                    collectionItemInfo = CollectionItemInfo(row + 1, 1, column, 1)
+                                    if (row == -1) heading()
+                                }) {
                                     MarkdownInlineContent(cells.optJSONArray(column), style = MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 12.sp,
                                         fontWeight = if (row == -1) FontWeight.Bold else FontWeight.Normal,

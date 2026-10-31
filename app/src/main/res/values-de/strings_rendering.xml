@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Code anzeigen</string>
+    <string name="ot3_render_show_preview">Vorschau anzeigen</string>
+    <string name="ot3_render_run">Im Terminal ausführen</string>
+    <string name="ot3_render_open">Vorschau öffnen</string>
+    <string name="ot3_render_offline">Vorschau offline nicht verfügbar</string>
+    <string name="ot3_render_expired">Vorschauberechtigung abgelaufen</string>
+    <string name="ot3_render_unsupported">Visueller Renderer nicht verfügbar</string>
+</resources>

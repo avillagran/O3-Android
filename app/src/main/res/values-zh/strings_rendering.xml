@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">显示代码</string>
+    <string name="ot3_render_show_preview">显示预览</string>
+    <string name="ot3_render_run">在终端中运行</string>
+    <string name="ot3_render_open">打开预览</string>
+    <string name="ot3_render_offline">离线时无法预览</string>
+    <string name="ot3_render_expired">预览权限已过期</string>
+    <string name="ot3_render_unsupported">视觉渲染器不可用</string>
+</resources>
