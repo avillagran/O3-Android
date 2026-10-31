@@ -129,7 +129,7 @@ as on Desktop.
 | Lists / quotes / headings / tables | Rich text positions | Nested blocks/cells, ordered text runs around images |
 | Linked images | Internal image action | Image opens shared viewer |
 | Image attachments | 220×160 thumbnails, popup, copy | Existing thumbnails, same viewer/copy |
-| Copy image | Normalizes supported raster formats to PNG, 16 MP clipboard limit | Existing private content URI with actual MIME; 16 MP limit; touch-visible action |
+| Copy image | Normalizes supported raster formats to PNG, 16 MP clipboard limit | Existing private content URI with actual MIME; 16 MP limit; long-press / accessibility menu and viewer action |
 | Video/audio attachments | Separate signed attachment resource, 50 MiB, Qt playback controls | Same grant/bound, native playback controls; codec acceptance unverified |
 | Image cache | Private immutable attachments, 128 entries/128 MiB; fresh host reads | Process-local compressed LRU, 128 entries/32 MiB; environment/thread/authority scoped; viewport pixels only |
 | Lifecycle / connection changes | Viewport-gated loading and cache ownership | STARTED + viewport-gated reads; 32 MiB bitmap budget; generation guards; attempt-scoped playback and orphan cleanup |
@@ -243,3 +243,39 @@ locales) and bridge-required debug assembly passed. The API 34 emulator passed a
 8 ReaderImagesDeviceTest / ReaderImageCopyDeviceTest / ReaderImageZoomDeviceTest
 cases, including rotation and cache reuse. The emulator was stopped afterwards.
 No phone or live-host acceptance was performed; host-JNI/opt-in skips remain.
+
+## Inline image interaction parity (2026-10-31)
+
+Inline images and attachment previews draw no permanent controls over their pixels.
+Successful Markdown image layout has exactly the image height, including images shorter
+than a 48 dp touch control. Tap opens the existing viewer with copy, pinch/pan,
+double-tap and accessible zoom controls. Long-press opens a Copy image menu; TalkBack
+can open the same menu through the localized Copy image custom accessibility action.
+The menu keeps copy busy/success/error feedback and the existing generation/lifecycle
+cancellation and original-byte clipboard checks. Loading, unavailable and Retry states
+remain in the image reader; copy stays available through the menu or viewer.
+
+The control-tray comparison reruns the original scratch SideBySideTest with the current
+MessageImages.kt, original 480×52 source, SDK 36 native graphics, Tokyo Night and
+density 3.4. The original Desktop captures are reused unchanged. Neither capture is
+resized, cropped or sharpened. At 444 dp, image and component both measure 48.24 dp;
+at 360 dp both measure 39.12 dp (133 physical pixels), replacing the former 47.94 dp
+component height. The rightmost source icon is visible at both widths. Rounded corners
+and normal renderer rounding remain unchanged. Evidence:
+`/home/node/.cache/o3-android-artifacts/side-by-side/contact-control-tray-fixed.png`,
+`android-fixed-metrics.tsv`, `android-fixed.log`, and the scratch SideBySideTest.
+
+Regression coverage includes a narrow-image height assertion, long-press and custom
+action menu access, busy/error clipboard preservation, original-byte URI readback,
+viewer copy, retry and zoom. Four affected Tokyo Night/Latte goldens were updated.
+
+Validation for this fix (Temurin 21, `--max-workers=2`): core debug and release each
+287 passed / 176 skipped; app 474 passed / 16 skipped; zero failures/errors.
+`verifyRoborazziDebug` verified 132 goldens, with four intentionally updated above.
+Both-module lint passed. Host-JNI and existing opt-in skips remain unverified.
+The API 34 emulator passed all eight ReaderImagesDeviceTest,
+ReaderImageCopyDeviceTest and ReaderImageZoomDeviceTest cases, including both themes,
+long-press, TalkBack custom-action entry, busy/error clipboard preservation, viewer
+copy, retry, zoom and rotation. A second run stalled before image interaction and was
+interrupted; clearing the emulator fixture app's data restored a clean 8/8 pass.
+No phone or live-host acceptance was performed.

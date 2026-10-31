@@ -19,13 +19,11 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.*
 import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
-import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
 import dev.avillagran.ot3android.ui.kit.CopyButton
 import dev.avillagran.ot3android.ui.kit.CopyState
-import dev.avillagran.ot3android.ui.theme.Ot3Theme
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -109,6 +107,7 @@ internal fun readerImageAllocation(width: Int, height: Int, sample: Int): Long =
 
 internal val LocalOpenReaderImage = compositionLocalOf<(JSONObject) -> Unit> { {} }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun AttachmentImage(attachment: JSONObject, markdown: Boolean = false) {
     val source = LocalReaderImages.current
@@ -117,12 +116,16 @@ internal fun AttachmentImage(attachment: JSONObject, markdown: Boolean = false) 
     if (!lifecycle.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return
     key(attachment.toString(), source.generation) {
         var naturalWidth by remember { mutableIntStateOf(0) }
+        var showMenu by remember { mutableStateOf(false) }
+        val copyLabel = stringResource(R.string.ot3_copy_image)
         Box(if (markdown) Modifier.widthIn(max = if (naturalWidth > 0) naturalWidth.dp else androidx.compose.ui.unit.Dp.Infinity).fillMaxWidth() else Modifier.size(220.dp, 160.dp)) {
             ImageRead(attachment, attachment.toString(), source, 640,
-                (if (markdown) Modifier.fillMaxWidth() else Modifier.size(220.dp, 160.dp)).clickable(onClickLabel = attachment.optString("name")) { open(attachment) }, onNaturalWidth = { naturalWidth = it })
-            Box(Modifier.align(Alignment.TopEnd)) {
-                ImageCopyButton(attachment, source, "thumbnail", Modifier
-                    .background(Ot3Theme.colors.surface.copy(alpha = 0.95f), RoundedCornerShape(6.dp)))
+                (if (markdown) Modifier.fillMaxWidth() else Modifier.size(220.dp, 160.dp)).combinedClickable(onClickLabel = attachment.optString("name"),
+                    onClick = { open(attachment) }, onLongClickLabel = copyLabel,
+                    onLongClick = { showMenu = true })
+                    .semantics { customActions = listOf(CustomAccessibilityAction(copyLabel) { showMenu = true; true }) }, onNaturalWidth = { naturalWidth = it })
+            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                ImageCopyButton(attachment, source, "menu")
             }
         }
     }
@@ -245,7 +248,7 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
     }
 }
 
-/** Always visible on touch surfaces; a lifecycle/generation change disposes and cancels this action. */
+/** Explicit menu/viewer copy; a lifecycle/generation change disposes and cancels this action. */
 @Composable
 private fun ImageCopyButton(attachment: JSONObject, source: ReaderImages, location: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -256,24 +259,40 @@ private fun ImageCopyButton(attachment: JSONObject, source: ReaderImages, locati
     LaunchedEffect(state) {
         if (state.resets) { delay(CopyState.RESET_MS); state = CopyState.IDLE }
     }
-    CopyButton(state = state, enabled = source.generation != null, label = label,
-        modifier = modifier.testTag("thread_image_copy_$location"),
-        onClick = {
-            state = CopyState.BUSY
-            scope.launch {
-                try {
-                    imageReads.withPermit {
-                        val bytes = requireNotNull(source.read(attachment))
-                        withContext(Dispatchers.Default) { readerImageBounds(bytes, 16_000_000) }
-                        ImageClipboard.copy(context, bytes, attachment.optString("mimeType").ifEmpty { dev.avillagran.ot3android.core.thread.PublicMarkdownImage.mime(bytes) }, label) {
-                            latest.generation == source.generation && source.isCurrent()
-                        }
+    val copy: () -> Unit = {
+        state = CopyState.BUSY
+        scope.launch {
+            try {
+                imageReads.withPermit {
+                    val bytes = requireNotNull(source.read(attachment))
+                    withContext(Dispatchers.Default) { readerImageBounds(bytes, 16_000_000) }
+                    ImageClipboard.copy(context, bytes, attachment.optString("mimeType").ifEmpty { dev.avillagran.ot3android.core.thread.PublicMarkdownImage.mime(bytes) }, label) {
+                        latest.generation == source.generation && source.isCurrent()
                     }
-                    state = CopyState.COPIED
-                } catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { state = CopyState.ERROR }
-            }
-        })
+                }
+                state = CopyState.COPIED
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { state = CopyState.ERROR }
+        }
+    }
+    if (location == "menu") {
+        val status = when (state) {
+            CopyState.COPIED -> stringResource(R.string.ot3_kit_copied)
+            CopyState.ERROR -> stringResource(R.string.ot3_kit_copy_failed)
+            else -> label
+        }
+        DropdownMenuItem(
+            text = { Text(status) },
+            leadingIcon = {
+                if (state == CopyState.BUSY) Ot3Spinner(size = 20.dp)
+                else dev.avillagran.ot3android.ui.kit.Ot3Icon(state.iconName, null)
+            },
+            enabled = source.generation != null && state != CopyState.BUSY,
+            onClick = copy,
+            modifier = modifier.testTag("thread_image_copy_$location").semantics { contentDescription = status }
+        )
+    } else CopyButton(state = state, enabled = source.generation != null, label = label,
+        modifier = modifier.testTag("thread_image_copy_$location"), onClick = copy)
 }
 
 private fun ReaderImageZoom.center() = Offset(viewport.width / 2, viewport.height / 2)
