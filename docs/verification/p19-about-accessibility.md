@@ -57,7 +57,9 @@ Android SDK: `$HOME/.android-sdk`. Gradle maximum workers: 2.
   New Arabic About/notice images and changed list/catalog images visually inspected.
 - `lint`: 0 errors; app 97 warnings, core 2 warnings. No new warning introduced.
 - `:app:assembleDebug -Pot3a.requireBridgeSdk=true`: passed.
-- `git diff --check`: passed; no ThreadScreen, AppGraph or generated string changes.
+- `git diff origin/main --check`: passed. `.gitattributes` permits original terminal
+  blank lines in upstream legal notices; their text is preserved. No ThreadScreen,
+  AppGraph or generated string changes.
 
 The 176 core skips and some app skips reflect missing host JNI/opt-in fixtures;
 this is not acceptance of live native-host flows. App release unit tests were not
