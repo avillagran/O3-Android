@@ -39,15 +39,17 @@ class ReaderImageCopyDeviceTest {
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_image_reader-shot_640"))
             rule.waitUntil(10_000) { rule.onAllNodesWithContentDescription("Vista previa del lector.png").fetchSemanticsNodes().isNotEmpty() }
             scenario.onActivity { assertEquals("unchanged", clipboard.primaryClip!!.getItemAt(0).text.toString()) }
-            rule.onNodeWithTag("thread_image_copy_thumbnail").assertIsDisplayed()
+            rule.onNodeWithTag("thread_image_copy_thumbnail").assertDoesNotExist()
+            rule.onNodeWithTag("thread_image_reader-shot_640").performTouchInput { longClick() }
+            rule.onNodeWithTag("thread_image_copy_menu").assertIsDisplayed()
             capture(context, "thumbnail.$theme")
 
             // Force a cache miss so the deferred transport exercises the busy action.
             dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
             val release = CompletableDeferred<Unit>()
             scenario.onActivity { it.fixture.transport.onImage = { _, _, _ -> release.await(); expected } }
-            rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()
-            rule.onNodeWithTag("thread_image_copy_thumbnail").assertIsNotEnabled()
+            rule.onNodeWithTag("thread_image_copy_menu").performClick()
+            rule.onNodeWithTag("thread_image_copy_menu").assertIsNotEnabled()
             capture(context, "busy.$theme")
             scenario.onActivity { assertEquals("unchanged", clipboard.primaryClip!!.getItemAt(0).text.toString()) }
             release.complete(Unit)
@@ -67,11 +69,18 @@ class ReaderImageCopyDeviceTest {
             dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
             // A failed explicit action retains the previous valid clipboard.
             scenario.onActivity { it.fixture.transport.onImage = { _, _, _ -> error("synthetic_copy_failure") } }
-            rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()
+            rule.onNodeWithTag("thread_image_copy_menu").performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithContentDescription("Copy failed").fetchSemanticsNodes().isNotEmpty() }
             scenario.onActivity { assertEquals(firstUri, clipboard.primaryClip!!.getItemAt(0).uri.toString()) }
             capture(context, "error.$theme")
             scenario.onActivity { it.fixture.transport.onImage = { _, _, _ -> expected } }
+            androidx.test.espresso.Espresso.pressBack()
+            // TalkBack exposes the same menu without a long-press gesture.
+            val actions = rule.onNodeWithTag("thread_image_reader-shot_640").fetchSemanticsNode()
+                .config[androidx.compose.ui.semantics.SemanticsActions.CustomActions]
+            rule.runOnIdle { assertTrue(actions.single().action()) }
+            rule.onNodeWithTag("thread_image_copy_menu").assertIsDisplayed()
+            androidx.test.espresso.Espresso.pressBack()
             rule.onNodeWithTag("thread_image_reader-shot_640").performClick()
             rule.onNodeWithTag("thread_image_copy_viewer").assertIsDisplayed()
             scenario.onActivity { assertEquals(firstUri, clipboard.primaryClip!!.getItemAt(0).uri.toString()) }
