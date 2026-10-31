@@ -1,86 +1,99 @@
-# P15 terminal: blocked native integration
+# P15 remote terminal
 
-Base: `feat/adopt-lib-036`. P15 is **Blocked**, not implemented terminal parity.
+The thread menu opens a real host/thread-scoped PTY screen. Native Markdown
+`command` actions route to the same screen with a command confirmation dialog;
+opening the dialog never sends the command. The destination host, thread and
+native-resolved cwd remain visible. Cancel consumes no input.
 
-## Verified contract inventory
+## Native contract
 
-Pinned AAR `v0.3.6`, source `86819eb442ae4a8635cb21206f2195343c75b094`,
-SHA-256 `5e44c1ef846f27b7f131ca3bbacb771f21ce70028f061014904064e4caf9e21d`.
-`javap` of its classes.jar confirms `T3Api.Terminal.open`, `write`, `resize`,
-`attach` and generic `T3Client.subscribeFn` are present. These RPC bindings are
-**not missing**. The native stream owns validation and subscription cancellation.
+Pinned release: lib-t3-rust v0.3.7, ABI 3, source
+`7cbad5d8198d37e9ded767d33ac03f2cf15875f4`, AAR SHA-256
+`15d60510f170c269631eedb182ad2cfed991e4d33ce19aa3c7ea364296594843`.
+The release AAR and host JNI are ignored build artifacts. The regenerated catalog
+contains 261 imported strings in 20 locales; 14 hand-kept terminal strings also
+exist in every locale.
 
-**terminal::context binding is absent in AAR 0.3.6.**
-**terminal::Output binding is absent in AAR 0.3.6.**
+- `terminal.context` resolves the selected host's worktree/project/provider from
+  that host's shell snapshot. Empty fallback fails closed: no Android cwd is used.
+- `terminal.attach` is used only with `terminal:operate`. Its domain helper builds
+  validated args. The initial explicit open may start the shell. Reconnection,
+  activity/lifecycle reentry and restored process state use `resume=true` and
+  `restartIfNotRunning=false`, without an `afterSequence` cursor.
+- `terminal.observe` is a distinct read-only subscription with `terminal:read`.
+  Its cwd/dimensions come from the terminal snapshot; it does not require shell
+  or project-read permission. It never calls attach, resize, write or open. Unsupported/denied observation
+  reports a terminal error; it never falls back to an operating session.
+- Every ordered event passes through `terminal.output`. Snapshots replace both
+  scrollback and parser state; duplicate sequence events produce no renderer write.
+  Transport closure reconnects with backoff; a PTY exit is separately displayed
+  and disables input. Exit codes/signals come from the native reduction.
+- Write and resize revalidate permissions through the transport. User input is
+  queued in order with an attachment generation; stale queued input is discarded.
+  Unknown write delivery is visible and is never retried. Resizes are serialized
+  and coalesced independently of input, including the layout/attach race.
+- Closing the screen cancels the subscription and IME ownership. It detaches from
+  the PTY; the protocol does not expose a terminal-kill RPC. The remote shell can
+  continue for Desktop or a later resume.
 
-Those helpers exist in the pinned Rust `src/terminal.rs` but are absent from
-Android's T3Api, execute operations and domain registry. Context resolves the
-thread worktree, project root, provider instance and fallback scratch directory;
-Output replaces snapshots, deduplicates sequence replay and observes exit/error.
-Do not port these shared rules to Kotlin to work around the missing bindings.
+## Android surface
 
-`terminal.attach` requires `terminal:operate` even for observation and can start
-a process. There is no separate read-only attach contract in this release.
-A token lacking that permission therefore cannot receive the requested live
-read-only terminal. Do not reuse a Desktop credential or probe access with attach.
+The persistent VT parser supports Unicode code points and combining marks,
+wide cells, CR/LF/backspace/tab, cursor movement/save/restore, erasure, insertion,
+scroll regions, primary/alternate buffers, SGR 16/256/true colors, underline,
+bold/inverse, OSC discard, cursor visibility, bracketed paste and application
+cursor keys. OSC cannot change the clipboard or launch links. Device/status
+queries receive bounded replies only on an operating live stream, never during
+snapshot replay. Scrollback is capped at 2,000 lines and 128,000 cells.
 
-Sources inspected read-only:
-- Desktop `docs/SHARED_DRAFTS_HOST.md`, native terminal contracts (lines 99–115).
-- Desktop `src/terminal.rs`, run_frontend uses both native helpers.
-- Audit `/home/node/.cache/o3-android-artifacts/desktop-parity-audit.md`, P15 row.
-- Pinned library Android `T3Api.kt`, `T3Client.kt`; `src/terminal.rs`, `src/ffi*`,
-  `src/domain*` and AAR classes.jar.
+The Canvas renders backgrounds before glyphs so wide glyphs are not erased by
+continuation cells. Drag vertically for history and horizontally for wider
+observed terminals. Copy copies the bounded output. Paste requires confirmation
+and honors bracketed-paste mode. The IME buffers composition locally, sends only
+committed text, maps delete to PTY backspace, and handles hardware control keys.
+The soft-key row exposes Esc, Ctrl, Tab, arrows and Return. View dimensions use
+measured monospaced cells; layout, rotation and IME insets drive resize.
 
-## Delivered prerequisite
-
-Thread menu opens a full-screen host/thread-scoped unavailable page. It cancels
-permission reads and discards state when the connection or target changes. Close
-and Back return to the thread. No attach, command execution, local shell, input,
-credential forwarding or automatic retry is offered. Bottom navigation is hidden.
-Five hand-kept strings in all 20 locales identify the binding and read-only gaps.
-Core adapter validates current auth before typed write/resize and does not retry
-unknown delivery; it is not wired to an executable UI while prerequisites lack.
+This is a text terminal: inline terminal graphics and mouse reporting are not
+implemented. Column resize preserves the visible grid rather than reflowing old
+scrollback paragraphs. Live-host shell/TUI compatibility and physical-keyboard,
+OEM IME, TalkBack and RTL visual acceptance are not established by the fixtures.
 
 ## Verification
 
+Fixture coverage lives in `TerminalEmulatorTest`, `TerminalSessionTest`,
+`TerminalBindingsTest`, `TerminalNativeContractTest`, `NativeTerminalTest`,
+`TerminalScreenTest` and `TerminalScreenDeviceTest`. The native WebSocket fixture
+fragments a Unicode code point across real continuation frames and splits ANSI
+across events. It verifies the actual observe wire tag, native output reduction,
+sequence dedupe, worktree/provider context and resume args. Session fixtures cover
+reconnect replacement, exited PTY, lifecycle/process resume, resize, read-only
+mutations, unsupported observe and uncertain/stale input. UI fixtures cover IME
+composition/deletion, layout sizing, read-only controls, confirmation and cancel.
+
+An initial full JVM run hit the existing `MessageImagesTest` Image 199 viewport
+assertion once. The unchanged fixture passed its focused rerun and subsequent
+full runs; its intermittent cause remains unresolved.
+
+Final suite results are recorded with the change. No phone or alternate checkout
+is used for acceptance; only the explicitly selected emulator is instrumented.
+
+### Final local results — 2026-10-31
+
 Java 21 (`mise where java@temurin-21`), `ANDROID_HOME=$HOME/.android-sdk`,
-Gradle `--max-workers=2`. Logs: `~/.cache/o3-android-artifacts/p15/`.
-The first app unit run failed existing MessageImagesTest visibility of Image 199;
-an unchanged full repeat passed; the final full repeat failed the same test again.
-No cause or fix is claimed for that failure. Final app result: 512 passed,
-1 failed, 1 skipped (514 total); the earlier green repeat had 513 passed and
-1 skipped. Both new app tests passed in every run. Core debug/release each:
-477 passed, 5 skipped (482 total), including five new terminal tests.
+`--max-workers=2`, one Gradle invocation at a time:
 
-The native contract regression runs against the actual host JNI and confirms
-RPC presence and absent domain/execute terminal helper exports. Permission tests
-cover unauthenticated/read-only tokens, unchanged UTF-8 payload forwarding,
-resize target preservation and exactly one attempt on unknown delivery. These
-are adapter tests, not PTY/ANSI/UTF-8 rendering acceptance.
+- `:core:test`: debug/release each 499 PASS, 5 SKIP, 0 failures.
+- `:app:testDebugUnitTest`: 519 PASS, 1 SKIP, 0 failures.
+- `:app:verifyRoborazziDebug`: 144 unchanged goldens, no replacements.
+- `lint`: no errors; core 2 warnings, app 103 warnings and 1 hint.
+- `tools/import-ot3-strings --check`: 261 keys × 20 locales; hand-kept 14 × 20 parity checked.
+- `:app:assembleDebug -Pot3a.requireBridgeSdk=true`: PASS.
+- Full unfiltered `:app:connectedDebugAndroidTest`, `ANDROID_SERIAL=emulator-5584`,
+  API 34: 110 PASS, 9 SKIP, 0 failures. Final combined Gradle run: 6m 53s.
+- 39 dedicated terminal fixtures pass (31 net additions over the diagnostic branch).
 
-API 34 emulator, explicit serial `emulator-5580`, 40-minute timeout:
-core 8 passed / 2 skipped; app 107 passed / 9 skipped; no failures.
-App XML duration 238.136 seconds; full Gradle run 4m19s. New blocked-surface
-device test passed. Console totals double-count skipped tests; counts here use
-XML testcase entries. Emulator stopped after testing. No phone/all-hosts access.
-
-Standalone `verifyRoborazziDebug` with all `*ScreenshotTest` classes:
-144 unchanged goldens passed, no baseline updates. Lint: 0 errors (core
-2 warnings; app 102 warnings and 1 hint). Required-Bridge-SDK debug APK passed.
-`tools/import-ot3-strings --check`: 261 × 20 passed; terminal XML parity:
-5 hand-kept keys × 20 locales passed. `git diff --check` passed.
-The screenshot-only run is separate from the failing full app unit run above.
-
-## Pending acceptance
-
-Remote PTY renderer, ANSI, UTF-8 rendering, bounded scrollback, selection/copy/paste,
-soft keyboard, key row, layout/IME resize, reconnect, exit state, run-code confirmation
-and native cwd remain unimplemented/unverified. Run-code actions remain disabled;
-a successful write response must never be treated as command success. A close
-must detach its subscription without killing the remote process.
-
-To unblock: expose native terminal context and output helpers through a versioned
-Android release, and add a server-authorized observation-only terminal stream for
-read-only tokens. Then wire the renderer/controller and command confirmation using
-the same authenticated host connection and stable per-thread terminal IDs. Do not
-restart an exited shell on reconnect; never retry uncertain command input.
+The dedicated emulator was stopped after verification. No phone or alternate
+checkout was changed. Logs, counts and the APK are under the local artifact cache
+`~/.cache/o3-android-artifacts/terminal-037/`. Live-host/physical-device acceptance
+and the intermittent image fixture cause remain unverified as described above.

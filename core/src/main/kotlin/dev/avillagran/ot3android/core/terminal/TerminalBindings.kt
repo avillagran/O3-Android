@@ -6,13 +6,15 @@ import org.json.JSONObject
 /** Terminal attach is a mutation, including on reconnect. Never use it to probe read access. */
 object TerminalBindings {
     const val SCOPE = "terminal:operate"
-    const val MISSING_CONTEXT = "terminal::context binding is absent in AAR 0.3.6"
-    const val MISSING_OUTPUT = "terminal::Output binding is absent in AAR 0.3.6"
+    const val READ_SCOPE = "terminal:read"
 
-    fun canOperate(session: JSONObject): Boolean {
+    fun canOperate(session: JSONObject): Boolean = hasScope(session, SCOPE)
+    fun canRead(session: JSONObject): Boolean = canOperate(session) || hasScope(session, READ_SCOPE)
+
+    private fun hasScope(session: JSONObject, scope: String): Boolean {
         if (!session.optBoolean("authenticated")) return false
         val scopes = session.optJSONArray("permissions") ?: session.optJSONArray("scopes") ?: return false
-        return (0 until scopes.length()).any { scopes.optString(it) == SCOPE }
+        return (0 until scopes.length()).any { scopes.optString(it) == scope }
     }
 
     /** All writes go through Rust's validated typed API, once. No retry after unknown delivery. */

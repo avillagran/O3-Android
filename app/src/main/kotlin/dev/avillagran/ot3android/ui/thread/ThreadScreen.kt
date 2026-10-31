@@ -111,7 +111,7 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null, onTerminal: (() -> Unit)? = null) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null, onTerminal: (() -> Unit)? = null, onRunCode: ((String) -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val checkpoint by viewModel.checkpoint.collectAsStateWithLifecycle()
     val checkpointMessages by viewModel.checkpointMessages.collectAsStateWithLifecycle()
@@ -132,7 +132,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
     val graph = androidx.compose.ui.platform.LocalContext.current.devGraph()
     val clientSettings by graph.generalClientPreferences.settings.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
     val mathRendering by androidx.compose.ui.platform.LocalContext.current.devGraph().mathRenderingEnabled.collectAsStateWithLifecycle()
-    androidx.compose.runtime.CompositionLocalProvider(LocalLiveInspector provides LiveInspector(imageConnection) { viewModel.isImageConnectionCurrent(imageConnection) }, LocalReaderCheckpoint provides ReaderCheckpoint(checkpointMessages, viewModel::previewCheckpoint), LocalReaderTimeFormat provides clientSettings.optString("timestampFormat", "locale"), LocalReaderReview provides if (viewModel.durableComposerAvailable) ReaderReviewSettings(diffSettings, graph::setDiffReviewSettings) else ReaderReviewSettings(), LocalReaderMath provides mathRendering, LocalReaderStreaming provides state.view.working, LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
+    androidx.compose.runtime.CompositionLocalProvider(dev.avillagran.ot3android.ui.thread.rendering.LocalCodeActions provides dev.avillagran.ot3android.ui.thread.rendering.CodeActions(run = onRunCode?.let { run -> { block: org.json.JSONObject -> run(block.getString("command")) } }), LocalLiveInspector provides LiveInspector(imageConnection) { viewModel.isImageConnectionCurrent(imageConnection) }, LocalReaderCheckpoint provides ReaderCheckpoint(checkpointMessages, viewModel::previewCheckpoint), LocalReaderTimeFormat provides clientSettings.optString("timestampFormat", "locale"), LocalReaderReview provides if (viewModel.durableComposerAvailable) ReaderReviewSettings(diffSettings, graph::setDiffReviewSettings) else ReaderReviewSettings(), LocalReaderMath provides mathRendering, LocalReaderStreaming provides state.view.working, LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
         ThreadContent(
             state = state,
             editorIdentity = viewModel.editorIdentity,

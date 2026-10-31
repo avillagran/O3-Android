@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Hand-kept P15 strings. -->
+<!-- Hand-kept terminal strings. -->
 <resources>
     <string name="terminal_title">Terminal</string>
     <string name="terminal_close">Schließen</string>
-    <string name="terminal_disconnected">Getrennt. Nach der Hostverbindung erneut öffnen.</string>
-    <string name="terminal_bindings_missing">Remote-Terminal nicht verfügbar: Native Bindings für Verzeichnis und Ausgabeverarbeitung fehlen in AAR 0.3.6.</string>
-    <string name="terminal_read_only_unavailable">Token mit Lesezugriff: Der Host verlangt terminal:operate auch zum Verbinden. Ein reiner Lesestream ist nicht verfügbar.</string>
+    <string name="terminal_disconnected">Getrennt. Verbindung wird hergestellt…</string>
+    <string name="terminal_read_only">Schreibgeschütztes Terminal</string>
+    <string name="terminal_exited">Terminal beendet: %1$s</string>
+    <string name="terminal_error">Terminal nicht verfügbar oder Berechtigung verweigert.</string>
+    <string name="terminal_uncertain">Die Eingabe wurde möglicherweise zugestellt. Kein erneuter Versuch.</string>
+    <string name="terminal_copy">Ausgabe kopieren</string>
+    <string name="terminal_paste">Einfügen</string>
+    <string name="terminal_run">Code ausführen</string>
+    <string name="terminal_confirm">Befehl und Ziel vor dem Senden bestätigen. Eingefügter Text kann Befehle ausführen.</string>
+    <string name="terminal_execute">Ausführen</string>
+    <string name="terminal_cancel">Abbrechen</string>
+    <string name="terminal_input_too_large">Die Eingabe ist zu groß. Sende weniger als 64 KiB auf einmal.</string>
 </resources>

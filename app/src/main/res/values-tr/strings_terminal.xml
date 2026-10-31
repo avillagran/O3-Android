@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Hand-kept P15 strings. -->
+<!-- Hand-kept terminal strings. -->
 <resources>
     <string name="terminal_title">Terminal</string>
     <string name="terminal_close">Kapat</string>
-    <string name="terminal_disconnected">Bağlantı kesildi. Ana bilgisayar bağlanınca yeniden açın.</string>
-    <string name="terminal_bindings_missing">Uzak terminal kullanılamıyor: AAR 0.3.6 içinde dizin ve çıktı işleme yerel bağları eksik.</string>
-    <string name="terminal_read_only_unavailable">Salt okunur belirteç: bu ana bilgisayar bağlanmak için bile terminal:operate gerektirir. Salt okunur akış yok.</string>
+    <string name="terminal_disconnected">Bağlantı kesildi. Yeniden bağlanıyor…</string>
+    <string name="terminal_read_only">Salt okunur terminal</string>
+    <string name="terminal_exited">Terminal sonlandı: %1$s</string>
+    <string name="terminal_error">Terminal kullanılamıyor veya izin reddedildi.</string>
+    <string name="terminal_uncertain">Girdinin teslimi belirsiz. Yeniden denenmedi.</string>
+    <string name="terminal_copy">Çıktıyı kopyala</string>
+    <string name="terminal_paste">Yapıştır</string>
+    <string name="terminal_run">Kodu çalıştır</string>
+    <string name="terminal_confirm">Göndermeden önce komutu ve hedefi onaylayın. Yapıştırılan metin komut çalıştırabilir.</string>
+    <string name="terminal_execute">Çalıştır</string>
+    <string name="terminal_cancel">İptal</string>
+    <string name="terminal_input_too_large">Girdi çok büyük. Bir seferde 64 KiB’den az gönderin.</string>
 </resources>

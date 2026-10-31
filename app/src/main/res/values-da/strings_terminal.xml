@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Hand-kept P15 strings. -->
+<!-- Hand-kept terminal strings. -->
 <resources>
     <string name="terminal_title">Terminal</string>
     <string name="terminal_close">Luk</string>
-    <string name="terminal_disconnected">Afbrudt. Åbn igen, når værten er tilsluttet.</string>
-    <string name="terminal_bindings_missing">Fjernterminal er utilgængelig: native bindinger til mappe og outputbehandling mangler i AAR 0.3.6.</string>
-    <string name="terminal_read_only_unavailable">Skrivebeskyttet token: værten kræver terminal:operate selv ved tilslutning. Ingen skrivebeskyttet strøm er tilgængelig.</string>
+    <string name="terminal_disconnected">Afbrudt. Opretter forbindelse igen…</string>
+    <string name="terminal_read_only">Skrivebeskyttet terminal</string>
+    <string name="terminal_exited">Terminal afsluttet: %1$s</string>
+    <string name="terminal_error">Terminalen er utilgængelig, eller adgang er nægtet.</string>
+    <string name="terminal_uncertain">Levering af input er usikker. Intet nyt forsøg.</string>
+    <string name="terminal_copy">Kopiér output</string>
+    <string name="terminal_paste">Indsæt</string>
+    <string name="terminal_run">Kør kode</string>
+    <string name="terminal_confirm">Bekræft kommando og destination før afsendelse. Indsat tekst kan køre kommandoer.</string>
+    <string name="terminal_execute">Kør</string>
+    <string name="terminal_cancel">Annuller</string>
+    <string name="terminal_input_too_large">Input er for stort. Send mindre end 64 KiB ad gangen.</string>
 </resources>

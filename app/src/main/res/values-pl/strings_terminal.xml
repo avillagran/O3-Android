@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Hand-kept P15 strings. -->
+<!-- Hand-kept terminal strings. -->
 <resources>
     <string name="terminal_title">Terminal</string>
     <string name="terminal_close">Zamknij</string>
-    <string name="terminal_disconnected">Rozłączono. Otwórz ponownie po połączeniu hosta.</string>
-    <string name="terminal_bindings_missing">Terminal zdalny niedostępny: w AAR 0.3.6 brakuje natywnych powiązań katalogu i przetwarzania wyjścia.</string>
-    <string name="terminal_read_only_unavailable">Token tylko do odczytu: host wymaga terminal:operate także do podłączenia. Strumień tylko do odczytu jest niedostępny.</string>
+    <string name="terminal_disconnected">Rozłączono. Ponowne łączenie…</string>
+    <string name="terminal_read_only">Terminal tylko do odczytu</string>
+    <string name="terminal_exited">Terminal zakończony: %1$s</string>
+    <string name="terminal_error">Terminal niedostępny lub brak uprawnień.</string>
+    <string name="terminal_uncertain">Dostarczenie danych jest niepewne. Nie ponowiono próby.</string>
+    <string name="terminal_copy">Kopiuj wynik</string>
+    <string name="terminal_paste">Wklej</string>
+    <string name="terminal_run">Uruchom kod</string>
+    <string name="terminal_confirm">Potwierdź polecenie i cel przed wysłaniem. Wklejony tekst może wykonać polecenia.</string>
+    <string name="terminal_execute">Wykonaj</string>
+    <string name="terminal_cancel">Anuluj</string>
+    <string name="terminal_input_too_large">Dane wejściowe są zbyt duże. Wysyłaj mniej niż 64 KiB naraz.</string>
 </resources>

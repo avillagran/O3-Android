@@ -186,6 +186,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             },
             onBack = { navigator.back() },
             onTerminal = { navigator.push(ThreadTerminal(route.environmentId, route.threadId)) },
+            onRunCode = { navigator.push(ThreadTerminal(route.environmentId, route.threadId, it)) },
             onGit = { navigator.push(ThreadGit(route.environmentId, route.threadId)) },
             onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) },
             onOpenThread = { navigator.openThread(route.environmentId, it) },
@@ -195,7 +196,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun Terminal(route: ThreadTerminal) {
-        dev.avillagran.ot3android.ui.terminal.TerminalPage(route.environmentId, route.threadId) { navigator.back() }
+        dev.avillagran.ot3android.ui.terminal.TerminalPage(route.environmentId, route.threadId, onClose = { navigator.back() }, command = route.command)
     }
 
     @Composable
