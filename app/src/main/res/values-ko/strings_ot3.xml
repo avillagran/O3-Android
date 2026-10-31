@@ -264,5 +264,4 @@
     <string name="ot3_new_chat_title">스레드 제목</string>
     <string name="ot3_new_chat_no_projects">프로젝트를 찾을 수 없습니다</string>
     <string name="ot3_new_chat_current_checkout">현재 작업 복사본</string>
-    <string name="ot3_image_label">이미지</string>
 </resources>

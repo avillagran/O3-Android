@@ -184,3 +184,36 @@ The cache removes repeat transport spinners when reopening during the same proce
 local sampled decode still occurs. It is bounded and disposable: eviction/process
 restart reads again, and cached host content is a snapshot until eviction/restart. No
 new physical-device or live remote HTTP/host/codec validation was performed in this pass.
+
+## CI cache expectations (2026-10-31)
+
+Run 41186779313 at 9a28eb1 failed the catalog check because `ot3_image_label`
+was appended to generated `strings_ot3.xml`. Its translations now live in
+hand-kept `strings_reader_images.xml` in all 20 locales; the generated catalog
+matches the AAR unchanged.
+
+The five instrumented failures were stale transport assumptions after compressed
+byte caching, rather than broken retry/copy or viewport loading:
+
+- Copy's Latte/Tokyo tests injected a blocked transport after the thumbnail had
+  cached the bytes, so Copy finished instead of remaining busy. They now evict
+  the fixture environment before blocked and failed reads, retaining busy,
+  failure, clipboard preservation and successful-copy assertions.
+- The failed-read zoom test also hit cached thumbnail bytes, so no read failed
+  and Retry correctly never appeared. Eviction now forces the failed read; the
+  original Retry, disabled zoom and successful zoom assertions remain.
+- The image navigation tests expected at least two transport reads. Thumbnail,
+  viewer and rotation intentionally share compressed bytes; they now require
+  exactly one transport read, preserving display, rotation and no-dispatch checks.
+
+Each affected class clears the synthetic environment's process cache before
+its tests so the common fixture authority cannot leak bytes across tests. No
+production loading, retry, clipboard or cache behavior was changed.
+
+Validation: targeted API34 emulator image classes 8/8 passed. Full connected
+reports: core 10 cases (8 passed, 2 skipped), app 95 cases (86 passed, 9 skipped),
+zero failures/errors. Counts use XML testcase elements; AGP's console double-counts
+skips in its finished totals. Fresh JVM runs: core 187 passed/170 skipped; app
+369 passed/16 skipped. Roborazzi, both-module lint, 261-string × 20-locale catalog
+check and bridge-required debug assembly passed. Emulator stopped afterwards.
+Host-JNI/opt-in checks remain skipped; no physical-device or live-host validation.

@@ -264,5 +264,4 @@
     <string name="ot3_new_chat_title">Tytuł wątku</string>
     <string name="ot3_new_chat_no_projects">Nie znaleziono projektów</string>
     <string name="ot3_new_chat_current_checkout">Bieżąca kopia robocza</string>
-    <string name="ot3_image_label">Obraz</string>
 </resources>
