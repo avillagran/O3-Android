@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Det gick inte att bekräfta åtgärden. Kontrollera trådens status innan du försöker igen.</string>
+    <string name="bridge_full_access">Full åtkomst via brygga</string>
+    <string name="bridge_full_access_ended">Full åtkomst har upphört – väntar på bryggan</string>
 </resources>

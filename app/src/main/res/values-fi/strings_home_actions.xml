@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Toimintoa ei voitu vahvistaa. Tarkista keskustelun tila ennen kuin yrität uudelleen.</string>
+    <string name="bridge_full_access">Täysi käyttöoikeus sillan kautta</string>
+    <string name="bridge_full_access_ended">Täysi käyttöoikeus päättyi – odotetaan siltaa</string>
 </resources>

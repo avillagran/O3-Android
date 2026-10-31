@@ -6,6 +6,12 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Upsert
 
+/** A row holding a long-lived write session from an all-hosts bridge. */
+const val NATIVE_AUTHORIZED = "native_authorized"
+
+/** That session ended; the row stays native and waits for a renewal. */
+const val NATIVE_EXPIRED = "native_expired"
+
 /** Provenance is separate so existing independent environments retain their ownership. */
 @Entity(tableName = "bridge_managed")
 data class BridgeManagedEntity(
@@ -13,7 +19,15 @@ data class BridgeManagedEntity(
     val provenance: String,
     val status: String,
     val authorizationExpiresAt: Long? = null,
-)
+) {
+    /** The status to show: a row no refresh reaches keeps a status its session outlived. */
+    fun effectiveStatus(now: Long): String = when {
+        (authorizationExpiresAt ?: 0L) > now -> status
+        status == NATIVE_AUTHORIZED -> NATIVE_EXPIRED
+        status == "authorized" -> "expired"
+        else -> status
+    }
+}
 
 @Dao
 interface BridgeManagedDao {

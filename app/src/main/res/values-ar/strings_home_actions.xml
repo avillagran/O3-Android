@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">تعذّر تأكيد الإجراء. تحقق من حالة المحادثة قبل المحاولة مرة أخرى.</string>
+    <string name="bridge_full_access">وصول كامل عبر الجسر</string>
+    <string name="bridge_full_access_ended">انتهى الوصول الكامل — في انتظار الجسر</string>
 </resources>

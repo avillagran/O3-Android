@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Impossibile confermare l\'azione. Controlla lo stato della conversazione prima di riprovare.</string>
+    <string name="bridge_full_access">Accesso completo tramite bridge</string>
+    <string name="bridge_full_access_ended">Accesso completo terminato: in attesa del bridge</string>
 </resources>

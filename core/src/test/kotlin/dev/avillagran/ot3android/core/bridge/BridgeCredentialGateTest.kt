@@ -6,6 +6,8 @@ import dev.avillagran.ot3android.core.data.local.BridgeManagedDao
 import dev.avillagran.ot3android.core.data.local.BridgeManagedEntity
 import dev.avillagran.ot3android.core.data.local.EnvironmentDao
 import dev.avillagran.ot3android.core.data.local.EnvironmentEntity
+import dev.avillagran.ot3android.core.data.local.NATIVE_AUTHORIZED
+import dev.avillagran.ot3android.core.data.local.NATIVE_EXPIRED
 import dev.avillagran.ot3android.core.security.TokenStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
@@ -13,6 +15,17 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BridgeCredentialGateTest {
+    @Test
+    fun anExpiredSessionNeverReadsAsAuthorized() {
+        fun row(status: String, expires: Long?) = BridgeManagedEntity("node", "bridge:owner:client", status, expires)
+        assertEquals("authorized", row("authorized", 200).effectiveStatus(100))
+        assertEquals("Orphaned read-only row, field case", "expired", row("authorized", 100).effectiveStatus(100))
+        assertEquals(NATIVE_AUTHORIZED, row(NATIVE_AUTHORIZED, 200).effectiveStatus(100))
+        assertEquals(NATIVE_EXPIRED, row(NATIVE_AUTHORIZED, 100).effectiveStatus(100))
+        assertEquals(NATIVE_EXPIRED, row(NATIVE_EXPIRED, null).effectiveStatus(100))
+        assertEquals("revoked", row("revoked", null).effectiveStatus(100))
+    }
+
     @Test
     fun discoveryRevocationAndExpiryCannotReuseAPreviousCredential() = runBlocking {
         val dao = object : EnvironmentDao {
@@ -52,6 +65,15 @@ class BridgeCredentialGateTest {
         }
         managed.row = BridgeManagedEntity("node", "bridge:owner:client", "authorized", 200)
         assertEquals("isolated-token", repository.token("node"))
+        managed.row = BridgeManagedEntity("node", "bridge:owner:client", NATIVE_AUTHORIZED, 200)
+        assertEquals("A native row needs its session, not a fresh catalog", "isolated-token", repository.token("node"))
+        managed.row = BridgeManagedEntity("node", "bridge:owner:client", NATIVE_EXPIRED, 200)
+        assertNull("native_expired means the session ended", repository.token("node"))
+        managed.row = BridgeManagedEntity("node", "bridge:owner:client", NATIVE_AUTHORIZED, 100)
+        assertNull("The session's own end closes it before any refresh", repository.token("node"))
+        managed.row = BridgeManagedEntity("node", "bridge:owner:client", "credential_updating", 200)
+        assertNull(repository.token("node"))
+        managed.row = BridgeManagedEntity("node", "bridge:owner:client", "authorized", 200)
         now = 200
         assertNull(repository.token("node"))
         assertEquals("isolated-token", repository.token("independent"))

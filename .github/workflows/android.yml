@@ -15,7 +15,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
 
@@ -29,19 +29,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       # lib-t3-rust: the AAR comes from the release pinned in libs/lib-t3-rust.lock; the
-      # host JNI library (JVM tests) is built from the lib at the same tag, since the
-      # release ships none. See docs/LIB_BUILD.md. Rust and CMake are preinstalled.
-      - name: Read the lib-t3-rust tag from the lock
+      # host JNI library (JVM tests) is built from the commit that AAR was packaged from,
+      # since the release ships none. See docs/LIB_BUILD.md. Rust and CMake are preinstalled.
+      - name: Read the lib-t3-rust source from the lock
         id: lib
         run: |
-          tag=$(sed -n 's/^tag=//p' libs/lib-t3-rust.lock)
-          [[ -n $tag ]] || { echo "libs/lib-t3-rust.lock has no tag=" >&2; exit 1; }
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          source=$(sed -n 's/^source=//p' libs/lib-t3-rust.lock)
+          [[ -n $source ]] || { echo "libs/lib-t3-rust.lock has no source=" >&2; exit 1; }
+          echo "source=$source" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v4
         with:
           repository: avillagran/lib-t3-rust
-          ref: ${{ steps.lib.outputs.tag }}
+          ref: ${{ steps.lib.outputs.source }}
           path: lib-t3-rust
           persist-credentials: false
 
@@ -62,6 +62,29 @@ jobs:
           scripts/fetch-or-build-lib.sh --release --host-jni
           cat libs/lib-t3-rust-android.properties libs/host/linux-x86_64/lib-t3-rust.properties
 
+      # The bridge SDK is built from the commit pinned in libs/omabridge-native.lock.
+      - name: Read the OmaBridge source from the lock
+        id: bridge
+        run: |
+          source=$(sed -n 's/^source=//p' libs/omabridge-native.lock)
+          [[ -n $source ]] || { echo "libs/omabridge-native.lock has no source=" >&2; exit 1; }
+          echo "source=$source" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: avillagran/omabridge
+          ref: ${{ steps.bridge.outputs.source }}
+          path: omabridge
+          persist-credentials: false
+
+      - name: Bridge SDK for the app and the JVM tests
+        env:
+          OMABRIDGE_DIR: ${{ github.workspace }}/omabridge
+        run: |
+          rustup target add aarch64-linux-android x86_64-linux-android
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358" >/dev/null
+          ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358 scripts/build-bridge-sdk.sh
+
       # values*/strings_ot3.xml are generated from the catalog in the pinned AAR and
       # committed; a lib bump that changes strings fails here until they are regenerated.
       - name: ot3 strings match the AAR's catalog
@@ -76,7 +99,7 @@ jobs:
           # JVM tests that load the host libt3_jni.so fail instead of skipping without it.
           OT3A_REQUIRE_HOST_JNI: "1"
         run: >-
-          ./gradlew --no-daemon
+          ./gradlew --no-daemon -Pot3a.requireBridgeSdk=true
           :core:testDebugUnitTest
           :app:testDebugUnitTest :app:verifyRoborazziDebug :lucide-vectors:test
           :core:lintDebug :app:lintDebug
@@ -89,6 +112,12 @@ jobs:
           unzip -l "$apk" | grep 'lib/.*/libt3_jni.so' || true
           count=$(unzip -l "$apk" | grep -c 'lib/.*/libt3_jni.so' || true)
           [[ $count == 4 ]] || { echo "expected 4 lib/<abi>/libt3_jni.so in $apk, found $count" >&2; exit 1; }
+
+      - name: The debug APK packages libomabridge_jni.so for two ABIs
+        run: |
+          apk=app/build/outputs/apk/debug/app-debug.apk
+          count=$(unzip -l "$apk" | grep -c 'lib/.*/libomabridge_jni.so' || true)
+          [[ $count == 2 ]] || { echo "expected 2 lib/<abi>/libomabridge_jni.so in $apk, found $count" >&2; exit 1; }
 
       - name: Upload test and lint reports
         if: failure()

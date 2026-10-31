@@ -18,11 +18,12 @@ data class EnvironmentItem(val environment: Environment, val state: ConnectionSt
 class EnvironmentsViewModel(
     private val repository: EnvironmentRepository,
     private val connections: ConnectionManager,
+    private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
 
     val items: StateFlow<List<EnvironmentItem>?> =
         combine(repository.environments, connections.states, repository.bridgeStates) { environments, states, origins ->
-            environments.map { environment -> EnvironmentItem(environment, states[environment.id], origins.find { it.id == environment.id }?.status) }
+            environments.map { environment -> EnvironmentItem(environment, states[environment.id], origins.find { it.id == environment.id }?.effectiveStatus(clock())) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun delete(environmentId: String) {
