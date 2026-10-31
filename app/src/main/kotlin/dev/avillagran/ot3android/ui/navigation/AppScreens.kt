@@ -179,6 +179,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             },
             onBack = { navigator.back() },
             onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) },
+            onOpenThread = { navigator.openThread(route.environmentId, it) },
             quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, compact = false, onOpenLimits = { navigator.push(QuotaLimits(route.environmentId)) }) },
         )
     }

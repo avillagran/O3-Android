@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Søg</string>
+    <string name="transcript_close_find">Luk søgning</string>
+    <string name="transcript_find_loaded">Søg i indlæste beskeder</string>
+    <string name="transcript_previous">Forrige</string>
+    <string name="transcript_next">Næste</string>
+    <string name="transcript_latest">Gå til nyeste ↓</string>
+    <string name="transcript_history_unavailable">Ældre historik er ikke tilgængelig i denne version</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Implementer plan</string>
+    <string name="transcript_compacting">Komprimerer kontekst</string>
+    <string name="transcript_compacted">Kontekst komprimeret</string>
+    <string name="transcript_handoff_pending">Kontekstoverførsel afventer</string>
+    <string name="transcript_handoff">Kontekstoverførsel</string>
+    <string name="transcript_open_thread">Åbn tråd</string>
+    <string name="transcript_secret_saved">Gemt sikkert og privat</string>
+    <string name="transcript_secret_declined">Afvist</string>
+    <string name="transcript_secret_unavailable">Sikkert svar er ikke tilgængeligt med dette SDK</string>
+    <string name="transcript_secret_ended">Anmodning afsluttet</string>
+    <string name="transcript_quote">Citér</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Gem</string>
+    <string name="transcript_secret_decline">Afvis</string>
+    <string name="transcript_secret_sent">Svar sendt; afventer bekræftelse</string>
+    <string name="transcript_secret_uncertain">Levering usikker. Kontroller anmodningen i den oprindelige tråd før et nyt forsøg.</string>
+    <string name="transcript_plan_feedback">Feedback på planen</string>
+    <string name="transcript_plan_follow_up">Send feedback</string>
+    <string name="transcript_plan_new_thread">I ny tråd</string>
+    <string name="transcript_plan_cancel">Annuller handling</string>
+    <string name="transcript_plan_retry">Prøv handling igen</string>
+    <string name="transcript_secret_private">Holdes privat og føjes aldrig til samtalen</string>
+</resources>

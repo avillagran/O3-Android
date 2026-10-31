@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Знайти</string>
+    <string name="transcript_close_find">Закрити пошук</string>
+    <string name="transcript_find_loaded">Пошук у завантажених повідомленнях</string>
+    <string name="transcript_previous">Попереднє</string>
+    <string name="transcript_next">Наступне</string>
+    <string name="transcript_latest">До останнього ↓</string>
+    <string name="transcript_history_unavailable">Стара історія недоступна в цій версії</string>
+    <string name="transcript_plan">План</string>
+    <string name="transcript_implement">Реалізувати план</string>
+    <string name="transcript_compacting">Стиснення контексту</string>
+    <string name="transcript_compacted">Контекст стиснено</string>
+    <string name="transcript_handoff_pending">Передавання контексту очікується</string>
+    <string name="transcript_handoff">Передавання контексту</string>
+    <string name="transcript_open_thread">Відкрити обговорення</string>
+    <string name="transcript_secret_saved">Збережено безпечно та приватно</string>
+    <string name="transcript_secret_declined">Відхилено</string>
+    <string name="transcript_secret_unavailable">Безпечна відповідь недоступна в цьому SDK</string>
+    <string name="transcript_secret_ended">Запит завершено</string>
+    <string name="transcript_quote">Цитувати</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Зберегти</string>
+    <string name="transcript_secret_decline">Відхилити</string>
+    <string name="transcript_secret_sent">Відповідь надіслано; очікується підтвердження</string>
+    <string name="transcript_secret_uncertain">Доставлення не підтверджено. Перевірте запит у початковому обговоренні перед повтором.</string>
+    <string name="transcript_plan_feedback">Зауваження до плану</string>
+    <string name="transcript_plan_follow_up">Надіслати зауваження</string>
+    <string name="transcript_plan_new_thread">У новому обговоренні</string>
+    <string name="transcript_plan_cancel">Скасувати операцію</string>
+    <string name="transcript_plan_retry">Повторити операцію</string>
+    <string name="transcript_secret_private">Залишається приватним і не додається до розмови</string>
+</resources>

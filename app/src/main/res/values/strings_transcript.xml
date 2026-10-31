@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Find</string>
+    <string name="transcript_close_find">Close find</string>
+    <string name="transcript_find_loaded">Search loaded messages</string>
+    <string name="transcript_previous">Previous</string>
+    <string name="transcript_next">Next</string>
+    <string name="transcript_latest">Jump to latest ↓</string>
+    <string name="transcript_history_unavailable">Older history is unavailable in this version</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Implement plan</string>
+    <string name="transcript_compacting">Compacting context</string>
+    <string name="transcript_compacted">Context compacted</string>
+    <string name="transcript_handoff_pending">Context handoff pending</string>
+    <string name="transcript_handoff">Context handoff</string>
+    <string name="transcript_open_thread">Open thread</string>
+    <string name="transcript_secret_saved">Saved securely and kept private</string>
+    <string name="transcript_secret_declined">Declined</string>
+    <string name="transcript_secret_unavailable">Secure answering is unavailable with this SDK</string>
+    <string name="transcript_secret_ended">Request ended</string>
+    <string name="transcript_quote">Quote</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Save</string>
+    <string name="transcript_secret_decline">Decline</string>
+    <string name="transcript_secret_sent">Answer sent; waiting for confirmation</string>
+    <string name="transcript_secret_uncertain">Delivery uncertain. Check the request in the original thread before trying again.</string>
+    <string name="transcript_plan_feedback">Plan feedback</string>
+    <string name="transcript_plan_follow_up">Send feedback</string>
+    <string name="transcript_plan_new_thread">In new thread</string>
+    <string name="transcript_plan_cancel">Cancel operation</string>
+    <string name="transcript_plan_retry">Retry operation</string>
+    <string name="transcript_secret_private">Kept private; never added to the conversation</string>
+</resources>

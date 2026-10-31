@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">查找</string>
+    <string name="transcript_close_find">关闭查找</string>
+    <string name="transcript_find_loaded">搜索已加载的消息</string>
+    <string name="transcript_previous">上一个</string>
+    <string name="transcript_next">下一个</string>
+    <string name="transcript_latest">跳到最新 ↓</string>
+    <string name="transcript_history_unavailable">此版本不支持较早的历史记录</string>
+    <string name="transcript_plan">计划</string>
+    <string name="transcript_implement">实施计划</string>
+    <string name="transcript_compacting">正在压缩上下文</string>
+    <string name="transcript_compacted">上下文已压缩</string>
+    <string name="transcript_handoff_pending">上下文交接待处理</string>
+    <string name="transcript_handoff">上下文交接</string>
+    <string name="transcript_open_thread">打开会话</string>
+    <string name="transcript_secret_saved">已安全私密保存</string>
+    <string name="transcript_secret_declined">已拒绝</string>
+    <string name="transcript_secret_unavailable">此 SDK 不支持安全回复</string>
+    <string name="transcript_secret_ended">请求已结束</string>
+    <string name="transcript_quote">引用</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">保存</string>
+    <string name="transcript_secret_decline">拒绝</string>
+    <string name="transcript_secret_sent">回复已发送，等待确认</string>
+    <string name="transcript_secret_uncertain">发送结果不确定。重试前请在原会话中检查请求。</string>
+    <string name="transcript_plan_feedback">计划反馈</string>
+    <string name="transcript_plan_follow_up">发送反馈</string>
+    <string name="transcript_plan_new_thread">在新会话中</string>
+    <string name="transcript_plan_cancel">取消操作</string>
+    <string name="transcript_plan_retry">重试操作</string>
+    <string name="transcript_secret_private">保持私密，不会添加到对话中</string>
+</resources>

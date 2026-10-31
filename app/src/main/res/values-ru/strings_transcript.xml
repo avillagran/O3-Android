@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Найти</string>
+    <string name="transcript_close_find">Закрыть поиск</string>
+    <string name="transcript_find_loaded">Поиск в загруженных сообщениях</string>
+    <string name="transcript_previous">Предыдущее</string>
+    <string name="transcript_next">Следующее</string>
+    <string name="transcript_latest">К последнему ↓</string>
+    <string name="transcript_history_unavailable">Старая история недоступна в этой версии</string>
+    <string name="transcript_plan">План</string>
+    <string name="transcript_implement">Реализовать план</string>
+    <string name="transcript_compacting">Сжатие контекста</string>
+    <string name="transcript_compacted">Контекст сжат</string>
+    <string name="transcript_handoff_pending">Передача контекста ожидается</string>
+    <string name="transcript_handoff">Передача контекста</string>
+    <string name="transcript_open_thread">Открыть обсуждение</string>
+    <string name="transcript_secret_saved">Сохранено безопасно и конфиденциально</string>
+    <string name="transcript_secret_declined">Отклонено</string>
+    <string name="transcript_secret_unavailable">Безопасный ответ недоступен в этом SDK</string>
+    <string name="transcript_secret_ended">Запрос завершён</string>
+    <string name="transcript_quote">Цитировать</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Сохранить</string>
+    <string name="transcript_secret_decline">Отклонить</string>
+    <string name="transcript_secret_sent">Ответ отправлен; ожидается подтверждение</string>
+    <string name="transcript_secret_uncertain">Доставка не подтверждена. Проверьте запрос в исходном обсуждении перед повтором.</string>
+    <string name="transcript_plan_feedback">Замечания к плану</string>
+    <string name="transcript_plan_follow_up">Отправить замечания</string>
+    <string name="transcript_plan_new_thread">В новом обсуждении</string>
+    <string name="transcript_plan_cancel">Отменить операцию</string>
+    <string name="transcript_plan_retry">Повторить операцию</string>
+    <string name="transcript_secret_private">Остаётся конфиденциальным и не добавляется в беседу</string>
+</resources>

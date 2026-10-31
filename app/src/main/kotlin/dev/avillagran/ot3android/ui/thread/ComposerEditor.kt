@@ -125,6 +125,7 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
     onDraftChange: (String, String) -> Unit, onSend: () -> Unit, onToggle: () -> Unit, modifier: Modifier = Modifier,
     toolbar: @Composable () -> Unit = {},
     onEditorValue: ((TextFieldValue) -> Unit)? = null,
+    compact: Boolean = false,
 ) {
     val colors = Ot3Theme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -171,8 +172,8 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
                 BasicTextField(value = editor.value, onValueChange = ::update, enabled = !sending, interactionSource = interaction,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foreground), cursorBrush = SolidColor(colors.accent),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default), keyboardActions = KeyboardActions { newline() },
-                    maxLines = if (expanded) Int.MAX_VALUE else 6,
-                    modifier = Modifier.weight(1f).then(if (expanded) Modifier.fillMaxHeight() else Modifier.heightIn(min = 56.dp, max = 130.dp))
+                    maxLines = if (expanded) Int.MAX_VALUE else if (compact) 2 else 6,
+                    modifier = Modifier.weight(1f).then(if (expanded) Modifier.fillMaxHeight() else Modifier.heightIn(min = 56.dp, max = if (compact) 56.dp else 130.dp))
                         .focusRequester(requester).onFocusChanged {
                             editor.focusWanted = it.isFocused
                             if (!it.isFocused && editor.value.composition != null) {
