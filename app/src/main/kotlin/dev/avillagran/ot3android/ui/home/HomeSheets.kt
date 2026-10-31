@@ -13,6 +13,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -36,6 +38,13 @@ import dev.avillagran.ot3android.core.home.ThreadAction
  */
 @Composable
 fun ThreadActionsContent(row: HomeRow, menu: List<MenuEntry>, onAction: (ThreadAction) -> Unit) {
+    var dispatched by androidx.compose.runtime.remember(row.key, menu) { androidx.compose.runtime.mutableStateOf(false) }
+    fun dispatch(action: ThreadAction) {
+        if (dispatched) return
+        // Confirmation entrypoints remain usable after cancellation.
+        dispatched = action !in setOf(ThreadAction.Rename, ThreadAction.Archive, ThreadAction.Delete)
+        onAction(action)
+    }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).testTag(SheetTags.THREAD_ACTIONS)) {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
             Text(row.title ?: stringResource(R.string.ot3_row_untitled), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -48,11 +57,11 @@ fun ThreadActionsContent(row: HomeRow, menu: List<MenuEntry>, onAction: (ThreadA
             if (group != null && entry.group != group) HorizontalDivider(Modifier.padding(vertical = 4.dp))
             group = entry.group
             if (entry.children.isEmpty()) {
-                SheetItem(threadActionText(entry.action, row), SheetTags.action(entry.action), entry.enabled) { onAction(entry.action) }
+                SheetItem(threadActionText(entry.action, row), SheetTags.action(entry.action), entry.enabled) { dispatch(entry.action) }
             } else {
                 val parent = threadActionText(entry.action, row)
                 entry.children.filter { it.visible }.forEach { child ->
-                    SheetItem("$parent ▸ ${if (child.checked == true) "✓ " else ""}${threadActionText(child.action, row)}", SheetTags.action(child.action), child.enabled) { onAction(child.action) }
+                    SheetItem("$parent ▸ ${if (child.checked == true) "✓ " else ""}${threadActionText(child.action, row)}", SheetTags.action(child.action), entry.enabled && child.enabled) { dispatch(child.action) }
                 }
             }
         }
@@ -64,8 +73,8 @@ fun ThreadActionsContent(row: HomeRow, menu: List<MenuEntry>, onAction: (ThreadA
 fun ProjectActionsContent(title: String?, menu: List<ProjectMenuEntry>, onAction: (ProjectAction) -> Unit) {
     Column(Modifier.fillMaxWidth().testTag(SheetTags.PROJECT_ACTIONS)) {
         title?.let { Text(it, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) }
-        menu.filter { it.enabled }.forEach { entry ->
-            SheetItem(projectActionText(entry.action), SheetTags.project(entry.action)) { onAction(entry.action) }
+        menu.forEach { entry ->
+            SheetItem(projectActionText(entry.action), SheetTags.project(entry.action), entry.enabled) { onAction(entry.action) }
         }
     }
 }
