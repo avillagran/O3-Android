@@ -38,6 +38,7 @@ import dev.avillagran.ot3android.ui.theme.Ot3Theme
 internal class ComposerEditorState(text: String = "", private var restored: TextRange? = null, var focusWanted: Boolean = false) {
     var value by mutableStateOf(TextFieldValue(text, TextRange(text.length)))
         private set
+    val awaitingRestore: Boolean get() = restored != null
     private var pendingToken: String? = null
     private var restoreFocus = focusWanted
     var requestFocus = false
@@ -122,6 +123,7 @@ internal fun composerKeyAction(key: Int, down: Boolean, repeat: Int, soft: Boole
 internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canSend: Boolean, sending: Boolean,
     onDraftChange: (String, String) -> Unit, onSend: () -> Unit, onToggle: () -> Unit, modifier: Modifier = Modifier,
     toolbar: @Composable () -> Unit = {},
+    onEditorValue: ((TextFieldValue) -> Unit)? = null,
 ) {
     val colors = Ot3Theme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -138,6 +140,7 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
             return
         }
         editor.edit(next, surface)?.let { onDraftChange(next.text, it) }
+        if (surface == editor.generation && !editor.awaitingRestore) onEditorValue?.invoke(editor.value)
     }
     fun newline() {
         if (sending || editor.value.composition != null) return

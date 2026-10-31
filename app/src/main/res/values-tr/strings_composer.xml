@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Dosya ekle</string>
+    <string name="composer_paste">Yapıştır</string>
+    <string name="composer_undo">Geri al</string>
+    <string name="composer_redo">Yinele</string>
+    <string name="composer_history">Geçmiş</string>
+    <string name="composer_continue_list">Listeye devam et</string>
+    <string name="composer_stash">Taslağı sakla</string>
+    <string name="composer_project_drafts">Proje taslakları</string>
+    <string name="composer_quick_replies">Hızlı yanıtlar</string>
+    <string name="composer_build">Oluştur</string>
+    <string name="composer_plan">Planla</string>
+    <string name="composer_implement">Planı uygula</string>
+    <string name="composer_feedback">Plan geri bildirimi</string>
+    <string name="composer_opposite">Bir kez ters teslim</string>
+    <string name="composer_background">Arka planda gönder</string>
+    <string name="composer_send_new">Gönder ve yeni konu başlat</string>
+    <string name="composer_remove">Kaldır</string>
+    <string name="composer_restore">Geri yükle</string>
+    <string name="composer_delete">Sil</string>
+    <string name="composer_refresh">Yenile</string>
+    <string name="composer_uncertain">Gönderim sonucu bilinmiyor. Düzenlemeden veya yeniden göndermeden önce mevcut komutu doğrulayın.</string>
+    <string name="composer_uploading">%1$s yükleniyor…</string>
+    <string name="composer_upload_failed">Yükleme başarısız: %1$s</string>
+    <string name="composer_attachment_count">Ekler: %1$d</string>
+</resources>

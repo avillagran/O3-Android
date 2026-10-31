@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Anexar arquivos</string>
+    <string name="composer_paste">Colar</string>
+    <string name="composer_undo">Desfazer</string>
+    <string name="composer_redo">Refazer</string>
+    <string name="composer_history">Histórico</string>
+    <string name="composer_continue_list">Continuar lista</string>
+    <string name="composer_stash">Guardar rascunho</string>
+    <string name="composer_project_drafts">Rascunhos do projeto</string>
+    <string name="composer_quick_replies">Respostas rápidas</string>
+    <string name="composer_build">Construir</string>
+    <string name="composer_plan">Planejar</string>
+    <string name="composer_implement">Implementar plano</string>
+    <string name="composer_feedback">Comentar plano</string>
+    <string name="composer_opposite">Entrega oposta uma vez</string>
+    <string name="composer_background">Enviar em segundo plano</string>
+    <string name="composer_send_new">Enviar e iniciar outra conversa</string>
+    <string name="composer_remove">Remover</string>
+    <string name="composer_restore">Restaurar</string>
+    <string name="composer_delete">Excluir</string>
+    <string name="composer_refresh">Atualizar</string>
+    <string name="composer_uncertain">Resultado desconhecido. Confira o comando existente antes de editar ou enviar novamente.</string>
+    <string name="composer_uploading">Enviando %1$s…</string>
+    <string name="composer_upload_failed">Falha no envio: %1$s</string>
+    <string name="composer_attachment_count">Anexos: %1$d</string>
+</resources>

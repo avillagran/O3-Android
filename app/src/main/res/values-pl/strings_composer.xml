@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Dołącz pliki</string>
+    <string name="composer_paste">Wklej</string>
+    <string name="composer_undo">Cofnij</string>
+    <string name="composer_redo">Ponów</string>
+    <string name="composer_history">Historia</string>
+    <string name="composer_continue_list">Kontynuuj listę</string>
+    <string name="composer_stash">Zachowaj szkic</string>
+    <string name="composer_project_drafts">Szkice projektu</string>
+    <string name="composer_quick_replies">Szybkie odpowiedzi</string>
+    <string name="composer_build">Buduj</string>
+    <string name="composer_plan">Planuj</string>
+    <string name="composer_implement">Wdróż plan</string>
+    <string name="composer_feedback">Skomentuj plan</string>
+    <string name="composer_opposite">Odwrotne dostarczenie raz</string>
+    <string name="composer_background">Wyślij w tle</string>
+    <string name="composer_send_new">Wyślij i rozpocznij nowy wątek</string>
+    <string name="composer_remove">Usuń załącznik</string>
+    <string name="composer_restore">Przywróć</string>
+    <string name="composer_delete">Usuń</string>
+    <string name="composer_refresh">Odśwież</string>
+    <string name="composer_uncertain">Nieznany wynik wysyłania. Sprawdź istniejące polecenie przed edycją lub ponowną wysyłką.</string>
+    <string name="composer_uploading">Przesyłanie %1$s…</string>
+    <string name="composer_upload_failed">Błąd przesyłania: %1$s</string>
+    <string name="composer_attachment_count">Załączniki: %1$d</string>
+</resources>

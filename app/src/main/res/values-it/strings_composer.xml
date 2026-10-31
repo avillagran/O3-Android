@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Allega file</string>
+    <string name="composer_paste">Incolla</string>
+    <string name="composer_undo">Annulla</string>
+    <string name="composer_redo">Ripeti</string>
+    <string name="composer_history">Cronologia</string>
+    <string name="composer_continue_list">Continua elenco</string>
+    <string name="composer_stash">Conserva bozza</string>
+    <string name="composer_project_drafts">Bozze del progetto</string>
+    <string name="composer_quick_replies">Risposte rapide</string>
+    <string name="composer_build">Crea</string>
+    <string name="composer_plan">Pianifica</string>
+    <string name="composer_implement">Implementa piano</string>
+    <string name="composer_feedback">Commenta piano</string>
+    <string name="composer_opposite">Consegna opposta una volta</string>
+    <string name="composer_background">Invia in background</string>
+    <string name="composer_send_new">Invia e avvia nuova discussione</string>
+    <string name="composer_remove">Rimuovi</string>
+    <string name="composer_restore">Ripristina</string>
+    <string name="composer_delete">Elimina</string>
+    <string name="composer_refresh">Aggiorna</string>
+    <string name="composer_uncertain">Esito sconosciuto. Verifica il comando esistente prima di modificare o inviare di nuovo.</string>
+    <string name="composer_uploading">Caricamento di %1$s…</string>
+    <string name="composer_upload_failed">Caricamento fallito: %1$s</string>
+    <string name="composer_attachment_count">Allegati: %1$d</string>
+</resources>
