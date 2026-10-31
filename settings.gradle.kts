@@ -20,7 +20,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ot3-android"
+rootProject.name = "o3-android"
 
 include(":app")
 include(":core")
