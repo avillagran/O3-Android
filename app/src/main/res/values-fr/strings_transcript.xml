@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Rechercher</string>
+    <string name="transcript_close_find">Fermer la recherche</string>
+    <string name="transcript_find_loaded">Rechercher dans les messages chargés</string>
+    <string name="transcript_previous">Précédent</string>
+    <string name="transcript_next">Suivant</string>
+    <string name="transcript_latest">Aller au dernier ↓</string>
+    <string name="transcript_history_unavailable">Les anciens messages sont indisponibles dans cette version</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Mettre en œuvre le plan</string>
+    <string name="transcript_compacting">Compression du contexte</string>
+    <string name="transcript_compacted">Contexte compressé</string>
+    <string name="transcript_handoff_pending">Transfert du contexte en attente</string>
+    <string name="transcript_handoff">Transfert du contexte</string>
+    <string name="transcript_open_thread">Ouvrir la conversation</string>
+    <string name="transcript_secret_saved">Enregistré de manière sécurisée et privée</string>
+    <string name="transcript_secret_declined">Refusé</string>
+    <string name="transcript_secret_unavailable">La réponse sécurisée est indisponible avec ce SDK</string>
+    <string name="transcript_secret_ended">Demande terminée</string>
+    <string name="transcript_quote">Citer</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Enregistrer</string>
+    <string name="transcript_secret_decline">Refuser</string>
+    <string name="transcript_secret_sent">Réponse envoyée ; confirmation en attente</string>
+    <string name="transcript_secret_uncertain">Livraison incertaine. Vérifiez la demande dans la conversation originale avant de réessayer.</string>
+    <string name="transcript_plan_feedback">Commentaires sur le plan</string>
+    <string name="transcript_plan_follow_up">Envoyer les commentaires</string>
+    <string name="transcript_plan_new_thread">Dans une nouvelle conversation</string>
+    <string name="transcript_plan_cancel">Annuler l’opération</string>
+    <string name="transcript_plan_retry">Réessayer l’opération</string>
+    <string name="transcript_secret_private">Reste privé et ne figure jamais dans la conversation</string>
+</resources>

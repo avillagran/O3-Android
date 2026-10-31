@@ -23,7 +23,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 
 /** ot3's own prompt lane: compact bubble, with touch-accessible actions below it. */
 @Composable
-internal fun UserMessage(row: JSONObject) {
+internal fun UserMessage(row: JSONObject, onQuote: ((String) -> Unit)? = null) {
     val id = row.getString("id")
     val author = stringResource(R.string.ot3_reader_you)
     BoxWithConstraints(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id))) {
@@ -52,6 +52,10 @@ internal fun UserMessage(row: JSONObject) {
                 Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     MessageDate(row.optLong("createdAt"))
                     CopyText(row.optString("text"), "message_$id")
+                    if (row.optString("text").isNotBlank()) onQuote?.let { quote ->
+                        androidx.compose.material3.TextButton(onClick = { quote(row.optString("text")) },
+                            modifier = Modifier.testTag("transcript_quote_$id")) { Text(stringResource(R.string.transcript_quote)) }
+                    }
                 }
             }
         }

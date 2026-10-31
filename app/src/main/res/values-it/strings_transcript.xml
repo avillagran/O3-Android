@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Cerca</string>
+    <string name="transcript_close_find">Chiudi ricerca</string>
+    <string name="transcript_find_loaded">Cerca nei messaggi caricati</string>
+    <string name="transcript_previous">Precedente</string>
+    <string name="transcript_next">Successivo</string>
+    <string name="transcript_latest">Vai al più recente ↓</string>
+    <string name="transcript_history_unavailable">La cronologia precedente non è disponibile in questa versione</string>
+    <string name="transcript_plan">Piano</string>
+    <string name="transcript_implement">Implementa piano</string>
+    <string name="transcript_compacting">Compressione del contesto</string>
+    <string name="transcript_compacted">Contesto compresso</string>
+    <string name="transcript_handoff_pending">Trasferimento contesto in attesa</string>
+    <string name="transcript_handoff">Trasferimento contesto</string>
+    <string name="transcript_open_thread">Apri conversazione</string>
+    <string name="transcript_secret_saved">Salvato in modo sicuro e privato</string>
+    <string name="transcript_secret_declined">Rifiutato</string>
+    <string name="transcript_secret_unavailable">La risposta sicura non è disponibile con questo SDK</string>
+    <string name="transcript_secret_ended">Richiesta terminata</string>
+    <string name="transcript_quote">Cita</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Salva</string>
+    <string name="transcript_secret_decline">Rifiuta</string>
+    <string name="transcript_secret_sent">Risposta inviata; in attesa di conferma</string>
+    <string name="transcript_secret_uncertain">Consegna incerta. Controlla la richiesta nella conversazione originale prima di riprovare.</string>
+    <string name="transcript_plan_feedback">Commenti sul piano</string>
+    <string name="transcript_plan_follow_up">Invia commenti</string>
+    <string name="transcript_plan_new_thread">In nuova conversazione</string>
+    <string name="transcript_plan_cancel">Annulla operazione</string>
+    <string name="transcript_plan_retry">Riprova operazione</string>
+    <string name="transcript_secret_private">Rimane privato e non viene mai aggiunto alla conversazione</string>
+</resources>
