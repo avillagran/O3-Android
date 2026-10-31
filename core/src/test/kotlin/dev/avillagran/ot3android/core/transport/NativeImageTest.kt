@@ -29,7 +29,24 @@ class NativeImageTest {
         }
     }
 
-    private fun serve(relative: String, bytes: ByteArray?, read: (NativeT3Transport) -> Unit) {
+    @Test fun hostImageUsesThreadScopedGrantWithoutAttachmentMetadata() {
+        assumeHostJni()
+        val png = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aU1cAAAAASUVORK5CYII=")
+        for (path in listOf("/home/avillagran/Work/gliff-fork.VaT72V/.github/assets/screenshots/control-driving.png", "assets/shot.png")) {
+            serve("/api/assets/signed/shot.png?sig=fixture", png, path) { transport ->
+                assertArrayEquals(png, runBlocking { transport.mediaImage("thread-1", path) })
+            }
+        }
+    }
+
+    @Test fun hostImageRejectsForeignGrant() {
+        assumeHostJni()
+        serve("https://foreign.invalid/api/assets/shot.png", null, "shot.png") { transport ->
+            assertThrows(T3Exception::class.java) { runBlocking { transport.mediaImage("thread-1", "shot.png") } }
+        }
+    }
+
+    private fun serve(relative: String, bytes: ByteArray?, hostPath: String? = null, read: (NativeT3Transport) -> Unit) {
         ServerSocket(0, 2, InetAddress.getLoopbackAddress()).use { server ->
             server.soTimeout = 5_000
             val failure = AtomicReference<Throwable?>()
@@ -40,11 +57,18 @@ class NativeImageTest {
                         val request = checkNotNull(peer.read())
                         assertEquals("assets.createUrl", request.getString("tag"))
                         val resource = request.getJSONObject("payload").getJSONObject("resource")
+                        if (hostPath != null) {
+                            assertEquals("media-file", resource.getString("_tag"))
+                            assertEquals("thread-1", resource.getString("threadId"))
+                            assertEquals(hostPath, resource.getString("path"))
+                            assertFalse(resource.has("attachmentId"))
+                        } else {
                         assertEquals("attachment", resource.getString("_tag"))
                         assertEquals("att-1", resource.getString("attachmentId"))
                         assertEquals("shot.png", resource.getString("fileName"))
                         assertEquals("image/png", resource.getString("mimeType"))
                         assertEquals("inline", resource.getString("disposition"))
+                        }
                         peer.send(JSONObject().put("_tag", "Exit").put("requestId", request.getString("id"))
                             .put("exit", JSONObject().put("_tag", "Success").put("value", JSONObject().put("relativeUrl", relative))))
                     }

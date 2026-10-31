@@ -18,6 +18,10 @@ import org.junit.Test
 /** Touch actions and real Android clipboard URI readback; synthetic app fixture only. */
 class ReaderImageCopyDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
+    // Each fixture uses the same synthetic authority; do not inherit another test's bytes.
+    @org.junit.Before fun clearImageCache() {
+        dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
+    }
     @Test fun tokyoNight() = copy(true)
     @Test fun latte() = copy(false)
 
@@ -38,6 +42,8 @@ class ReaderImageCopyDeviceTest {
             rule.onNodeWithTag("thread_image_copy_thumbnail").assertIsDisplayed()
             capture(context, "thumbnail.$theme")
 
+            // Force a cache miss so the deferred transport exercises the busy action.
+            dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
             val release = CompletableDeferred<Unit>()
             scenario.onActivity { it.fixture.transport.onImage = { _, _, _ -> release.await(); expected } }
             rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()
@@ -57,6 +63,8 @@ class ReaderImageCopyDeviceTest {
                 assertArrayEquals(expected, it.contentResolver.openInputStream(uri)!!.use { input -> input.readBytes() })
             }
             capture(context, "copied.$theme")
+            // Force another miss: a cached copy deliberately needs no transport.
+            dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
             // A failed explicit action retains the previous valid clipboard.
             scenario.onActivity { it.fixture.transport.onImage = { _, _, _ -> error("synthetic_copy_failure") } }
             rule.onNodeWithTag("thread_image_copy_thumbnail").performClick()

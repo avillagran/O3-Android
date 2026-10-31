@@ -1281,3 +1281,18 @@ Follow is enabled and closes it on Stop, inspector dismissal or owner change.
 
 No fabricated polling or Kotlin stream parser was introduced. Explicit inspector
 reads remain useful independently; live output remains an open acceptance item.
+
+### 2026-10-31 — U30 existing binary-channel implementation
+
+The v0.3.5 Android `assetBytes(resource,maxBytes,timeoutMs)` binding already accepts the
+same `media-file` resource used internally by `Connection::media_image`. Android now
+uses it with thread scope and a 10 MiB limit; source adapter and image MIME/signature
+checks match Desktop. See [HOST_MARKDOWN_IMAGES.md](HOST_MARKDOWN_IMAGES.md).
+The dedicated typed Markdown API remains a desirable consolidation: add
+`T3Client.markdownImage(threadId,descriptor): T3Asset` and a `markdownImage` branch in
+`ffi.rs:t3_client_image`, moving Desktop `workspace_path` and public/data handling into
+Rust, returning bytes plus MIME/dimensions. Reuse `Connection::media_image` for host
+sources, its exact thread grant, 10 MiB/40 MP limits, and credential-free bounded public
+HTTP/data reads. No shared-library change is necessary for this implementation and no
+shared checkout or pinned binary was modified. Native signed-grant tests are present,
+but require the separately built host JNI library to execute on the JVM.
