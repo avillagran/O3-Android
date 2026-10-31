@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">プロバイダー</string>
+    <string name="providers_back">戻る</string>
+    <string name="providers_refresh">更新</string>
+    <string name="providers_update">更新</string>
+    <string name="providers_install">インストール</string>
+    <string name="providers_sign_in">サインイン</string>
+    <string name="providers_sign_out">サインアウト</string>
+    <string name="providers_cancel">キャンセル</string>
+    <string name="providers_continue">続行</string>
+    <string name="providers_open_sign_in">サインインページを開く</string>
+    <string name="providers_auth_status">状態を更新</string>
+    <string name="providers_install_status">状態を確認</string>
+    <string name="providers_terminal_input">入力</string>
+    <string name="providers_interaction_unavailable">利用不可</string>
+    <string name="providers_configuration_unbound">このバージョンでは設定を利用できません。</string>
+    <string name="providers_modes_unavailable">このプロバイダーは権限の選択肢を提供していません。</string>
+    <string name="providers_unknown_result">結果は不明です。同じ操作を再試行する前に更新して確認してください。</string>
+    <string name="providers_unavailable_value">選択項目は利用できません: %1$s</string>
+</resources>
