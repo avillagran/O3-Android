@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">このライブラリのバージョンではライブ出力を利用できません。更新して最新の出力を確認してください。</string>
+</resources>

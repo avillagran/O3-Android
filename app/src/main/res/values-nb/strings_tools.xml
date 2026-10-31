@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">Direkteutdata er ikke tilgjengelig i denne bibliotekversjonen. Oppdater for å lese nyeste utdata.</string>
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools_live_unavailable">此库版本不支持实时输出。请刷新以读取最新输出。</string>
+</resources>
