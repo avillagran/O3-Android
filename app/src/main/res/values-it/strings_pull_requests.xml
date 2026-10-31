@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Conferma</string>
+  <string name="pr_close">Chiudi</string>
+  <string name="pr_reopen">Riapri</string>
+  <string name="pr_ready">Pronta per la revisione</string>
+  <string name="pr_draft">Converti in bozza</string>
+  <string name="pr_reply">Lascia un commento</string>
+  <string name="pr_comment">Commenta</string>
+  <string name="pr_approve">Approva</string>
+  <string name="pr_request_changes">Richiedi modifiche</string>
+  <string name="pr_write_unknown">Il risultato è sconosciuto. Verifica sul fornitore prima di eseguire altre azioni.</string>
+  <string name="pr_merge">Unisci</string>
+</resources>

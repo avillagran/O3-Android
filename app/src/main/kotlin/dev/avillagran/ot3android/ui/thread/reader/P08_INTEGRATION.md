@@ -70,6 +70,22 @@ Secret outcome cards render native saved/declined/ended states without showing v
 - Subagent stop and parent/sibling discovery require native action eligibility and scoped
   graph/navigation integration. Native childThreadId navigation is exported above.
 
-This package exports controls; it does not edit ThreadScreen, ThreadViewModel, navigation,
-AppGraph, Gradle, Desktop, shared lib, all-hosts checkout or any phone. End-to-end P20 wiring,
-live host secret delivery, physical IME/security and accessibility acceptance remain unverified.
+## ThreadScreen wiring after main integration
+
+ThreadScreen now passes the transcript actions through ThreadContent. User quotes append
+plain quoted text to the existing draft without sending or replacing attachments; quoting
+is unavailable while editing a queued message or sending. AppScreens routes child-thread
+navigation through the same environment. Find and the position slider remain available.
+
+The ViewModel retains the secret controller for the connection lifetime, including screen
+recreation. Each answer checks thread identity, current connection, live screen state and
+orchestration:operate permission, then rechecks connection ownership after authorization.
+No outbox or logging adapter is used. A changed/unavailable controller clears private input
+and closes its dialog, even if the request ID stays unchanged.
+
+Plan implementation/new-thread controls remain unbound: v0.3.5 followUp/attachSourceRef
+cannot build the full interaction-mode + dispatch sequence with durable retry identities
+(see docs/LIB_REQUESTS.md, common submission builder). Do not expose a partial dispatch
+as a successful plan implementation. Other U18/U35/terminal eligibility gaps above remain.
+Live-host secret delivery, physical IME/security and accessibility acceptance are unverified.
+No AppGraph, Gradle, Desktop, shared lib, all-hosts checkout or phone changes in this wiring.

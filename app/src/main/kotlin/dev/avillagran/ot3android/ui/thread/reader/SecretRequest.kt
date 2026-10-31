@@ -29,10 +29,10 @@ import org.json.JSONObject
 internal enum class SecretDelivery { Sending, Sent, Uncertain }
 
 /** Direct, non-replayable native call. Never use an outbox or logging adapter. */
-internal class TranscriptSecrets(private val transport: T3Transport) {
+class TranscriptSecrets(private val transport: T3Transport) {
     // Only outcome metadata survives a row/dialog recreation; never retain the value.
     private val deliveryState = MutableStateFlow<Map<String, SecretDelivery>>(emptyMap())
-    val deliveries = deliveryState.asStateFlow()
+    internal val deliveries = deliveryState.asStateFlow()
 
     suspend fun answer(threadId: String, itemId: String, value: CharArray?) {
         val key = "$threadId/$itemId"
@@ -64,11 +64,11 @@ internal fun SecretRequestCard(request: JSONObject, secrets: TranscriptSecrets?)
     val deliveries by (secrets?.deliveries ?: emptyDeliveries).collectAsState()
     val delivery = deliveries[identity]
     // Deliberately not saveable: no secret in Bundle, preferences, clipboard or draft.
-    var editing by remember(identity) { mutableStateOf(false) }
-    var input by remember(identity) { mutableStateOf("") }
+    var editing by remember(identity, secrets) { mutableStateOf(false) }
+    var input by remember(identity, secrets) { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(identity, lifecycle) {
+    DisposableEffect(identity, secrets, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) { input = ""; editing = false }
         }
@@ -78,7 +78,7 @@ internal fun SecretRequestCard(request: JSONObject, secrets: TranscriptSecrets?)
     val status = request.readerText("status")
     val pending = request.readerText("threadId").isNotBlank() && request.readerText("turnItemId").isNotBlank() &&
         status == "pending" && request.optBoolean("local", true)
-    DisposableEffect(identity, pending) { onDispose { input = ""; editing = false } }
+    DisposableEffect(identity, secrets, pending) { onDispose { input = ""; editing = false } }
 
     fun submit(decline: Boolean) {
         val target = secrets ?: return

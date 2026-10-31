@@ -35,6 +35,7 @@ class ThreadFollowService : Service() {
     private val wakeups = Channel<Input>(Channel.CONFLATED)
     private var idleSince = SystemClock.elapsedRealtime()
     private val awareness = ThreadAwareness()
+    private val batchSound = BatchNotificationSound()
     @Volatile private var activeCard = false
     private val manager get() = getSystemService(NotificationManager::class.java)
 
@@ -42,6 +43,7 @@ class ThreadFollowService : Service() {
     override fun onCreate() {
         super.onCreate()
         Ot3NotificationChannels.ensure(this)
+        if (!allowed(this)) { stopSelf(); return }
         // Immediate service notice, before network/Room/JNI work; never invent native counts.
         startForeground(SERVICE_ID, followingNotice())
         scope.launch {
@@ -108,7 +110,8 @@ class ThreadFollowService : Service() {
                 val result = awareness.evaluate(envs, now, onScreen = route, preferences = settings.awarenessPreferences(), locale = Locale.getDefault().toLanguageTag())
                 currentCoroutineContext().ensureActive()
                 // Privacy may have changed while Rust processed a queued shell transition.
-                val privacy = graph.followPreferences.settings.first().lockscreen
+                val latestSettings = graph.followPreferences.settings.first()
+                val privacy = latestSettings.lockscreen
                 val card = NotificationContract.card(result.optJSONObject("card"))
                 activeCard = card?.active == true
                 if (card?.active == true) idleSince = SystemClock.elapsedRealtime()
@@ -137,13 +140,19 @@ class ThreadFollowService : Service() {
                     lastCard = presentation // Desired data only; a missing/stale platform record is retried on the existing deadline wake.
                 }
                 val alerts = result.optJSONArray("alerts")
+                val audible = mutableListOf<AwarenessAlert>()
                 for (i in 0 until (alerts?.length() ?: 0)) {
                     val alert = NotificationContract.alert(alerts!!.optJSONObject(i)) ?: continue
-                    AwarenessAlertBuilder.build(this@ThreadFollowService, alert, now, privacy)?.let {
+                    if (alert.expiresAt?.let { it <= now } == true) continue
+                    audible.add(alert)
+                    if (!latestSettings.mode.banners) continue
+                    AwarenessAlertBuilder.build(this@ThreadFollowService, alert, now, privacy, silent = true)?.let {
                         LegacyNotificationExpiry.publish(this@ThreadFollowService, Ot3NotificationIds.alertTag(alert), Ot3NotificationIds.ALERT_ID, it)
                     }
                 }
-                val summaries = result.optJSONArray("summaries")
+                if (!latestSettings.mode.sound) batchSound.stop()
+                if (latestSettings.mode.sound && audible.isNotEmpty()) batchSound.play(this@ThreadFollowService, scope)
+                val summaries = result.optJSONArray("summaries").takeIf { latestSettings.mode.banners }
                 val postedGroups = mutableSetOf<AlertGroup>()
                 for (i in 0 until (summaries?.length() ?: 0)) {
                     val summary = summaries!!.getJSONObject(i)
@@ -192,6 +201,7 @@ class ThreadFollowService : Service() {
         return START_NOT_STICKY
     }
     override fun onDestroy() {
+        batchSound.stop()
         scope.cancel() // finally releases leases, leaving foreground screens alone.
         stopForeground(STOP_FOREGROUND_REMOVE)
         if (activeCard) LegacyNotificationExpiry.cancel(this@ThreadFollowService, null, Ot3NotificationIds.ACTIVITY_ID)
@@ -212,8 +222,13 @@ class ThreadFollowService : Service() {
         const val PRESENTATION_STAMP = "ot3.presentationStamp"
         const val STOP = "dev.avillagran.ot3android.STOP_FOLLOW"
         const val IDLE_MS = 15 * 60_000L
-        fun allowed(context: android.content.Context) = Build.VERSION.SDK_INT < 33 ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        fun allowed(context: android.content.Context): Boolean {
+            if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+            if (Build.VERSION.SDK_INT >= 26 && context.getSystemService(NotificationManager::class.java)
+                    .getNotificationChannel(Ot3NotificationChannels.ACTIVITY)?.importance == NotificationManager.IMPORTANCE_NONE) return false
+            return Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context,
+                Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        }
         /** Call only from a visible app after explicit opt-in and notification permission. */
         fun start(context: android.content.Context) {
             if (allowed(context)) ContextCompat.startForegroundService(context, Intent(context, ThreadFollowService::class.java))

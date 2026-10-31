@@ -40,6 +40,27 @@ class SharedQuotaSourceTest {
         limits.cancel(); runCurrent(); assertEquals(0, active)
     }
 
+    @Test fun explicitRefreshKeepsOneSubscriptionAndReportsProbeFailureWithExistingData() = runTest {
+        var reads = 0
+        var probes = 0
+        val source = SharedQuotaSource(backgroundScope, { flowOf(Connection(FakeT3Transport(), 1)) }, { _, _ ->
+            probes++
+            if (probes > 1) error("refresh_denied")
+        }, { flow {
+            reads++
+            emit(QuotaUpdate(JSONObject().put("providers", org.json.JSONArray())))
+            awaitCancellation()
+        } })
+        var state = QuotaState()
+        val collector = backgroundScope.launch { source.observe("a").collect { state = it } }
+        runCurrent(); assertEquals(1, probes); assertNotNull(state.limits)
+        source.refresh("a"); runCurrent()
+        assertEquals(2, probes); assertEquals(1, reads)
+        assertTrue(state.failed); assertNotNull(state.limits)
+        collector.cancel(); runCurrent()
+        source.refresh("a"); runCurrent(); assertEquals(2, probes)
+    }
+
     @Test fun distinctEnvironmentsRetryIndependentlyAndStopDuringBackoff() = runTest {
         var a = 0
         var b = 0

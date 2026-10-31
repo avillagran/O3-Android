@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Oznámení vláken</string>
+    <string name="usage_mode_notifications">Pouze oznámení</string>
+    <string name="usage_mode_both">Oznámení se zvukem</string>
+    <string name="usage_mode_sound">Pouze zvuk</string>
+    <string name="usage_mode_off">Vypnuto</string>
+    <string name="usage_sound_policy">Jeden zvuk kanálu na dávku. Sledování na pozadí zachová tiché oznámení.</string>
+    <string name="usage_channel_denied">Oznámení jsou blokována v nastavení Androidu.</string>
+    <string name="usage_pool_unavailable">Pouze jednotlivé zprávy. Přesné sdílené kvóty, nejednoznačné identity a akce kreditů pro reset vyžadují novější sdílenou knihovnu.</string>
+    <string name="usage_auth_required">Přihlaste se k poskytovateli na hostiteli a obnovte.</string>
+</resources>

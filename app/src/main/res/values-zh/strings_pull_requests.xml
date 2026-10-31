@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">确认</string>
+  <string name="pr_close">关闭</string>
+  <string name="pr_reopen">重新打开</string>
+  <string name="pr_ready">可供审查</string>
+  <string name="pr_draft">转为草稿</string>
+  <string name="pr_reply">发表评论</string>
+  <string name="pr_comment">评论</string>
+  <string name="pr_approve">批准</string>
+  <string name="pr_request_changes">请求更改</string>
+  <string name="pr_write_unknown">操作结果未知。执行其他操作前，请在提供商处确认。</string>
+  <string name="pr_merge">合并</string>
+</resources>

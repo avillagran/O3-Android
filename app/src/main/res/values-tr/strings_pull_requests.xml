@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Onayla</string>
+  <string name="pr_close">Kapat</string>
+  <string name="pr_reopen">Yeniden aç</string>
+  <string name="pr_ready">İncelemeye hazır</string>
+  <string name="pr_draft">Taslağa dönüştür</string>
+  <string name="pr_reply">Yorum bırakın</string>
+  <string name="pr_comment">Yorum yap</string>
+  <string name="pr_approve">Onayla</string>
+  <string name="pr_request_changes">Değişiklik iste</string>
+  <string name="pr_write_unknown">İşlem sonucu bilinmiyor. Başka bir işlem yapmadan önce sağlayıcıdan kontrol edin.</string>
+  <string name="pr_merge">Birleştir</string>
+</resources>

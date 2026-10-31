@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">確認</string>
+  <string name="pr_close">閉じる</string>
+  <string name="pr_reopen">再オープン</string>
+  <string name="pr_ready">レビュー準備完了</string>
+  <string name="pr_draft">下書きに変換</string>
+  <string name="pr_reply">コメントを残す</string>
+  <string name="pr_comment">コメント</string>
+  <string name="pr_approve">承認</string>
+  <string name="pr_request_changes">変更を依頼</string>
+  <string name="pr_write_unknown">操作結果は不明です。次の操作の前にプロバイダーで確認してください。</string>
+  <string name="pr_merge">マージ</string>
+</resources>

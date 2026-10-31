@@ -114,7 +114,7 @@ fun PreferencesScopePicker(
 }
 
 @androidx.compose.runtime.Composable
-private fun ScopeChoice(all: String, selected: String?, options: List<PreferencesScopeOption>, select: (String?) -> Unit) {
+internal fun ScopeChoice(all: String, selected: String?, options: List<PreferencesScopeOption>, select: (String?) -> Unit) {
     var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     androidx.compose.foundation.layout.Box {
         androidx.compose.material3.TextButton(onClick = { expanded = true }) {

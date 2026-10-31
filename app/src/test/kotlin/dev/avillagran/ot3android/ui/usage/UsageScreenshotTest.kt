@@ -33,6 +33,27 @@ class UsageScreenshotTest : ScreenshotTest() {
         composeRule.onNodeWithText("Team accounts").assertExists()
     }
 
+    @Test fun ambiguousWorkspaceReportsStaySeparateAndUnavailableWindowsStayHidden() {
+        val limits = JSONObject("""{
+          "providers":[
+            {"instanceId":"a","displayName":"Workspace A","auth":{"email":"same@example.test","workspaceId":"a","status":"authenticated"},"usageLimits":{"checkedAt":"2026-10-26T18:00:00Z","windows":[{"label":"Session A","usedPercent":25,"resetsAt":"2026-10-26T19:00:00Z"}]}},
+            {"instanceId":"b","displayName":"Workspace B","auth":{"email":"same@example.test","workspaceId":"b","status":"authenticated"},"usageLimits":{"windows":[{"label":"Session B","usedPercent":75,"resetsAt":"not-a-date"}]}},
+            {"instanceId":"denied","displayName":"Signed out","auth":{"status":"unauthenticated"},"usageLimits":{"windows":[{"label":"Stale window","usedPercent":99}]}}
+          ],
+          "usageLimitSources":[{"id":"hub","label":"Ambiguous report","accounts":[{"id":"x","driver":"codex","email":"same@example.test","usageLimits":{"windows":[{"label":"Independent report","usedPercent":10}]}}]}]
+        }""")
+        val state = UsageState(listOf(Environment("node", "NODE", "http://node.test", createdAt = 0)), "node", tab = "limits", limits = limits)
+        snapshot("ambiguous") { UsageScreen(state, {}, {}, {}, {}) }
+        composeRule.onNodeWithTag("limits_pool_unavailable").assertIsDisplayed()
+        composeRule.onNodeWithText("25% used").assertExists()
+        composeRule.onNodeWithText("75% used").assertExists()
+        composeRule.onNodeWithTag("usage_page").performScrollToNode(hasTestTag("limits_provider_denied"))
+        composeRule.onNodeWithText("Sign in to this provider on the host, then refresh.").assertExists()
+        composeRule.onNodeWithText("Stale window").assertDoesNotExist()
+        composeRule.onNodeWithTag("usage_page").performScrollToNode(hasTestTag("limits_account_hub_x"))
+        composeRule.onNodeWithText("10% used").assertExists()
+    }
+
     @Test fun unavailablePricesExposeExplicitAction() {
         val summary = JSONObject(checkNotNull(javaClass.getResource("/usage/summary.view.json")).readText())
             .put("pricing", "unavailable").put("unpricedRecords", 3)

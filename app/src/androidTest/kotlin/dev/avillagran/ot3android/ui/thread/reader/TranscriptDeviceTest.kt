@@ -83,6 +83,25 @@ class TranscriptDeviceTest {
         }
     }
 
+    @Test fun changingSecretConnectionClearsPrivateInput() {
+        val first = FakeT3Transport()
+        val second = FakeT3Transport()
+        val controller = mutableStateOf<TranscriptSecrets?>(TranscriptSecrets(first))
+        val request = JSONObject("""{"threadId":"t","turnItemId":"s","label":"Token","status":"pending","local":true}""")
+        ActivityScenario.launch(WorkspaceFixtureActivity::class.java).use { scenario ->
+            scenario.onActivity { it.setContent { Ot3Theme { SecretRequestCard(request, controller.value) } } }
+            rule.onNodeWithTag("transcript_secret_answer").performClick()
+            rule.onNodeWithTag("transcript_secret_input").performTextInput("discard-on-disconnect")
+            rule.runOnIdle { controller.value = null }
+            rule.onNodeWithTag("transcript_secret_input").assertDoesNotExist()
+            rule.runOnIdle { controller.value = TranscriptSecrets(second) }
+            rule.onNodeWithTag("transcript_secret_answer").performClick()
+            rule.onNodeWithTag("transcript_secret_input").assertTextEquals("")
+            assertTrue(first.log.isEmpty())
+            assertTrue(second.log.isEmpty())
+        }
+    }
+
     @Test fun secretIsSecureClearedAndSentOnlyOnceWithoutLogging() {
         var calls = 0
         var retained: JSONObject? = null

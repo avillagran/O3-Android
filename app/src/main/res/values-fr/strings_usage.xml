@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Notifications des fils</string>
+    <string name="usage_mode_notifications">Notifications seules</string>
+    <string name="usage_mode_both">Notifications avec son</string>
+    <string name="usage_mode_sound">Son seul</string>
+    <string name="usage_mode_off">Désactivées</string>
+    <string name="usage_sound_policy">Un son du canal par lot. Le suivi en arrière-plan conserve son avis silencieux.</string>
+    <string name="usage_channel_denied">Les notifications sont bloquées dans les paramètres Android.</string>
+    <string name="usage_pool_unavailable">Rapports individuels uniquement. Les quotas partagés exacts, les identités ambiguës et les actions de crédits de réinitialisation nécessitent une bibliothèque partagée plus récente.</string>
+    <string name="usage_auth_required">Connectez-vous à ce fournisseur sur le serveur, puis actualisez.</string>
+</resources>

@@ -171,20 +171,33 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                     graph.appScope,
                     graph.composerPreferences,
                     graph.threadCache,
+                    clientPreferences = graph.generalClientPreferences,
+                    attachmentDirectory = graph.applicationContext.noBackupFilesDir.resolve("composer-attachments-v1"),
                     cacheAuthority = { graph.environmentRepository.cacheAuthority(route.environmentId) },
                     cacheAuthorityUpdates = graph.environmentRepository.cacheAuthorities(route.environmentId),
                 )
             },
             onBack = { navigator.back() },
+            onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) },
+            onOpenThread = { navigator.openThread(route.environmentId, it) },
             quotaStrip = { dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, compact = false, onOpenLimits = { navigator.push(QuotaLimits(route.environmentId)) }) },
         )
     }
 
     @Composable
+    override fun Changes(route: ThreadChanges) { WorkingChangesPage(navigator, route) }
+
+    @Composable
     override fun Settings() {
-        SettingsScreen(onBack = { navigator.home() }, onOpen = { entry ->
+        SettingsScreen(onBack = { navigator.home() }, contributions = listOf(
+            dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "providers" }) { navigator.push(ProvidersPreferences) },
+            dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "general" }) { navigator.push(GeneralPreferences) },
+            dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "projects" }) { navigator.push(ProjectPreferences()) },
+            dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "connections" }) { navigator.push(ConnectionsPreferences) },
+            dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "source-control" }) { navigator.push(SourceControlPreferences) },
+        ), onOpen = { entry ->
             when (entry) {
-                SettingsEntry.Environments -> navigator.push(Environments)
+                SettingsEntry.Environments -> navigator.push(ConnectionsPreferences)
                 SettingsEntry.Appearance -> navigator.push(Appearance)
                 SettingsEntry.Notifications -> navigator.push(Notifications)
                 SettingsEntry.Usage -> navigator.push(Usage)
@@ -193,6 +206,28 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             }
         })
     }
+
+    @Composable
+    override fun ProvidersPreferences() { ProvidersPreferencesPage(navigator) }
+
+    @Composable
+    override fun SourceControlPreferences() { SourceControlPreferencesPage(navigator) }
+
+    @Composable
+    override fun ConnectionsPreferences() {
+        val graph = LocalContext.current.appGraph
+        val identity by graph.bridgeCatalog.identity.collectAsStateWithLifecycle()
+        dev.avillagran.ot3android.ui.settings.connections.ConnectionsRouteContribution.Content(
+            identity = identity,
+            onBack = { navigator.back() }, onEnvironments = { navigator.push(Environments) },
+            onPair = { navigator.push(PairEnvironment) })
+    }
+
+    @Composable
+    override fun GeneralPreferences() { ScopedPreferencesPage(navigator, projects = false) }
+
+    @Composable
+    override fun ProjectPreferences(route: ProjectPreferences) { ScopedPreferencesPage(navigator, projects = true, route) }
 
     @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
     @Composable
@@ -352,6 +387,15 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val state by viewModel.state.collectAsStateWithLifecycle()
         val clipboard = LocalClipboard.current
         val scope = rememberCoroutineScope()
+        val graph = LocalContext.current.appGraph
+        val live by remember(route.environmentId) { graph.connectionManager.connectionFlow(route.environmentId) }.collectAsStateWithLifecycle(initialValue = null)
+        val operations = live?.let { graph.threadMenuOwner(route.environmentId, route.threadId, it.transport) }
+        val operationState by (operations?.state ?: kotlinx.coroutines.flow.flowOf(dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperationState())).collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperationState())
+        val supervisor by androidx.compose.runtime.produceState<dev.avillagran.ot3android.core.connection.ConnectionSupervisor?>(null, route.environmentId) { value = graph.connectionManager.supervisor(route.environmentId) }
+        val shell by (supervisor?.shell ?: kotlinx.coroutines.flow.flowOf(null)).collectAsStateWithLifecycle(initialValue = null)
+        val regenerating = shell?.thread(route.threadId)?.raw?.opt("titleRegeneration")?.let { it != org.json.JSONObject.NULL && it != false } == true
+        androidx.compose.runtime.LaunchedEffect(operations, regenerating) { operations?.observeTitleRegeneration(regenerating) }
+        dev.avillagran.ot3android.ui.settings.projects.ThreadMenuRecoveryContent(operationState) { scope.launch { operations?.retry() } }
         val current = state ?: return
         val row = current.rows["${route.environmentId}/${route.threadId}"] ?: return
         val target = ThreadMenuTarget(
@@ -360,15 +404,16 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             working = row.working,
             autoSettleDisabled = row.autoSettleDisabled,
             canSnooze = row.canSnooze,
+            titleRegenerating = regenerating || operationState.titleRegenerating,
         )
         var pending by rememberSaveable(row.key) { mutableStateOf(route.initialAction?.let { ThreadAction.valueOf(it) }) }
         pending?.let { action -> dev.avillagran.ot3android.ui.home.ThreadManagementDialog(row, action,
             onDismiss = { pending = null }, onConfirm = { title ->
-                viewModel.manage(row, action, title = title, confirmed = true)
+                scope.launch { operations?.execute(row, action, title = title, confirmed = true) }
                 pending = null
                 navigator.closeSheet(entry)
             }) }
-        ThreadActionsContent(row, ThreadActions.menu(target, current.actionContexts[row.environmentId] ?: ActionContext.Interim)) { action ->
+        ThreadActionsContent(row, ThreadActions.menu(target, (current.actionContexts[row.environmentId] ?: ActionContext.Interim).copy(projectSettingsAvailable = row.projectId != null, newThreadAvailable = row.projectId != null, busy = current.actionContexts[row.environmentId]?.busy == true || operationState.busy || operationState.retryCommandId != null || operations == null))) { action ->
             if (action in setOf(ThreadAction.Rename, ThreadAction.Archive, ThreadAction.Delete)) {
                 pending = action
                 return@ThreadActionsContent
@@ -378,7 +423,17 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 navigator.openSheet(SnoozeUntilSheet(row.environmentId, row.threadId))
                 return@ThreadActionsContent
             }
-            if (dev.avillagran.ot3android.core.home.ThreadManagement.supported(action)) viewModel.manage(row, action)
+            if (action == ThreadAction.ProjectSettings && row.projectId != null) {
+                navigator.closeSheet(entry)
+                navigator.push(ProjectPreferences(row.environmentId, row.projectId))
+                return@ThreadActionsContent
+            }
+            if (action == ThreadAction.NewThreadOnBranch && row.projectId != null) {
+                navigator.closeSheet(entry)
+                navigator.push(NewThreadDraft(row.environmentId, requireNotNull(row.projectId), row.branch))
+                return@ThreadActionsContent
+            }
+            if (dev.avillagran.ot3android.core.home.ThreadManagement.supported(action)) scope.launch { operations?.execute(row, action) }
             when (action) {
                 ThreadAction.CopyPath -> row.path
                 ThreadAction.CopyBranch -> row.branch
@@ -402,7 +457,12 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         val clipboard = LocalClipboard.current
         val scope = rememberCoroutineScope()
         val project = state?.projects?.get("${route.environmentId}/${route.projectId}")
-        ProjectActionsContent(project?.title, ThreadActions.projectMenu(project?.workspaceRoot, ActionContext.Interim)) { action ->
+        ProjectActionsContent(project?.title, ThreadActions.projectMenu(project?.workspaceRoot, ActionContext.Interim.copy(projectSettingsAvailable = project != null))) { action ->
+            if (action == ProjectAction.ProjectSettings && project != null) {
+                navigator.closeSheet(entry)
+                navigator.push(ProjectPreferences(route.environmentId, route.projectId))
+                return@ProjectActionsContent
+            }
             val root = project?.workspaceRoot
             if (action == ProjectAction.CopyPath && root != null) {
                 scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(root, root))) }

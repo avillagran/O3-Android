@@ -83,19 +83,34 @@ internal fun QuotaToggleMenuItem(
 fun QuotaStrip(states: List<Pair<String, QuotaState>>, enabled: Boolean, compact: Boolean, onOpenLimits: () -> Unit) {
     val groups = states.flatMap { (host, state) ->
         val limits = state.limits
-        val providers = limits?.optJSONArray("providers").objects().map { provider ->
+        val providers = limits?.optJSONArray("providers").objects().filter { it.optJSONObject("auth")?.optString("status") != "unauthenticated" }.map { provider ->
             Triple(host, provider.optString("displayName").ifBlank { quotaProviderLabel(provider.optString("driver")) }, provider.optJSONObject("usageLimits"))
         }
         providers + limits?.optJSONArray("usageLimitSources").objects().flatMap { source ->
             source.optJSONArray("accounts").objects().map { account -> Triple(host, quotaProviderLabel(account.optString("driver")), account.optJSONObject("usageLimits")) }
         }
-    }.filter { it.third?.optJSONArray("windows")?.length()?.let { n -> n > 0 } == true }
+    }.filter { it.third?.has("unavailable") != true && it.third?.optJSONArray("windows")?.length()?.let { n -> n > 0 } == true }
+    val authHosts = states.filter { (_, state) -> state.limits?.optJSONArray("providers").objects()
+        .any { it.optJSONObject("auth")?.optString("status") == "unauthenticated" } }
+    val unavailableHosts = states.filter { (_, state) ->
+        val providers = state.limits?.optJSONArray("providers").objects()
+        val sources = state.limits?.optJSONArray("usageLimitSources").objects()
+        providers.any { it.optJSONObject("usageLimits")?.has("unavailable") == true } ||
+            sources.any { source -> source.has("error") || source.optJSONArray("accounts").objects()
+                .any { it.optJSONObject("usageLimits")?.has("unavailable") == true } }
+    }
     val notices = states.filter { it.second.offline || it.second.failed || it.second.busy }
-    VerticalReveal(enabled && (groups.isNotEmpty() || notices.isNotEmpty()), Modifier.fillMaxWidth().testTag("quota_reveal")) {
+    VerticalReveal(enabled && (groups.isNotEmpty() || notices.isNotEmpty() || authHosts.isNotEmpty() || unavailableHosts.isNotEmpty()), Modifier.fillMaxWidth().testTag("quota_reveal")) {
         val scroll = if (compact) Modifier else Modifier.heightIn(max = 200.dp).verticalScroll(rememberScrollState())
         Column(scroll.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).testTag("quota_strip"), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             notices.forEach { (host, state) ->
                 Text("$host · " + stringResource(when { state.offline -> R.string.ot3_usage_offline; state.failed -> R.string.ot3_usage_unavailable; else -> R.string.mobile_connecting_environment }), style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim)
+            }
+            unavailableHosts.forEach { (host, _) ->
+                Text("$host · " + stringResource(R.string.ot3_usage_unavailable), style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim)
+            }
+            authHosts.forEach { (host, _) ->
+                Text("$host · " + stringResource(R.string.usage_auth_required), style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim)
             }
             groups.forEach { (host, title, limits) ->
                 Surface(onClick = onOpenLimits, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("quota_group_${host}_$title"),

@@ -78,8 +78,13 @@ class UsageViewModel(
 
     fun selectTab(value: String) { if (value in listOf("usage", "limits")) saved["tab"] = value }
     fun selectEnvironment(id: String) { saved["environment"] = id }
-    fun selectPeriod(value: String) { saved["period"] = value }
-    fun refresh() { refresh.update { ReadRequest(it.sequence + 1) } }
+    fun selectPeriod(value: String) { if (value in listOf("day", "week", "month", "quarter")) saved["period"] = value }
+    fun refresh() {
+        val current = state.value
+        if (current.tab == "limits") {
+            current.environmentId?.let { id -> viewModelScope.launch { quotas.refresh(id) } }
+        } else refresh.update { ReadRequest(it.sequence + 1) }
+    }
     fun refreshPrices() {
         val current = state.value
         if (current.busy || current.offline) return

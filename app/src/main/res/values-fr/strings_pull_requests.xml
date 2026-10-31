@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Confirmer</string>
+  <string name="pr_close">Fermer</string>
+  <string name="pr_reopen">Rouvrir</string>
+  <string name="pr_ready">Prête pour la revue</string>
+  <string name="pr_draft">Convertir en brouillon</string>
+  <string name="pr_reply">Laissez un commentaire</string>
+  <string name="pr_comment">Commenter</string>
+  <string name="pr_approve">Approuver</string>
+  <string name="pr_request_changes">Demander des modifications</string>
+  <string name="pr_write_unknown">Le résultat est inconnu. Vérifiez auprès du fournisseur avant toute autre action.</string>
+  <string name="pr_merge">Fusionner</string>
+</resources>

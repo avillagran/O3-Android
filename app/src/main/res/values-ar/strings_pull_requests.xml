@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">تأكيد</string>
+  <string name="pr_close">إغلاق</string>
+  <string name="pr_reopen">أعد الفتح</string>
+  <string name="pr_ready">جاهز للمراجعة</string>
+  <string name="pr_draft">حوّل إلى مسودة</string>
+  <string name="pr_reply">اترك تعليقًا</string>
+  <string name="pr_comment">علّق</string>
+  <string name="pr_approve">موافقة</string>
+  <string name="pr_request_changes">اطلب تغييرات</string>
+  <string name="pr_write_unknown">نتيجة الإجراء غير معروفة. تحقق لدى المزود قبل تنفيذ إجراء آخر.</string>
+  <string name="pr_merge">دمج</string>
+</resources>

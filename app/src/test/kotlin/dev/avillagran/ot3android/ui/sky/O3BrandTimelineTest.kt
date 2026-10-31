@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class O3BrandTimelineTest {
+    @Test fun savedAppearanceAndSystemMotionReachHeaderWithoutErasingChoices() {
+        val settings = dev.avillagran.ot3android.core.data.prefs.AppearanceSettings(local = mapOf(
+            dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.BRAND_GLYPH to "omarchy",
+            dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.SIDEBAR_STYLE to "vivid",
+        ))
+        val animated = homeBrandConfig(settings, false)
+        assertEquals(O3BrandGlyph.OMARCHY, animated.glyph)
+        assertFalse(animated.sober)
+        assertFalse(animated.reducedMotion)
+        assertEquals(animated.copy(reducedMotion = true), homeBrandConfig(settings, true))
+        assertTrue(homeBrandConfig(settings.copy(local = settings.local +
+            (dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.ANIMATIONS_ENABLED to "false")), false).reducedMotion)
+        assertEquals(O3BrandConfig(), homeBrandConfig(dev.avillagran.ot3android.core.data.prefs.AppearanceSettings(), false))
+    }
+
     @Test fun desktopDefaults() {
         val c=O3BrandConfig()
         assertEquals(O3BrandGlyph.O,c.glyph)

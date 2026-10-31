@@ -119,6 +119,7 @@ internal fun composerKeyAction(key: Int, down: Boolean, repeat: Int, soft: Boole
     return if (expanded || shift) ComposerKeyAction.Newline else ComposerKeyAction.Send
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canSend: Boolean, sending: Boolean,
     onDraftChange: (String, String) -> Unit, onSend: () -> Unit, onToggle: () -> Unit, modifier: Modifier = Modifier,
@@ -143,6 +144,21 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
         editor.edit(next, surface)?.let { onDraftChange(next.text, it) }
         if (surface == editor.generation && !editor.awaitingRestore) onEditorValue?.invoke(editor.value)
     }
+    // Hiding the IME does not reliably deliver finishComposingText on every
+    // input connection. Commit its UI range when that surface is gone so the
+    // owner cannot remain composing and disable Send/Undo indefinitely.
+    val imeVisible = WindowInsets.isImeVisible
+    var hadIme by remember(editor) { mutableStateOf(false) }
+    LaunchedEffect(imeVisible) {
+        if (imeVisible) hadIme = true
+        else if (hadIme) {
+            hadIme = false
+            if (editor.value.composition != null) {
+                editor.finishComposition(surface)
+                onEditorValue?.invoke(editor.value)
+            }
+        }
+    }
     fun newline() {
         if (sending || editor.value.composition != null) return
         val current = editor.value
@@ -158,7 +174,13 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default), keyboardActions = KeyboardActions { newline() },
                     maxLines = if (expanded) Int.MAX_VALUE else if (compact) 2 else 6,
                     modifier = Modifier.weight(1f).then(if (expanded) Modifier.fillMaxHeight() else Modifier.heightIn(min = 56.dp, max = if (compact) 56.dp else 130.dp))
-                        .focusRequester(requester).onFocusChanged { editor.focusWanted = it.isFocused }
+                        .focusRequester(requester).onFocusChanged {
+                            editor.focusWanted = it.isFocused
+                            if (!it.isFocused && editor.value.composition != null) {
+                                editor.finishComposition(surface)
+                                onEditorValue?.invoke(editor.value)
+                            }
+                        }
                         .onPreviewKeyEvent { event ->
                             val native = event.nativeKeyEvent
                             val device = native.device

@@ -18,6 +18,7 @@ import dev.avillagran.ot3android.core.thread.ThreadSession
 import dev.avillagran.ot3android.core.thread.ThreadView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 
 /** A message for the snackbar. */
 sealed interface ThreadNotice {
@@ -44,6 +46,7 @@ data class ThreadUiState(
     val view: ThreadView,
     /** The projection's title, else the shell row's. */
     val title: String? = null,
+    val composerScope: dev.avillagran.ot3android.core.composer.ComposerScope? = null,
     /** The thread's `modelSelection` (compact JSON) from the projection, else the shell row's. */
     val modelSelection: String? = null,
     val connection: ConnectionState = ConnectionState.Disconnected,
@@ -104,14 +107,120 @@ class ThreadViewModel(
     private val threadId: String,
     connections: ConnectionManager,
     drafts: DraftRepository,
-    outbox: OutboxRepository,
+    private val outbox: OutboxRepository,
     private val sender: MessageSender,
     private val appScope: CoroutineScope,
     private val preferences: dev.avillagran.ot3android.core.data.prefs.ComposerPreferences? = null,
     threadCache: dev.avillagran.ot3android.core.thread.ThreadCache? = null,
     private val cacheAuthority: suspend () -> String? = { environmentId },
     cacheAuthorityUpdates: Flow<String?>? = null,
+    attachmentDirectory: java.io.File? = null,
+    private val clientPreferences: dev.avillagran.ot3android.core.settings.GeneralClientPreferences? = null,
 ) : ViewModel() {
+    val durableComposerAvailable = attachmentDirectory != null
+    private val attachmentFile = attachmentDirectory?.let { directory ->
+        directory.mkdirs()
+        val key = java.security.MessageDigest.getInstance("SHA-256").digest((environmentId + "/" + threadId).toByteArray()).joinToString("") { "%02x".format(it) }
+        android.util.AtomicFile(java.io.File(directory, key + ".json"))
+    }
+    val attachmentDraft = MutableStateFlow<List<dev.avillagran.ot3android.core.composer.ComposerAttachment>>(emptyList())
+    val attachmentStorageError = MutableStateFlow(false)
+    val attachmentPending = MutableStateFlow<String?>(null)
+    private var attachmentCommand: String? = null
+    private var attachmentAuthority: String? = null
+    init {
+        attachmentFile?.let { file ->
+            try { if (file.baseFile.exists()) {
+                val saved = org.json.JSONObject(file.openRead().use { it.readBytes().toString(Charsets.UTF_8) })
+                attachmentAuthority = saved.optString("authority").takeIf { it.isNotEmpty() }
+                attachmentCommand = saved.optString("command").takeIf { it.isNotEmpty() }
+                attachmentPending.value = attachmentCommand?.let { org.json.JSONObject(it).getString("commandId") }
+                val files = saved.optJSONArray("attachments") ?: org.json.JSONArray()
+                attachmentDraft.value = (0 until files.length()).map { i ->
+                    val item = files.getJSONObject(i)
+                    dev.avillagran.ot3android.core.composer.ComposerAttachment(item.getString("id"), item.getString("name"),
+                        if (item.has("descriptor")) dev.avillagran.ot3android.core.composer.UploadStatus.Ready else dev.avillagran.ot3android.core.composer.UploadStatus.Failed,
+                        item.optString("descriptor").takeIf { it.isNotEmpty() })
+                }
+            } } catch (_: Exception) { attachmentStorageError.value = true }
+        }
+    }
+    private fun persistAttachments(): Boolean = try {
+        val saved = org.json.JSONObject().put("authority", attachmentAuthority ?: "").put("command", attachmentCommand ?: "").put("attachments", org.json.JSONArray(attachmentDraft.value.map {
+            org.json.JSONObject().put("id", it.id).put("name", it.name).apply { it.descriptor?.let { value -> put("descriptor", value) } }
+        }))
+        attachmentFile?.let { file ->
+            val stream = file.startWrite()
+            try { stream.write(saved.toString().toByteArray()); file.finishWrite(stream) }
+            catch (error: Exception) { file.failWrite(stream); throw error }
+        }
+        true
+    } catch (_: Exception) { attachmentStorageError.value = true; false }
+    private suspend fun verifyAttachmentAuthority() {
+        val authority = cacheAuthority() ?: error("attachment_authority_unavailable")
+        val previous = attachmentAuthority
+        check(previous == authority || (attachmentCommand == null && attachmentDraft.value.none { it.descriptor != null })) { "attachment_authority_changed" }
+        attachmentAuthority = authority
+    }
+    fun removeAttachment(id: String) {
+        if (local.value.queueBusy || attachmentPending.value != null || state.value.sending) return
+        attachmentDraft.value = attachmentDraft.value.filterNot { it.id == id }
+        persistAttachments()
+    }
+    fun importAttachment(context: android.content.Context, uri: String) {
+        if (attachmentStorageError.value || local.value.queueBusy || !state.value.connected || state.value.sending || attachmentPending.value != null || attachmentDraft.value.size >= 100) return
+        val id = java.util.UUID.randomUUID().toString()
+        attachmentDraft.value += dev.avillagran.ot3android.core.composer.ComposerAttachment(id, "attachment", dev.avillagran.ot3android.core.composer.UploadStatus.Uploading)
+        persistAttachments()
+        viewModelScope.launch {
+            try {
+                val descriptor = attachmentImportLock.withLock { verifyAttachmentAuthority(); uploadAttachment(context, uri) }
+                if (attachmentDraft.value.any { it.id == id }) {
+                    attachmentDraft.value = attachmentDraft.value.map { if (it.id == id) it.copy(name = descriptor.optString("name", it.name),
+                        status = dev.avillagran.ot3android.core.composer.UploadStatus.Ready, descriptor = descriptor.toString()) else it }
+                }
+            } catch (error: Exception) {
+                attachmentDraft.value = attachmentDraft.value.map { if (it.id == id) it.copy(status = dev.avillagran.ot3android.core.composer.UploadStatus.Failed) else it }
+                if (error is kotlinx.coroutines.CancellationException) throw error
+            } finally { persistAttachments() }
+        }
+    }
+    fun dispatchAttachments(oppositeOnce: Boolean = false) {
+        if (attachmentStorageError.value || local.value.queueBusy || state.value.composer.sending || local.value.respondingRequest != null || !state.value.connected || state.value.view.stale || state.value.queueEdit != null) return
+        val pending = attachmentCommand
+        if (pending == null && (!state.value.unconfirmed.isEmpty() || (attachmentDraft.value.isEmpty() && state.value.draft.isBlank()) || attachmentDraft.value.any { it.descriptor == null })) return
+        local.update { it.copy(queueBusy = true) }
+        appScope.launch(kotlinx.coroutines.Dispatchers.Main.immediate) {
+            try {
+                verifyAttachmentAuthority()
+                val args = pending?.let { org.json.JSONObject(it) } ?: MessageSender.messageCommand("ot3a-" + java.util.UUID.randomUUID(),
+                    "ot3a-" + java.util.UUID.randomUUID(), threadId, state.value.draft, state.value.modelSelection)
+                    .put("attachments", org.json.JSONArray(attachmentDraft.value.map { org.json.JSONObject(it.descriptor!!) }))
+                if (pending == null) {
+                    val preferences = clientPreferences?.settings?.first()
+                    var delivery = if (state.value.view.activeRunId == null) "auto" else if ((state.value.view.timeline?.optJSONArray("approvals")?.length() ?: 0) > 0) "steer" else preferences?.optString("followUpBehavior", "queue") ?: "queue"
+                    if (oppositeOnce && delivery != "auto") delivery = if (delivery == "queue") "steer" else "queue"
+                    args.put("deliveryIntent", delivery)
+                }
+                val id = args.getString("commandId")
+                attachmentCommand = args.toString()
+                attachmentPending.value = id
+                check(persistAttachments()) { "attachment_storage_unavailable" }
+                if (outbox.find(id) == null) outbox.add(environmentId, threadId, id, args.toString())
+                val result = sender.retry(transport(), id)
+                if (result is SendResult.Accepted) {
+                    attachmentDraft.value = emptyList(); attachmentCommand = null; attachmentPending.value = null
+                    persistAttachments()
+                    if (state.value.draft == args.optString("text")) composer.onDraftChange("")
+                }
+                onResult(result)
+            } catch (error: Exception) {
+                local.update { it.copy(notice = ThreadNotice.Failed("attachment_send_unconfirmed")) }
+                if (error is kotlinx.coroutines.CancellationException) throw error
+            } finally { local.update { it.copy(queueBusy = false) } }
+        }
+    }
+
     val editorIdentity: String get() = org.json.JSONArray().put(environmentId).put(threadId).toString()
 
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
@@ -154,6 +263,9 @@ class ThreadViewModel(
         ThreadUiState(
             view = view,
             title = view.title ?: shellRow?.title,
+            composerScope = (connection.first as? ConnectionState.Connected)?.descriptor?.environmentId?.let { server ->
+                shellRow?.projectId?.let { project -> dev.avillagran.ot3android.core.composer.ComposerScope(server, project, threadId) }
+            },
             modelSelection = local.selectedModel ?: view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
             connection = connection.first,
             queueConnection = connection.second,
@@ -369,6 +481,14 @@ class ThreadViewModel(
         }
     }
 
+    suspend fun uploadAttachment(context: android.content.Context, uri: String): org.json.JSONObject {
+        val captured = supervisor.value?.connection?.value ?: error("not_connected")
+        val upload = captured.transport as? dev.avillagran.ot3android.ui.thread.composer.ComposerBinaryUpload ?: error("upload_unavailable")
+        val result = dev.avillagran.ot3android.ui.thread.composer.ComposerAttachmentImporter(context, upload).upload(uri)
+        check(supervisor.value?.connection?.value == captured) { "connection_changed" }
+        return result
+    }
+
     fun send() {
         val current = state.value
         if (!current.connected || current.view.stale || local.value.queueBusy || local.value.respondingRequest != null) return
@@ -382,11 +502,16 @@ class ThreadViewModel(
 
     /** Resends an unconfirmed command, byte-identical; the draft is not touched. */
     fun retry(commandId: String) {
+        if (commandId == attachmentPending.value) { dispatchAttachments(); return }
         local.update { it.copy(notice = null) }
         composer.retry(commandId)
     }
 
     fun discard(commandId: String) {
+        if (local.value.queueBusy || state.value.composer.sending) return
+        if (commandId == attachmentPending.value) {
+            attachmentCommand = null; attachmentPending.value = null; attachmentDraft.value = emptyList(); persistAttachments()
+        }
         composer.discard(commandId)
     }
 
@@ -427,6 +552,21 @@ class ThreadViewModel(
 
     fun isImageConnectionCurrent(expected: Connection?): Boolean =
         expected != null && supervisor.value?.connection?.value === expected
+
+    private var secretConnection: Connection? = null
+    private var secretController: dev.avillagran.ot3android.ui.thread.reader.TranscriptSecrets? = null
+
+    internal fun transcriptSecrets(expected: Connection?): dev.avillagran.ot3android.ui.thread.reader.TranscriptSecrets? {
+        if (expected !== secretConnection) {
+            secretConnection = expected
+            secretController = expected?.let { connection ->
+                dev.avillagran.ot3android.ui.thread.reader.scopedTranscriptSecrets(connection.transport, threadId) {
+                    isImageConnectionCurrent(connection) && state.value.connected && state.value.view.loaded && !state.value.view.stale
+                }
+            }
+        }
+        return secretController.takeIf { expected != null && state.value.connected && state.value.view.loaded && !state.value.view.stale }
+    }
 
     suspend fun readImage(attachment: org.json.JSONObject): ByteArray? {
         val owner = supervisor.value ?: return null
@@ -497,3 +637,5 @@ internal fun queueEditArguments(row: org.json.JSONObject): org.json.JSONObject =
     .put("action", "edit").put("runId", row.getString("runId")).put("text", row.optString("text"))
     .put("attachments", row.optJSONArray("attachments") ?: org.json.JSONArray())
     .apply { row.optJSONObject("context")?.let { put("context", it) } }
+
+private val attachmentImportLock = kotlinx.coroutines.sync.Mutex()

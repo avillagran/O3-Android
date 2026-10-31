@@ -106,10 +106,14 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val imageConnection by viewModel.imageConnection.collectAsStateWithLifecycle()
-    androidx.compose.runtime.CompositionLocalProvider(LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
+    val diffSettings by androidx.compose.ui.platform.LocalContext.current.devGraph().diffReviewSettings.collectAsStateWithLifecycle()
+    val graph = androidx.compose.ui.platform.LocalContext.current.devGraph()
+    val clientSettings by graph.generalClientPreferences.settings.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
+    val mathRendering by androidx.compose.ui.platform.LocalContext.current.devGraph().mathRenderingEnabled.collectAsStateWithLifecycle()
+    androidx.compose.runtime.CompositionLocalProvider(LocalReaderTimeFormat provides clientSettings.optString("timestampFormat", "locale"), LocalReaderReview provides if (viewModel.durableComposerAvailable) ReaderReviewSettings(diffSettings, graph::setDiffReviewSettings) else ReaderReviewSettings(), LocalReaderMath provides mathRendering, LocalReaderStreaming provides state.view.working, LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
         ThreadContent(
             state = state,
             editorIdentity = viewModel.editorIdentity,
@@ -137,6 +141,10 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             onApprovalDecision = viewModel::respondApproval,
             onQuestionResponse = viewModel::respondQuestion,
             onRuntimeMode = viewModel::selectRuntimeMode,
+            composerSlot = if (viewModel.durableComposerAvailable) ({ ConnectedComposer(viewModel, state) }) else null,
+            onChanges = onChanges,
+            onOpenThread = onOpenThread,
+            transcriptSecrets = viewModel.transcriptSecrets(imageConnection),
         )
     }
 }
@@ -168,6 +176,10 @@ fun ThreadContent(
     onQuestionResponse: (String, String, org.json.JSONObject) -> Unit = { _, _, _ -> },
     onRuntimeMode: (String) -> Unit = {},
     quotaStrip: @Composable () -> Unit = {},
+    composerSlot: (@Composable () -> Unit)? = null,
+    onChanges: (() -> Unit)? = null,
+    onOpenThread: ((String) -> Unit)? = null,
+    transcriptSecrets: dev.avillagran.ot3android.ui.thread.reader.TranscriptSecrets? = null,
     editorIdentity: String = state.view.threadId,
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
     onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
@@ -275,6 +287,9 @@ fun ThreadContent(
                         }, modifier = Modifier.testTag("thread_overflow"))
                         androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
                             if (showComposerOptions) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
+                            if (onChanges != null) androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.ot3_git_review)) },
+                                onClick = { quotaMenu = false; onChanges() })
                             dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { quotaMenu = false }
                         }
                     }
@@ -325,7 +340,10 @@ fun ThreadContent(
                 QuestionCard(state.view.timeline?.optJSONArray("questions"),
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
                     state.respondingRequest, state.answeredRequests, onResponse = onQuestionResponse)
-                if (!hasQuestion) ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = { if (!compactComposer) toolbar() }, compact = compactComposer)
+                if (!hasQuestion) {
+                    if (composerSlot != null && state.queueEdit == null) { if (!compactComposer) toolbar(); composerSlot() }
+                    else ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = { if (!compactComposer) toolbar() }, compact = compactComposer)
+                }
             }
         },
     ) { padding ->
@@ -357,7 +375,17 @@ fun ThreadContent(
                         !state.view.loaded -> Ot3Spinner(Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp)
                         (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(stringResource(R.string.thread_empty), modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY))
                         else -> if (state.readingPositionLoaded) timelineState.SaveableStateProvider(editorIdentity) {
-                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition, followLatestRequest)
+                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition, followLatestRequest,
+                                actions = dev.avillagran.ot3android.ui.thread.reader.TranscriptActions(
+                                    secrets = transcriptSecrets,
+                                    openThread = onOpenThread,
+                                    quote = if (state.queueEdit == null && !state.sending) ({ text ->
+                                        val quoted = text.lineSequence().joinToString("\n") { "> $it" }
+                                        val draft = editor.value.text
+                                        val appended = if (draft.isBlank()) "$quoted\n\n" else "$draft\n\n$quoted\n\n"
+                                        edit(appended, java.util.UUID.randomUUID().toString())
+                                    }) else null,
+                                ))
                         }
                     }
                 }
@@ -489,3 +517,87 @@ private fun noticeText(notice: ThreadNotice): String = when (notice) {
         else -> errorText(notice.code)
     }
 }
+
+@Composable
+private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = state.composerScope
+    if (scope == null) { ConnectionChip(state.connection); return }
+    val session = remember(scope) { dev.avillagran.ot3android.core.composer.ComposerSession(
+        dev.avillagran.ot3android.core.composer.ComposerSnapshot(scope, text = state.draft,
+            selection = dev.avillagran.ot3android.core.composer.ComposerSelection(state.draft.length, state.draft.length))) }
+    var snapshot by remember(scope) { mutableStateOf(session.snapshot) }
+    var quickReplies by remember(scope) { mutableStateOf(false) }
+    val graph = context.devGraph()
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+    val client by graph.generalClientPreferences.settings.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
+    LaunchedEffect(state.draft) {
+        if (session.snapshot.text != state.draft) session.replace(session.snapshot, state.draft,
+            dev.avillagran.ot3android.core.composer.ComposerSelection(state.draft.length, state.draft.length))
+        snapshot = session.snapshot
+    }
+    val current by androidx.compose.runtime.rememberUpdatedState(state)
+    fun publish() { snapshot = session.snapshot; model.onDraftChange(snapshot.text) }
+    val unavailable = !state.connected || state.view.stale || state.sending || state.unconfirmed.isNotEmpty()
+    val attachments by model.attachmentDraft.collectAsStateWithLifecycle()
+    val pending by model.attachmentPending.collectAsStateWithLifecycle()
+    val storageError by model.attachmentStorageError.collectAsStateWithLifecycle()
+    if (storageError) Text(stringResource(R.string.composer_uncertain), color = MaterialTheme.colorScheme.error)
+    val displayed = snapshot.copy(attachments = attachments, loading = unavailable || storageError, uncertainCommand = pending)
+    if (pending != null) {
+        Row {
+            TextButton(onClick = { model.retry(pending!!) }, enabled = state.connected && !state.sending) { Text(stringResource(R.string.thread_resend)) }
+            TextButton(onClick = { model.discard(pending!!) }, enabled = !state.sending) { Text(stringResource(R.string.thread_discard)) }
+        }
+    }
+    dev.avillagran.ot3android.ui.thread.composer.ComposerParity(displayed,
+        capabilities = buildSet {
+            add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.Attach)
+            if (state.view.working) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.OppositeOnce)
+            add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.Undo)
+            add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.Redo)
+            if (client.optBoolean("quickRepliesButton", true)) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.QuickReplies)
+        }, onEdit = { expected, text, selection, composing ->
+            if (!unavailable && expected.scope == session.snapshot.scope) {
+                session.edit(text, selection, composing); publish()
+            }
+        }, onRequest = { request ->
+            val sameContent = request.expected.scope == session.snapshot.scope && request.expected.text == session.snapshot.text &&
+                request.expected.attachments == attachments && !session.snapshot.composing
+            val scopeOnly = request is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.ImportUri ||
+                request is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RemoveAttachment
+            // Un cambio de foco puede publicar selección antes del clic; no cambia el contenido enviado.
+            if (!unavailable && request.expected.scope == session.snapshot.scope && (sameContent || scopeOnly)) {
+                when (request) {
+                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.Action -> when(request.action) {
+                        dev.avillagran.ot3android.ui.thread.composer.ComposerAction.Undo -> { session.undo(); publish() }
+                        dev.avillagran.ot3android.ui.thread.composer.ComposerAction.Redo -> { session.undo(true); publish() }
+                        dev.avillagran.ot3android.ui.thread.composer.ComposerAction.QuickReplies -> quickReplies = true
+                        else -> Unit
+                    }
+                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.Send -> model.dispatchAttachments(request.delivery == dev.avillagran.ot3android.core.composer.ComposerDelivery.OppositeOnce)
+                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.ImportUri -> model.importAttachment(context, request.uri)
+                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RemoveAttachment -> model.removeAttachment(request.id)
+                    else -> Unit
+                }
+            }
+        })
+    if (quickReplies) androidx.compose.material3.AlertDialog(onDismissRequest = { quickReplies = false },
+        title = { Text(stringResource(R.string.composer_quick_replies)) }, text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                val language = client.optString("quickReplyLanguage", "auto").let {
+                    if (it == "auto") locale.language else it
+                }
+                client.optString("quickReplies.$language", client.optString("quickReplies.en")).lineSequence().filter { it.isNotBlank() }.forEach { text ->
+                    TextButton(onClick = {
+                        if (session.snapshot.transformable && current.connected) {
+                            session.replace(session.snapshot, text, dev.avillagran.ot3android.core.composer.ComposerSelection(text.length, text.length)); publish()
+                        }
+                        quickReplies = false
+                    }) { Text(text) }
+                }
+            }
+        }, confirmButton = { TextButton(onClick = { quickReplies = false }) { Text(stringResource(R.string.ot3_dialog_close)) } })
+}
+
+private fun android.content.Context.devGraph() = (applicationContext as dev.avillagran.ot3android.Ot3Application).graph

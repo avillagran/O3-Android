@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Підтвердити</string>
+  <string name="pr_close">Закрити</string>
+  <string name="pr_reopen">Відкрити знову</string>
+  <string name="pr_ready">Готово до рев’ю</string>
+  <string name="pr_draft">Перетворити на чернетку</string>
+  <string name="pr_reply">Залиште коментар</string>
+  <string name="pr_comment">Коментувати</string>
+  <string name="pr_approve">Дозволити</string>
+  <string name="pr_request_changes">Запросити зміни</string>
+  <string name="pr_write_unknown">Результат дії невідомий. Перевірте його в постачальника перед наступною дією.</string>
+  <string name="pr_merge">Злиття</string>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Thread-Benachrichtigungen</string>
+    <string name="usage_mode_notifications">Nur Benachrichtigungen</string>
+    <string name="usage_mode_both">Benachrichtigungen mit Ton</string>
+    <string name="usage_mode_sound">Nur Ton</string>
+    <string name="usage_mode_off">Aus</string>
+    <string name="usage_sound_policy">Ein Kanalton pro Gruppe. Die Hintergrundverfolgung behält ihren lautlosen Hinweis.</string>
+    <string name="usage_channel_denied">Benachrichtigungen sind in den Android-Einstellungen gesperrt.</string>
+    <string name="usage_pool_unavailable">Nur Einzelberichte. Exakte gemeinsame Kontingente, mehrdeutige Identitäten und Aktionen für Rücksetzguthaben erfordern eine neuere gemeinsame Bibliothek.</string>
+    <string name="usage_auth_required">Auf dem Host bei diesem Anbieter anmelden und dann aktualisieren.</string>
+</resources>

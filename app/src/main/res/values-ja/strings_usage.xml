@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">スレッド通知</string>
+    <string name="usage_mode_notifications">通知のみ</string>
+    <string name="usage_mode_both">通知とサウンド</string>
+    <string name="usage_mode_sound">サウンドのみ</string>
+    <string name="usage_mode_off">オフ</string>
+    <string name="usage_sound_policy">バッチごとにチャンネル音を1回再生します。バックグラウンド追跡は無音の通知を維持します。</string>
+    <string name="usage_channel_denied">Androidの設定で通知がブロックされています。</string>
+    <string name="usage_pool_unavailable">個別のレポートのみです。正確な共有枠、曖昧なIDの処理、リセットクレジット操作には新しい共有ライブラリが必要です。</string>
+    <string name="usage_auth_required">ホストでこのプロバイダーにログインしてから更新してください。</string>
+</resources>
