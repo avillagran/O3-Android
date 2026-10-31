@@ -165,6 +165,7 @@
     <string name="bridge_approved">Bridge saved. Authorized computers appear automatically in Home.</string>
     <string name="bridge_connecting">Connecting to bridge…</string>
     <string name="bridge_failed">Bridge unavailable or invitation refused. Check the bridge and retry.</string>
+    <string name="bridge_management_unsupported">This invitation asks to manage this phone, which OT3 does not support. On the computer, create a new invitation without \"Let it manage this device\".</string>
     <string name="bridge_sdk_unavailable">This build does not include the bridge SDK. You can still pair a computer with its T3 link.</string>
     <string name="bridge_revoked">Bridge access revoked</string>
     <string name="bridge_expired">Bridge catalog or session expired — reconnect bridge</string>

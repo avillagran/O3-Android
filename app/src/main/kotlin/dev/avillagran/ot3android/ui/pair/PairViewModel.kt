@@ -80,7 +80,11 @@ class PairViewModel(
                     bridge.value = if (approved) "approved" else "pending"
                     if (approved) link.value = ""
                 } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
-                catch (_: Exception) { bridge.value = "failed" }
+                catch (error: Exception) {
+                    // Native and invitation errors are fixed codes, never invitation contents.
+                    android.util.Log.w("OT3Bridge", "Bridge pairing failed: ${error.javaClass.simpleName}: ${error.message}")
+                    bridge.value = BridgeInvitation.failureStatus(error)
+                }
             }
             return
         }

@@ -181,6 +181,7 @@ fun PairScreen(
                     "approved" -> R.string.bridge_approved
                     "sdk_unavailable" -> R.string.bridge_sdk_unavailable
                     "connecting" -> R.string.bridge_connecting
+                    "management_unsupported" -> R.string.bridge_management_unsupported
                     else -> R.string.bridge_failed
                 }), modifier = Modifier.testTag("bridge_pair_status"))
             }
