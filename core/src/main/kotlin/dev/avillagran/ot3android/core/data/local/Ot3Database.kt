@@ -8,11 +8,12 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [EnvironmentEntity::class, OutboxEntity::class, DraftEntity::class, BridgeManagedEntity::class],
-    version = 3,
+    entities = [EnvironmentEntity::class, OutboxEntity::class, DraftEntity::class, BridgeManagedEntity::class, SharedDraftJournal::class],
+    version = 4,
     exportSchema = true,
 )
 abstract class Ot3Database : RoomDatabase() {
+    abstract fun sharedDraftJournalDao(): SharedDraftJournalDao
     abstract fun bridgeManagedDao(): BridgeManagedDao
     abstract fun environmentDao(): EnvironmentDao
     abstract fun outboxDao(): OutboxDao
@@ -45,7 +46,12 @@ abstract class Ot3Database : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `shared_draft_journal` (`authority` TEXT NOT NULL, `json` TEXT NOT NULL, PRIMARY KEY(`authority`))")
+            }
+        }
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
         fun create(context: Context): Ot3Database =
             Room.databaseBuilder(context.applicationContext, Ot3Database::class.java, NAME)
