@@ -141,6 +141,21 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
     LaunchedEffect(settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.PROJECT_CHIPS)) {
         if (settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.PROJECT_CHIPS) != "true") sidebarChip = null
     }
+    // Presentation controls belong to the existing header menu. A fixed controls row
+    // here consumes 48dp of the workspace even when no control is being used.
+    val sidebarControls: @Composable () -> Unit = {
+        if (state?.content == HomeContent.List) {
+            SidebarControls(state, settings, effectiveMetadata, sidebarChip,
+                onLayout = { layout -> scope.launch {
+                    preferences.setLocal(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.INTERFACE_LAYOUT, layout)
+                } },
+                onHostStyle = { host, style -> scope.launch {
+                    homePreferences.setHostStyle(host, style.icon, style.color, style.showName)
+                } },
+                onChip = { sidebarChip = it },
+            )
+        }
+    }
     val query = state?.query.orEmpty()
     BackHandler(enabled = isTop && (query.isNotEmpty() || searchFocused)) {
         onIntent(HomeIntent.ClearSearch)
@@ -168,13 +183,13 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
             ) {
                 if (LocalConfiguration.current.screenHeightDp < 480) {
                     Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { Header(state, onIntent) }
+                        Box(Modifier.weight(1f)) { Header(state, onIntent, sidebarControls) }
                         Box(Modifier.weight(1f)) {
                             SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                         }
                     }
                 } else Column(Modifier.statusBarsPadding()) {
-                    Header(state, onIntent)
+                    Header(state, onIntent, sidebarControls)
                     SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                 }
             }
@@ -186,12 +201,9 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
                 marquee = settings.threadTitleOverflow == "marquee",
                 projectColors = settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.PROJECT_COLORS) == "true",
                 hostStyles = effectiveMetadata.hostStyles,
-            )) { Column(Modifier.fillMaxSize()) {
-                SidebarControls(state, settings, effectiveMetadata, sidebarChip, { layout -> scope.launch {
-                    preferences.setLocal(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.INTERFACE_LAYOUT, layout)
-                } }, { host, style -> scope.launch { homePreferences.setHostStyle(host, style.icon, style.color, style.showName) } }) { chip -> sidebarChip = chip }
+            )) {
                 ThreadList(state, onIntent, quotaStrip, settings, effectiveMetadata, sidebarChip)
-            } }
+            }
             else LazyColumn(Modifier.fillMaxSize()) {
                 item("provider_usage") { quotaStrip() }
                 item("home_message") { Box(Modifier.fillParentMaxHeight()) {
@@ -217,7 +229,7 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
 }
 
 @Composable
-private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit) {
+private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarControls: @Composable () -> Unit) {
     val header = state?.header
     var menuOpen by remember { mutableStateOf(false) }
     val colors = Ot3Theme.colors
@@ -244,6 +256,7 @@ private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit) {
             Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { menuOpen = true },
                 modifier = Modifier.testTag(HomeTags.OVERFLOW))
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                sidebarControls()
                 DropdownMenuItem(text = { Text(stringResource(R.string.ot3_home_add_project)) }, onClick = { menuOpen = false; onIntent(HomeIntent.AddProject) })
                 dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { menuOpen = false }
                 DropdownMenuItem(

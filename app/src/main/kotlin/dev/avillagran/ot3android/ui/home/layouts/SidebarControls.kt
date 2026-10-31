@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.avillagran.ot3android.R
@@ -42,7 +43,7 @@ internal fun SidebarControls(state: HomeUiState, settings: AppearanceSettings, m
     selected: String?, onLayout: (String) -> Unit, onHostStyle: (String, HostStyle) -> Unit, onChip: (String?) -> Unit) {
     var styling by rememberSaveable { mutableStateOf<String?>(null) }
     var menu by remember { mutableStateOf(false) }
-    Column {
+    Column(Modifier.testTag("home_sidebar_controls")) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
         Box {
             TextButton(onClick = { menu = true }) { Text(sidebarLabel(settings.interfaceLayout)) }
