@@ -16,17 +16,18 @@ import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.json.JSONObject
 
-/** Presentation names follow T3PermissionPicker.qml. Only native-advertised choices are offered. */
+/** Presentation names follow T3PermissionPicker.qml. Choices and empty-advertisement fallback come from Rust. */
 @Composable
 internal fun ComposerPermissions(
     catalogJson: String?, selectionJson: String?, mode: String?, enabled: Boolean,
     onRefresh: () -> Unit, onSelect: (String) -> Unit,
 ) {
-    val catalog = remember(catalogJson) { catalogJson?.let(::JSONObject) }
-    val instance = remember(selectionJson) { selectionJson?.let(::JSONObject)?.optString("instanceId") }
-    val provider = catalog?.optJSONArray("providers").objects().firstOrNull { it.optString("instanceId") == instance }
-    val advertised = provider?.optJSONArray("supportedRuntimeModes")
-    val modes = (0 until (advertised?.length() ?: 0)).mapNotNull { advertised?.optString(it)?.takeIf(String::isNotBlank) }
+    val modes = remember(catalogJson, selectionJson) {
+        val catalog = catalogJson?.let(::JSONObject)
+        val instance = selectionJson?.let(::JSONObject)?.optString("instanceId")
+        val rows = catalog?.optJSONObject("permissionViews")?.optJSONObject(instance.orEmpty())?.optJSONArray("rows")
+        (0 until (rows?.length() ?: 0)).map { rows!!.getJSONObject(it).getString("id") }
+    }
     val definitions = mapOf(
         "approval-required" to (R.string.ot3_permission_supervised to R.string.ot3_permission_supervised_detail),
         "auto-accept-edits" to (R.string.ot3_permission_accept_edits to R.string.ot3_permission_accept_edits_detail),

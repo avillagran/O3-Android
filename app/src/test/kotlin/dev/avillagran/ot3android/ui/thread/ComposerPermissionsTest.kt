@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 @Config(application = Application::class)
 class ComposerPermissionsTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
-    private val catalog = """{"providers":[{"instanceId":"work","supportedRuntimeModes":["approval-required","auto-accept-edits"]}]}"""
+    private val catalog = """{"providers":[{"instanceId":"work","supportedRuntimeModes":["approval-required","auto-accept-edits"]}],"permissionViews":{"work":{"rows":[{"id":"approval-required"},{"id":"auto-accept-edits"}]}}}"""
     @Test fun onlyAdvertisedChoicesAreOfferedAndSelectionIsExplicit() {
         var chosen: String? = null
         var refreshes = 0
@@ -35,13 +35,12 @@ class ComposerPermissionsTest {
         rule.onNodeWithTag("composer_permissions").assertIsNotEnabled()
     }
 
-    @Test fun providerWithoutSupportedModesCannotInventFallbackOrChangeCurrentMode() {
-        rule.setContent { Ot3Theme { ComposerPermissions("""{"providers":[{"instanceId":"work"}]}""",
+    @Test fun nativeFallbackOffersAllChoicesWithoutChangingCurrentMode() {
+        rule.setContent { Ot3Theme { ComposerPermissions("""{"providers":[{"instanceId":"work"}],"permissionViews":{"work":{"rows":[{"id":"approval-required"},{"id":"auto-accept-edits"},{"id":"auto"},{"id":"full-access"}]}}}""",
             """{"instanceId":"work"}""", "auto", true, {}, { error("unbound fallback") }) } }
         rule.onNodeWithTag("composer_permissions").performClick()
-        rule.onNodeWithText("This provider does not advertise permission choices.").assertExists()
-        rule.onNodeWithTag("permission_auto").assertDoesNotExist()
-        rule.onNodeWithTag("permission_approval-required").assertDoesNotExist()
+        rule.onNodeWithTag("permission_auto").assertExists()
+        rule.onNodeWithTag("permission_approval-required").assertExists()
         rule.onNodeWithContentDescription("Thread permissions: Auto").assertExists()
     }
 }

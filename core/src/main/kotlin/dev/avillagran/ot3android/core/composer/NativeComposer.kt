@@ -5,8 +5,10 @@ import dev.avillagran.ot3android.core.transport.DomainEngine
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Existing v0.3.5 projections only. Trigger/range/list/recall policy awaits U33. */
+/** Native composer projections and UTF-16 transforms; the caller owns IME and undo. */
 class NativeComposer(private val domain: DomainCalls = DomainEngine.shared) {
+    suspend fun transform(input: JSONObject): JSONObject =
+        domain.domain("composer.transform", JSONObject().put("input", input)) as JSONObject
     suspend fun paths(searchResult: JSONObject): JSONArray = domain.domain("composer.paths", JSONObject().put("result", searchResult)) as JSONArray
     suspend fun catalog(provider: JSONObject, cwd: String, kind: String, query: String): JSONArray =
         domain.domain("composer.catalog", JSONObject().put("provider", provider).put("cwd", cwd).put("kind", kind).put("query", query)) as JSONArray

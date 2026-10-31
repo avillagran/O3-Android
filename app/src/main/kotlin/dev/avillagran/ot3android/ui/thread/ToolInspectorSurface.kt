@@ -34,6 +34,9 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import org.json.JSONObject
 
+internal data class LiveInspector(val connection: dev.avillagran.ot3android.core.connection.Connection?, val current: () -> Boolean)
+internal val LocalLiveInspector = staticCompositionLocalOf<LiveInspector?> { null }
+
 private data class InspectorRead(val loading: Boolean = true, val failed: Boolean = false, val view: JSONObject? = null)
 
 /** Reader-owned window: lazy-row recycling cannot dispose its selected inspector. */
@@ -94,6 +97,29 @@ internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSO
                 InspectorRead(loading = false, failed = true)
             }
         }
+        val live = LocalLiveInspector.current
+        if (reference.optString("type") == "command_execution" && live?.connection != null) {
+            var stopped by remember { mutableStateOf(false) }
+            var output by remember { mutableStateOf<JSONObject?>(null) }
+            LaunchedEffect(live.connection, identity, stopped) {
+                if (!stopped && live.current()) {
+                    val source = JSONObject().put("threadId", reference.getString("sourceThreadId"))
+                        .put("itemId", reference.getString("sourceItemId")).put("environment", owner?.environment)
+                        .put("generation", live.connection.epoch)
+                    try {
+                        dev.avillagran.ot3android.core.tools.LiveCommandOutput().observe(live.connection.transport, source).collect {
+                            if (live.current()) output = it
+                        }
+                    } catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) { output = JSONObject().put("error", "output_unavailable") }
+                }
+            }
+            output?.let { value ->
+                SelectionContainer { Text(value.optString("text"), fontFamily = FiraCode, modifier = Modifier.testTag("inspector_live_output")) }
+                if (!value.isNull("error")) Text(stringResource(R.string.ot3_inspector_unavailable_error))
+            }
+            TextButton(onClick = { stopped = !stopped }) { Text(stringResource(if (stopped) R.string.bridge_refresh else R.string.thread_interrupt)) }
+        }
         ToolInspectorContent(result.view, result.loading, result.failed, mode, { mode = it }, { attempt++ }, onClose, reference.optString("type"))
     }
 }
@@ -142,7 +168,7 @@ internal fun ToolInspectorContent(
                 if (status.isNotBlank() || !view.isNull("exitCode")) Text(
                     listOfNotNull(status.takeIf { it.isNotBlank() }?.let { inspectorLabel(it) }, if (view.isNull("exitCode")) null else stringResource(R.string.ot3_inspector_exit_code) + ": " + view.get("exitCode")).joinToString(" · "),
                     color = if (failure) colors.failed else colors.dim, modifier = Modifier.testTag("thread_inspector_status"), style = MaterialTheme.typography.bodySmall)
-                if (referenceType == "command_execution") Text(stringResource(R.string.tools_live_unavailable),
+                if (referenceType == "command_execution" && LocalLiveInspector.current?.connection == null) Text(stringResource(R.string.tools_live_unavailable),
                     color = colors.dim, style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.testTag("thread_inspector_live_unavailable"))
                 if (mode == "details" && view.optBoolean("emptyOutput")) Text(stringResource(R.string.ot3_inspector_empty_output), color = colors.dim, style = MaterialTheme.typography.bodySmall)

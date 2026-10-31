@@ -16,6 +16,8 @@ import dev.avillagran.ot3android.core.thread.SendResult
 import dev.avillagran.ot3android.core.thread.ThreadComposer
 import dev.avillagran.ot3android.core.thread.ThreadSession
 import dev.avillagran.ot3android.core.thread.ThreadView
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -259,6 +261,34 @@ class ThreadViewModel(
     // Retain only this thread's last authenticated composer identity while offline.
     // Delivery remains gated by connection/staleness and attachment authority.
     private var lastComposerScope: dev.avillagran.ot3android.core.composer.ComposerScope? = null
+    private data class OlderHistory(val connection: Connection, val rows: org.json.JSONArray, val cursor: String?)
+    private val olderHistory = MutableStateFlow<OlderHistory?>(null)
+    private var historyJob: Job? = null
+    fun loadOlderHistory() {
+        if (historyJob?.isActive == true) return
+        val current = supervisor.value?.connection?.value ?: return
+        val prior = olderHistory.value?.takeIf { it.connection === current }
+        val cursor = if (prior != null) prior.cursor else state.value.view.timeline?.optString("historyCursor")?.takeIf { it.isNotBlank() && it != "null" }
+        if (cursor == null) return
+        val owner = java.util.UUID.randomUUID().toString()
+        historyJob = viewModelScope.launch {
+            try {
+                val page = current.transport.historyPage(threadId, cursor)
+                val envelope = current.transport.domain("history.envelope", org.json.JSONObject().put("threadId", threadId).put("page", page)) as org.json.JSONObject
+                val presentation = current.transport.domain("timeline.view", org.json.JSONObject().put("projection", envelope.getJSONObject("projection"))) as org.json.JSONObject
+                if (supervisor.value?.connection?.value !== current) return@launch
+                val merged = current.transport.domain("history.mergeView", org.json.JSONObject()
+                    .put("older", prior?.rows ?: org.json.JSONArray()).put("recent", org.json.JSONArray())
+                    .put("page", presentation.getJSONArray("timeline")).put("owner", owner).put("pageOwner", owner)
+                    .put("cursor", cursor).put("pageCursor", cursor).put("nextCursor", envelope.opt("historyCursor"))
+                    .put("hasMoreHistory", envelope.optBoolean("hasMoreHistory"))) as org.json.JSONObject
+                if (supervisor.value?.connection?.value === current && merged.getBoolean("applied")) {
+                    olderHistory.value = OlderHistory(current, merged.getJSONArray("older"), if (merged.isNull("cursor")) null else merged.getString("cursor"))
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { local.update { it.copy(notice = ThreadNotice.Failed("history_unavailable")) } }
+        }
+    }
     val state: StateFlow<ThreadUiState> = combine(
         session.view,
         connection,
@@ -289,6 +319,18 @@ class ThreadViewModel(
             answeredRequests = local.answeredRequests,
             readingPosition = local.readingPosition, readingPositionLoaded = local.readingPositionLoaded,
         )
+    }.combine(olderHistory) { ui, older ->
+        val recent = ui.view.timeline
+        if (older == null || older.connection !== ui.queueConnection || recent == null) ui
+        else {
+            val merged = older.connection.transport.domain("history.mergeView", org.json.JSONObject()
+                .put("older", older.rows).put("recent", recent.optJSONArray("timeline") ?: org.json.JSONArray())
+                .put("owner", "current").put("cursor", older.cursor)) as org.json.JSONObject
+            val raw = org.json.JSONObject(recent.toString()).put("timeline", merged.getJSONArray("timeline"))
+                .put("historyCursor", older.cursor ?: org.json.JSONObject.NULL).put("hasMoreHistory", older.cursor != null)
+            val parsed = dev.avillagran.ot3android.core.thread.ThreadTimelines.parse(raw)
+            ui.copy(view = ui.view.copy(timeline = raw, messages = parsed.messages))
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId)))
 
     init {
@@ -351,6 +393,14 @@ class ThreadViewModel(
                 val catalog = dev.avillagran.ot3android.core.transport.DomainEngine.shared.domain(
                     "models.catalog", org.json.JSONObject().put("config", config),
                 ) as org.json.JSONObject
+                val permissionViews = org.json.JSONObject()
+                val providers = catalog.optJSONArray("providers") ?: org.json.JSONArray()
+                for (index in 0 until providers.length()) {
+                    val id = providers.getJSONObject(index).getString("instanceId")
+                    permissionViews.put(id, live.domain("models.permissionView", org.json.JSONObject().put("catalog", catalog)
+                        .put("selection", org.json.JSONObject().put("instanceId", id))))
+                }
+                catalog.put("permissionViews", permissionViews)
                 if (transport() === live) local.update { it.copy(modelCatalog = catalog.toString()) }
             } catch (error: dev.avillagran.t3.T3Exception) {
                 local.update { it.copy(notice = ThreadNotice.Failed(error.code, error.reason, error.requiredScope)) }
