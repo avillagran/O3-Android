@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 Stunden</string>
+    <string name="general_text_1" formatted="false">24 Stunden</string>
+    <string name="general_text_2" formatted="false">Erlaubt neuen Agentensitzungen, lokale und entfernte Geräte mit automatisch eingerichteten Werkzeugen zu starten und zu steuern.</string>
+    <string name="general_text_3" formatted="false">Wird an den Prompt für neue und neu erzeugte Thread-Titel angehängt.</string>
+    <string name="general_text_4" formatted="false">Änderungen akzeptieren</string>
+    <string name="general_text_5" formatted="false">Nach Inaktivität abschließen (Tage)</string>
+    <string name="general_text_6" formatted="false">Automatisch</string>
+    <string name="general_text_7" formatted="false">Legt Threads automatisch ab, nachdem ihre Pull Requests zusammengeführt wurden.</string>
+    <string name="general_text_8" formatted="false">Legt Threads nach dieser Anzahl inaktiver Tage automatisch ab.</string>
+    <string name="general_text_9" formatted="false">Hintergrundaktivität</string>
+    <string name="general_text_10" formatted="false">Gleicht Hintergrundaktualisierungen mit Leistung und Akkulaufzeit ab.</string>
+    <string name="general_text_11" formatted="false">Ausgewogen</string>
+    <string name="general_text_12" formatted="false">Energiesparen</string>
+    <string name="general_text_13" formatted="false">Bevor der Cache abläuft (Beta)</string>
+    <string name="general_text_14" formatted="false">Präfix für Branchnamen</string>
+    <string name="general_text_15" formatted="false">Branchbenennung</string>
+    <string name="general_text_16" formatted="false">Anweisungen für Branchnamen</string>
+    <string name="general_text_17" formatted="false">Prüft installierte Anbieter im Hintergrund auf Updates.</string>
+    <string name="general_text_18" formatted="false">Anbieter-Updates prüfen</string>
+    <string name="general_text_19" formatted="false">Wählen Sie, wie Branches für neue Arbeitsbäume benannt werden.</string>
+    <string name="general_text_20" formatted="false">Wählen Sie, wann Antworten während der Arbeit des Agenten sichtbar werden.</string>
+    <string name="general_text_21" formatted="false">Inaktive Threads komprimieren</string>
+    <string name="general_text_22" formatted="false">Setzt aktive Threads nach einem Serverneustart für ein Update fort.</string>
+    <string name="general_text_23" formatted="false">Konventionelle Commits</string>
+    <string name="general_text_24" formatted="false">Aktuelle Arbeitskopie</string>
+    <string name="general_text_25" formatted="false">Benutzerdefiniert</string>
+    <string name="general_text_26" formatted="false">Standardmodell für neue Threads. Projekte können es überschreiben.</string>
+    <string name="general_text_27" formatted="false">Standardberechtigungen für neue Threads. Projekte können sie überschreiben.</string>
+    <string name="general_text_28" formatted="false">Review-Leitfäden aktivieren</string>
+    <string name="general_text_29" formatted="false">Pull-Request-Vorlagen befolgen</string>
+    <string name="general_text_30" formatted="false">Verhalten bei Folgenachrichten</string>
+    <string name="general_text_31" formatted="false">Voller Zugriff</string>
+    <string name="general_settings_title" formatted="false">Allgemein</string>
+    <string name="general_text_33" formatted="false">Wie neue Arbeitsbäume git-Submodule befüllen. Projekte können dies überschreiben.</string>
+    <string name="general_text_34" formatted="false">Übernehmen</string>
+    <string name="general_text_35" formatted="false">Von der Umgebung übernommen</string>
+    <string name="general_text_36" formatted="false">Anweisungen zum Erzeugen von Arbeitsbaum-Branchnamen.</string>
+    <string name="general_text_37" formatted="false">Schließt Threads mit offenen Pull Requests von der automatischen Ablage aus.</string>
+    <string name="general_text_38" formatted="false">Threads mit Pull Requests behalten</string>
+    <string name="general_text_39" formatted="false">Titel mit wenigen Wörtern. Mit dem Hauptthema beginnen.</string>
+    <string name="general_text_40" formatted="false">Hält den Standardbranch aktuell, wenn die Arbeitskopie keine lokalen Änderungen oder Commits enthält. Projekte können dies überschreiben.</string>
+    <string name="general_text_41" formatted="false">Sprache</string>
+    <string name="general_text_42" formatted="false">Zuletzt verwendet</string>
+    <string name="general_text_43" formatted="false">Regionale Einstellung</string>
+    <string name="general_text_44" formatted="false">Log-Endpunkt</string>
+    <string name="general_text_45" formatted="false">Zusammenführen</string>
+    <string name="general_text_46" formatted="false">Metriken-Endpunkt</string>
+    <string name="general_text_47" formatted="false">Unterschiedliche Quellen</string>
+    <string name="general_text_48" formatted="false">Unterschiedliche Werte</string>
+    <string name="general_text_49" formatted="false">Modell</string>
+    <string name="general_text_50" formatted="false">Modell für Titel und andere generierte Texte.</string>
+    <string name="general_text_51" formatted="false">Modell zum Erstellen von Pull-Request-Review-Leitfäden.</string>
+    <string name="general_text_52" formatted="false">Modell zum Schreiben von Commit- und Pull-Request-Nachrichten.</string>
+    <string name="general_text_53" formatted="false">Verschiebt wegen Nutzungslimits gestoppte Threads bis zum Rücksetzzeitpunkt nach Snoozed. Mit automatischer Fortsetzung werden sie danach geweckt und fortgesetzt.</string>
+    <string name="general_text_54" formatted="false">Nie</string>
+    <string name="general_text_55" formatted="false">Neuer Arbeitsbaum</string>
+    <string name="general_text_56" formatted="false">Keine</string>
+    <string name="general_text_57" formatted="false">Aus</string>
+    <string name="general_text_58" formatted="false">Ein</string>
+    <string name="general_text_59" formatted="false">Absatz</string>
+    <string name="general_text_60" formatted="false">Leistung</string>
+    <string name="general_text_61" formatted="false">Berechtigungen</string>
+    <string name="general_text_62" formatted="false">Planmodus (alt)</string>
+    <string name="general_text_63" formatted="false">Präfix für automatisch erzeugte Arbeitsbaum-Branches.</string>
+    <string name="general_text_64" formatted="false">Projektüberschreibung</string>
+    <string name="general_text_65" formatted="false">Änderungen automatisch abrufen</string>
+    <string name="general_text_66" formatted="false">Merge-Methode für Pull Requests</string>
+    <string name="general_text_67" formatted="false">Pull Requests verwenden zunächst diese Methode. „Zuletzt verwendet“ übernimmt die letzte Auswahl auf diesem Gerät.</string>
+    <string name="general_text_68" formatted="false">In Warteschlange</string>
+    <string name="general_text_69" formatted="false">Schnellantworten</string>
+    <string name="general_text_70" formatted="false">Rebase</string>
+    <string name="general_text_71" formatted="false">Rekursiv</string>
+    <string name="general_text_72" formatted="false">Aktualisieren</string>
+    <string name="general_text_73" formatted="false">Agentenhinweise beim Zusammenführen entfernen</string>
+    <string name="general_text_74" formatted="false">Entfernt erkannte Agenten-Nennungen aus Merge-Nachrichten, behält aber menschliche Mitautoren bei.</string>
+    <string name="general_text_75" formatted="false">Repository-Konventionen</string>
+    <string name="general_text_76" formatted="false">Zurücksetzen</string>
+    <string name="general_text_77" formatted="false">Antwortübertragung</string>
+    <string name="general_text_78" formatted="false">Ergebnis unbekannt. Vor erneutem Versuch aktualisieren.</string>
+    <string name="general_text_79" formatted="false">Nach Server-Updates fortsetzen</string>
+    <string name="general_text_80" formatted="false">Begrenzte Threads automatisch fortsetzen</string>
+    <string name="general_text_81" formatted="false">Setzt wegen Nutzungslimits gestoppte Threads zum angegebenen Rücksetzzeitpunkt fort. Jeder Thread kann seine geplante Fortsetzung abbrechen.</string>
+    <string name="general_text_82" formatted="false">Anweisungen für Review-Leitfäden</string>
+    <string name="general_text_83" formatted="false">Modell für Review-Leitfäden</string>
+    <string name="general_text_84" formatted="false">Speichern</string>
+    <string name="general_text_85" formatted="false">Gespeichert</string>
+    <string name="general_text_86" formatted="false">Semantisch</string>
+    <string name="general_text_87" formatted="false">Sendet Traces, Metriken und Logs an einen OTLP-HTTP-Empfänger. Zum Übernehmen den Server neu starten.</string>
+    <string name="general_text_88" formatted="false">Threads zusammengeführter Pull Requests abschließen</string>
+    <string name="general_text_89" formatted="false">Threads mit Nutzungslimit zurückstellen</string>
+    <string name="general_text_90" formatted="false">Modell zum Verfassen von Versionskontrolltexten</string>
+    <string name="general_text_91" formatted="false">Commits zusammenfassen</string>
+    <string name="general_text_92" formatted="false">Neue Worktrees von origin starten</string>
+    <string name="general_text_93" formatted="false">Erstellt neue Arbeitsbäume nach Möglichkeit vom entfernten Basisbranch.</string>
+    <string name="general_text_94" formatted="false">Statisch</string>
+    <string name="general_text_95" formatted="false">Umlenken</string>
+    <string name="general_text_96" formatted="false">Beaufsichtigt</string>
+    <string name="general_text_97" formatted="false">Modell für die Textgenerierung</string>
+    <string name="general_text_98" formatted="false">Dieses Gerät</string>
+    <string name="general_text_99" formatted="false">Anweisungen für Thread-Titel</string>
+    <string name="general_text_100" formatted="false">Zeitformat</string>
+    <string name="general_text_101" formatted="false">Oberste Ebene</string>
+    <string name="general_text_102" formatted="false">Traces-Endpunkt</string>
+    <string name="general_text_103" formatted="false">Durchlauf</string>
+    <string name="general_text_104" formatted="false">Nicht verfügbar</string>
+    <string name="general_text_105" formatted="false">Geerbten Wert verwenden</string>
+    <string name="general_text_106" formatted="false">Wann ein inaktiver Claude-Thread über 200.000 Tokens komprimiert wird: wenn du zurückkehrst, kurz bevor sein Prompt-Cache abläuft, oder nie. Jeder Claude-Anbieter kann das überschreiben.</string>
+    <string name="general_text_107" formatted="false">Wenn du zurückkehrst</string>
+    <string name="general_text_108" formatted="false">Startort neuer Threads. Projekte und ihre Datei t3.json können dies überschreiben.</string>
+    <string name="general_text_109" formatted="false">Arbeitsbereich</string>
+    <string name="general_text_110" formatted="false">Worktree-Submodule</string>
+    <string name="general_text_111" formatted="false">Schreibanweisungen</string>
+    <string name="general_text_112" formatted="false">Schreibstil</string>
+    <string name="general_text_113" formatted="false">Standard</string>
+    <string name="general_text_114" formatted="false">Worktree</string>
+</resources>

@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 godzin</string>
+    <string name="general_text_1" formatted="false">24 godziny</string>
+    <string name="general_text_2" formatted="false">Zezwól nowym sesjom agenta uruchamiać i sterować urządzeniami lokalnymi i zdalnymi, z automatyczną konfiguracją narzędzi.</string>
+    <string name="general_text_3" formatted="false">Dołączane do promptu nowych i ponownie generowanych tytułów.</string>
+    <string name="general_text_4" formatted="false">Akceptuj zmiany</string>
+    <string name="general_text_5" formatted="false">Zamykaj po bezczynności (dni)</string>
+    <string name="general_text_6" formatted="false">Automatycznie</string>
+    <string name="general_text_7" formatted="false">Automatycznie archiwizuje wątki po scaleniu ich pull requestów.</string>
+    <string name="general_text_8" formatted="false">Automatycznie archiwizuje wątki po tylu dniach bezczynności.</string>
+    <string name="general_text_9" formatted="false">Aktywność w tle</string>
+    <string name="general_text_10" formatted="false">Równoważy odświeżanie w tle z wydajnością i zużyciem baterii.</string>
+    <string name="general_text_11" formatted="false">Zrównoważony</string>
+    <string name="general_text_12" formatted="false">Oszczędzanie baterii</string>
+    <string name="general_text_13" formatted="false">Przed wygaśnięciem pamięci podręcznej (beta)</string>
+    <string name="general_text_14" formatted="false">Prefiks nazwy gałęzi</string>
+    <string name="general_text_15" formatted="false">Nazewnictwo gałęzi</string>
+    <string name="general_text_16" formatted="false">Instrukcje nazewnictwa gałęzi</string>
+    <string name="general_text_17" formatted="false">Sprawdza w tle aktualizacje zainstalowanych dostawców.</string>
+    <string name="general_text_18" formatted="false">Sprawdzaj aktualizacje dostawców</string>
+    <string name="general_text_19" formatted="false">Wybierz sposób nazywania gałęzi tworzonych dla nowych drzew roboczych.</string>
+    <string name="general_text_20" formatted="false">Wybierz, kiedy odpowiedzi są widoczne podczas pracy agenta.</string>
+    <string name="general_text_21" formatted="false">Kompaktuj nieaktywne wątki</string>
+    <string name="general_text_22" formatted="false">Kontynuuje aktywne wątki po ponownym uruchomieniu serwera na potrzeby aktualizacji.</string>
+    <string name="general_text_23" formatted="false">Konwencjonalne commity</string>
+    <string name="general_text_24" formatted="false">Bieżąca kopia robocza</string>
+    <string name="general_text_25" formatted="false">Niestandardowe</string>
+    <string name="general_text_26" formatted="false">Domyślny model dla nowych wątków. Projekty mogą go zastąpić.</string>
+    <string name="general_text_27" formatted="false">Domyślne uprawnienia dla nowych wątków. Projekty mogą je zastąpić.</string>
+    <string name="general_text_28" formatted="false">Włącz przewodniki przeglądu</string>
+    <string name="general_text_29" formatted="false">Stosuj szablony pull requestów</string>
+    <string name="general_text_30" formatted="false">Zachowanie wiadomości uzupełniających</string>
+    <string name="general_text_31" formatted="false">Pełny dostęp</string>
+    <string name="general_settings_title" formatted="false">Ogólne</string>
+    <string name="general_text_33" formatted="false">Sposób wypełniania podmodułów git w nowych drzewach roboczych. Projekty mogą go zmienić.</string>
+    <string name="general_text_34" formatted="false">Dziedzicz</string>
+    <string name="general_text_35" formatted="false">Odziedziczono ze środowiska</string>
+    <string name="general_text_36" formatted="false">Instrukcje generowania nazw gałęzi drzew roboczych.</string>
+    <string name="general_text_37" formatted="false">Wyklucza wątki z otwartymi pull requestami z automatycznego archiwizowania.</string>
+    <string name="general_text_38" formatted="false">Zachowuj wątki z pull requestami</string>
+    <string name="general_text_39" formatted="false">Krótkie tytuły. Zacznij od głównego tematu.</string>
+    <string name="general_text_40" formatted="false">Utrzymuje domyślną gałąź aktualną, gdy kopia robocza nie ma lokalnych zmian ani commitów. Projekty mogą to zmienić.</string>
+    <string name="general_text_41" formatted="false">Język</string>
+    <string name="general_text_42" formatted="false">Ostatnio używana</string>
+    <string name="general_text_43" formatted="false">Ustawienia regionalne</string>
+    <string name="general_text_44" formatted="false">Punkt końcowy logów</string>
+    <string name="general_text_45" formatted="false">Scal</string>
+    <string name="general_text_46" formatted="false">Punkt końcowy metryk</string>
+    <string name="general_text_47" formatted="false">Różne źródła</string>
+    <string name="general_text_48" formatted="false">Różne wartości</string>
+    <string name="general_text_49" formatted="false">Model</string>
+    <string name="general_text_50" formatted="false">Model używany do tytułów i innych generowanych tekstów.</string>
+    <string name="general_text_51" formatted="false">Model do generowania przewodników przeglądu pull requestów.</string>
+    <string name="general_text_52" formatted="false">Model do pisania komunikatów commitów i pull requestów.</string>
+    <string name="general_text_53" formatted="false">Przenosi wątki zatrzymane przez limit użycia do Snoozed do czasu resetowania. Połącz z automatycznym wznawianiem, aby je wybudzić i kontynuować.</string>
+    <string name="general_text_54" formatted="false">Nigdy</string>
+    <string name="general_text_55" formatted="false">Nowe drzewo robocze</string>
+    <string name="general_text_56" formatted="false">Brak</string>
+    <string name="general_text_57" formatted="false">Wyłączone</string>
+    <string name="general_text_58" formatted="false">Włączone</string>
+    <string name="general_text_59" formatted="false">Akapit</string>
+    <string name="general_text_60" formatted="false">Wydajność</string>
+    <string name="general_text_61" formatted="false">Uprawnienia</string>
+    <string name="general_text_62" formatted="false">Tryb planu (starszy)</string>
+    <string name="general_text_63" formatted="false">Przedrostek dodawany do automatycznie generowanych nazw gałęzi drzew roboczych.</string>
+    <string name="general_text_64" formatted="false">Nadpisanie w projekcie</string>
+    <string name="general_text_65" formatted="false">Automatycznie pobieraj zmiany</string>
+    <string name="general_text_66" formatted="false">Metoda scalania pull requestów</string>
+    <string name="general_text_67" formatted="false">Pull requesty początkowo korzystają z tej metody. „Ostatnio używana” ponownie wybiera najnowszą opcję z tego urządzenia.</string>
+    <string name="general_text_68" formatted="false">Do kolejki</string>
+    <string name="general_text_69" formatted="false">Szybkie odpowiedzi</string>
+    <string name="general_text_70" formatted="false">Przebazuj</string>
+    <string name="general_text_71" formatted="false">Rekurencyjne</string>
+    <string name="general_text_72" formatted="false">Odśwież</string>
+    <string name="general_text_73" formatted="false">Usuwaj wzmianki o agencie przy scalaniu</string>
+    <string name="general_text_74" formatted="false">Usuwa rozpoznane linie przypisania agentów z komunikatów scalania, zachowując ludzkich współautorów.</string>
+    <string name="general_text_75" formatted="false">Konwencje repozytorium</string>
+    <string name="general_text_76" formatted="false">Resetuj</string>
+    <string name="general_text_77" formatted="false">Strumieniowanie odpowiedzi</string>
+    <string name="general_text_78" formatted="false">Wynik nieznany. Odśwież przed ponowną próbą.</string>
+    <string name="general_text_79" formatted="false">Wznawiaj po aktualizacji serwera</string>
+    <string name="general_text_80" formatted="false">Automatycznie wznawiaj wątki z limitem</string>
+    <string name="general_text_81" formatted="false">Wznawia wątki zatrzymane przez limit użycia o podanej godzinie resetowania. Każdy wątek może anulować zaplanowane wznowienie.</string>
+    <string name="general_text_82" formatted="false">Instrukcje przewodników przeglądu</string>
+    <string name="general_text_83" formatted="false">Model przewodników przeglądu</string>
+    <string name="general_text_84" formatted="false">Zapisz</string>
+    <string name="general_text_85" formatted="false">Zapisano</string>
+    <string name="general_text_86" formatted="false">Semantyczne</string>
+    <string name="general_text_87" formatted="false">Wysyła ślady, metryki i logi do odbiornika OTLP HTTP. Uruchom ponownie serwer, aby zastosować.</string>
+    <string name="general_text_88" formatted="false">Zamykaj wątki scalonych pull requestów</string>
+    <string name="general_text_89" formatted="false">Odkładaj wątki z limitem użycia</string>
+    <string name="general_text_90" formatted="false">Model do pisania tekstów kontroli wersji</string>
+    <string name="general_text_91" formatted="false">Połącz commity</string>
+    <string name="general_text_92" formatted="false">Twórz nowe worktrees z origin</string>
+    <string name="general_text_93" formatted="false">Tworzy nowe drzewa robocze ze zdalnej gałęzi bazowej, gdy jest dostępna.</string>
+    <string name="general_text_94" formatted="false">Statyczne</string>
+    <string name="general_text_95" formatted="false">Przekieruj</string>
+    <string name="general_text_96" formatted="false">Nadzorowany</string>
+    <string name="general_text_97" formatted="false">Model generowania tekstu</string>
+    <string name="general_text_98" formatted="false">To urządzenie</string>
+    <string name="general_text_99" formatted="false">Instrukcje tytułów wątków</string>
+    <string name="general_text_100" formatted="false">Format godziny</string>
+    <string name="general_text_101" formatted="false">Najwyższy poziom</string>
+    <string name="general_text_102" formatted="false">Punkt końcowy śladów</string>
+    <string name="general_text_103" formatted="false">Tura</string>
+    <string name="general_text_104" formatted="false">Niedostępny</string>
+    <string name="general_text_105" formatted="false">Użyj odziedziczonej wartości</string>
+    <string name="general_text_106" formatted="false">Kiedy kompaktować nieaktywny wątek Claude powyżej 200 000 tokenów: po powrocie, tuż przed wygaśnięciem pamięci podręcznej promptu lub nigdy. Każdy dostawca Claude może to zmienić.</string>
+    <string name="general_text_107" formatted="false">Po powrocie</string>
+    <string name="general_text_108" formatted="false">Miejsce rozpoczynania nowych wątków. Projekty i ich pliki t3.json mogą to zmienić.</string>
+    <string name="general_text_109" formatted="false">Obszar roboczy</string>
+    <string name="general_text_110" formatted="false">Podmoduły worktrees</string>
+    <string name="general_text_111" formatted="false">Instrukcje pisania</string>
+    <string name="general_text_112" formatted="false">Styl pisania</string>
+    <string name="general_text_113" formatted="false">domyślna</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

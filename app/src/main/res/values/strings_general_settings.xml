@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12-hour</string>
+    <string name="general_text_1" formatted="false">24-hour</string>
+    <string name="general_text_2" formatted="false">Allow new agent sessions in this environment to start and control local and remote devices, with required tools set up automatically.</string>
+    <string name="general_text_3" formatted="false">Appended to the prompt for new and regenerated thread titles.</string>
+    <string name="general_text_4" formatted="false">Auto-accept edits</string>
+    <string name="general_text_5" formatted="false">Auto-settle after inactivity (days)</string>
+    <string name="general_text_6" formatted="false">Automatic</string>
+    <string name="general_text_7" formatted="false">Automatically settle threads after their pull requests are merged.</string>
+    <string name="general_text_8" formatted="false">Automatically settle threads after this many days of inactivity.</string>
+    <string name="general_text_9" formatted="false">Background activity</string>
+    <string name="general_text_10" formatted="false">Balance background refresh activity with performance and battery use.</string>
+    <string name="general_text_11" formatted="false">Balanced</string>
+    <string name="general_text_12" formatted="false">Battery saver</string>
+    <string name="general_text_13" formatted="false">Before the cache expires (beta)</string>
+    <string name="general_text_14" formatted="false">Branch name prefix</string>
+    <string name="general_text_15" formatted="false">Branch naming</string>
+    <string name="general_text_16" formatted="false">Branch naming instructions</string>
+    <string name="general_text_17" formatted="false">Check installed providers for updates in the background.</string>
+    <string name="general_text_18" formatted="false">Check provider updates</string>
+    <string name="general_text_19" formatted="false">Choose how branches created for new worktrees are named.</string>
+    <string name="general_text_20" formatted="false">Choose when responses become visible while the agent is working.</string>
+    <string name="general_text_21" formatted="false">Compact idle threads</string>
+    <string name="general_text_22" formatted="false">Continue active threads after the server restarts for an update.</string>
+    <string name="general_text_23" formatted="false">Conventional commits</string>
+    <string name="general_text_24" formatted="false">Current checkout</string>
+    <string name="general_text_25" formatted="false">Custom</string>
+    <string name="general_text_26" formatted="false">Default model for new threads. Projects can override it.</string>
+    <string name="general_text_27" formatted="false">Default permissions for new threads. Projects can override them.</string>
+    <string name="general_text_28" formatted="false">Enable review guides</string>
+    <string name="general_text_29" formatted="false">Follow pull request templates</string>
+    <string name="general_text_30" formatted="false">Follow-up behavior</string>
+    <string name="general_text_31" formatted="false">Full access</string>
+    <string name="general_settings_title" formatted="false">General</string>
+    <string name="general_text_33" formatted="false">How new worktrees populate git submodules. Projects can override it.</string>
+    <string name="general_text_34" formatted="false">Inherit</string>
+    <string name="general_text_35" formatted="false">Inherited from environment</string>
+    <string name="general_text_36" formatted="false">Instructions for generating worktree branch names.</string>
+    <string name="general_text_37" formatted="false">Keep threads with open pull requests out of automatic settlement.</string>
+    <string name="general_text_38" formatted="false">Keep threads with pull requests</string>
+    <string name="general_text_39" formatted="false">Keep titles to a few words. Lead with the main subject.</string>
+    <string name="general_text_40" formatted="false">Keeps the default branch current when the checkout has no local changes or commits. Projects can override it.</string>
+    <string name="general_text_41" formatted="false">Language</string>
+    <string name="general_text_42" formatted="false">Last used</string>
+    <string name="general_text_43" formatted="false">Locale</string>
+    <string name="general_text_44" formatted="false">Logs endpoint</string>
+    <string name="general_text_45" formatted="false">Merge</string>
+    <string name="general_text_46" formatted="false">Metrics endpoint</string>
+    <string name="general_text_47" formatted="false">Mixed sources</string>
+    <string name="general_text_48" formatted="false">Mixed values</string>
+    <string name="general_text_49" formatted="false">Model</string>
+    <string name="general_text_50" formatted="false">Model used for titles and other generated text.</string>
+    <string name="general_text_51" formatted="false">Model used to generate pull request review guides.</string>
+    <string name="general_text_52" formatted="false">Model used to write commit and pull request messages.</string>
+    <string name="general_text_53" formatted="false">Move usage-limit stops to Snoozed until the reset time. Combine with auto-resume to wake and continue them.</string>
+    <string name="general_text_54" formatted="false">Never</string>
+    <string name="general_text_55" formatted="false">New worktree</string>
+    <string name="general_text_56" formatted="false">None</string>
+    <string name="general_text_57" formatted="false">Off</string>
+    <string name="general_text_58" formatted="false">On</string>
+    <string name="general_text_59" formatted="false">Paragraph</string>
+    <string name="general_text_60" formatted="false">Performance</string>
+    <string name="general_text_61" formatted="false">Permissions</string>
+    <string name="general_text_62" formatted="false">Plan mode (legacy)</string>
+    <string name="general_text_63" formatted="false">Prefix added to automatically generated worktree branch names.</string>
+    <string name="general_text_64" formatted="false">Project override</string>
+    <string name="general_text_65" formatted="false">Pull changes automatically</string>
+    <string name="general_text_66" formatted="false">Pull request merge method</string>
+    <string name="general_text_67" formatted="false">Pull requests start with this method. Last used reuses the most recent choice on this device.</string>
+    <string name="general_text_68" formatted="false">Queue</string>
+    <string name="general_text_69" formatted="false">Quick replies</string>
+    <string name="general_text_70" formatted="false">Rebase</string>
+    <string name="general_text_71" formatted="false">Recursive</string>
+    <string name="general_text_72" formatted="false">Refresh</string>
+    <string name="general_text_73" formatted="false">Remove agent credits on merge</string>
+    <string name="general_text_74" formatted="false">Remove recognized agent credit lines from merge messages, keeping human co-authors.</string>
+    <string name="general_text_75" formatted="false">Repository conventions</string>
+    <string name="general_text_76" formatted="false">Reset</string>
+    <string name="general_text_77" formatted="false">Response streaming</string>
+    <string name="general_text_78" formatted="false">Result unknown. Refresh before retrying.</string>
+    <string name="general_text_79" formatted="false">Resume after server updates</string>
+    <string name="general_text_80" formatted="false">Resume rate-limited threads automatically</string>
+    <string name="general_text_81" formatted="false">Resume usage-limit stops at the reported reset time. Each thread can cancel its scheduled continuation.</string>
+    <string name="general_text_82" formatted="false">Review guide instructions</string>
+    <string name="general_text_83" formatted="false">Review guide model</string>
+    <string name="general_text_84" formatted="false">Save</string>
+    <string name="general_text_85" formatted="false">Saved</string>
+    <string name="general_text_86" formatted="false">Semantic</string>
+    <string name="general_text_87" formatted="false">Send traces, metrics, and logs to an OTLP HTTP receiver. Restart the server to apply.</string>
+    <string name="general_text_88" formatted="false">Settle merged pull requests</string>
+    <string name="general_text_89" formatted="false">Snooze rate-limited threads</string>
+    <string name="general_text_90" formatted="false">Source control writer model</string>
+    <string name="general_text_91" formatted="false">Squash</string>
+    <string name="general_text_92" formatted="false">Start new worktrees from origin</string>
+    <string name="general_text_93" formatted="false">Start new worktrees from the remote base branch when available.</string>
+    <string name="general_text_94" formatted="false">Static</string>
+    <string name="general_text_95" formatted="false">Steer</string>
+    <string name="general_text_96" formatted="false">Supervised</string>
+    <string name="general_text_97" formatted="false">Text generation model</string>
+    <string name="general_text_98" formatted="false">This device</string>
+    <string name="general_text_99" formatted="false">Thread title instructions</string>
+    <string name="general_text_100" formatted="false">Time format</string>
+    <string name="general_text_101" formatted="false">Top level</string>
+    <string name="general_text_102" formatted="false">Traces endpoint</string>
+    <string name="general_text_103" formatted="false">Turn</string>
+    <string name="general_text_104" formatted="false">Unavailable</string>
+    <string name="general_text_105" formatted="false">Use inherited value</string>
+    <string name="general_text_106" formatted="false">When to compact an idle Claude thread over 200,000 tokens: after you return, just before its prompt cache expires, or never. Each Claude provider can override this.</string>
+    <string name="general_text_107" formatted="false">When you return</string>
+    <string name="general_text_108" formatted="false">Where new threads start. Projects and their t3.json can override it.</string>
+    <string name="general_text_109" formatted="false">Workspace</string>
+    <string name="general_text_110" formatted="false">Worktree submodules</string>
+    <string name="general_text_111" formatted="false">Writing instructions</string>
+    <string name="general_text_112" formatted="false">Writing style</string>
+    <string name="general_text_113" formatted="false">default</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>
