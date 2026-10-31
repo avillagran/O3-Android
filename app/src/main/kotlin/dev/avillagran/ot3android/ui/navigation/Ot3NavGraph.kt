@@ -38,6 +38,21 @@ interface Ot3Screens {
     fun NewChatDraft(entry: NavBackStackEntry, route: NewThreadDraft) { NotYetScreen("NewThreadDraft") }
 
     @Composable
+    fun GeneralPreferences() {}
+
+    @Composable
+    fun ConnectionsPreferences() {}
+
+    @Composable
+    fun SourceControlPreferences() {}
+
+    @Composable
+    fun ProjectPreferences(route: ProjectPreferences) {}
+
+    @Composable
+    fun Changes(route: ThreadChanges) {}
+
+    @Composable
     fun Settings()
 
     @Composable
@@ -99,7 +114,7 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
                 }
             }
         }
-        composable<ThreadChanges> { NotYetScreen("ThreadChanges") }
+        composable<ThreadChanges> { screens.Changes(it.toRoute()) }
         composable<NewThread> { entry -> screens.NewChat(entry) }
         composable<NewThreadDraft> { entry -> screens.NewChatDraft(entry, entry.toRoute()) }
         composable<AddProject> { NotYetScreen("AddProject") }
@@ -118,6 +133,10 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<Appearance> { screens.Appearance() }
         composable<Notifications> { screens.Notifications() }
         composable<Settings> { screens.Settings() }
+        composable<GeneralPreferences> { screens.GeneralPreferences() }
+        composable<SourceControlPreferences> { screens.SourceControlPreferences() }
+        composable<ConnectionsPreferences> { screens.ConnectionsPreferences() }
+        composable<ProjectPreferences> { screens.ProjectPreferences(it.toRoute()) }
         composable<Environments> { screens.Environments() }
         composable<AddEnvironment> { entry -> screens.AddEnvironment(entry.toRoute()) }
         composable<PairEnvironment> { screens.PairEnvironment() }

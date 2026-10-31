@@ -50,6 +50,9 @@ class ThreadWorkspaceDeviceTest {
         rule.activityRule.scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
         rule.waitUntil(10_000) { rule.activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE }
         val density = rule.activity.resources.displayMetrics.density
+        rule.waitUntil(10_000) {
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot.let { it.width > 0f && it.left > 0f }
+        }
         val sidebarList = rule.onNodeWithTag(HomeTags.LIST).fetchSemanticsNode().boundsInRoot
         val chatViewport = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot
         assertEquals("Cutout is consumed once before the split, preserving 280 dp content", 280f * density, sidebarList.width, density)

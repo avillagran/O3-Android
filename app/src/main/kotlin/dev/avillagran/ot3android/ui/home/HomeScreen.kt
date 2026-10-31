@@ -257,7 +257,6 @@ private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarC
                 modifier = Modifier.testTag(HomeTags.OVERFLOW))
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 sidebarControls()
-                DropdownMenuItem(text = { Text(stringResource(R.string.ot3_home_add_project)) }, onClick = { menuOpen = false; onIntent(HomeIntent.AddProject) })
                 dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { menuOpen = false }
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.ot3_home_group_shelves)) },
@@ -266,7 +265,6 @@ private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarC
                     modifier = Modifier.testTag(HomeTags.GROUP),
                 )
                 DropdownMenuItem(text = { Text(stringResource(R.string.ot3_home_refresh)) }, onClick = { menuOpen = false; onIntent(HomeIntent.Refresh) })
-                DropdownMenuItem(text = { Text(stringResource(R.string.ot3_home_command_palette)) }, onClick = { menuOpen = false; onIntent(HomeIntent.CommandPalette) })
             }
         }
     }

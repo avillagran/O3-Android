@@ -8,7 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import androidx.lifecycle.viewModelScope
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import dev.avillagran.ot3android.debug.workspace.WorkspaceFixtureActivity

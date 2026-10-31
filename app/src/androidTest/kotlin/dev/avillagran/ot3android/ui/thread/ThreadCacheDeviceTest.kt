@@ -3,7 +3,7 @@ package dev.avillagran.ot3android.ui.thread
 import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import dev.avillagran.ot3android.Ot3Application
@@ -33,8 +33,13 @@ class ThreadCacheDeviceTest {
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToIndex(12)
             rule.waitUntil(5_000) { runBlocking { (preferences.readingPosition("node", "chat")?.index ?: 0) >= 10 } }
-            val position = preferences.readingPosition("node", "chat")!!
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement("Borrador sin conexión")
+            androidx.test.espresso.Espresso.closeSoftKeyboard()
+            rule.waitUntil(5_000) {
+                val saved = runBlocking { preferences.readingPosition("node", "chat") }
+                saved != null && rule.onNodeWithTag(ThreadScreenTags.message(saved.rowId)).isDisplayed()
+            }
+            val position = preferences.readingPosition("node", "chat")!!
             val beforeOffset = rule.onNodeWithTag(ThreadScreenTags.message(position.rowId)).fetchSemanticsNode().boundsInRoot.bottom -
                 rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot.bottom
             val headerBack = rule.onNodeWithContentDescription("Back")

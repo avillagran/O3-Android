@@ -60,7 +60,10 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     var openedInspector by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
     openedInspector?.let { reference -> ToolInspectorDialog(JSONObject(reference), onInspect) { openedInspector = null } }
     var openedDiff by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
-    openedDiff?.let { summary -> ThreadDiffDialog(JSONObject(summary), onReadDiff) { openedDiff = null } }
+    openedDiff?.let { summary ->
+        val review = LocalReaderReview.current
+        ThreadReviewDialog(JSONObject(summary), onReadDiff, onClose = { openedDiff = null }, settings = review.settings, onSettingsChange = review.change, enhancedControls = review.settings != null)
+    }
     val rows = view?.optJSONArray("timeline").objects().ifEmpty {
         fallback.map { JSONObject().put("id", it.id).put("role", it.role).put("text", it.text)
             .put("createdAt", it.createdAt).put("streaming", it.streaming).put("rev", it.rev) }
@@ -164,7 +167,11 @@ private fun TimelineRow(row: JSONObject, onOpenInspector: (JSONObject) -> Unit, 
             Column(Modifier.padding(horizontal = 4.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 val time = row.optLong("createdAt")
                 if (role != "assistant") Text(listOf(role,
-                    if (time > 0) DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(time)) else "").filter(String::isNotBlank).joinToString(" · "),
+                    if (time > 0) when (LocalReaderTimeFormat.current) {
+                        "12-hour" -> java.text.SimpleDateFormat("h:mm a", androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
+                        "24-hour" -> java.text.SimpleDateFormat("HH:mm", androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
+                        else -> DateFormat.getTimeInstance(DateFormat.SHORT)
+                    }.format(Date(time)) else "").filter(String::isNotBlank).joinToString(" · "),
                     style = MaterialTheme.typography.labelSmall, color = colors.dim)
                 when (role) {
                     "assistant" -> {
@@ -239,16 +246,7 @@ internal fun MarkdownBlocks(blocks: JSONArray?) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         blocks.objects().forEachIndexed { index, block ->
             when (block.optString("type")) {
-                "code" -> Surface(color = Ot3Theme.colors.surface, contentColor = Ot3Theme.colors.foreground, shape = RoundedCornerShape(6.dp)) {
-                    Column(Modifier.fillMaxWidth().padding(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(block.optString("language"), style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
-                            CopyText(block.optString("code"), "code_$index")
-                        }
-                        SelectionContainer { Text(block.optString("code"), fontFamily = FiraCode, fontSize = 12.sp,
-                            softWrap = false, modifier = Modifier.horizontalScroll(rememberScrollState()).testTag("thread_code_$index")) }
-                    }
-                }
+                "code" -> dev.avillagran.ot3android.ui.thread.rendering.VisualCodeBlock(block, index, streaming = LocalReaderStreaming.current)
                 "list" -> block.optJSONArray("items").objects().forEachIndexed { i, item ->
                     Row {
                         Text(if (block.optBoolean("ordered")) "${block.optInt("start", 1) + i}. " else "• ")
@@ -259,7 +257,7 @@ internal fun MarkdownBlocks(blocks: JSONArray?) {
                 "rule" -> HorizontalDivider()
                 "table" -> MarkdownTable(block, index)
                 "image" -> MarkdownImage(block)
-                "math" -> SelectionContainer { Text(block.optString("tex"), fontFamily = FiraCode) }
+                "math" -> dev.avillagran.ot3android.ui.thread.rendering.VisualMath(block.optString("tex"), enabled = LocalReaderMath.current)
                 else -> SelectionContainer {
                     MarkdownInlineContent(block.optJSONArray("spans"), style = if (block.optString("type") == "heading") when (block.optInt("level")) {
                         1 -> MaterialTheme.typography.headlineSmall
@@ -272,7 +270,13 @@ internal fun MarkdownBlocks(blocks: JSONArray?) {
     }
 }
 
-internal fun inlineSpans(spans: JSONArray?): AnnotatedString = buildAnnotatedString {
+internal data class ReaderReviewSettings(val settings: dev.avillagran.ot3android.ui.git.DiffReviewSettings? = null, val change: ((dev.avillagran.ot3android.ui.git.DiffReviewSettings) -> Unit)? = null)
+internal val LocalReaderReview = staticCompositionLocalOf { ReaderReviewSettings() }
+internal val LocalReaderTimeFormat = staticCompositionLocalOf { "locale" }
+internal val LocalReaderMath = staticCompositionLocalOf { true }
+internal val LocalReaderStreaming = staticCompositionLocalOf { false }
+
+internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true): AnnotatedString = buildAnnotatedString {
     spans.objects().forEach { span ->
         val style = SpanStyle(fontWeight = if (span.optBoolean("strong")) FontWeight.Bold else null,
             fontStyle = if (span.optBoolean("emphasis")) FontStyle.Italic else null,
@@ -284,7 +288,13 @@ internal fun inlineSpans(spans: JSONArray?): AnnotatedString = buildAnnotatedStr
         val web = link?.takeIf { it.optString("kind") in setOf("web", "github") }
             ?.getString("href")?.let { android.net.Uri.parse(it).normalizeScheme().toString() }
         if (web != null) pushLink(LinkAnnotation.Url(web))
-        withStyle(style) { append(if (span.optString("type") == "break") "\n" else span.optString("text")) }
+        withStyle(style) {
+            when (span.optString("type")) {
+                "math" -> append(if (mathEnabled) dev.avillagran.ot3android.ui.thread.rendering.mathText(span.optString("tex")) else AnnotatedString(span.optString("tex")))
+                "break" -> append("\n")
+                else -> append(span.optString("text"))
+            }
+        }
         if (web != null) pop()
     }
 }
@@ -313,11 +323,11 @@ internal fun MarkdownInlineContent(spans: JSONArray?, style: TextStyle = Materia
     Column(Modifier.fillMaxWidth()) {
         spans.objects().forEach { span ->
             if (span.optString("type") == "image") {
-                if (run.length() > 0) Text(inlineSpans(run), style = style, modifier = Modifier.fillMaxWidth())
+                if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current), style = style, modifier = Modifier.fillMaxWidth())
                 run = JSONArray()
                 MarkdownImage(span)
             } else run.put(span)
         }
-        if (run.length() > 0) Text(inlineSpans(run), style = style, modifier = Modifier.fillMaxWidth())
+        if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current), style = style, modifier = Modifier.fillMaxWidth())
     }
 }
