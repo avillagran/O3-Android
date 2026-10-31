@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">حول التطبيق</string>
+    <string name="about_licenses">تراخيص المصادر المفتوحة</string>
+    <string name="about_version">الإصدار %1$s</string>
+    <string name="about_description">⁦O3 Android⁩ هو عميل محمول لـ ⁦O3⁩ و⁦T3 Code⁩.</string>
+    <string name="about_translations">الترجمات مسودات وقد تحتاج إلى مراجعة.</string>
+    <string name="about_source">شفرة التطبيق</string>
+    <string name="about_search">البحث في التراخيص</string>
+    <string name="about_unavailable">الإشعارات غير متاحة.</string>
+    <string name="about_retry">إعادة المحاولة</string>
+    <string name="about_loading">جارٍ تحميل الإشعارات…</string>
+    <string name="about_count">الإشعارات: %1$d / %2$d</string>
+    <string name="about_empty">لا توجد تراخيص تطابق البحث.</string>
+    <string name="about_expanded">موسّع</string>
+    <string name="about_collapsed">مطوي</string>
+    <string name="about_project_source">شفرة المشروع: %1$s</string>
+</resources>

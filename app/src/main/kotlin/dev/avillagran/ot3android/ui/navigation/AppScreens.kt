@@ -203,6 +203,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 SettingsEntry.Usage -> navigator.push(Usage)
                 SettingsEntry.Archive -> navigator.push(Archive)
                 SettingsEntry.Licenses -> navigator.push(Licenses)
+                SettingsEntry.About -> navigator.push(About)
             }
         })
     }
@@ -228,6 +229,12 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun ProjectPreferences(route: ProjectPreferences) { ScopedPreferencesPage(navigator, projects = true, route) }
+
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+    @Composable
+    override fun About(licenses: Boolean) {
+        dev.avillagran.ot3android.ui.settings.about.AboutScreen(onBack = { navigator.back() }, initialLicenses = licenses)
+    }
 
     @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
     @Composable

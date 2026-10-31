@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">Om</string>
+    <string name="about_licenses">Åpen kildekode-lisenser</string>
+    <string name="about_version">Versjon %1$s</string>
+    <string name="about_description">O3 Android er en mobilklient for O3 og T3 Code.</string>
+    <string name="about_translations">Oversettelsene er utkast og kan trenge gjennomgang.</string>
+    <string name="about_source">Appens kildekode</string>
+    <string name="about_search">Søk i lisenser</string>
+    <string name="about_unavailable">Merknader er utilgjengelige.</string>
+    <string name="about_retry">Prøv igjen</string>
+    <string name="about_loading">Laster merknader…</string>
+    <string name="about_count">Merknader: %1$d / %2$d</string>
+    <string name="about_empty">Ingen lisenser samsvarer med søket.</string>
+    <string name="about_expanded">Utvidet</string>
+    <string name="about_collapsed">Sammenfoldet</string>
+    <string name="about_project_source">Prosjektets kildekode: %1$s</string>
+</resources>

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -92,7 +94,8 @@ fun PrBadge(model: PrBadgeModel, modifier: Modifier = Modifier, onClick: (() -> 
     val name = listOfNotNull(stringResource(R.string.ot3_tab_pull_requests) + " " + model.text, state).joinToString(", ")
     Row(
         modifier
-            .height(Ot3Sizes.inlineIcon)
+            .heightIn(min = if (onClick != null) Ot3Sizes.touchTarget else Ot3Sizes.inlineIcon)
+            .then(if (onClick != null) Modifier.widthIn(min = Ot3Sizes.touchTarget) else Modifier)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .clearAndSetSemantics { contentDescription = name },
         horizontalArrangement = Arrangement.spacedBy(Ot3Spacing.xxs),

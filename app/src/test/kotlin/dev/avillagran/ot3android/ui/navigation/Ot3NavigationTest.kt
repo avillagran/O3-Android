@@ -336,6 +336,17 @@ class Ot3NavigationTest {
     }
 
     @Test
+    fun aboutAndLicensesAreReachable() {
+        launch()
+        onUi { navigator.selectTab(TopTab.Settings) }
+        listOf(About to "fake_about", Licenses to "fake_licenses").forEach { (route, tag) ->
+            onUi { navigator.push(route) }
+            composeRule.onNodeWithTag(tag).assertIsDisplayed()
+            onUi { navController.popBackStack() }
+        }
+    }
+
+    @Test
     fun everyUnbuiltDestinationRoutesToThePlaceholder() {
         launch()
         listOf(
@@ -352,7 +363,7 @@ class Ot3NavigationTest {
         onUi { navigator.push(PullRequestFile("e1", "p1", "o/r", 3, "a.kt")) }
         composeRule.onNodeWithTag(NavTags.notYet("PullRequestFile")).assertIsDisplayed()
         onUi { navigator.selectTab(TopTab.Settings) }
-        listOf(Usage to "Usage", Archive to "Archive", Licenses to "Licenses").forEach { (route, name) ->
+        listOf(Usage to "Usage", Archive to "Archive").forEach { (route, name) ->
             onUi { navigator.push(route) }
             composeRule.onNodeWithTag(NavTags.notYet(name)).assertIsDisplayed()
             onUi { navController.popBackStack() }
@@ -366,6 +377,8 @@ private class FakeScreens : Ot3Screens {
     @Composable override fun ConnectionsPreferences() { Tagged("fake_connections") }
     @Composable override fun ProjectPreferences(route: ProjectPreferences) { Tagged("fake_projects_${route.environmentId}_${route.projectId}") }
     @Composable override fun Changes(route: ThreadChanges) { Tagged("fake_changes_${route.environmentId}_${route.threadId}") }
+
+    @Composable override fun About(licenses: Boolean) { Tagged(if (licenses) "fake_licenses" else "fake_about") }
 
     var query by mutableStateOf("")
 

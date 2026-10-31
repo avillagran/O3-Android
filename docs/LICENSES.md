@@ -2,7 +2,8 @@
 
 This list feeds Settings → About → Licenses (UI_SPEC 4.9). Each entry names what the APK
 ships, where it came from and the notice that must travel with it. Library dependencies
-(AndroidX, Kotlin, lib-t3-rust) are collected separately when that screen is built.
+(AndroidX, Kotlin and others) are collected from the resolved release graph; see the
+collection details below. Native SDK license provenance is tracked separately.
 
 ## Fira Code 6.2
 
@@ -115,3 +116,16 @@ SOFTWARE.
   the app inherits that status and says so in About.
 
 The notification OT3 mark adds an O outline to the preserved MIT T3 mark path; see app/src/main/res/drawable/ic_stat_ot3.xml and the existing T3 MIT notice.
+
+## Settings pages and library notices
+
+Settings now exposes About and Licenses without a connected host. About shows the
+installed package version, project source and translation draft notice. Licenses
+searches the packaged names, versions and license identifiers; opening an entry shows
+selectable, unmodified legal text and a source link. UI labels are available in all
+20 locales through hand-kept `strings_about.xml`.
+
+`app/src/main/assets/licenses/index.json` includes the material above, the pinned
+lib-t3-rust and OmaBridge project licenses, and notices for resolved release Maven
+libraries. Collection details, checksums and native transitive inventory limitations
+are documented in `tools/about-notices/README.md` and `provenance.json`.

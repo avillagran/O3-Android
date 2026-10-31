@@ -138,3 +138,6 @@ data object SourceControlPreferences
 
 @Serializable
 data object ProvidersPreferences
+
+@kotlinx.serialization.Serializable
+data object About

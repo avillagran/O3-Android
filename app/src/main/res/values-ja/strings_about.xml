@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">このアプリについて</string>
+    <string name="about_licenses">オープンソースライセンス</string>
+    <string name="about_version">バージョン %1$s</string>
+    <string name="about_description">O3 Android は O3 と T3 Code のモバイルクライアントです。</string>
+    <string name="about_translations">翻訳は草稿であり、確認が必要な場合があります。</string>
+    <string name="about_source">アプリのソースコード</string>
+    <string name="about_search">ライセンスを検索</string>
+    <string name="about_unavailable">通知を表示できません。</string>
+    <string name="about_retry">再試行</string>
+    <string name="about_loading">通知を読み込み中…</string>
+    <string name="about_count">通知: %1$d / %2$d</string>
+    <string name="about_empty">一致するライセンスはありません。</string>
+    <string name="about_expanded">展開済み</string>
+    <string name="about_collapsed">折りたたみ済み</string>
+    <string name="about_project_source">プロジェクトのソースコード: %1$s</string>
+</resources>

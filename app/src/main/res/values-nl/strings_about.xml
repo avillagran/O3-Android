@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">Over</string>
+    <string name="about_licenses">Opensourcelicenties</string>
+    <string name="about_version">Versie %1$s</string>
+    <string name="about_description">O3 Android is een mobiele client voor O3 en T3 Code.</string>
+    <string name="about_translations">Vertalingen zijn concepten en moeten mogelijk worden nagekeken.</string>
+    <string name="about_source">Broncode van de app</string>
+    <string name="about_search">Licenties zoeken</string>
+    <string name="about_unavailable">Kennisgevingen zijn niet beschikbaar.</string>
+    <string name="about_retry">Opnieuw proberen</string>
+    <string name="about_loading">Kennisgevingen laden…</string>
+    <string name="about_count">Kennisgevingen: %1$d / %2$d</string>
+    <string name="about_empty">Geen overeenkomende licenties.</string>
+    <string name="about_expanded">Uitgevouwen</string>
+    <string name="about_collapsed">Ingevouwen</string>
+    <string name="about_project_source">Projectbroncode: %1$s</string>
+</resources>

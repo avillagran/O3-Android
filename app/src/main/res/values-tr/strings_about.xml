@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">Hakkında</string>
+    <string name="about_licenses">Açık kaynak lisansları</string>
+    <string name="about_version">Sürüm %1$s</string>
+    <string name="about_description">O3 Android, O3 ve T3 Code için bir mobil istemcidir.</string>
+    <string name="about_translations">Çeviriler taslaktır ve gözden geçirilmesi gerekebilir.</string>
+    <string name="about_source">Uygulama kaynak kodu</string>
+    <string name="about_search">Lisans ara</string>
+    <string name="about_unavailable">Bildirimler kullanılamıyor.</string>
+    <string name="about_retry">Yeniden dene</string>
+    <string name="about_loading">Bildirimler yükleniyor…</string>
+    <string name="about_count">Bildirimler: %1$d / %2$d</string>
+    <string name="about_empty">Eşleşen lisans yok.</string>
+    <string name="about_expanded">Genişletilmiş</string>
+    <string name="about_collapsed">Daraltılmış</string>
+    <string name="about_project_source">Proje kaynak kodu: %1$s</string>
+</resources>
