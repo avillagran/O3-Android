@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Trådnotifikationer</string>
+    <string name="usage_mode_notifications">Kun notifikationer</string>
+    <string name="usage_mode_both">Notifikationer med lyd</string>
+    <string name="usage_mode_sound">Kun lyd</string>
+    <string name="usage_mode_off">Fra</string>
+    <string name="usage_sound_policy">Én kanallyd pr. gruppe. Baggrundssporing bevarer sin lydløse notifikation.</string>
+    <string name="usage_channel_denied">Notifikationer er blokeret i Android-indstillingerne.</string>
+    <string name="usage_pool_unavailable">Kun individuelle rapporter. Præcise delte kvoter, tvetydige identiteter og handlinger for nulstillingskreditter kræver et nyere fælles bibliotek.</string>
+    <string name="usage_auth_required">Log ind hos udbyderen på værten, og opdater.</string>
+</resources>

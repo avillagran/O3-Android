@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Сповіщення гілок</string>
+    <string name="usage_mode_notifications">Лише сповіщення</string>
+    <string name="usage_mode_both">Сповіщення зі звуком</string>
+    <string name="usage_mode_sound">Лише звук</string>
+    <string name="usage_mode_off">Вимкнено</string>
+    <string name="usage_sound_policy">Один звук каналу на пакет. Фонове стеження зберігає тихе сповіщення.</string>
+    <string name="usage_channel_denied">Сповіщення заблоковано в налаштуваннях Android.</string>
+    <string name="usage_pool_unavailable">Лише окремі звіти. Точні спільні квоти, неоднозначні ідентичності та операції кредитів скидання потребують новішої спільної бібліотеки.</string>
+    <string name="usage_auth_required">Увійдіть до цього провайдера на хості та оновіть.</string>
+</resources>

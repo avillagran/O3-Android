@@ -52,6 +52,18 @@ class QuotaStripScreenshotTest : ScreenshotTest() {
         composeRule.runOnIdle { enabled = false }
         composeRule.onNodeWithTag("quota_reveal").assertHeightIsEqualTo(0.dp)
     }
+    @Test fun signedOutAndUnavailableReportsNeverShowStalePercentages() {
+        val reports = JSONObject("""{"providers":[
+          {"driver":"codex","auth":{"status":"unauthenticated"},"usageLimits":{"windows":[{"label":"Stale auth","usedPercent":99}]}},
+          {"driver":"claudeAgent","usageLimits":{"unavailable":{"reason":"probeFailed"},"windows":[{"label":"Stale probe","usedPercent":88}]}}
+        ]}""")
+        snapshot("auth-unavailable") { QuotaStrip(listOf("NODE" to QuotaState(reports, busy = false)), true, true, {}) }
+        composeRule.onNodeWithText("Stale auth").assertDoesNotExist()
+        composeRule.onNodeWithText("Stale probe").assertDoesNotExist()
+        composeRule.onNodeWithText("NODE · Sign in to this provider on the host, then refresh.").assertExists()
+        composeRule.onNodeWithText("NODE · Unavailable").assertExists()
+    }
+
     @Test fun emptyIsHidden() {
         snapshot("empty") { QuotaStrip(listOf("NODE" to QuotaState(JSONObject(), busy = false)), true, true, {}) }
         composeRule.onNodeWithTag("quota_strip").assertDoesNotExist()

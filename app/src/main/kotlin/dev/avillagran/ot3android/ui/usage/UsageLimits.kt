@@ -24,6 +24,10 @@ import java.util.Date
 
 /** Renders the native public projection as-is: no account pooling or pace calculation. */
 fun androidx.compose.foundation.lazy.LazyListScope.usageLimits(state: JSONObject?) {
+    item("limits_pool_notice") {
+        Text(stringResource(R.string.usage_pool_unavailable), color = Ot3Theme.colors.dim,
+            modifier = Modifier.testTag("limits_pool_unavailable"))
+    }
     if (state == null) return
     val providers = state.optJSONArray("providers").objects()
     val sources = state.optJSONArray("usageLimitSources").objects()
@@ -32,7 +36,8 @@ fun androidx.compose.foundation.lazy.LazyListScope.usageLimits(state: JSONObject
         item("limits_provider_$index") {
             LimitAccount(provider.optString("displayName").ifBlank { provider.optString("driver") },
                 provider.optJSONObject("auth")?.optString("email").orEmpty(),
-                provider.optJSONObject("usageLimits"), "provider_${provider.optString("instanceId")}")
+                provider.optJSONObject("usageLimits"), "provider_${provider.optString("instanceId")}",
+                provider.optJSONObject("auth")?.optString("status") == "unauthenticated")
         }
     }
     sources.forEachIndexed { sourceIndex, source ->
@@ -51,15 +56,16 @@ fun androidx.compose.foundation.lazy.LazyListScope.usageLimits(state: JSONObject
 }
 
 @Composable
-private fun LimitAccount(title: String, detail: String, limits: JSONObject?, tag: String) {
+private fun LimitAccount(title: String, detail: String, limits: JSONObject?, tag: String, needsAuth: Boolean = false) {
     val locale = LocalConfiguration.current.locales[0]
     Surface(color = Ot3Theme.colors.card, contentColor = Ot3Theme.colors.foreground, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth().testTag("limits_$tag")) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall)
             if (detail.isNotBlank()) Text(detail, color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall)
+            if (needsAuth) Text(stringResource(R.string.usage_auth_required), color = Ot3Theme.colors.failed)
             if (limits == null || limits.has("unavailable")) Text(stringResource(R.string.ot3_usage_unavailable), color = Ot3Theme.colors.dim)
-            limits?.optJSONArray("windows").objects().forEach { window ->
-                val used = window.getDouble("usedPercent")
+            limits?.takeUnless { it.has("unavailable") || needsAuth }?.optJSONArray("windows").objects().forEach { window ->
+                val used = window.optDouble("usedPercent").takeIf { it.isFinite() && it in 0.0..100.0 } ?: return@forEach
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(window.getString("label"), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     Text(stringResource(R.string.limits_used, NumberFormat.getPercentInstance(locale).format(used / 100)))
