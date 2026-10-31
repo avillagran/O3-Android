@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Av</string>
     <string name="usage_sound_policy">Ett kanalljud per grupp. Bakgrundsbevakning behåller sin tysta avisering.</string>
     <string name="usage_channel_denied">Aviseringar är blockerade i Android-inställningarna.</string>
-    <string name="usage_pool_unavailable">Endast enskilda rapporter. Exakta delade kvoter, tvetydiga identiteter och åtgärder för återställningskrediter kräver ett nyare delat bibliotek.</string>
+    <string name="usage_pool_unavailable">Enskilda kontorapporter. Delade kvoter visas i användningsfältet.</string>
     <string name="usage_auth_required">Logga in hos leverantören på värden och uppdatera.</string>
 </resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Sdílené koncepty</string>
+    <string name="shared_draft_note">Text se synchronizuje automaticky. Přístup k přílohám vyžaduje zdrojového hostitele. Úpravy fronty a pokusy o odeslání zůstávají místní.</string>
+    <string name="shared_draft_failed">Synchronizace selhala. Místní kopie a čekající příkazy byly zachovány.</string>
+    <string name="shared_draft_pending">Čekající příkazy: %1$d</string>
+    <string name="shared_draft_save">Uložit text u autority</string>
+    <string name="shared_draft_adopt">Použít text v editoru</string>
+    <string name="shared_draft_restore">Obnovit se zálohou cíle</string>
+    <string name="shared_draft_conflict">Konflikt: před vyřešením zkontroluj obě kopie.</string>
+    <string name="shared_draft_authority">ID koncového bodu autority konceptů</string>
+    <string name="shared_draft_select">Vybrat autoritu konceptů</string>
+    <string name="shared_draft_keep_remote">Ponechat vzdálenou kopii</string>
+    <string name="shared_draft_keep_local">Ponechat místní operaci</string>
+</resources>

@@ -8,6 +8,6 @@
     <string name="usage_mode_off">إيقاف</string>
     <string name="usage_sound_policy">صوت قناة واحد لكل دفعة. تبقى متابعة الخلفية مع إشعار صامت.</string>
     <string name="usage_channel_denied">الإشعارات محظورة في إعدادات Android.</string>
-    <string name="usage_pool_unavailable">تقارير فردية فقط. تتطلب الحصص المشتركة الدقيقة والهويات الملتبسة وإجراءات أرصدة إعادة التعيين مكتبة مشتركة أحدث.</string>
+    <string name="usage_pool_unavailable">تقارير الحسابات الفردية. تظهر الحصص المشتركة في شريط الاستخدام.</string>
     <string name="usage_auth_required">سجل الدخول إلى هذا المزود على المضيف ثم حدّث.</string>
 </resources>

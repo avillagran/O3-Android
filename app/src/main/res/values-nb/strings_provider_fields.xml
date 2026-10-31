@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Programsti</string>
+    <string name="provider_field_home_path">Hjemmemappe</string>
+    <string name="provider_field_shadow_home_path">Alternativ hjemmemappe</string>
+    <string name="provider_field_launch_args">Startargumenter</string>
+    <string name="provider_field_auto_compact_window">Komprimer automatisk etter</string>
+    <string name="provider_field_server_url">Serveradresse</string>
+    <string name="provider_field_server_password">Serverpassord</string>
+    <string name="provider_field_auth_method">Innloggingsmetode</string>
+    <string name="provider_field_api_key">API-nøkkel</string>
+    <string name="provider_field_gcp_project">GCP-prosjekt</string>
+    <string name="provider_field_gcp_location">GCP-plassering</string>
+    <string name="provider_field_source">ACP-kilde</string>
+    <string name="provider_field_agent_id">Registeragent-ID</string>
+    <string name="provider_field_command_path">Alternativt program</string>
+    <string name="provider_field_auth_method_id">Autentiseringsmetode-ID</string>
+    <string name="provider_field_environment">Miljøvariabler</string>
+    <string name="provider_field_name">Navn</string>
+    <string name="provider_field_value">Verdi</string>
+    <string name="provider_field_sensitive">Sensitiv</string>
+    <string name="provider_field_distribution">Distribusjon</string>
+    <string name="provider_field_command_args">Kommandoargumenter (ett per linje)</string>
+    <string name="provider_field_add_variable">Legg til variabel</string>
+    <string name="provider_field_remove_variable">Fjern variabel</string>
+    <string name="provider_field_automatic">Automatisk</string>
+    <string name="provider_field_binary_distribution">Kjørbar fil</string>
+</resources>

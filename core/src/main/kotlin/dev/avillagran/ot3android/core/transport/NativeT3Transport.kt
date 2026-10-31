@@ -77,6 +77,21 @@ class NativeT3Transport(
         }
     }
 
+    override suspend fun draftAttachmentBytes(id: String, name: String): DraftAttachmentBytes = native {
+        val asset = client.assetBytes(JSONObject().put("_tag", "attachment").put("attachmentId", id).put("fileName", name), 50L * 1024 * 1024)
+        DraftAttachmentBytes(requireNotNull(asset.bytes), asset.status.getString("mimeType"))
+    }
+
+    override suspend fun draftAttachment(id: String, name: String): JSONObject = native {
+        val asset = client.assetBytes(JSONObject().put("_tag", "attachment").put("attachmentId", id).put("fileName", name), 50L * 1024 * 1024)
+        val bytes = requireNotNull(asset.bytes)
+        try {
+            val mime = asset.status.getString("mimeType")
+            JSONObject().put("id", id).put("name", name).put("mimeType", mime).put("sizeBytes", bytes.size)
+                .put("type", if (mime in setOf("image/png", "image/jpeg", "image/gif", "image/webp")) "image" else "file")
+        } finally { bytes.fill(0) }
+    }
+
     override suspend fun registryIconBytes(url: String, requestId: String): ByteArray = native {
         requireNotNull(client.registryIconBytes(url, requestId).bytes)
     }

@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
     <string name="shared_draft_title">Shared drafts</string>
-    <string name="shared_draft_note">Explicitly save or adopt text. Unsynced commands stay on this device. Attachments require durable host uploads and are not transferred here. Queue edits and send attempts stay local.</string>
-    <string name="shared_draft_failed">Synchronization failed. Local branches and exact pending commands are preserved.</string>
+    <string name="shared_draft_note">Text syncs automatically. Attachment access requires the source host. Queue edits and send attempts stay local.</string>
+    <string name="shared_draft_failed">Sync failed. Local branches and pending commands are preserved.</string>
     <string name="shared_draft_pending">Pending commands: %1$d</string>
     <string name="shared_draft_save">Save text to authority</string>
     <string name="shared_draft_adopt">Adopt text in editor</string>
     <string name="shared_draft_restore">Restore with target backup</string>
-    <string name="shared_draft_conflict">Conflict: local branch preserved. Review both copies before resolving.</string>
+    <string name="shared_draft_conflict">Conflict: review both copies before resolving.</string>
     <string name="shared_draft_authority">Draft authority endpoint ID</string>
     <string name="shared_draft_select">Select draft authority</string>
+    <string name="shared_draft_keep_remote">Keep remote copy</string>
+    <string name="shared_draft_keep_local">Keep local operation</string>
 </resources>

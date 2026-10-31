@@ -8,24 +8,24 @@ wiring is now an **O3-Android** task, not a lib/bridge blocker.
 
 | Adoption item | Status | Delivered / remaining |
 | --- | --- | --- |
-| Pins and strings | Done | Verified release AAR; production host/x86_64/arm64 bridge SDK; generated 261 keys × 20 locales. |
-| Shared drafts | Partial | Room v4 journal, exact anchored conditional commands, offline cache, visible conflicts, expired-cursor preservation, project stash/restore with atomic backup. Explicit text-only composer panel. Automatic sync, conflict resolution UI, preference payloads, migration, send-ack clear and cross-host uploads remain. See `core/.../composer/SHARED_DRAFTS.md`. |
-| Mobile administration | Partial | Connections: peers, read/endpoints, confirmed rename/publish/unpublish/invite, explicit authority selection; owner-only controls hidden with a reason. Relay/gateway/approval/revoke forms, invitation QR/share and live host acceptance remain. Native grants remain authoritative on every request. |
+| Pins and strings | Done | Verified release AAR; production host/x86_64/arm64 bridge SDK; generated 261 keys × 20 locales plus 62 administration/draft/provider/diff keys × 20, with no MissingTranslation suppression in those three resource families. |
+| Shared drafts | Partial | Process-lifetime polling and startup replay for the explicitly selected authority; automatic thread-composer text/model/delivery and durable upload metadata; source-host resource verification before restoring sendable attachments; create-only legacy text import; CAS send-ack clear with durable local send identity; generation/IME guards, explicit keep-local/keep-remote conflicts and resync preservation. Project stash/restore keeps atomic backups. Cross-host restore now prepares authenticated source-byte reads/target uploads, canonical native attachment-reference replacement and an atomic CAS transfer with target backup. Remaining: new-chat draft identity/consumer, whole-process/two-real-device/live-upload acceptance and OS background/Doze acceptance. Noncanonical attachment references refuse transfer instead of copying stale IDs. See `core/.../composer/SHARED_DRAFTS.md`. |
+| Mobile administration | Partial | Connections: peers/read/endpoints; confirmed rename/publish/unpublish, relay selection/hosting, self-targeted gateway, normal approvals and non-admin revocation; invitation TTL/service/all-hosts form, QR and explicit share. Invitation data remains ephemeral. Owner-only grants/consent/domain/all-host approvals stay absent. Native receiver revalidates every request. Multi-service invitation selection is bounded by the actor’s advertised grants. Authenticated live-host acceptance remains. |
 | U18 history | Partial | Authenticated page read, native envelope/timeline/merge, connection guard, recent rows win; explicit load-more. Anchoring and device paging acceptance remain. Historical data never replaces live requests/queue/run state. |
-| U26 quota presentation | Partial | Native presentation adapter available. Existing strip retained; replace it with account pools/pace/reset/segments and localized notices. No credit-redemption API was introduced. |
+| U26 quota presentation | Partial | Production strip now consumes native account/workspace pools, missing segments, pace, reset times and account/host labels. Notices use localized Android resources. Existing independent strip remains a fixture surface. The presentation clock refreshes once per minute; reset ordering parses instants across offsets. Device/RTL/TalkBack acceptance and complete native notice distinctions remain. No credit redemption is exposed. |
 | U29 permission fallback | Done | Rust computes per-provider choices on catalog refresh; Compose renders those rows and retains authoritative current mode. Empty-advertisement fallback tested natively. |
-| U31 PR list/diff | Partial | Native page dedup/order replaces Kotlin append; authenticated diff adapter and first-page tab. Full diff pagination and renderer acceptance remain. |
-| U33 composer transforms | Partial | Native transform adapter; Continue list wired with captured editor version/IME guards. Completion/range replacement and recall UI remain. |
-| U34 custom icons | Partial | Native credential-free fetch/cancel adapters; safe SVG image renderer and catalog UI consumption remain. Bundled marks remain in use. |
-| U35 references | Partial | Native destination builder and bounded document transport adapter. Reader click routing/viewer integration remains. |
-| U36 live output | Partial | Existing cancellable subscription feeds native incremental reducer in inspector; native ANSI/CR state regression. Running/truncation UI and reconnect/permission/device acceptance remain; no invented wire channels. |
-| Pin ordering | Partial | Native plan + validated command builder adapter. Durable multi-command dispatch and reorder UI remain. |
-| Project mutation | Partial | Validated native metadata command builder adapter. Journal/dispatch and metadata editing UI remain. |
-| Provider builders | Partial | Native safe projection/atomic mutation/readback-confirmation adapters. Existing provider UI still needs configuration forms and integration. |
+| U31 PR list/diff | Partial | Native list merge retained; authenticated diff pages load from a real More button with connection/generation guards and retry cursor preservation. Selectable per-file source renderer. Remaining: structured diff/review rendering, inline review and renderer/device acceptance. |
+| U33 composer transforms | Partial | Native prefix detection, host path/skill/command completion, exact-range insertion, Continue list, and recall choices are wired with captured editor version/IME guards. Remaining: device/RTL/accessibility and provider-catalog live acceptance; /model uses the existing model control instead of an inert completion. |
+| U34 custom icons | Partial | Catalog icons use native credential-free bounded fetch/cancel and a path-only bitmap SVG renderer. Script/entities/resources/CSS/transforms and unsupported elements fall back to bundled marks. Safety/rendering regressions added. Remaining: broader SVG drawing support and live registry/device acceptance. |
+| U35 references | Partial | Reader clicks now use native routing for external URLs, loaded cross-environment threads and authenticated bounded text documents, with connection guards. HTML is selectable source, never executable. Remaining: anchor scrolling, binary-document viewer and device acceptance; unsupported targets report a visible read failure. |
+| U36 live output | Partial | Existing cancellable subscription feeds native incremental reducer; inspector displays running/truncation/error state. Native ANSI/CR regressions retained. Reconnect/permission/device acceptance remains; no invented wire channels. |
+| Pin ordering | Partial | Move up/down controls build native fractional/rebalance plans from the complete host pin section. Exact multi-command batches checkpoint each receipt in private storage; unknown suffixes require explicit same-ID retry and survive restart. Shared Git admission is retained. Boundary moves and missing pin capabilities disable the controls. Live-host/concurrent reorder/device acceptance remains. |
+| Project mutation | Partial | Project settings expose native validated title, auto-pull, default checkout/worktree mode and confirmed removal. Private exact command journal supports same-ID retry. Project writes also use shared Git admission; native catalog default-model selection/reset is reachable. Structured settings-schema editors and live-host/device acceptance remain. |
+| Provider builders | Partial | Safe native projections and driver field forms support instance create/update/remove, labels/color/enabled and configuration fields. Atomic server mutation is followed by native target readback. Unknown configuration writes persist a non-secret guard and require explicit fresh-state review, with no automatic replay. Existing installation/authentication consumers retained. Environment variables preserve redacted secrets; expanded ACP arguments/distribution and pinned field labels are localized in all 20 locales. Process/live-host/device acceptance remains. |
 
 Validation and exact remaining scope are recorded in [adopt-lib-036.md](adopt-lib-036.md).
 
-Earlier package audit:
+Earlier package audit (historical v0.3.5 wiring; the consumer table above takes precedence):
 
 This replaces the audit's historical package planning status, not its 609 source records.
 Done means the package's full requested scope is complete; Partial means shipped behavior
@@ -62,17 +62,15 @@ A passed fixture is not evidence of a live host mutation or complete Desktop par
 - Licenses/About and editable shortcuts: Android modules not delivered.
 - Physical repository/path/separate grouping: missing consumed native physical identity/member adapter;
   do not expose controls that only persist unused values. Named groups are available.
-- Project rename/remove, pin reordering, copy reference: missing released safe native builders.
+- Project rename/remove and pin reordering now have consumer controls as described above; copy-reference/physical grouping remain separate work.
 - New scheduled task and import requiring project creation: real P06 recipe/callback not wired;
   existing tasks and existing-project imports work.
 - Checkpoint source messages containing attachments or structured context: no atomic attachment-aware recovery yet.
   Text-only rollback never claims to recover attachments. New attachment imports are blocked
   while this thread has an unresolved rollback.
-- Live tool output, authenticated PR file diff, inline review, PR linked-thread/stack actions:
-  contracts/UI blockers in P10/P12. No inert link points to a placeholder file page.
+- Live tool output and authenticated PR file diff are reachable. Inline review and PR linked-thread/stack actions remain pending. Document links open a real bounded text viewer.
 - Mermaid, QML/HTML, browser/device/terminal/code-run/capture: absent runtime or page consumers.
-- Composer history/shared drafts/transforms/plan/background/send-and-new: P06/P08 contracts
-  or command/receipt integration absent. No automatic replay is introduced.
+- Composer recall/completion and automatic shared thread drafts are reachable. New-chat shared identity, plan/background/send-and-new receipt integration remain pending. Automatic replay is limited to exact conditional shared-draft commands; orchestration sends remain local and explicit.
 
 Unsupported route types remain for serialized compatibility and navigation test fakes;
 production menus expose only real modules. Archive now dispatches a real maintenance page.

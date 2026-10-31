@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">Administración de OmaBridge</string>
+    <string name="bridge_admin_local_note">Los controles exclusivos del propietario quedan en su dispositivo. La administración remota requiere un permiso de gestión independiente.</string>
+    <string name="bridge_admin_name">Nombre del dispositivo</string>
+    <string name="bridge_admin_rename">Cambiar nombre</string>
+    <string name="bridge_admin_invite">Crear invitación</string>
+    <string name="bridge_admin_endpoints">Consultar endpoints</string>
+    <string name="bridge_admin_failed">Solicitud rechazada o no disponible. Revisa el permiso de gestión en el dispositivo propietario.</string>
+    <string name="bridge_admin_confirm">Confirmar cambio del dispositivo</string>
+    <string name="pr_diff">Diferencias</string>
+    <string name="pr_diff_more_pending">Hay más páginas de diferencias disponibles.</string>
+    <string name="bridge_admin_publish">Publicar</string>
+    <string name="bridge_admin_unpublish">Retirar publicación</string>
+    <string name="bridge_admin_service">Servicio</string>
+    <string name="bridge_admin_ttl">Vigencia (segundos)</string>
+    <string name="bridge_admin_all_hosts">Todos los hosts</string>
+    <string name="bridge_admin_relay">URL HTTPS pública del relay</string>
+    <string name="bridge_admin_relay_set">Configurar relay</string>
+    <string name="bridge_admin_relay_start">Iniciar alojamiento del relay</string>
+    <string name="bridge_admin_relay_stop">Detener alojamiento del relay</string>
+    <string name="bridge_admin_gateway">Nombre del gateway</string>
+    <string name="bridge_admin_port">Puerto (opcional)</string>
+    <string name="bridge_admin_gateway_start">Activar gateway</string>
+    <string name="bridge_admin_gateway_stop">Desactivar gateway</string>
+    <string name="bridge_admin_revoke">Revocar acceso</string>
+    <string name="bridge_admin_share">Compartir invitación</string>
+</resources>

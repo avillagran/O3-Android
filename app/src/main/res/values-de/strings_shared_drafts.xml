@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Geteilte Entwürfe</string>
+    <string name="shared_draft_note">Text wird automatisch synchronisiert. Der Zugriff auf Anhänge erfordert den Quellhost. Warteschlangenänderungen und Sendeversuche bleiben lokal.</string>
+    <string name="shared_draft_failed">Synchronisierung fehlgeschlagen. Lokale Kopien und ausstehende Befehle bleiben erhalten.</string>
+    <string name="shared_draft_pending">Ausstehende Befehle: %1$d</string>
+    <string name="shared_draft_save">Text bei der Instanz speichern</string>
+    <string name="shared_draft_adopt">Text im Editor übernehmen</string>
+    <string name="shared_draft_restore">Mit Sicherung des Ziels wiederherstellen</string>
+    <string name="shared_draft_conflict">Konflikt: Prüfe beide Kopien vor der Auflösung.</string>
+    <string name="shared_draft_authority">Endpunkt-ID der Entwurfsinstanz</string>
+    <string name="shared_draft_select">Entwurfsinstanz auswählen</string>
+    <string name="shared_draft_keep_remote">Entfernte Kopie behalten</string>
+    <string name="shared_draft_keep_local">Lokalen Vorgang behalten</string>
+</resources>

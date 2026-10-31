@@ -393,7 +393,7 @@ internal val LocalReaderTimeFormat = staticCompositionLocalOf { "locale" }
 internal val LocalReaderMath = staticCompositionLocalOf { true }
 internal val LocalReaderStreaming = staticCompositionLocalOf { false }
 
-internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true): AnnotatedString = buildAnnotatedString {
+internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true, onReference: ((String) -> Unit)? = null): AnnotatedString = buildAnnotatedString {
     spans.objects().forEach { span ->
         val style = SpanStyle(fontWeight = if (span.optBoolean("strong")) FontWeight.Bold else null,
             fontStyle = if (span.optBoolean("emphasis")) FontStyle.Italic else null,
@@ -404,7 +404,9 @@ internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true): Annota
         // for intent matching; file/thread/anchor destinations still need native routing.
         val web = link?.takeIf { it.optString("kind") in setOf("web", "github") }
             ?.getString("href")?.let { android.net.Uri.parse(it).normalizeScheme().toString() }
-        if (web != null) pushLink(LinkAnnotation.Url(web))
+        val reference = link?.optString("href")?.takeIf { it.isNotEmpty() && !it.startsWith("#") && onReference != null }
+        if (reference != null) pushLink(LinkAnnotation.Clickable(reference, linkInteractionListener = { onReference!!(reference) }))
+        else if (web != null) pushLink(LinkAnnotation.Url(web))
         withStyle(style) {
             when (span.optString("type")) {
                 "math" -> append(if (mathEnabled) dev.avillagran.ot3android.ui.thread.rendering.mathText(span.optString("tex")) else AnnotatedString(span.optString("tex")))
@@ -412,7 +414,7 @@ internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true): Annota
                 else -> append(span.optString("text"))
             }
         }
-        if (web != null) pop()
+        if (reference != null || web != null) pop()
     }
 }
 
@@ -440,11 +442,11 @@ internal fun MarkdownInlineContent(spans: JSONArray?, style: TextStyle = Materia
     Column(Modifier.fillMaxWidth()) {
         spans.objects().forEach { span ->
             if (span.optString("type") == "image") {
-                if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current), style = style, modifier = Modifier.fillMaxWidth())
+                if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current), style = style, modifier = Modifier.fillMaxWidth())
                 run = JSONArray()
                 MarkdownImage(span)
             } else run.put(span)
         }
-        if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current), style = style, modifier = Modifier.fillMaxWidth())
+        if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current), style = style, modifier = Modifier.fillMaxWidth())
     }
 }

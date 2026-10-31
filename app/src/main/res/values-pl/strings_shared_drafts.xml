@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Współdzielone szkice</string>
+    <string name="shared_draft_note">Tekst synchronizuje się automatycznie. Dostęp do załączników wymaga hosta źródłowego. Zmiany kolejki i próby wysłania pozostają lokalne.</string>
+    <string name="shared_draft_failed">Synchronizacja nie powiodła się. Zachowano lokalne kopie i oczekujące polecenia.</string>
+    <string name="shared_draft_pending">Oczekujące polecenia: %1$d</string>
+    <string name="shared_draft_save">Zapisz tekst w instancji nadrzędnej</string>
+    <string name="shared_draft_adopt">Użyj tekstu w edytorze</string>
+    <string name="shared_draft_restore">Przywróć z kopią celu</string>
+    <string name="shared_draft_conflict">Konflikt: sprawdź obie kopie przed rozwiązaniem.</string>
+    <string name="shared_draft_authority">ID punktu końcowego instancji szkiców</string>
+    <string name="shared_draft_select">Wybierz instancję szkiców</string>
+    <string name="shared_draft_keep_remote">Zachowaj zdalną kopię</string>
+    <string name="shared_draft_keep_local">Zachowaj lokalną operację</string>
+</resources>

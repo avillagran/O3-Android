@@ -36,6 +36,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -52,12 +53,24 @@ class AppGraph(
     val transportFactory: T3TransportFactory = T3TransportFactory { ConnectedAppTransport() },
 ) {
     private val appContext = context.applicationContext
+    val consumerWrites by lazy { dev.avillagran.ot3android.core.transport.ConsumerWrites(appContext.noBackupFilesDir.resolve("consumer-writes-v1")) }
     val gitJournal by lazy { dev.avillagran.ot3android.core.git.GitJournal(appContext.noBackupFilesDir.resolve("git-journal-v1")) }
     val checkoutAdmission by lazy { dev.avillagran.ot3android.core.git.CheckoutAdmission(gitJournal) }
     init {
         // El grafo se crea antes de aceptar selecciones; limpia archivos de procesos interrumpidos.
         appContext.cacheDir.listFiles { file -> file.name.startsWith("composer-") && file.name.endsWith(".upload") }?.forEach { it.delete() }
     }
+    private val draftWorkers = mutableMapOf<String, dev.avillagran.ot3android.core.composer.SharedDraftSynchronizer>()
+    @Synchronized fun activateDraftAuthority(authority: String?) {
+        val obsolete = draftWorkers.filterValues { it.repository.authority != authority }.keys.toList()
+        obsolete.forEach { key -> draftWorkers.remove(key)?.stop() }
+    }
+    @Synchronized fun sharedDraftWorker(authority: String, localEnvironment: String, scope: dev.avillagran.ot3android.core.composer.ComposerScope): dev.avillagran.ot3android.core.composer.SharedDraftSynchronizer =
+        draftWorkers.getOrPut(authority + "/" + scope.environment + "/" + scope.project + "/" + scope.thread) {
+            val repository = dev.avillagran.ot3android.core.composer.SharedDraftRepository(authority, database.sharedDraftJournalDao()) { command -> bridgeCatalog.drafts(authority, command) }
+            dev.avillagran.ot3android.core.composer.SharedDraftSynchronizer(repository, scope, appScope, syncRemotely = false) { text -> draftRepository.save(localEnvironment, scope.thread, text) }
+        }
+
     private val threadMenuOwners = mutableMapOf<String, Pair<dev.avillagran.ot3android.core.transport.T3Transport, dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations>>()
     @Synchronized fun threadMenuOwner(environment: String, thread: String, transport: dev.avillagran.ot3android.core.transport.T3Transport): dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations {
         val key = org.json.JSONArray().put(environment).put(thread).toString()
@@ -240,6 +253,23 @@ class AppGraph(
                         }
                     } }
                 }
+            }
+        }
+        appScope.launch {
+            // Resume exact pending commands even when their thread has not been reopened.
+            val preferences = appContext.getSharedPreferences("shared-drafts", Context.MODE_PRIVATE)
+            while (kotlinx.coroutines.currentCoroutineContext().isActive) {
+                val authority = preferences.getString("authority", null)?.takeIf(String::isNotBlank)
+                activateDraftAuthority(authority)
+                if (authority != null) {
+                    try {
+                        bridgeCatalog.open(appContext.noBackupFilesDir.resolve("omabridge").absolutePath)
+                        val repository = dev.avillagran.ot3android.core.composer.SharedDraftRepository(authority, database.sharedDraftJournalDao()) { command -> bridgeCatalog.drafts(authority, command) }
+                        repository.synchronize()
+                    } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                    catch (_: Exception) { /* Exact commands remain in Room for the next automatic attempt. */ }
+                }
+                kotlinx.coroutines.delay(2_000)
             }
         }
         appScope.launch(Dispatchers.IO) {

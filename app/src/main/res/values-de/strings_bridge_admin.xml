@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge-Verwaltung</string>
+    <string name="bridge_admin_local_note">Eigentümerfunktionen bleiben auf dem Gerät des Eigentümers. Fernverwaltung erfordert eine separate Verwaltungsberechtigung.</string>
+    <string name="bridge_admin_name">Gerätename</string>
+    <string name="bridge_admin_rename">Umbenennen</string>
+    <string name="bridge_admin_invite">Einladung erstellen</string>
+    <string name="bridge_admin_endpoints">Endpunkte lesen</string>
+    <string name="bridge_admin_failed">Anfrage abgelehnt oder nicht verfügbar. Prüfe die Verwaltungsberechtigung auf dem Eigentümergerät.</string>
+    <string name="bridge_admin_confirm">Geräteänderung bestätigen</string>
+    <string name="pr_diff">Änderungen</string>
+    <string name="pr_diff_more_pending">Weitere Änderungsseiten sind verfügbar.</string>
+    <string name="bridge_admin_publish">Veröffentlichen</string>
+    <string name="bridge_admin_unpublish">Veröffentlichung aufheben</string>
+    <string name="bridge_admin_service">Dienst</string>
+    <string name="bridge_admin_ttl">Gültigkeit (Sekunden)</string>
+    <string name="bridge_admin_all_hosts">Alle Hosts</string>
+    <string name="bridge_admin_relay">Öffentliche HTTPS-Relay-URL</string>
+    <string name="bridge_admin_relay_set">Relay festlegen</string>
+    <string name="bridge_admin_relay_start">Relay-Hosting starten</string>
+    <string name="bridge_admin_relay_stop">Relay-Hosting stoppen</string>
+    <string name="bridge_admin_gateway">Gateway-Hostname</string>
+    <string name="bridge_admin_port">Port (optional)</string>
+    <string name="bridge_admin_gateway_start">Gateway aktivieren</string>
+    <string name="bridge_admin_gateway_stop">Gateway deaktivieren</string>
+    <string name="bridge_admin_revoke">Zugriff widerrufen</string>
+    <string name="bridge_admin_share">Einladung teilen</string>
+</resources>

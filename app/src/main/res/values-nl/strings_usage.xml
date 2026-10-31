@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Uit</string>
     <string name="usage_sound_policy">Eén kanaalgeluid per groep. Volgen op de achtergrond behoudt de stille melding.</string>
     <string name="usage_channel_denied">Meldingen zijn geblokkeerd in de Android-instellingen.</string>
-    <string name="usage_pool_unavailable">Alleen individuele rapporten. Exacte gedeelde quota, onduidelijke identiteiten en acties voor resetcredits vereisen een nieuwere gedeelde bibliotheek.</string>
+    <string name="usage_pool_unavailable">Afzonderlijke accountrapporten. Gedeelde quota staan in de gebruiksbalk.</string>
     <string name="usage_auth_required">Meld je op de host aan bij deze provider en vernieuw.</string>
 </resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">Адміністрування OmaBridge</string>
+    <string name="bridge_admin_local_note">Керування власника залишається на його пристрої. Віддалене адміністрування потребує окремого дозволу на керування.</string>
+    <string name="bridge_admin_name">Назва пристрою</string>
+    <string name="bridge_admin_rename">Перейменувати</string>
+    <string name="bridge_admin_invite">Створити запрошення</string>
+    <string name="bridge_admin_endpoints">Прочитати кінцеві точки</string>
+    <string name="bridge_admin_failed">Запит відхилено або недоступний. Перевір дозвіл на керування на пристрої власника.</string>
+    <string name="bridge_admin_confirm">Підтвердити зміну пристрою</string>
+    <string name="pr_diff">Відмінності</string>
+    <string name="pr_diff_more_pending">Доступні інші сторінки відмінностей.</string>
+    <string name="bridge_admin_publish">Опублікувати</string>
+    <string name="bridge_admin_unpublish">Скасувати публікацію</string>
+    <string name="bridge_admin_service">Служба</string>
+    <string name="bridge_admin_ttl">Термін дії (секунди)</string>
+    <string name="bridge_admin_all_hosts">Усі хости</string>
+    <string name="bridge_admin_relay">Публічна HTTPS URL ретранслятора</string>
+    <string name="bridge_admin_relay_set">Налаштувати ретранслятор</string>
+    <string name="bridge_admin_relay_start">Запустити ретранслятор</string>
+    <string name="bridge_admin_relay_stop">Зупинити ретранслятор</string>
+    <string name="bridge_admin_gateway">Назва хоста шлюзу</string>
+    <string name="bridge_admin_port">Порт (необов’язково)</string>
+    <string name="bridge_admin_gateway_start">Увімкнути шлюз</string>
+    <string name="bridge_admin_gateway_stop">Вимкнути шлюз</string>
+    <string name="bridge_admin_revoke">Відкликати доступ</string>
+    <string name="bridge_admin_share">Поділитися запрошенням</string>
+</resources>

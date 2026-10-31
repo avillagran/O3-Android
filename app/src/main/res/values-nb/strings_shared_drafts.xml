@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Delte utkast</string>
+    <string name="shared_draft_note">Tekst synkroniseres automatisk. Tilgang til vedlegg krever kildeverten. Køendringer og sendeforsøk forblir lokale.</string>
+    <string name="shared_draft_failed">Synkronisering mislyktes. Lokale kopier og ventende kommandoer er bevart.</string>
+    <string name="shared_draft_pending">Ventende kommandoer: %1$d</string>
+    <string name="shared_draft_save">Lagre tekst hos autoriteten</string>
+    <string name="shared_draft_adopt">Bruk tekst i redigereren</string>
+    <string name="shared_draft_restore">Gjenopprett med sikkerhetskopi av målet</string>
+    <string name="shared_draft_conflict">Konflikt: se gjennom begge kopiene før du løser den.</string>
+    <string name="shared_draft_authority">Endepunkt-ID for utkastautoritet</string>
+    <string name="shared_draft_select">Velg utkastautoritet</string>
+    <string name="shared_draft_keep_remote">Behold ekstern kopi</string>
+    <string name="shared_draft_keep_local">Behold lokal handling</string>
+</resources>

@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Disattivate</string>
     <string name="usage_sound_policy">Un suono del canale per gruppo. Il monitoraggio in background mantiene il suo avviso silenzioso.</string>
     <string name="usage_channel_denied">Le notifiche sono bloccate nelle impostazioni Android.</string>
-    <string name="usage_pool_unavailable">Solo rapporti individuali. Quote condivise esatte, identità ambigue e azioni sui crediti di ripristino richiedono una libreria condivisa più recente.</string>
+    <string name="usage_pool_unavailable">Rapporti per singolo account. I limiti condivisi sono mostrati nella barra di utilizzo.</string>
     <string name="usage_auth_required">Accedi a questo provider sul server, poi aggiorna.</string>
 </resources>

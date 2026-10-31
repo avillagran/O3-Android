@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">Administration OmaBridge</string>
+    <string name="bridge_admin_local_note">Les commandes réservées au propriétaire restent sur son appareil. L’administration distante nécessite une autorisation de gestion distincte.</string>
+    <string name="bridge_admin_name">Nom de l’appareil</string>
+    <string name="bridge_admin_rename">Renommer</string>
+    <string name="bridge_admin_invite">Créer une invitation</string>
+    <string name="bridge_admin_endpoints">Lire les points de terminaison</string>
+    <string name="bridge_admin_failed">Requête refusée ou indisponible. Vérifiez l’autorisation de gestion sur l’appareil propriétaire.</string>
+    <string name="bridge_admin_confirm">Confirmer la modification de l’appareil</string>
+    <string name="pr_diff">Différences</string>
+    <string name="pr_diff_more_pending">D’autres pages de différences sont disponibles.</string>
+    <string name="bridge_admin_publish">Publier</string>
+    <string name="bridge_admin_unpublish">Dépublier</string>
+    <string name="bridge_admin_service">Service</string>
+    <string name="bridge_admin_ttl">Durée de validité (secondes)</string>
+    <string name="bridge_admin_all_hosts">Tous les hôtes</string>
+    <string name="bridge_admin_relay">URL HTTPS publique du relais</string>
+    <string name="bridge_admin_relay_set">Configurer le relais</string>
+    <string name="bridge_admin_relay_start">Démarrer l’hébergement du relais</string>
+    <string name="bridge_admin_relay_stop">Arrêter l’hébergement du relais</string>
+    <string name="bridge_admin_gateway">Nom d’hôte de la passerelle</string>
+    <string name="bridge_admin_port">Port (facultatif)</string>
+    <string name="bridge_admin_gateway_start">Activer la passerelle</string>
+    <string name="bridge_admin_gateway_stop">Désactiver la passerelle</string>
+    <string name="bridge_admin_revoke">Révoquer l’accès</string>
+    <string name="bridge_admin_share">Partager l’invitation</string>
+</resources>

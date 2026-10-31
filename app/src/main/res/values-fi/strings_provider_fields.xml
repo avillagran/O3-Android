@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Ohjelman polku</string>
+    <string name="provider_field_home_path">Kotihakemiston polku</string>
+    <string name="provider_field_shadow_home_path">Vaihtoehtoisen kotihakemiston polku</string>
+    <string name="provider_field_launch_args">Käynnistysargumentit</string>
+    <string name="provider_field_auto_compact_window">Automaattinen tiivistysraja</string>
+    <string name="provider_field_server_url">Palvelimen URL</string>
+    <string name="provider_field_server_password">Palvelimen salasana</string>
+    <string name="provider_field_auth_method">Kirjautumistapa</string>
+    <string name="provider_field_api_key">API-avain</string>
+    <string name="provider_field_gcp_project">GCP-projekti</string>
+    <string name="provider_field_gcp_location">GCP-sijainti</string>
+    <string name="provider_field_source">ACP-lähde</string>
+    <string name="provider_field_agent_id">Rekisteriagentin tunnus</string>
+    <string name="provider_field_command_path">Vaihtoehtoinen ohjelma</string>
+    <string name="provider_field_auth_method_id">Todennusmenetelmän tunnus</string>
+    <string name="provider_field_environment">Ympäristömuuttujat</string>
+    <string name="provider_field_name">Nimi</string>
+    <string name="provider_field_value">Arvo</string>
+    <string name="provider_field_sensitive">Luottamuksellinen</string>
+    <string name="provider_field_distribution">Jakelu</string>
+    <string name="provider_field_command_args">Komentoargumentit (yksi rivillä)</string>
+    <string name="provider_field_add_variable">Lisää muuttuja</string>
+    <string name="provider_field_remove_variable">Poista muuttuja</string>
+    <string name="provider_field_automatic">Automaattinen</string>
+    <string name="provider_field_binary_distribution">Suoritettava tiedosto</string>
+</resources>

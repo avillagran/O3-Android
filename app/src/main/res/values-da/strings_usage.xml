@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Fra</string>
     <string name="usage_sound_policy">Én kanallyd pr. gruppe. Baggrundssporing bevarer sin lydløse notifikation.</string>
     <string name="usage_channel_denied">Notifikationer er blokeret i Android-indstillingerne.</string>
-    <string name="usage_pool_unavailable">Kun individuelle rapporter. Præcise delte kvoter, tvetydige identiteter og handlinger for nulstillingskreditter kræver et nyere fælles bibliotek.</string>
+    <string name="usage_pool_unavailable">Rapporter for enkelte konti. Delte kvoter vises i forbrugsbjælken.</string>
     <string name="usage_auth_required">Log ind hos udbyderen på værten, og opdater.</string>
 </resources>

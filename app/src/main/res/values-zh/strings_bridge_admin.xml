@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge 管理</string>
+    <string name="bridge_admin_local_note">所有者专属控件保留在所有者设备上。远程管理需要单独的管理授权。</string>
+    <string name="bridge_admin_name">设备名称</string>
+    <string name="bridge_admin_rename">重命名</string>
+    <string name="bridge_admin_invite">创建邀请</string>
+    <string name="bridge_admin_endpoints">读取端点</string>
+    <string name="bridge_admin_failed">请求被拒绝或不可用。请在所有者设备上检查管理授权。</string>
+    <string name="bridge_admin_confirm">确认设备更改</string>
+    <string name="pr_diff">差异</string>
+    <string name="pr_diff_more_pending">还有更多差异页面。</string>
+    <string name="bridge_admin_publish">发布</string>
+    <string name="bridge_admin_unpublish">取消发布</string>
+    <string name="bridge_admin_service">服务</string>
+    <string name="bridge_admin_ttl">有效期（秒）</string>
+    <string name="bridge_admin_all_hosts">所有主机</string>
+    <string name="bridge_admin_relay">公共 HTTPS 中继 URL</string>
+    <string name="bridge_admin_relay_set">设置中继</string>
+    <string name="bridge_admin_relay_start">启动中继托管</string>
+    <string name="bridge_admin_relay_stop">停止中继托管</string>
+    <string name="bridge_admin_gateway">网关主机名</string>
+    <string name="bridge_admin_port">端口（可选）</string>
+    <string name="bridge_admin_gateway_start">启用网关</string>
+    <string name="bridge_admin_gateway_stop">禁用网关</string>
+    <string name="bridge_admin_revoke">撤销访问</string>
+    <string name="bridge_admin_share">分享邀请</string>
+</resources>

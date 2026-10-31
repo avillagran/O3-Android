@@ -8,14 +8,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
 
 /** One selected host per controller. No retries, credentials on disk, or optimistic mutations. */
-class ProviderAdministration(val environmentId: String, private val transport: T3Transport) {
+class ProviderAdministration(val environmentId: String, private val transport: T3Transport,
+    initiallyUncertain: Boolean = false, private val configurationReceipt: (Boolean) -> Unit = {}) {
     data class State(
         val providers: List<JSONObject> = emptyList(), val busy: Boolean = false,
         val canManage: Boolean = false, val errorCode: String? = null,
         val uncertain: Boolean = false, val setup: JSONObject? = null,
         val setupInstanceId: String? = null,
+        val configuration: JSONObject? = null, val canConfigure: Boolean = false,
     )
-    private val mutable = MutableStateFlow(State())
+    private var configurationUnresolved = initiallyUncertain
+    private val mutable = MutableStateFlow(State(uncertain = initiallyUncertain))
     val state = mutable.asStateFlow()
 
     suspend fun refresh(fresh: Boolean = false) = run(false) {
@@ -43,7 +46,42 @@ class ProviderAdministration(val environmentId: String, private val transport: T
                 } }
             }
         }
-        mutable.value = State(providers = providers, busy = true, canManage = manage)
+        val canConfigure = auth.optBoolean("authenticated") && (0 until (scopes?.length() ?: 0)).any { scopes!!.optString(it) == "settings:write" }
+        val configuration = if (canConfigure) {
+            val settings = transport.call("server.getSettings") as JSONObject
+            dev.avillagran.ot3android.core.transport.NativeParity().providers(settings, config, true)
+        } else null
+        mutable.value = State(providers = providers, busy = true, canManage = manage, uncertain = configurationUnresolved,
+            configuration = configuration, canConfigure = canConfigure)
+    }
+
+    suspend fun configure(input: JSONObject) = run(false) {
+        check(mutable.value.canConfigure && !mutable.value.uncertain)
+        val auth = transport.authSession()
+        val permissions = auth.optJSONArray("permissions") ?: auth.optJSONArray("scopes")
+        check(auth.optBoolean("authenticated") && (0 until (permissions?.length() ?: 0)).any { permissions!!.optString(it) == "settings:write" })
+        val settings = transport.call("server.getSettings") as JSONObject
+        val native = dev.avillagran.ot3android.core.transport.NativeParity()
+        val payload = native.providerMutation(input, settings)
+        // No secrets are persisted; unknown mutations require explicit readback review, never replay.
+        configurationReceipt(true)
+        configurationUnresolved = true
+        mutable.value = mutable.value.copy(uncertain = true, configuration = null)
+        transport.call("server.updateSettings", payload)
+        val saved = transport.call("server.getSettings") as JSONObject
+        check(native.confirmProvider(input.getString("action"), input.getString("instanceId"), payload, saved)) { "provider_readback_mismatch" }
+        configurationReceipt(false)
+        configurationUnresolved = false
+        mutable.value = mutable.value.copy(uncertain = false, configuration = null)
+    }
+
+    /** Explicit review of a fresh safe projection releases an unknown write without replaying it. */
+    fun reviewedConfiguration() {
+        if (!mutable.value.busy && mutable.value.configuration != null) {
+            configurationReceipt(false)
+            configurationUnresolved = false
+            mutable.value = mutable.value.copy(uncertain = false)
+        }
     }
 
     enum class Action(val function: String) {

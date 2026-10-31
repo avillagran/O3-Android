@@ -115,6 +115,8 @@ internal fun ToolInspectorSurface(reference: JSONObject, onInspect: suspend (JSO
                 }
             }
             output?.let { value ->
+                if (value.optBoolean("running")) Text(stringResource(R.string.ot3_inspector_label_running))
+                if (value.optBoolean("truncated")) Text(stringResource(R.string.ot3_inspector_truncated))
                 SelectionContainer { Text(value.optString("text"), fontFamily = FiraCode, modifier = Modifier.testTag("inspector_live_output")) }
                 if (!value.isNull("error")) Text(stringResource(R.string.ot3_inspector_unavailable_error))
             }

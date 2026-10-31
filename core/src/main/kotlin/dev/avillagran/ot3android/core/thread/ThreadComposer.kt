@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.withLock
 /** What the composer shows: the draft, whether it is being sent, and the commands left unconfirmed. */
 data class ComposerState(
     val draft: String = "",
+    val loaded: Boolean = false,
     /** Ephemeral UI echo identity; never persisted or included in a command. */
     val draftToken: String? = null,
     /** A send is in flight: the field is locked and holds the text being sent. */
@@ -77,6 +78,7 @@ class ThreadComposer(
             // Text typed before the draft loaded wins.
             _state.update { if (!editedSinceInit && it.draft.isEmpty() && !it.sending) it.copy(draft = saved, draftToken = null) else it }
             draftLoaded = true
+            _state.update { it.copy(loaded = true) }
             if (editedSinceInit) saveRequests.update { it + 1 }
         }
         scope.launch {
