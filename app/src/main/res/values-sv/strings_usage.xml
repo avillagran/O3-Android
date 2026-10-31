@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Trådaviseringar</string>
+    <string name="usage_mode_notifications">Endast aviseringar</string>
+    <string name="usage_mode_both">Aviseringar med ljud</string>
+    <string name="usage_mode_sound">Endast ljud</string>
+    <string name="usage_mode_off">Av</string>
+    <string name="usage_sound_policy">Ett kanalljud per grupp. Bakgrundsbevakning behåller sin tysta avisering.</string>
+    <string name="usage_channel_denied">Aviseringar är blockerade i Android-inställningarna.</string>
+    <string name="usage_pool_unavailable">Endast enskilda rapporter. Exakta delade kvoter, tvetydiga identiteter och åtgärder för återställningskrediter kräver ett nyare delat bibliotek.</string>
+    <string name="usage_auth_required">Logga in hos leverantören på värden och uppdatera.</string>
+</resources>

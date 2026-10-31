@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Trådvarsler</string>
+    <string name="usage_mode_notifications">Bare varsler</string>
+    <string name="usage_mode_both">Varsler med lyd</string>
+    <string name="usage_mode_sound">Bare lyd</string>
+    <string name="usage_mode_off">Av</string>
+    <string name="usage_sound_policy">Én kanallyd per gruppe. Bakgrunnssporing beholder sitt lydløse varsel.</string>
+    <string name="usage_channel_denied">Varsler er blokkert i Android-innstillingene.</string>
+    <string name="usage_pool_unavailable">Bare individuelle rapporter. Nøyaktige delte kvoter, tvetydige identiteter og handlinger for tilbakestillingskreditter krever et nyere delt bibliotek.</string>
+    <string name="usage_auth_required">Logg inn hos leverandøren på verten og oppdater.</string>
+</resources>

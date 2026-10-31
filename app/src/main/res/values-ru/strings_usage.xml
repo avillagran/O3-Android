@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Уведомления веток</string>
+    <string name="usage_mode_notifications">Только уведомления</string>
+    <string name="usage_mode_both">Уведомления со звуком</string>
+    <string name="usage_mode_sound">Только звук</string>
+    <string name="usage_mode_off">Выключены</string>
+    <string name="usage_sound_policy">Один звук канала на пакет. Фоновое отслеживание сохраняет тихое уведомление.</string>
+    <string name="usage_channel_denied">Уведомления заблокированы в настройках Android.</string>
+    <string name="usage_pool_unavailable">Только отдельные отчёты. Точные общие квоты, неоднозначные идентификаторы и операции кредитов сброса требуют новой общей библиотеки.</string>
+    <string name="usage_auth_required">Войдите в аккаунт провайдера на хосте и обновите.</string>
+</resources>

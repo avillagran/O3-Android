@@ -18,6 +18,20 @@ class FollowPreferencesTest {
         store.edit { it[FollowPreferences.ENABLED] = true }
         assertEquals(FollowSettings(enabled = true), preferences.settings.first())
     }
+    @Test fun allDeliveryModesPersistWithoutChangingNativeTransitionPreferences() = runBlocking {
+        val native = preferences.settings.first().awarenessPreferences().toString()
+        for (mode in FollowNotificationMode.entries) {
+            preferences.setMode(mode)
+            val restored = FollowPreferences(store).settings.first()
+            assertEquals(mode, restored.mode)
+            assertEquals(native, restored.awarenessPreferences().toString())
+        }
+        assertTrue(FollowNotificationMode.Notifications.banners)
+        assertFalse(FollowNotificationMode.Notifications.sound)
+        assertFalse(FollowNotificationMode.Sound.banners)
+        assertTrue(FollowNotificationMode.Sound.sound)
+        assertFalse(FollowNotificationMode.Off.banners || FollowNotificationMode.Off.sound)
+    }
     @Test fun settingsPersistIndependentlyAndPassAllNativePreferenceKeys() = runBlocking {
         preferences.setEnabled(true)
         preferences.setLockscreen(FollowLockscreen.State)

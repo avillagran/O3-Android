@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Thread notifications</string>
+    <string name="usage_mode_notifications">Notifications only</string>
+    <string name="usage_mode_both">Notifications with sound</string>
+    <string name="usage_mode_sound">Sound only</string>
+    <string name="usage_mode_off">Off</string>
+    <string name="usage_sound_policy">One channel sound per batch. Background following keeps its silent activity notice.</string>
+    <string name="usage_channel_denied">Notifications are blocked in Android settings.</string>
+    <string name="usage_pool_unavailable">Individual reports only. Exact shared pools, ambiguous identities and reset-credit actions require a newer shared library.</string>
+    <string name="usage_auth_required">Sign in to this provider on the host, then refresh.</string>
+</resources>

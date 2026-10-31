@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept mobile usage and notification adaptations; not generated. -->
+<resources>
+    <string name="usage_notification_mode">Ketjuilmoitukset</string>
+    <string name="usage_mode_notifications">Vain ilmoitukset</string>
+    <string name="usage_mode_both">Ilmoitukset ja ääni</string>
+    <string name="usage_mode_sound">Vain ääni</string>
+    <string name="usage_mode_off">Pois</string>
+    <string name="usage_sound_policy">Yksi kanavaääni erää kohti. Taustaseuranta säilyttää hiljaisen ilmoituksensa.</string>
+    <string name="usage_channel_denied">Ilmoitukset on estetty Android-asetuksissa.</string>
+    <string name="usage_pool_unavailable">Vain yksittäiset raportit. Tarkat jaetut kiintiöt, epäselvät tunnisteet ja nollaushyvitysten toiminnot vaativat uudemman jaetun kirjaston.</string>
+    <string name="usage_auth_required">Kirjaudu palveluntarjoajalle isännällä ja päivitä.</string>
+</resources>

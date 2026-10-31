@@ -30,6 +30,12 @@ object Ot3NotificationChannels {
     /** Approval, question, done and failed alerts: heads-up. */
     const val ALERTS = "ot3-alerts"
 
+    fun alertsAllowed(context: Context): Boolean {
+        if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+        return Build.VERSION.SDK_INT < 26 || context.getSystemService(NotificationManager::class.java)
+            .getNotificationChannel(ALERTS)?.importance != NotificationManager.IMPORTANCE_NONE
+    }
+
     /** Creates both channels (API 26+); idempotent, keeps the user's own changes. */
     fun ensure(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -158,6 +164,7 @@ object AwarenessAlertBuilder {
         alert: AwarenessAlert,
         now: Long,
         lockscreen: LockscreenDetail = LockscreenDetail.Full,
+        silent: Boolean = false,
     ): Notification? {
         val timeout = alert.expiresAt?.let { it - now }
         if (timeout != null && timeout <= 0) return null
@@ -171,6 +178,7 @@ object AwarenessAlertBuilder {
             .setGroup(Ot3NotificationIds.group(alert.group))
             .setCategory(if (alert.phase.needsUser) NotificationCompat.CATEGORY_REMINDER else NotificationCompat.CATEGORY_STATUS)
             .setContentIntent(NotificationRoutes.open(context, alert.route))
+        if (silent) builder.setSilent(true)
         if (timeout != null) builder.setTimeoutAfter(timeout).addExtras(android.os.Bundle().apply { putLong("ot3.expiresAt", now + timeout) })
         tint(context, alert.phase)?.let(builder::setColor)
         lockscreen(context, builder, lockscreen, alert.status.ifBlank { statusLabel(context, alert.phase) }, Ot3NotificationChannels.ALERTS)

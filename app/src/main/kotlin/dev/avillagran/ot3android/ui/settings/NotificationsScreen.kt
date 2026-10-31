@@ -33,17 +33,25 @@ fun NotificationsScreen(preferences: FollowPreferences, onBack: () -> Unit) {
     val settings by preferences.settings.collectAsStateWithLifecycle(FollowSettings())
     val enabled = settings.enabled
     var support by remember { mutableStateOf(LiveUpdates.support(context)) }
+    var alertsAllowed by remember { mutableStateOf(Ot3NotificationChannels.alertsAllowed(context) && ThreadFollowService.allowed(context)) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, context) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) support = LiveUpdates.support(context)
+            if (event == Lifecycle.Event.ON_RESUME) {
+                support = LiveUpdates.support(context)
+                alertsAllowed = Ot3NotificationChannels.alertsAllowed(context) && ThreadFollowService.allowed(context)
+            }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
     }
     val scope = rememberCoroutineScope()
     var denied by remember { mutableStateOf(false) }
-    fun enable() { scope.launch { preferences.setEnabled(true); ThreadFollowService.start(context) } }
+    fun enable() {
+        if (!ThreadFollowService.allowed(context)) { denied = true; return }
+        denied = false
+        scope.launch { preferences.setEnabled(true); ThreadFollowService.start(context) }
+    }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) enable() else denied = true
     }
@@ -56,12 +64,37 @@ fun NotificationsScreen(preferences: FollowPreferences, onBack: () -> Unit) {
                     if (value) {
                         if (ThreadFollowService.allowed(context)) enable()
                         else if (android.os.Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        else denied = true
                     } else scope.launch {
                         preferences.setEnabled(false)
                         context.stopService(Intent(context, ThreadFollowService::class.java))
                     }
                 }, modifier = Modifier.testTag("follow_enabled"), contentDescription = stringResource(R.string.follow_enabled))
             })
+            Text(stringResource(R.string.usage_notification_mode), style = MaterialTheme.typography.titleMedium)
+            FollowNotificationMode.entries.forEach { mode ->
+                val label = stringResource(when (mode) {
+                    FollowNotificationMode.Notifications -> R.string.usage_mode_notifications
+                    FollowNotificationMode.NotificationsAndSound -> R.string.usage_mode_both
+                    FollowNotificationMode.Sound -> R.string.usage_mode_sound
+                    FollowNotificationMode.Off -> R.string.usage_mode_off
+                })
+                Row(Modifier.fillMaxWidth().testTag("follow_mode_${mode.wire}")
+                    .selectable(settings.mode == mode, role = Role.RadioButton, onClick = {
+                        scope.launch { preferences.setMode(mode) }
+                    }), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    RadioButton(settings.mode == mode, onClick = null)
+                    Text(label)
+                }
+            }
+            Text(stringResource(R.string.usage_sound_policy))
+            if (!alertsAllowed) TextButton(onClick = {
+                context.startActivity(if (android.os.Build.VERSION.SDK_INT >= 26)
+                    Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                else Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    android.net.Uri.fromParts("package", context.packageName, null)))
+            }) { Text(stringResource(R.string.usage_channel_denied)) }
             if (denied) Text(stringResource(R.string.follow_permission_denied))
             Text(stringResource(R.string.follow_alerts), style = MaterialTheme.typography.titleMedium)
             FollowAlert.entries.forEach { alert ->

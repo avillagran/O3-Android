@@ -19,7 +19,7 @@ class SharedQuotaSource(
     private val refresh: suspend (String, Connection) -> Unit,
     private val read: (Connection) -> Flow<QuotaUpdate> = { QuotaReader().stream(it.transport) },
 ) {
-    private class Entry(val scope: CoroutineScope, val state: StateFlow<QuotaState>, var consumers: Int = 0)
+    private class Entry(val scope: CoroutineScope, val state: StateFlow<QuotaState>, val refreshes: MutableSharedFlow<Unit>, var consumers: Int = 0)
     private val mutex = Mutex()
     private val entries = mutableMapOf<String, Entry>()
 
@@ -27,9 +27,10 @@ class SharedQuotaSource(
         val entry = mutex.withLock {
             entries.getOrPut(id) {
                 val child = CoroutineScope(scope.coroutineContext + SupervisorJob(scope.coroutineContext[Job]))
+                val refreshes = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
                 Entry(child, connection(id).flatMapLatest { current ->
-                    if (current == null) flowOf(QuotaState(busy = false, offline = true)) else connected(id, current)
-                }.stateIn(child, SharingStarted.Lazily, QuotaState()))
+                    if (current == null) flowOf(QuotaState(busy = false, offline = true)) else connected(id, current, refreshes)
+                }.stateIn(child, SharingStarted.Lazily, QuotaState()), refreshes)
             }.also { it.consumers++ }
         }
         try { emitAll(entry.state) }
@@ -45,29 +46,35 @@ class SharedQuotaSource(
         }
     }
 
-    private fun connected(id: String, current: Connection): Flow<QuotaState> = flow {
+    suspend fun refresh(id: String) {
+        mutex.withLock { entries[id]?.refreshes?.tryEmit(Unit) }
+    }
+
+    private fun connected(id: String, current: Connection, refreshes: Flow<Unit>): Flow<QuotaState> = channelFlow {
         var attempt = 0
         while (currentCoroutineContext().isActive) {
-            emit(QuotaState())
+            send(QuotaState())
             try {
                 coroutineScope {
+                    val status = MutableStateFlow(QuotaState())
+                    val publishing = launch { status.collect { send(it) } }
                     launch {
-                        while (isActive) {
+                        merge(refreshes, flow { while (currentCoroutineContext().isActive) { emit(Unit); delay(300_000) } }).collect {
                             try { refresh(id, current) }
                             catch (cancelled: CancellationException) { throw cancelled }
-                            catch (_: Exception) { /* Probe failure still counts in the application gate. */ }
-                            delay(300_000)
+                            catch (_: Exception) { status.update { it.copy(busy = false, failed = true) } }
                         }
                     }
                     read(current).collect { update ->
                         if (update.closed) error("quota_stream_closed")
-                        update.state?.let { attempt = 0; emit(QuotaState(it, busy = false)) }
+                        update.state?.let { attempt = 0; status.value = QuotaState(it, busy = false) }
                     }
+                    publishing.cancel()
                     error("quota_stream_ended")
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) {
-                emit(QuotaState(busy = false, failed = true))
+                send(QuotaState(busy = false, failed = true))
                 delay((1000L shl attempt.coerceAtMost(5)).coerceAtMost(30_000))
                 attempt++
             }
