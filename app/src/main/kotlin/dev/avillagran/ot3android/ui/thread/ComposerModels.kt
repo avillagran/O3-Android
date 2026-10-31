@@ -65,9 +65,8 @@ internal fun ComposerModels(
             )
         }
         permissions()
-        TextButton(onClick = { options = true; onRefresh() }, enabled = enabled && selection.has("model")) {
-            Text(stringResource(R.string.composer_options))
-        }
+        Ot3IconButton("sliders-horizontal", stringResource(R.string.composer_options),
+            { options = true; onRefresh() }, enabled = enabled && selection.has("model"))
     }
     if (picker) Ot3Sheet(onDismissRequest = { picker = false }, title = stringResource(R.string.composer_model)) {
         OutlinedTextField(search, { search = it }, Modifier.fillMaxWidth().padding(horizontal = 12.dp),

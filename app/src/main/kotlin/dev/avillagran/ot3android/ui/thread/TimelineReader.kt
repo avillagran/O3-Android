@@ -52,12 +52,14 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     onPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
     followLatestRequest: Int = 0,
     actions: TranscriptActions = TranscriptActions(),
+    findRequest: Int? = null,
 ) {
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     fun releaseEditor() { focus.clearFocus(force = true); keyboard?.hide() }
     val threadKey = LocalSelectedThreadKey.current
     var finding by rememberSaveable(threadKey) { mutableStateOf(false) }
+    LaunchedEffect(findRequest) { if (findRequest != null && findRequest > 0) finding = true }
     var query by rememberSaveable(threadKey) { mutableStateOf("") }
     var selectedMatch by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
     var matchOffset by rememberSaveable(threadKey) { mutableIntStateOf(0) }
@@ -146,8 +148,13 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         BoxWithConstraints(Modifier.fillMaxSize()) {
             // IME windows can leave less height than the navigation chrome itself.
             // Keep the lazy viewport usable; find controls move into a dialog.
-            val compactReader = maxHeight < 160.dp
+            val compactReader = maxHeight < 320.dp || findRequest != null
             Column(Modifier.fillMaxSize()) {
+                if (compactReader && findRequest == null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = { finding = true }, modifier = Modifier.testTag("transcript_find")) {
+                        Text(stringResource(R.string.transcript_find))
+                    }
+                }
                 if (!compactReader) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = { finding = !finding }, modifier = Modifier.widthIn(max = 160.dp).testTag("transcript_find")) {
                         Text(stringResource(if (finding) R.string.transcript_close_find else R.string.transcript_find))
@@ -193,9 +200,6 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
                 }
             }
             if (compactReader) {
-                TextButton(onClick = { finding = true }, modifier = Modifier.align(Alignment.TopEnd).testTag("transcript_find")) {
-                    Text(stringResource(R.string.transcript_find))
-                }
                 if (finding) androidx.compose.ui.window.Dialog(onDismissRequest = { finding = false }) {
                     Surface {
                         Column(Modifier.padding(12.dp)) {

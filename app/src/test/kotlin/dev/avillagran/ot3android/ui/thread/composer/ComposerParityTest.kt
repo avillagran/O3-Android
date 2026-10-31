@@ -25,6 +25,17 @@ class ComposerParityTest {
     private val scope = ComposerScope("host", "project", "thread")
     private fun initial() = ComposerSnapshot(scope, text = "Look at the file", selection = ComposerSelection(16, 16),
         attachments = listOf(ComposerAttachment("file", "notes.md", UploadStatus.Ready, "descriptor")))
+    @Test fun blockedEmptyDraftDoesNotPretendToBeSendingAndBusyIsExplicit() {
+        var state by mutableStateOf(ComposerSnapshot(scope, loading = true))
+        rule.setContent { Ot3Theme { ComposerParity(state, emptySet(), { _, _, _, _ -> }, {}) } }
+        rule.onNodeWithTag("thread_sending").assertDoesNotExist()
+        rule.onNodeWithTag("thread_send").assertIsNotEnabled()
+        rule.onNodeWithTag("composer_busy").assertDoesNotExist()
+        rule.runOnIdle { state = state.copy(sending = true) }
+        rule.onNodeWithTag("thread_sending").assertIsDisplayed()
+        rule.onNodeWithTag("composer_busy").assertTextEquals("Sending…")
+    }
+
     @Test fun losingFocusPublishesCommittedCompositionWithoutChangingText() {
         val editor = dev.avillagran.ot3android.ui.thread.ComposerEditorState("Compose")
         lateinit var focus: androidx.compose.ui.focus.FocusManager
@@ -64,6 +75,7 @@ class ComposerParityTest {
             ComposerParity(initial().copy(uncertainCommand = "durable-id"),
                 setOf(ComposerAction.SendAndNew, ComposerAction.OppositeOnce), { _, _, _, _ -> fail("locked editor") }, requests::add)
         } }
+        rule.onNodeWithTag("composer_actions").performClick()
         rule.onNodeWithText("Send and start new thread").assertIsNotEnabled()
         rule.onNodeWithText("Opposite delivery once").assertIsNotEnabled()
         rule.onNodeWithTag("thread_composer").assertIsNotEnabled()

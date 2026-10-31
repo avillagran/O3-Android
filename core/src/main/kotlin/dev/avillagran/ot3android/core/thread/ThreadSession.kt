@@ -14,9 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
@@ -289,14 +287,17 @@ class ThreadSession(
             // leaving actions disabled until some unrelated event arrives.
             val updates = if (stale) flow {
                 coroutineScope {
-                    val inbox = stream.buffer(1).produceIn(this)
-                    try {
-                        val first = withTimeoutOrNull(CACHE_RESUME_TIMEOUT_MS) { inbox.receiveCatching() }
-                            ?: throw T3Exception(REFETCH)
-                        first.exceptionOrNull()?.let { throw it }
-                        first.getOrNull()?.let { emit(it) }
-                        for (update in inbox) emit(update)
-                    } finally { inbox.cancel() }
+                    // Idle/cursor-only frames do not validate the saved projection.
+                    // Bound the whole stale interval, not just receipt of the first frame.
+                    val validation = launch {
+                        delay(CACHE_RESUME_TIMEOUT_MS)
+                        throw T3Exception(REFETCH)
+                    }
+                    try { stream.collect { update ->
+                        emit(update)
+                        if (!stale) validation.cancel()
+                    } }
+                    finally { validation.cancel() }
                 }
             } else stream
             updates.takeWhile { update ->

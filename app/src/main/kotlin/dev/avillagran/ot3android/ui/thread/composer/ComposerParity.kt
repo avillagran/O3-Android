@@ -12,6 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
@@ -87,8 +90,60 @@ fun ComposerParity(
             onRequest(ComposerRequest.ImportUri(origin, it.toString()))
         }
     }
+    val compact = LocalConfiguration.current.screenHeightDp < 420
+    var overflow by remember { mutableStateOf(false) }
+    fun request(action: ComposerAction) {
+        when (action) {
+            ComposerAction.Attach -> { picking = snapshot; picker.launch(arrayOf("*/*")) }
+            ComposerAction.Paste -> {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = clipboard.primaryClip
+                if (clip != null) for (index in 0 until minOf(clip.itemCount, 100)) {
+                    val item = clip.getItemAt(index)
+                    if (item.uri != null) onRequest(ComposerRequest.ImportUri(snapshot, item.uri.toString()))
+                    else item.text?.toString()?.let { onRequest(ComposerRequest.PasteText(snapshot, it)) }
+                }
+            }
+            ComposerAction.OppositeOnce -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.OppositeOnce))
+            ComposerAction.Background -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Background))
+            ComposerAction.SendAndNew -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.SendAndNew))
+            else -> onRequest(ComposerRequest.Action(snapshot, action))
+        }
+    }
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    fun closeEditor() {
+        editor.newSurface(); editor.releaseFocus(); focus.clearFocus(); keyboard?.hide(); expanded = false
+    }
+    val editorActions: @Composable () -> Unit = {
+        if (ComposerAction.Attach in capabilities) Ot3IconButton("paperclip", stringResource(R.string.composer_attach),
+            { request(ComposerAction.Attach) }, enabled = snapshot.transformable)
+        Box {
+            Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { overflow = true },
+                modifier = Modifier.testTag("composer_actions"))
+            DropdownMenu(expanded = overflow, onDismissRequest = { overflow = false }) {
+                capabilities.forEach { action ->
+                    val sendAction = action in setOf(ComposerAction.OppositeOnce, ComposerAction.Background, ComposerAction.SendAndNew)
+                    DropdownMenuItem(text = { Text(actionLabel(action, snapshot.interaction)) },
+                        enabled = if (sendAction) snapshot.sendable else snapshot.transformable,
+                        onClick = { overflow = false; request(action) })
+                }
+            }
+        }
+    }
+    val renderEditor: @Composable (Boolean, Modifier) -> Unit = { full, layout ->
+        ComposerEditor(editor, full, snapshot.sendable, snapshot.sending,
+            onDraftChange = { _, _ -> },
+            onSend = { if (snapshot.sendable) onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
+            onToggle = { editor.newSurface(); editor.requestFocus = true; expanded = true },
+            modifier = layout,
+            onEditorValue = { value ->
+                onEdit(snapshot, value.text, ComposerSelection(value.selection.start, value.selection.end), value.composition != null)
+            },
+            compact = compact, enabled = snapshot.editable, actions = editorActions)
+    }
     Column(modifier) {
-        if (snapshot.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+        if (snapshot.sending) Text(stringResource(R.string.approval_sending), Modifier.testTag("composer_busy"))
         if (snapshot.uncertainCommand != null) Text(stringResource(R.string.composer_uncertain))
         if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
@@ -121,43 +176,24 @@ fun ComposerParity(
                 }
             }
         }
-        ComposerEditor(editor, expanded, snapshot.sendable, !snapshot.editable,
-            onDraftChange = { _, _ -> },
-            onSend = { if (snapshot.sendable) onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
-            onToggle = { expanded = !expanded },
-            modifier = if (expanded) Modifier.heightIn(min = 180.dp, max = 360.dp) else Modifier,
-            onEditorValue = { value ->
-                onEdit(snapshot, value.text, ComposerSelection(value.selection.start, value.selection.end), value.composition != null)
-            },
-            toolbar = {
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-                    capabilities.forEach { action ->
-                        val sendAction = action in setOf(ComposerAction.OppositeOnce, ComposerAction.Background, ComposerAction.SendAndNew)
-                        TextButton(enabled = if (sendAction) snapshot.sendable else snapshot.transformable, onClick = {
-                            when (action) {
-                                ComposerAction.Attach -> { picking = snapshot; picker.launch(arrayOf("*/*")) }
-                                ComposerAction.Paste -> {
-                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    val clip = clipboard.primaryClip
-                                    if (clip != null) for (index in 0 until minOf(clip.itemCount, 100)) {
-                                        val item = clip.getItemAt(index)
-                                        val uri = item.uri
-                                        if (uri != null) onRequest(ComposerRequest.ImportUri(snapshot, uri.toString()))
-                                        else item.text?.toString()?.let { onRequest(ComposerRequest.PasteText(snapshot, it)) }
-                                    }
-                                }
-                                ComposerAction.OppositeOnce -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.OppositeOnce))
-                                ComposerAction.Background -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Background))
-                                ComposerAction.SendAndNew -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.SendAndNew))
-                                else -> onRequest(ComposerRequest.Action(snapshot, action))
-                            }
-                        }) { Text(actionLabel(action, snapshot.interaction)) }
-                    }
+        if (!expanded) renderEditor(false, Modifier)
+    }
+    if (expanded) androidx.compose.ui.window.Dialog(onDismissRequest = ::closeEditor,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Surface(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Ot3IconButton("chevron-down", stringResource(R.string.ot3_composer_back), ::closeEditor,
+                        modifier = Modifier.testTag("composer_dialog_back"))
+                    Text(stringResource(R.string.ot3_composer_edit), Modifier.weight(1f))
+                    editorActions()
+                    if (snapshot.sending) dev.avillagran.ot3android.ui.kit.Ot3Spinner(Modifier.size(48.dp))
+                    else Ot3IconButton("arrow-up", stringResource(R.string.thread_send),
+                        { onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
+                        enabled = snapshot.sendable, modifier = Modifier.testTag("thread_send"))
                 }
-            },
-        )
-        if (expanded) TextButton(onClick = { onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) }, enabled = snapshot.sendable) {
-            Text(stringResource(R.string.thread_send))
+                renderEditor(true, Modifier.weight(1f).testTag("composer_expanded"))
+            }
         }
     }
 }
