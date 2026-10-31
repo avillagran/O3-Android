@@ -69,13 +69,15 @@ fun BridgeAdministration(bridge: BridgeCatalogController, onClose: () -> Unit) {
                 TextButton(enabled = !busy, onClick = { request(JSONObject().put("action", "read")) }) { Text(stringResource(R.string.bridge_refresh)) }
                 if (snapshot != null) {
                     // Deliberately render selected public fields, never serialize the host snapshot.
-                    snapshot?.optJSONObject("identity")?.optString("name")?.let { Text(it) }
+                    snapshot?.optJSONObject("device")?.optString("name")?.let { Text(it) }
                     OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.bridge_admin_name)) })
                     TextButton(enabled = !busy && name.isNotBlank(), onClick = { confirmation = JSONObject().put("action", "rename").put("name", name) }) { Text(stringResource(R.string.bridge_admin_rename)) }
                     listOf("publish", "unpublish").forEach { action ->
                         TextButton(enabled = !busy, onClick = { confirmation = JSONObject().put("action", action) }) { Text(action) }
                     }
-                    TextButton(enabled = !busy, onClick = { confirmation = JSONObject().put("action", "invite").put("services", org.json.JSONArray().put("t3")).put("ttl", 600) }) { Text(stringResource(R.string.bridge_admin_invite)) }
+                    val features = snapshot?.optJSONArray("features")
+                    val canIssueInvitation = (0 until (features?.length() ?: 0)).any { features!!.optString(it) == "mobile-admin-v1" }
+                    if (canIssueInvitation) TextButton(enabled = !busy, onClick = { confirmation = JSONObject().put("action", "invite").put("services", org.json.JSONArray().put("t3")).put("ttl", 600) }) { Text(stringResource(R.string.bridge_admin_invite)) }
                     TextButton(enabled = !busy, onClick = { request(JSONObject().put("action", "endpoints")) }) { Text(stringResource(R.string.bridge_admin_endpoints)) }
                 }
             }
