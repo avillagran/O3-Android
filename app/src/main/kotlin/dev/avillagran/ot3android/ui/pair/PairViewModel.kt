@@ -24,6 +24,7 @@ data class PairUiState(
     /** The server [link] points at, read offline by the lib; null while it is not a readable link. */
     val linkOrigin: String? = null,
     val bridge: String? = null,
+    val bridgeTarget: dev.avillagran.ot3android.core.bridge.BridgePairingReview.Target? = null,
 ) {
     val busy: Boolean get() = bridge == "connecting" || pairing is PairingState.Inspecting || pairing is PairingState.Pairing
 
@@ -39,20 +40,25 @@ class PairViewModel(
 ) : ViewModel() {
     val bridgeSupported: Boolean get() = bridgeAvailable()
     private val bridge = MutableStateFlow<String?>(null)
+    private val review = dev.avillagran.ot3android.core.bridge.BridgePairingReview()
+    private val target = MutableStateFlow<dev.avillagran.ot3android.core.bridge.BridgePairingReview.Target?>(null)
+    private var bridgeJob: kotlinx.coroutines.Job? = null
 
     private val link = MutableStateFlow("")
 
     /** Each link with its origin, read by the lib off the main thread. */
     private val origins = link.mapLatest { value -> value to value.takeIf { it.isNotEmpty() && !BridgeInvitation.isLink(it) }?.let { service.origin(it) } }
 
-    val state: StateFlow<PairUiState> = combine(link, service.state, origins, bridge) { link, pairing, source, bridge ->
+    val state: StateFlow<PairUiState> = combine(link, service.state, origins, bridge, target) { link, pairing, source, bridge, target ->
         val (read, origin) = source
         // An origin read for an older link is not shown with a newer one.
-        PairUiState(link, pairing, origin.takeIf { read == link }, bridge)
+        PairUiState(link, pairing, origin.takeIf { read == link }, bridge, target)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, PairUiState())
 
     fun setLink(value: String) {
         if (state.value.busy) return
+        review.clear()
+        target.value = null
         link.value = value.trim()
         bridge.value = null
         if (service.state.value !is PairingState.Idle) viewModelScope.launch { service.reset() }
@@ -64,7 +70,10 @@ class PairViewModel(
      */
     fun open(value: String) {
         if (state.value.busy) return
+        review.clear()
+        target.value = null
         link.value = value.trim()
+        bridge.value = null
         inspect()
     }
 
@@ -73,18 +82,53 @@ class PairViewModel(
         val current = link.value
         if (BridgeInvitation.isLink(current)) {
             if (!bridgeAvailable() || pairBridge == null) { bridge.value = "sdk_unavailable"; return }
-            bridge.value = "connecting"
-            viewModelScope.launch {
-                try {
-                    val approved = pairBridge.invoke(BridgeInvitation.decode(current))
-                    bridge.value = if (approved) "approved" else "pending"
-                    if (approved) link.value = ""
-                } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
-                catch (_: Exception) { bridge.value = "failed" }
+            try {
+                target.value = review.inspect(BridgeInvitation.decode(current))
+                bridge.value = "review"
+            } catch (_: Exception) {
+                target.value = null
+                link.value = ""
+                bridge.value = "failed"
             }
             return
         }
         viewModelScope.launch { forgetDeadLink(service.inspect(current)) }
+    }
+
+    /** Explicit confirmation of the full peer ID; all-host scope is decided by the issuer. */
+    fun confirmBridge(exactPeerId: String, consent: Boolean) {
+        if (state.value.busy || pairBridge == null) return
+        val (ticket, invitation) = try { review.consume(exactPeerId, consent) } catch (_: Exception) {
+            bridge.value = "failed"
+            return
+        }
+        target.value = null
+        link.value = ""
+        bridge.value = "connecting"
+        bridgeJob = viewModelScope.launch {
+            try {
+                if (!review.isCurrent(ticket)) return@launch
+                val approved = pairBridge.invoke(invitation)
+                if (review.isCurrent(ticket)) bridge.value = if (approved) "approved" else "pending"
+            } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+            catch (_: Exception) { if (review.isCurrent(ticket)) bridge.value = "failed" }
+        }
+    }
+
+    /** Leaving the surface clears the one-use invitation and rejects late completions. */
+    fun dismissBridge() {
+        review.clear()
+        bridgeJob?.cancel()
+        bridgeJob = null
+        target.value = null
+        link.value = ""
+        bridge.value = null
+    }
+
+    override fun onCleared() {
+        review.close()
+        bridgeJob?.cancel()
+        super.onCleared()
     }
 
     /** Pairs; [replace] moves a saved environment at another address instead of adding one. */

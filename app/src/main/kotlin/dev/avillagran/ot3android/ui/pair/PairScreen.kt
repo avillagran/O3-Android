@@ -25,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -78,6 +79,9 @@ fun PairScreen(
     modifier: Modifier = Modifier,
 ) {
     SecureWindow()
+    androidx.compose.runtime.DisposableEffect(viewModel) {
+        onDispose { viewModel.dismissBridge() }
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val waiting by inbox.collectAsStateWithLifecycle()
     // Taken only while idle: a link arriving mid-pairing waits in the inbox instead of being
@@ -175,9 +179,26 @@ fun PairScreen(
                 }
             }
 
-            state.bridge?.let { bridge ->
+            state.bridgeTarget?.let { target ->
+                var consent by androidx.compose.runtime.remember(target) { androidx.compose.runtime.mutableStateOf(false) }
+                Text(stringResource(R.string.connections_peer_review))
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(target.peerId, modifier = Modifier.testTag("bridge_peer_id"))
+                }
+                Text(stringResource(R.string.connections_all_hosts_warning))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Checkbox(checked = consent, onCheckedChange = { consent = it },
+                        modifier = Modifier.testTag("bridge_peer_consent"))
+                    Text(stringResource(R.string.connections_peer_confirm))
+                }
+                Button(onClick = { viewModel.confirmBridge(target.peerId, consent) }, enabled = consent,
+                    modifier = Modifier.testTag("bridge_peer_pair")) {
+                    Text(stringResource(R.string.pair_confirm))
+                }
+            }
+            state.bridge?.takeIf { it != "review" }?.let { bridge ->
                 Text(stringResource(when (bridge) {
-                    "pending" -> R.string.bridge_pending
+                    "pending" -> R.string.connections_pair_pending
                     "approved" -> R.string.bridge_approved
                     "sdk_unavailable" -> R.string.bridge_sdk_unavailable
                     "connecting" -> R.string.bridge_connecting
