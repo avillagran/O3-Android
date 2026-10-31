@@ -31,13 +31,14 @@ class RevealPaceDeviceTest {
                 rule.waitUntil(15_000) { rule.onNodeWithTag("nav_tab_Settings").isDisplayed() }
                 rule.onNodeWithTag("nav_tab_Settings").performClick()
                 rule.onNodeWithTag("settings_Appearance").performClick()
-                rule.onNodeWithTag("appearance_reveal_pace_NORMAL").performScrollTo().assertIsSelected()
-                rule.onNodeWithTag("appearance_reveal_pace_SLOW").performScrollTo().performClick()
+                // P02 unifies reveal controls with the persisted local appearance options.
+                rule.onNodeWithTag("preference_transitionSpeed_normal").performScrollTo().assertIsSelected()
+                rule.onNodeWithTag("preference_transitionSpeed_slow").performScrollTo().performClick()
                 rule.waitUntil(15_000) { runBlocking { prefs.settings.first().revealPace == RevealPace.SLOW } }
                 capture("appearance-slow")
                 scenario.recreate()
-                rule.onNodeWithTag("appearance_reveal_pace_SLOW").performScrollTo().assertIsSelected()
-                rule.onNodeWithTag("appearance_reveal_pace_FAST").performScrollTo().performClick()
+                rule.onNodeWithTag("preference_transitionSpeed_slow").performScrollTo().assertIsSelected()
+                rule.onNodeWithTag("preference_transitionSpeed_fast").performScrollTo().performClick()
                 rule.waitUntil(15_000) { runBlocking { prefs.settings.first().revealPace == RevealPace.FAST } }
                 capture("appearance-fast")
                 rule.onNodeWithContentDescription("Back").performClick()
