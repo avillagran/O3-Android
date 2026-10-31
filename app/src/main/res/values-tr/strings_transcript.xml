@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Bul</string>
+    <string name="transcript_close_find">Aramayı kapat</string>
+    <string name="transcript_find_loaded">Yüklenen iletilerde ara</string>
+    <string name="transcript_previous">Önceki</string>
+    <string name="transcript_next">Sonraki</string>
+    <string name="transcript_latest">En yeniye git ↓</string>
+    <string name="transcript_history_unavailable">Bu sürümde eski geçmiş kullanılamaz</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Planı uygula</string>
+    <string name="transcript_compacting">Bağlam sıkıştırılıyor</string>
+    <string name="transcript_compacted">Bağlam sıkıştırıldı</string>
+    <string name="transcript_handoff_pending">Bağlam aktarımı bekliyor</string>
+    <string name="transcript_handoff">Bağlam aktarımı</string>
+    <string name="transcript_open_thread">Konuyu aç</string>
+    <string name="transcript_secret_saved">Güvenli ve gizli kaydedildi</string>
+    <string name="transcript_secret_declined">Reddedildi</string>
+    <string name="transcript_secret_unavailable">Bu SDK ile güvenli yanıt kullanılamaz</string>
+    <string name="transcript_secret_ended">İstek sona erdi</string>
+    <string name="transcript_quote">Alıntıla</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Kaydet</string>
+    <string name="transcript_secret_decline">Reddet</string>
+    <string name="transcript_secret_sent">Yanıt gönderildi; onay bekleniyor</string>
+    <string name="transcript_secret_uncertain">Teslimat belirsiz. Tekrar denemeden önce asıl konudaki isteği kontrol et.</string>
+    <string name="transcript_plan_feedback">Plan geri bildirimi</string>
+    <string name="transcript_plan_follow_up">Geri bildirim gönder</string>
+    <string name="transcript_plan_new_thread">Yeni konuda</string>
+    <string name="transcript_plan_cancel">İşlemi iptal et</string>
+    <string name="transcript_plan_retry">İşlemi yeniden dene</string>
+    <string name="transcript_secret_private">Gizli tutulur; konuşmaya asla eklenmez</string>
+</resources>

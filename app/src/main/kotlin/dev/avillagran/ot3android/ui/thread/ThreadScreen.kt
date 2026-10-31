@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -105,7 +106,7 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onChanges: (() -> Unit)? = null) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val imageConnection by viewModel.imageConnection.collectAsStateWithLifecycle()
     val diffSettings by androidx.compose.ui.platform.LocalContext.current.devGraph().diffReviewSettings.collectAsStateWithLifecycle()
@@ -142,12 +143,14 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             onRuntimeMode = viewModel::selectRuntimeMode,
             composerSlot = if (viewModel.durableComposerAvailable) ({ ConnectedComposer(viewModel, state) }) else null,
             onChanges = onChanges,
+            onOpenThread = onOpenThread,
+            transcriptSecrets = viewModel.transcriptSecrets(imageConnection),
         )
     }
 }
 
 /** Stateless thread screen: top bar, banners, the timeline (newest at the bottom) and the composer. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ThreadContent(
     state: ThreadUiState,
@@ -175,6 +178,8 @@ fun ThreadContent(
     quotaStrip: @Composable () -> Unit = {},
     composerSlot: (@Composable () -> Unit)? = null,
     onChanges: (() -> Unit)? = null,
+    onOpenThread: ((String) -> Unit)? = null,
+    transcriptSecrets: dev.avillagran.ot3android.ui.thread.reader.TranscriptSecrets? = null,
     editorIdentity: String = state.view.threadId,
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
     onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
@@ -200,6 +205,11 @@ fun ThreadContent(
     val density = androidx.compose.ui.platform.LocalDensity.current
     val availableEditorHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp -
         with(density) { WindowInsets.ime.getBottom(this).toDp() }
+    // Leave room for the reader when the IME occupies most of a landscape window.
+    // The same options remain available from the header overflow.
+    val compactComposer = availableEditorHeight < 360.dp ||
+        (androidx.compose.foundation.layout.WindowInsets.isImeVisible &&
+            androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
     val compactEditorToolbar = expanded && availableEditorHeight < 220.dp
     val editKey = state.queueEdit?.let { org.json.JSONObject(it).getString("runId") }
     val editors = androidx.compose.runtime.saveable.rememberSaveable(editorIdentity, saver = ComposerEditors.StateSaver) { ComposerEditors() }
@@ -256,17 +266,27 @@ fun ThreadContent(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { if (expanded) toggleEditor() else onBack() }, modifier = Modifier.testTag("composer_back")) {
+                    IconButton(onClick = { if (expanded) toggleEditor() else {
+                        editor.releaseFocus()
+                        focus.clearFocus()
+                        keyboard?.hide()
+                        onBack()
+                    } }, modifier = Modifier.testTag("composer_back")) {
                         Icon(painterResource(R.drawable.ic_arrow_back), stringResource(if (expanded) R.string.ot3_composer_back else R.string.action_back))
                     }
                 },
                 actions = {
                     if (expanded) Ot3IconButton("arrow-up", stringResource(R.string.thread_send), ::submit, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = state.canSend && !state.sending, tint = Ot3Theme.colors.accent)
                     var quotaMenu by remember { mutableStateOf(false) }
+                    var showComposerOptions by remember { mutableStateOf(false) }
                     Box {
-                        Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { quotaMenu = true }, modifier = Modifier.testTag("thread_overflow"))
+                        Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), {
+                            showComposerOptions = expanded || compactComposer
+                            if (compactComposer && !expanded) { editor.releaseFocus(); focus.clearFocus(); keyboard?.hide() }
+                            quotaMenu = true
+                        }, modifier = Modifier.testTag("thread_overflow"))
                         androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
-                            if (expanded) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
+                            if (showComposerOptions) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
                             if (onChanges != null) androidx.compose.material3.DropdownMenuItem(
                                 text = { Text(stringResource(R.string.ot3_git_review)) },
                                 onClick = { quotaMenu = false; onChanges() })
@@ -290,7 +310,9 @@ fun ThreadContent(
             )
         },
         bottomBar = {
-            if (!expanded) Column(Modifier.navigationBarsPadding().imePadding()) {
+            if (!expanded) Column(Modifier.navigationBarsPadding().imePadding()
+                .then(if (compactComposer) Modifier.heightIn(max = 64.dp)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier)) {
                 ThreadQueue(
                     state.view.timeline?.optJSONObject("queue"),
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
@@ -319,8 +341,8 @@ fun ThreadContent(
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
                     state.respondingRequest, state.answeredRequests, onResponse = onQuestionResponse)
                 if (!hasQuestion) {
-                    if (composerSlot != null && state.queueEdit == null) { toolbar(); composerSlot() }
-                    else ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = toolbar)
+                    if (composerSlot != null && state.queueEdit == null) { if (!compactComposer) toolbar(); composerSlot() }
+                    else ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = { if (!compactComposer) toolbar() }, compact = compactComposer)
                 }
             }
         },
@@ -353,7 +375,17 @@ fun ThreadContent(
                         !state.view.loaded -> Ot3Spinner(Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp)
                         (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(stringResource(R.string.thread_empty), modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY))
                         else -> if (state.readingPositionLoaded) timelineState.SaveableStateProvider(editorIdentity) {
-                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition, followLatestRequest)
+                            TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition, followLatestRequest,
+                                actions = dev.avillagran.ot3android.ui.thread.reader.TranscriptActions(
+                                    secrets = transcriptSecrets,
+                                    openThread = onOpenThread,
+                                    quote = if (state.queueEdit == null && !state.sending) ({ text ->
+                                        val quoted = text.lineSequence().joinToString("\n") { "> $it" }
+                                        val draft = editor.value.text
+                                        val appended = if (draft.isBlank()) "$quoted\n\n" else "$draft\n\n$quoted\n\n"
+                                        edit(appended, java.util.UUID.randomUUID().toString())
+                                    }) else null,
+                                ))
                         }
                     }
                 }

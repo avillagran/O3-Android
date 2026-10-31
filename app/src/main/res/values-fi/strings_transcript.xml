@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Etsi</string>
+    <string name="transcript_close_find">Sulje haku</string>
+    <string name="transcript_find_loaded">Etsi ladatuista viesteistä</string>
+    <string name="transcript_previous">Edellinen</string>
+    <string name="transcript_next">Seuraava</string>
+    <string name="transcript_latest">Siirry uusimpaan ↓</string>
+    <string name="transcript_history_unavailable">Vanhempi historia ei ole käytettävissä tässä versiossa</string>
+    <string name="transcript_plan">Suunnitelma</string>
+    <string name="transcript_implement">Toteuta suunnitelma</string>
+    <string name="transcript_compacting">Tiivistetään kontekstia</string>
+    <string name="transcript_compacted">Konteksti tiivistetty</string>
+    <string name="transcript_handoff_pending">Kontekstin siirto odottaa</string>
+    <string name="transcript_handoff">Kontekstin siirto</string>
+    <string name="transcript_open_thread">Avaa keskustelu</string>
+    <string name="transcript_secret_saved">Tallennettu turvallisesti ja yksityisesti</string>
+    <string name="transcript_secret_declined">Hylätty</string>
+    <string name="transcript_secret_unavailable">Turvallinen vastaus ei ole käytettävissä tällä SDK:lla</string>
+    <string name="transcript_secret_ended">Pyyntö päättynyt</string>
+    <string name="transcript_quote">Lainaa</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Tallenna</string>
+    <string name="transcript_secret_decline">Hylkää</string>
+    <string name="transcript_secret_sent">Vastaus lähetetty; odotetaan vahvistusta</string>
+    <string name="transcript_secret_uncertain">Toimitus epävarma. Tarkista pyyntö alkuperäisestä keskustelusta ennen uutta yritystä.</string>
+    <string name="transcript_plan_feedback">Suunnitelman palaute</string>
+    <string name="transcript_plan_follow_up">Lähetä palaute</string>
+    <string name="transcript_plan_new_thread">Uudessa keskustelussa</string>
+    <string name="transcript_plan_cancel">Peruuta toiminto</string>
+    <string name="transcript_plan_retry">Yritä uudelleen</string>
+    <string name="transcript_secret_private">Pidetään yksityisenä eikä lisätä keskusteluun</string>
+</resources>

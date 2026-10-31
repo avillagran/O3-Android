@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Hledat</string>
+    <string name="transcript_close_find">Zavřít hledání</string>
+    <string name="transcript_find_loaded">Hledat v načtených zprávách</string>
+    <string name="transcript_previous">Předchozí</string>
+    <string name="transcript_next">Další</string>
+    <string name="transcript_latest">Přejít na nejnovější ↓</string>
+    <string name="transcript_history_unavailable">Starší historie není v této verzi dostupná</string>
+    <string name="transcript_plan">Plán</string>
+    <string name="transcript_implement">Provést plán</string>
+    <string name="transcript_compacting">Komprimace kontextu</string>
+    <string name="transcript_compacted">Kontext komprimován</string>
+    <string name="transcript_handoff_pending">Předání kontextu čeká</string>
+    <string name="transcript_handoff">Předání kontextu</string>
+    <string name="transcript_open_thread">Otevřít vlákno</string>
+    <string name="transcript_secret_saved">Bezpečně a soukromě uloženo</string>
+    <string name="transcript_secret_declined">Odmítnuto</string>
+    <string name="transcript_secret_unavailable">Bezpečná odpověď není s tímto SDK dostupná</string>
+    <string name="transcript_secret_ended">Požadavek ukončen</string>
+    <string name="transcript_quote">Citovat</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Uložit</string>
+    <string name="transcript_secret_decline">Odmítnout</string>
+    <string name="transcript_secret_sent">Odpověď odeslána; čeká na potvrzení</string>
+    <string name="transcript_secret_uncertain">Doručení nejisté. Před dalším pokusem zkontrolujte požadavek v původním vlákně.</string>
+    <string name="transcript_plan_feedback">Připomínky k plánu</string>
+    <string name="transcript_plan_follow_up">Odeslat připomínky</string>
+    <string name="transcript_plan_new_thread">V novém vlákně</string>
+    <string name="transcript_plan_cancel">Zrušit operaci</string>
+    <string name="transcript_plan_retry">Opakovat operaci</string>
+    <string name="transcript_secret_private">Zůstává soukromé a nikdy se nepřidá do konverzace</string>
+</resources>

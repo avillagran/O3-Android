@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Suchen</string>
+    <string name="transcript_close_find">Suche schließen</string>
+    <string name="transcript_find_loaded">Geladene Nachrichten durchsuchen</string>
+    <string name="transcript_previous">Zurück</string>
+    <string name="transcript_next">Weiter</string>
+    <string name="transcript_latest">Zur neuesten Nachricht ↓</string>
+    <string name="transcript_history_unavailable">Älterer Verlauf ist in dieser Version nicht verfügbar</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Plan umsetzen</string>
+    <string name="transcript_compacting">Kontext wird komprimiert</string>
+    <string name="transcript_compacted">Kontext komprimiert</string>
+    <string name="transcript_handoff_pending">Kontextübergabe ausstehend</string>
+    <string name="transcript_handoff">Kontextübergabe</string>
+    <string name="transcript_open_thread">Thread öffnen</string>
+    <string name="transcript_secret_saved">Sicher und privat gespeichert</string>
+    <string name="transcript_secret_declined">Abgelehnt</string>
+    <string name="transcript_secret_unavailable">Sichere Antworten sind mit diesem SDK nicht verfügbar</string>
+    <string name="transcript_secret_ended">Anfrage beendet</string>
+    <string name="transcript_quote">Zitieren</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Speichern</string>
+    <string name="transcript_secret_decline">Ablehnen</string>
+    <string name="transcript_secret_sent">Antwort gesendet; Bestätigung ausstehend</string>
+    <string name="transcript_secret_uncertain">Zustellung ungewiss. Prüfe die Anfrage im ursprünglichen Thread vor einem erneuten Versuch.</string>
+    <string name="transcript_plan_feedback">Rückmeldung zum Plan</string>
+    <string name="transcript_plan_follow_up">Rückmeldung senden</string>
+    <string name="transcript_plan_new_thread">In neuem Thread</string>
+    <string name="transcript_plan_cancel">Vorgang abbrechen</string>
+    <string name="transcript_plan_retry">Vorgang wiederholen</string>
+    <string name="transcript_secret_private">Bleibt privat und wird nie zur Unterhaltung hinzugefügt</string>
+</resources>

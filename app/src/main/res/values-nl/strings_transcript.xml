@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Zoeken</string>
+    <string name="transcript_close_find">Zoeken sluiten</string>
+    <string name="transcript_find_loaded">Geladen berichten doorzoeken</string>
+    <string name="transcript_previous">Vorige</string>
+    <string name="transcript_next">Volgende</string>
+    <string name="transcript_latest">Naar nieuwste ↓</string>
+    <string name="transcript_history_unavailable">Oudere geschiedenis is niet beschikbaar in deze versie</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Plan uitvoeren</string>
+    <string name="transcript_compacting">Context comprimeren</string>
+    <string name="transcript_compacted">Context gecomprimeerd</string>
+    <string name="transcript_handoff_pending">Contextoverdracht in afwachting</string>
+    <string name="transcript_handoff">Contextoverdracht</string>
+    <string name="transcript_open_thread">Thread openen</string>
+    <string name="transcript_secret_saved">Veilig en privé opgeslagen</string>
+    <string name="transcript_secret_declined">Geweigerd</string>
+    <string name="transcript_secret_unavailable">Veilig antwoorden is niet beschikbaar met deze SDK</string>
+    <string name="transcript_secret_ended">Verzoek beëindigd</string>
+    <string name="transcript_quote">Citeren</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Opslaan</string>
+    <string name="transcript_secret_decline">Weigeren</string>
+    <string name="transcript_secret_sent">Antwoord verzonden; wacht op bevestiging</string>
+    <string name="transcript_secret_uncertain">Bezorging onzeker. Controleer het verzoek in de oorspronkelijke thread voordat je het opnieuw probeert.</string>
+    <string name="transcript_plan_feedback">Feedback op plan</string>
+    <string name="transcript_plan_follow_up">Feedback verzenden</string>
+    <string name="transcript_plan_new_thread">In nieuwe thread</string>
+    <string name="transcript_plan_cancel">Bewerking annuleren</string>
+    <string name="transcript_plan_retry">Bewerking opnieuw proberen</string>
+    <string name="transcript_secret_private">Blijft privé en wordt nooit aan het gesprek toegevoegd</string>
+</resources>

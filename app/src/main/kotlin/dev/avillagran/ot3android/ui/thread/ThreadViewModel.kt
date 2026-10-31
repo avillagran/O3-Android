@@ -553,6 +553,21 @@ class ThreadViewModel(
     fun isImageConnectionCurrent(expected: Connection?): Boolean =
         expected != null && supervisor.value?.connection?.value === expected
 
+    private var secretConnection: Connection? = null
+    private var secretController: dev.avillagran.ot3android.ui.thread.reader.TranscriptSecrets? = null
+
+    internal fun transcriptSecrets(expected: Connection?): dev.avillagran.ot3android.ui.thread.reader.TranscriptSecrets? {
+        if (expected !== secretConnection) {
+            secretConnection = expected
+            secretController = expected?.let { connection ->
+                dev.avillagran.ot3android.ui.thread.reader.scopedTranscriptSecrets(connection.transport, threadId) {
+                    isImageConnectionCurrent(connection) && state.value.connected && state.value.view.loaded && !state.value.view.stale
+                }
+            }
+        }
+        return secretController.takeIf { expected != null && state.value.connected && state.value.view.loaded && !state.value.view.stale }
+    }
+
     suspend fun readImage(attachment: org.json.JSONObject): ByteArray? {
         val owner = supervisor.value ?: return null
         val current = owner.connection.value ?: return null

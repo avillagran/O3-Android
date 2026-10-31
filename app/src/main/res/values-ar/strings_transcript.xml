@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">بحث</string>
+    <string name="transcript_close_find">إغلاق البحث</string>
+    <string name="transcript_find_loaded">البحث في الرسائل المحملة</string>
+    <string name="transcript_previous">السابق</string>
+    <string name="transcript_next">التالي</string>
+    <string name="transcript_latest">الانتقال إلى الأحدث ↓</string>
+    <string name="transcript_history_unavailable">السجل الأقدم غير متاح في هذا الإصدار</string>
+    <string name="transcript_plan">خطة</string>
+    <string name="transcript_implement">تنفيذ الخطة</string>
+    <string name="transcript_compacting">جارٍ ضغط السياق</string>
+    <string name="transcript_compacted">تم ضغط السياق</string>
+    <string name="transcript_handoff_pending">تسليم السياق قيد الانتظار</string>
+    <string name="transcript_handoff">تسليم السياق</string>
+    <string name="transcript_open_thread">فتح المحادثة</string>
+    <string name="transcript_secret_saved">تم الحفظ بأمان وخصوصية</string>
+    <string name="transcript_secret_declined">مرفوض</string>
+    <string name="transcript_secret_unavailable">الرد الآمن غير متاح مع حزمة SDK هذه</string>
+    <string name="transcript_secret_ended">انتهى الطلب</string>
+    <string name="transcript_quote">اقتباس</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">حفظ</string>
+    <string name="transcript_secret_decline">رفض</string>
+    <string name="transcript_secret_sent">تم إرسال الرد؛ في انتظار التأكيد</string>
+    <string name="transcript_secret_uncertain">التسليم غير مؤكد. تحقق من الطلب في المحادثة الأصلية قبل المحاولة مجددًا.</string>
+    <string name="transcript_plan_feedback">ملاحظات على الخطة</string>
+    <string name="transcript_plan_follow_up">إرسال الملاحظات</string>
+    <string name="transcript_plan_new_thread">في محادثة جديدة</string>
+    <string name="transcript_plan_cancel">إلغاء العملية</string>
+    <string name="transcript_plan_retry">إعادة محاولة العملية</string>
+    <string name="transcript_secret_private">يبقى خاصًا ولا يضاف إلى المحادثة أبدًا</string>
+</resources>
