@@ -155,6 +155,8 @@ internal fun providerDrawable(driverKind: String): Int = when (driverKind) {
 
 @Composable
 private fun ProviderIcon(provider: JSONObject, tint: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
-    Icon(painterResource(providerDrawable(provider.optString("driverKind"))), contentDescription = null,
-        tint = tint, modifier = modifier.size(20.dp).testTag("provider_icon_${provider.optString("instanceId")}"))
+    RegistryIcon(provider.optString("registryIcon"), modifier.size(20.dp)) {
+        Icon(painterResource(providerDrawable(provider.optString("driverKind"))), contentDescription = null,
+            tint = tint, modifier = modifier.size(20.dp).testTag("provider_icon_${provider.optString("instanceId")}"))
+    }
 }

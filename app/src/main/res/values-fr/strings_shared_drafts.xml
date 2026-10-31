@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Brouillons partagés</string>
+    <string name="shared_draft_note">Le texte se synchronise automatiquement. L’accès aux pièces jointes nécessite l’hôte source. Les modifications de file et tentatives d’envoi restent locales.</string>
+    <string name="shared_draft_failed">Échec de synchronisation. Les copies locales et commandes en attente sont conservées.</string>
+    <string name="shared_draft_pending">Commandes en attente : %1$d</string>
+    <string name="shared_draft_save">Enregistrer le texte sur l’autorité</string>
+    <string name="shared_draft_adopt">Utiliser le texte dans l’éditeur</string>
+    <string name="shared_draft_restore">Restaurer avec sauvegarde de la cible</string>
+    <string name="shared_draft_conflict">Conflit : examinez les deux copies avant de résoudre.</string>
+    <string name="shared_draft_authority">ID du point de terminaison de l’autorité des brouillons</string>
+    <string name="shared_draft_select">Choisir l’autorité des brouillons</string>
+    <string name="shared_draft_keep_remote">Garder la copie distante</string>
+    <string name="shared_draft_keep_local">Garder l’opération locale</string>
+</resources>

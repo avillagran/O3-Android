@@ -58,6 +58,9 @@ class MessageImagesTest {
         assertTrue(ReaderBitmapBudget.shared.used <= ReaderBitmapBudget.shared.limit)
         rule.onNodeWithTag("image-end").performScrollTo()
         rule.waitUntil(5000) { "image-199" in reads }
+        // Reading starts before Dispatchers.Default decodes and publishes the bitmap.
+        // Compose idle alone does not await that external work or the resulting layout.
+        rule.waitUntil(5000) { rule.onNodeWithContentDescription("Image 199").isDisplayed() }
         rule.waitForIdle()
         assertTrue("Scrolling should not read intermediate images: ${reads.size}", reads.size < 60)
         rule.onNodeWithContentDescription("Image 0").assertDoesNotExist()

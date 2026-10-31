@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">Správa OmaBridge</string>
+    <string name="bridge_admin_local_note">Ovládání vyhrazené vlastníkovi zůstává na jeho zařízení. Vzdálená správa vyžaduje samostatné oprávnění ke správě.</string>
+    <string name="bridge_admin_name">Název zařízení</string>
+    <string name="bridge_admin_rename">Přejmenovat</string>
+    <string name="bridge_admin_invite">Vytvořit pozvánku</string>
+    <string name="bridge_admin_endpoints">Načíst koncové body</string>
+    <string name="bridge_admin_failed">Požadavek byl odmítnut nebo není dostupný. Zkontroluj oprávnění ke správě na zařízení vlastníka.</string>
+    <string name="bridge_admin_confirm">Potvrdit změnu zařízení</string>
+    <string name="pr_diff">Rozdíly</string>
+    <string name="pr_diff_more_pending">Jsou dostupné další stránky rozdílů.</string>
+    <string name="bridge_admin_publish">Zveřejnit</string>
+    <string name="bridge_admin_unpublish">Zrušit zveřejnění</string>
+    <string name="bridge_admin_service">Služba</string>
+    <string name="bridge_admin_ttl">Platnost (sekundy)</string>
+    <string name="bridge_admin_all_hosts">Všichni hostitelé</string>
+    <string name="bridge_admin_relay">Veřejná HTTPS adresa přenosu</string>
+    <string name="bridge_admin_relay_set">Nastavit přenos</string>
+    <string name="bridge_admin_relay_start">Spustit hostování přenosu</string>
+    <string name="bridge_admin_relay_stop">Zastavit hostování přenosu</string>
+    <string name="bridge_admin_gateway">Název hostitele brány</string>
+    <string name="bridge_admin_port">Port (volitelný)</string>
+    <string name="bridge_admin_gateway_start">Zapnout bránu</string>
+    <string name="bridge_admin_gateway_stop">Vypnout bránu</string>
+    <string name="bridge_admin_revoke">Odvolat přístup</string>
+    <string name="bridge_admin_share">Sdílet pozvánku</string>
+</resources>

@@ -15,6 +15,8 @@ data class ProjectSettingsRoute(val environmentId: String, val projectId: String
 
 data class ProjectConfigurationState(
     val view: JSONObject? = null,
+    val metadata: JSONObject? = null,
+    val canMutate: Boolean = false,
     val busy: Boolean = false,
     val error: String? = null,
     /** An unknown write must be reconciled by an explicit refresh before editing again. */
@@ -22,7 +24,8 @@ data class ProjectConfigurationState(
 )
 
 /** Scoped native descriptors and validators own defaults, inheritance and write eligibility. */
-class ProjectConfiguration(private val route: ProjectSettingsRoute, private val transport: T3Transport) {
+class ProjectConfiguration(private val route: ProjectSettingsRoute, private val transport: T3Transport, private val writes: dev.avillagran.ot3android.core.transport.ConsumerWrites? = null,
+    private val admission: dev.avillagran.ot3android.core.git.CheckoutAdmission? = null) {
     private val mutex = Mutex()
     private val mutable = MutableStateFlow(ProjectConfigurationState())
     val state = mutable.asStateFlow()
@@ -44,7 +47,11 @@ class ProjectConfiguration(private val route: ProjectSettingsRoute, private val 
         val view = transport.domain("scopedSettings.targetView", JSONObject()
             .put("target", JSONObject().put("environment", route.environmentId).put("projectId", route.projectId))
             .put("config", config).put("settings", settings).put("project", project).put("writeAllowed", write)) as JSONObject
-        mutable.value = ProjectConfigurationState(view = view, busy = true)
+        mutable.value = ProjectConfigurationState(view = view, busy = true,
+            metadata = JSONObject().put("title", project.optString("title")).put("autoPull", project.optBoolean("autoPull"))
+                .put("defaultThreadEnvMode", project.optString("defaultThreadEnvMode")).put("defaultModelSelection", project.optJSONObject("defaultModelSelection")),
+            canMutate = writes != null && writes.pending(route.environmentId) == null && session.optBoolean("authenticated") &&
+                (0 until (permissions?.length() ?: 0)).any { permissions!!.optString(it) == "orchestration:operate" })
     }
 
     /** Only keys returned as writable by the native project view can be submitted. */
@@ -60,6 +67,21 @@ class ProjectConfiguration(private val route: ProjectSettingsRoute, private val 
         // No optimistic settings: the next explicit refresh reads authoritative host state.
         transport.call("server.updateSettings", patch)
         mutable.value = mutable.value.copy(view = null, needsRefresh = true)
+    }
+
+    fun hasPendingMutation() = writes?.pending(route.environmentId) != null
+    suspend fun mutate(input: JSONObject) = exclusive {
+        check(mutable.value.canMutate && !mutable.value.needsRefresh)
+        val command = dev.avillagran.ot3android.core.transport.NativeParity().project(
+            JSONObject(input.toString()).put("projectId", route.projectId), "ot3a-" + java.util.UUID.randomUUID())
+        val send: suspend () -> Unit = { writes!!.submit(route.environmentId, transport, "projects.mutate", org.json.JSONArray().put(command)) }
+        if (admission != null) admission.command(route.environmentId, send) else send()
+        mutable.value = mutable.value.copy(needsRefresh = true, canMutate = false)
+    }
+    suspend fun retryMutation() = exclusive {
+        val retry: suspend () -> Unit = { writes?.retry(route.environmentId, transport); Unit }
+        if (admission != null) admission.command(route.environmentId, retry) else retry()
+        mutable.value = mutable.value.copy(needsRefresh = true)
     }
 
     private suspend fun exclusive(block: suspend () -> Unit) {

@@ -58,10 +58,12 @@ internal fun ScopedPreferencesPage(navigator: Ot3Navigator, projects: Boolean, i
                 val transport = connection?.transport
                 if (selectedEnvironment != null && selectedProject != null && transport != null) {
                     key(selectedEnvironment, selectedProject, connection) {
-                        val config = remember { ProjectConfiguration(ProjectSettingsRoute(selectedEnvironment, selectedProject), transport) }
+                        val config = remember { ProjectConfiguration(ProjectSettingsRoute(selectedEnvironment, selectedProject), transport, graph.consumerWrites, graph.checkoutAdmission) }
                         val state by config.state.collectAsStateWithLifecycle()
                         LaunchedEffect(config) { config.refresh() }
-                        ProjectSettingsScreen(state, { coroutine.launch { config.refresh() } }, { name, value, clear -> coroutine.launch { config.update(name, value, clear) } })
+                        ProjectSettingsScreen(state, { coroutine.launch { config.refresh() } }, { name, value, clear -> coroutine.launch { config.update(name, value, clear) } },
+                            onMutation = { input -> graph.appScope.launch { config.mutate(input) } },
+                            onRetryMutation = if (config.hasPendingMutation()) ({ graph.appScope.launch { config.retryMutation() } }) else null)
                     }
                 } else Text(stringResource(if (transport == null && selectedEnvironment != null) R.string.ot3_git_offline else R.string.preferences_all_projects))
             }
@@ -114,7 +116,9 @@ internal fun ProvidersPreferencesPage(navigator: Ot3Navigator) {
             val selected = environment
             val transport = connection?.transport
             if (selected != null && transport != null) key(selected, connection) {
-                val controller = remember { dev.avillagran.ot3android.core.providers.ProviderAdministration(selected, transport) }
+                val controller = remember { dev.avillagran.ot3android.core.providers.ProviderAdministration(selected, transport,
+                    initiallyUncertain = graph.applicationContext.getSharedPreferences("provider-receipts", android.content.Context.MODE_PRIVATE).getBoolean(selected, false),
+                    configurationReceipt = { unresolved -> check(graph.applicationContext.getSharedPreferences("provider-receipts", android.content.Context.MODE_PRIVATE).edit().putBoolean(selected, unresolved).commit()) }) }
                 dev.avillagran.ot3android.ui.settings.providers.ProvidersRoute(controller, { navigator.back() }, uriHandler::openUri)
             } else Text(stringResource(if (selected != null) R.string.ot3_git_offline else R.string.preferences_all_environments))
         }

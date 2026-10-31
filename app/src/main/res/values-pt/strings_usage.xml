@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Desativadas</string>
     <string name="usage_sound_policy">Um som do canal por lote. O acompanhamento em segundo plano mantém o aviso silencioso.</string>
     <string name="usage_channel_denied">As notificações estão bloqueadas nas definições do Android.</string>
-    <string name="usage_pool_unavailable">Apenas relatórios individuais. Pools partilhados exatos, identidades ambíguas e ações de créditos de reposição requerem uma biblioteca partilhada mais recente.</string>
+    <string name="usage_pool_unavailable">Relatórios de contas individuais. Os limites compartilhados aparecem na faixa de uso.</string>
     <string name="usage_auth_required">Inicie sessão neste fornecedor no host e atualize.</string>
 </resources>

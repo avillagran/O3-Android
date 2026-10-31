@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Общие черновики</string>
+    <string name="shared_draft_note">Текст синхронизируется автоматически. Доступ к вложениям требует исходного хоста. Изменения очереди и попытки отправки остаются локальными.</string>
+    <string name="shared_draft_failed">Сбой синхронизации. Локальные копии и ожидающие команды сохранены.</string>
+    <string name="shared_draft_pending">Ожидающие команды: %1$d</string>
+    <string name="shared_draft_save">Сохранить текст в хранилище</string>
+    <string name="shared_draft_adopt">Использовать текст в редакторе</string>
+    <string name="shared_draft_restore">Восстановить с резервной копией назначения</string>
+    <string name="shared_draft_conflict">Конфликт: проверьте обе копии перед разрешением.</string>
+    <string name="shared_draft_authority">ID конечной точки хранилища черновиков</string>
+    <string name="shared_draft_select">Выбрать хранилище черновиков</string>
+    <string name="shared_draft_keep_remote">Сохранить удалённую копию</string>
+    <string name="shared_draft_keep_local">Сохранить локальную операцию</string>
+</resources>

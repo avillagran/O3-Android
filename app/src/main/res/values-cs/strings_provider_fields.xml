@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Cesta k programu</string>
+    <string name="provider_field_home_path">Cesta k domovskému adresáři</string>
+    <string name="provider_field_shadow_home_path">Cesta k alternativnímu domovskému adresáři</string>
+    <string name="provider_field_launch_args">Argumenty spuštění</string>
+    <string name="provider_field_auto_compact_window">Automaticky zkomprimovat po</string>
+    <string name="provider_field_server_url">URL serveru</string>
+    <string name="provider_field_server_password">Heslo serveru</string>
+    <string name="provider_field_auth_method">Způsob přihlášení</string>
+    <string name="provider_field_api_key">Klíč API</string>
+    <string name="provider_field_gcp_project">Projekt GCP</string>
+    <string name="provider_field_gcp_location">Umístění GCP</string>
+    <string name="provider_field_source">Zdroj ACP</string>
+    <string name="provider_field_agent_id">ID agenta registru</string>
+    <string name="provider_field_command_path">Alternativní program</string>
+    <string name="provider_field_auth_method_id">ID metody ověření</string>
+    <string name="provider_field_environment">Proměnné prostředí</string>
+    <string name="provider_field_name">Název</string>
+    <string name="provider_field_value">Hodnota</string>
+    <string name="provider_field_sensitive">Citlivé</string>
+    <string name="provider_field_distribution">Distribuce</string>
+    <string name="provider_field_command_args">Argumenty příkazu (jeden na řádek)</string>
+    <string name="provider_field_add_variable">Přidat proměnnou</string>
+    <string name="provider_field_remove_variable">Odebrat proměnnou</string>
+    <string name="provider_field_automatic">Automaticky</string>
+    <string name="provider_field_binary_distribution">Spustitelný soubor</string>
+</resources>

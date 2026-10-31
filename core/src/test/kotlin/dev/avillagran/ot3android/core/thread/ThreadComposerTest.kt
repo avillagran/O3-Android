@@ -109,7 +109,7 @@ class ThreadComposerTest {
 
         answer.complete(JSONObject().put("sequence", 4))
         runCurrent()
-        assertEquals(ComposerState(), composer.state.value)
+        assertEquals(ComposerState(loaded = true), composer.state.value)
         assertEquals(listOf<SendResult>(SendResult.Accepted("ot3a-1", 4)), results)
         advanceTimeBy(ThreadComposer.DRAFT_DEBOUNCE_MS + 1)
         assertNull(persistedDraft())
@@ -166,7 +166,7 @@ class ThreadComposerTest {
         composer.send(null)
         runCurrent()
 
-        assertEquals(ComposerState(draft = "Hello"), composer.state.value)
+        assertEquals(ComposerState(draft = "Hello", loaded = true), composer.state.value)
         assertEquals("Hello", persistedDraft())
         assertTrue(outboxDao.rows.value.isEmpty())
         assertEquals(SendResult.Failed("rpc_rejected", "Thread is archived"), results.single())

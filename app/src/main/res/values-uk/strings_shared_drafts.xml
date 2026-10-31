@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Спільні чернетки</string>
+    <string name="shared_draft_note">Текст синхронізується автоматично. Доступ до вкладень потребує вихідного хоста. Зміни черги й спроби надсилання залишаються локальними.</string>
+    <string name="shared_draft_failed">Помилка синхронізації. Локальні копії та команди в очікуванні збережено.</string>
+    <string name="shared_draft_pending">Команд в очікуванні: %1$d</string>
+    <string name="shared_draft_save">Зберегти текст у сховищі</string>
+    <string name="shared_draft_adopt">Використати текст у редакторі</string>
+    <string name="shared_draft_restore">Відновити з резервною копією призначення</string>
+    <string name="shared_draft_conflict">Конфлікт: переглянь обидві копії перед вирішенням.</string>
+    <string name="shared_draft_authority">ID кінцевої точки сховища чернеток</string>
+    <string name="shared_draft_select">Вибрати сховище чернеток</string>
+    <string name="shared_draft_keep_remote">Зберегти віддалену копію</string>
+    <string name="shared_draft_keep_local">Зберегти локальну операцію</string>
+</resources>

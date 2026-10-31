@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Wyłączone</string>
     <string name="usage_sound_policy">Jeden dźwięk kanału na partię. Śledzenie w tle zachowuje ciche powiadomienie.</string>
     <string name="usage_channel_denied">Powiadomienia są zablokowane w ustawieniach Androida.</string>
-    <string name="usage_pool_unavailable">Tylko raporty indywidualne. Dokładne wspólne limity, niejednoznaczne tożsamości i operacje kredytów resetowania wymagają nowszej biblioteki współdzielonej.</string>
+    <string name="usage_pool_unavailable">Raporty poszczególnych kont. Współdzielone limity są widoczne na pasku użycia.</string>
     <string name="usage_auth_required">Zaloguj się u tego dostawcy na hoście, a następnie odśwież.</string>
 </resources>

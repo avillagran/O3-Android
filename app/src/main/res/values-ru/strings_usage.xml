@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Выключены</string>
     <string name="usage_sound_policy">Один звук канала на пакет. Фоновое отслеживание сохраняет тихое уведомление.</string>
     <string name="usage_channel_denied">Уведомления заблокированы в настройках Android.</string>
-    <string name="usage_pool_unavailable">Только отдельные отчёты. Точные общие квоты, неоднозначные идентификаторы и операции кредитов сброса требуют новой общей библиотеки.</string>
+    <string name="usage_pool_unavailable">Отчёты по отдельным аккаунтам. Общие лимиты показаны на панели использования.</string>
     <string name="usage_auth_required">Войдите в аккаунт провайдера на хосте и обновите.</string>
 </resources>

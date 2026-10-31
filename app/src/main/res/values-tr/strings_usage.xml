@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Kapalı</string>
     <string name="usage_sound_policy">Her toplu işlemde bir kanal sesi. Arka planda takip sessiz bildirimini korur.</string>
     <string name="usage_channel_denied">Bildirimler Android ayarlarında engellenmiş.</string>
-    <string name="usage_pool_unavailable">Yalnızca bireysel raporlar. Kesin ortak kotalar, belirsiz kimlikler ve sıfırlama kredisi işlemleri daha yeni bir ortak kitaplık gerektirir.</string>
+    <string name="usage_pool_unavailable">Ayrı hesap raporları. Paylaşılan kotalar kullanım çubuğunda görünür.</string>
     <string name="usage_auth_required">Ana makinede bu sağlayıcıda oturum açıp yenileyin.</string>
 </resources>

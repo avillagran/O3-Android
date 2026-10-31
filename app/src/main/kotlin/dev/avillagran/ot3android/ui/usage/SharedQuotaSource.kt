@@ -9,7 +9,7 @@ import org.json.JSONObject
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-data class QuotaState(val limits: JSONObject? = null, val busy: Boolean = true, val offline: Boolean = false, val failed: Boolean = false)
+data class QuotaState(val limits: JSONObject? = null, val busy: Boolean = true, val offline: Boolean = false, val failed: Boolean = false, val environmentId: String? = null)
 
 /** One reducer/subscription per visible environment. No retained entries or jobs after last release. */
 @OptIn(ExperimentalCoroutinesApi::class)

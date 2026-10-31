@@ -93,7 +93,7 @@ private fun PrSelect(label: String, options: List<Pair<String, String>>, tag: St
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, onTab: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit, onWrite: ((JSONObject) -> Unit)? = null) {
+fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, onTab: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit, onWrite: ((JSONObject) -> Unit)? = null, onMoreDiff: (() -> Unit)? = null) {
     var reply by rememberSaveable(number, repository) { mutableStateOf("") }
     var confirming by rememberSaveable(number, repository) { mutableStateOf("") }
     var mergeMethod by rememberSaveable(number, repository) { mutableStateOf("") }
@@ -163,7 +163,7 @@ fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, 
                         Text(file.optString("path"), style = MaterialTheme.typography.titleSmall)
                         androidx.compose.foundation.text.selection.SelectionContainer { Text(file.optString("patch"), fontFamily = dev.avillagran.ot3android.ui.theme.FiraCode) }
                     }
-                    if (!content.isNull("nextCursor")) item { Text(stringResource(R.string.pr_diff_more_pending)) }
+                    if (!content.isNull("nextCursor") && onMoreDiff != null) item { TextButton(onClick = onMoreDiff, enabled = !state.busy) { Text(stringResource(R.string.ot3_pr_more)) } }
                 }
                 "checks" -> {
                     val checks = content.optJSONArray("checks").objects()

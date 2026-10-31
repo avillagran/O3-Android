@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Delade utkast</string>
+    <string name="shared_draft_note">Text synkroniseras automatiskt. Åtkomst till bilagor kräver källvärden. Köändringar och sändningsförsök förblir lokala.</string>
+    <string name="shared_draft_failed">Synkronisering misslyckades. Lokala kopior och väntande kommandon har bevarats.</string>
+    <string name="shared_draft_pending">Väntande kommandon: %1$d</string>
+    <string name="shared_draft_save">Spara text hos auktoriteten</string>
+    <string name="shared_draft_adopt">Använd text i redigeraren</string>
+    <string name="shared_draft_restore">Återställ med säkerhetskopia av målet</string>
+    <string name="shared_draft_conflict">Konflikt: granska båda kopiorna innan du löser den.</string>
+    <string name="shared_draft_authority">Slutpunkts-ID för utkastauktoritet</string>
+    <string name="shared_draft_select">Välj utkastauktoritet</string>
+    <string name="shared_draft_keep_remote">Behåll fjärrkopian</string>
+    <string name="shared_draft_keep_local">Behåll lokal åtgärd</string>
+</resources>

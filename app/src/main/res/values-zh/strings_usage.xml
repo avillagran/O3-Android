@@ -8,6 +8,6 @@
     <string name="usage_mode_off">关闭</string>
     <string name="usage_sound_policy">每批播放一次频道声音。后台跟踪会保留静音状态通知。</string>
     <string name="usage_channel_denied">通知已在 Android 设置中被屏蔽。</string>
-    <string name="usage_pool_unavailable">仅显示独立报告。准确的共享额度、模糊身份处理和重置额度操作需要更新的共享库。</string>
+    <string name="usage_pool_unavailable">此处显示各账户报告。共享额度显示在用量栏中。</string>
     <string name="usage_auth_required">在主机上登录此提供商，然后刷新。</string>
 </resources>

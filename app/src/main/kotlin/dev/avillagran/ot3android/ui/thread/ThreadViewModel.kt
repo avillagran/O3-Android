@@ -107,7 +107,7 @@ private data class Local(
 class ThreadViewModel(
     private val environmentId: String,
     private val threadId: String,
-    connections: ConnectionManager,
+    private val connections: ConnectionManager,
     drafts: DraftRepository,
     private val outbox: OutboxRepository,
     private val sender: MessageSender,
@@ -121,6 +121,7 @@ class ThreadViewModel(
     private val checkoutAdmission: dev.avillagran.ot3android.core.git.CheckoutAdmission? = null,
     private val clientPreferences: dev.avillagran.ot3android.core.settings.GeneralClientPreferences? = null,
 ) : ViewModel() {
+    val localEnvironmentId get() = environmentId
     val durableComposerAvailable = attachmentDirectory != null
     private val attachmentFile = attachmentDirectory?.let { directory ->
         directory.mkdirs()
@@ -130,12 +131,16 @@ class ThreadViewModel(
     val attachmentDraft = MutableStateFlow<List<dev.avillagran.ot3android.core.composer.ComposerAttachment>>(emptyList())
     val attachmentStorageError = MutableStateFlow(false)
     val attachmentPending = MutableStateFlow<String?>(null)
+    var sharedDraftSynchronizer: dev.avillagran.ot3android.core.composer.SharedDraftSynchronizer? = null
+    var sharedDraftRepository: dev.avillagran.ot3android.core.composer.SharedDraftRepository? = null
+    private var sharedClear: org.json.JSONObject? = null
     private var attachmentCommand: String? = null
     private var attachmentAuthority: String? = null
     init {
         attachmentFile?.let { file ->
             try { if (file.baseFile.exists()) {
                 val saved = org.json.JSONObject(file.openRead().use { it.readBytes().toString(Charsets.UTF_8) })
+                sharedClear = saved.optJSONObject("sharedClear")
                 attachmentAuthority = saved.optString("authority").takeIf { it.isNotEmpty() }
                 attachmentCommand = saved.optString("command").takeIf { it.isNotEmpty() }
                 attachmentPending.value = attachmentCommand?.let { org.json.JSONObject(it).getString("commandId") }
@@ -150,7 +155,7 @@ class ThreadViewModel(
         }
     }
     private fun persistAttachments(): Boolean = try {
-        val saved = org.json.JSONObject().put("authority", attachmentAuthority ?: "").put("command", attachmentCommand ?: "").put("attachments", org.json.JSONArray(attachmentDraft.value.map {
+        val saved = org.json.JSONObject().put("sharedClear", sharedClear).put("authority", attachmentAuthority ?: "").put("command", attachmentCommand ?: "").put("attachments", org.json.JSONArray(attachmentDraft.value.map {
             org.json.JSONObject().put("id", it.id).put("name", it.name).apply { it.descriptor?.let { value -> put("descriptor", value) } }
         }))
         attachmentFile?.let { file ->
@@ -166,6 +171,101 @@ class ThreadViewModel(
         check(previous == authority || (attachmentCommand == null && attachmentDraft.value.none { it.descriptor != null })) { "attachment_authority_changed" }
         attachmentAuthority = authority
     }
+    fun sharedDraftTargets(): List<dev.avillagran.ot3android.core.composer.SharedDraftTarget> = connections.supervisors.value.flatMap { (local, supervisor) ->
+        val server = (supervisor.state.value as? ConnectionState.Connected)?.descriptor?.environmentId
+        if (server == null || supervisor.connection.value == null) emptyList() else supervisor.shell.value?.threads.orEmpty().mapNotNull { thread ->
+            if (thread.deletedAt != null || thread.archivedAt != null) return@mapNotNull null
+            val project = thread.projectId ?: return@mapNotNull null
+            dev.avillagran.ot3android.core.composer.SharedDraftTarget(local,
+                dev.avillagran.ot3android.core.composer.ComposerScope(server, project, thread.id),
+                listOf(local, supervisor.shell.value?.project(project)?.title ?: project, thread.title ?: thread.id).joinToString(" · "))
+        }
+    }
+
+    /** Cross-host bytes go only through each captured authenticated native connection. */
+    suspend fun copySharedAttachments(context: android.content.Context, payload: org.json.JSONObject,
+        target: dev.avillagran.ot3android.core.composer.SharedDraftTarget): org.json.JSONObject {
+        val source = supervisor.value?.connection?.value ?: error("source_disconnected")
+        val sourceScope = state.value.composerScope ?: error("source_unavailable")
+        val owner = connections.supervisor(target.localEnvironment) ?: error("target_unavailable")
+        val destination = owner.connection.value ?: error("target_disconnected")
+        fun validTarget() = owner.connection.value === destination &&
+            (owner.state.value as? ConnectionState.Connected)?.descriptor?.environmentId == target.scope.environment &&
+            owner.shell.value?.thread(target.scope.thread)?.let { it.projectId == target.scope.project && it.deletedAt == null && it.archivedAt == null } == true
+        check(validTarget()) { "target_changed" }
+        val files = payload.getJSONArray("attachments")
+        require(files.length() <= 16)
+        val replaced = org.json.JSONArray()
+        var transferredText = payload.getString("text")
+        val referenceBuilder = dev.avillagran.ot3android.core.composer.NativeComposer()
+        for (i in 0 until files.length()) {
+            val file = files.getJSONObject(i)
+            check(file.getString("sourceEnvironment") == sourceScope.environment) { "source_changed" }
+            check(supervisor.value?.connection?.value === source && state.value.composerScope == sourceScope && validTarget())
+            val uploaded = if (target.scope.environment == sourceScope.environment) {
+                destination.transport.draftAttachment(file.getString("id"), file.getString("name"))
+            } else {
+                val uploader = destination.transport as? dev.avillagran.ot3android.ui.thread.composer.ComposerBinaryUpload ?: error("upload_unavailable")
+                val asset = source.transport.draftAttachmentBytes(file.getString("id"), file.getString("name"))
+                try {
+                    require(asset.bytes.isNotEmpty() && asset.bytes.size <= 50 * 1024 * 1024)
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val temporary = java.io.File.createTempFile("composer-", ".upload", context.cacheDir)
+                        try {
+                            temporary.outputStream().use { it.write(asset.bytes) }
+                            android.os.ParcelFileDescriptor.open(temporary, android.os.ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
+                                uploader.upload(fd.fd, file.getString("name"), asset.mimeType, asset.bytes.size.toLong())
+                            }
+                        } finally { temporary.delete() }
+                    }
+                } finally { asset.bytes.fill(0) }
+            }
+            check(supervisor.value?.connection?.value === source && state.value.composerScope == sourceScope && validTarget())
+            if (uploaded.getString("id") != file.getString("id")) {
+                val original = org.json.JSONObject(uploaded.toString()).put("id", file.getString("id")).put("name", file.getString("name"))
+                val oldReference = referenceBuilder.attachmentReference(original)
+                val newReference = referenceBuilder.attachmentReference(uploaded)
+                transferredText = transferredText.replace(oldReference, newReference)
+                // Refuse a noncanonical source reference rather than silently copying an unusable host id.
+                check(!transferredText.contains(file.getString("id"))) { "noncanonical_attachment_reference" }
+            }
+            replaced.put(org.json.JSONObject().put("id", uploaded.getString("id")).put("name", uploaded.getString("name"))
+                .put("sourceEnvironment", target.scope.environment))
+        }
+        check(validTarget())
+        return org.json.JSONObject(payload.toString()).put("text", transferredText).put("attachments", replaced).put("selection", org.json.JSONArray().put(transferredText.length).put(transferredText.length))
+    }
+
+    /** Metadata conveys no grant. Verify every resource on the captured source host first. */
+    suspend fun adoptSharedAttachments(payload: org.json.JSONObject, expectedText: String, applyText: () -> Boolean): Boolean {
+        val captured = supervisor.value?.connection?.value ?: return false
+        val target = state.value.composerScope ?: return false
+        val files = payload.optJSONArray("attachments") ?: org.json.JSONArray()
+        if (files.length() > 16 || attachmentPending.value != null || state.value.sending) return false
+        val authority = cacheAuthority() ?: return false
+        val existing = attachmentDraft.value
+        val same = existing.size == files.length() && existing.indices.all { index ->
+            val current = existing[index]
+            val descriptor = current.descriptor?.let(::orgJson)
+            val metadata = files.getJSONObject(index)
+            descriptor?.optString("id") == metadata.optString("id") && descriptor?.optString("name") == metadata.optString("name") &&
+                metadata.optString("sourceEnvironment") == target.environment && current.status == dev.avillagran.ot3android.core.composer.UploadStatus.Ready
+        }
+        val restored = if (same && attachmentAuthority == authority) existing else (0 until files.length()).map { i ->
+            val file = files.getJSONObject(i)
+            check(file.getString("sourceEnvironment") == target.environment) { "draft_attachment_host" }
+            val descriptor = captured.transport.draftAttachment(file.getString("id"), file.getString("name"))
+            dev.avillagran.ot3android.core.composer.ComposerAttachment(file.getString("id"), file.getString("name"),
+                dev.avillagran.ot3android.core.composer.UploadStatus.Ready, descriptor.toString())
+        }
+        if (supervisor.value?.connection?.value !== captured || state.value.composerScope != target || state.value.draft != expectedText ||
+            attachmentDraft.value != existing || attachmentPending.value != null || state.value.sending) return false
+        if (!applyText()) return false
+        attachmentAuthority = authority
+        attachmentDraft.value = restored
+        return persistAttachments()
+    }
+
     fun removeAttachment(id: String) {
         if (local.value.queueBusy || attachmentPending.value != null || state.value.sending) return
         attachmentDraft.value = attachmentDraft.value.filterNot { it.id == id }
@@ -202,8 +302,16 @@ class ThreadViewModel(
                     "ot3a-" + java.util.UUID.randomUUID(), threadId, state.value.draft, state.value.modelSelection)
                     .put("attachments", org.json.JSONArray(attachmentDraft.value.map { org.json.JSONObject(it.descriptor!!) }))
                 if (pending == null) {
+                    sharedClear = sharedDraftSynchronizer?.let { sync ->
+                        val source = state.value.composerScope ?: error("draft_scope_unavailable")
+                        val metadata = org.json.JSONArray(attachmentDraft.value.map { attachment ->
+                            val descriptor = org.json.JSONObject(attachment.descriptor!!)
+                            org.json.JSONObject().put("id", descriptor.getString("id")).put("name", descriptor.getString("name")).put("sourceEnvironment", source.environment)
+                        })
+                        checkNotNull(sync.submitted(args.optString("text"), metadata)) { "draft_conflict" }.put("authority", sync.repository.authority)
+                    }
                     val preferences = clientPreferences?.settings?.first()
-                    var delivery = if (state.value.view.activeRunId == null) "auto" else if ((state.value.view.timeline?.optJSONArray("approvals")?.length() ?: 0) > 0) "steer" else preferences?.optString("followUpBehavior", "queue") ?: "queue"
+                    var delivery = if (state.value.view.activeRunId == null) "auto" else if ((state.value.view.timeline?.optJSONArray("approvals")?.length() ?: 0) > 0) "steer" else sharedDeliveryMode ?: preferences?.optString("followUpBehavior", "queue") ?: "queue"
                     if (oppositeOnce && delivery != "auto") delivery = if (delivery == "queue") "steer" else "queue"
                     args.put("deliveryIntent", delivery)
                 }
@@ -214,6 +322,14 @@ class ThreadViewModel(
                 if (outbox.find(id) == null) outbox.add(environmentId, threadId, id, args.toString())
                 val result = sender.retry(transport(), id)
                 if (result is SendResult.Accepted) {
+                    sharedClear?.let { saved ->
+                        val repository = sharedDraftRepository
+                        if (repository != null && saved.optString("authority") == repository.authority) {
+                            val command = org.json.JSONObject(saved.toString()).apply { remove("authority") }
+                            repository.stage(command, command.getString("baseCursor"), identity = "send-" + args.getString("commandId"))
+                            sharedClear = null
+                        }
+                    }
                     attachmentDraft.value = emptyList(); attachmentCommand = null; attachmentPending.value = null
                     persistAttachments()
                     if (state.value.draft == args.optString("text")) composer.onDraftChange("")
@@ -410,6 +526,53 @@ class ThreadViewModel(
         }
     }
 
+    suspend fun composerCompletions(snapshot: dev.avillagran.ot3android.core.composer.ComposerSnapshot): Pair<org.json.JSONObject, org.json.JSONArray>? {
+        if (!snapshot.transformable || snapshot.scope != state.value.composerScope) return null
+        val captured = supervisor.value?.connection?.value ?: return null
+        val native = dev.avillagran.ot3android.core.composer.NativeComposer()
+        val trigger = native.completion(org.json.JSONObject().put("action", "completion").put("text", snapshot.text)
+            .put("cursor", snapshot.selection.end).put("composing", snapshot.composing)) ?: return null
+        val shell = supervisor.value?.shell?.value ?: return null
+        val thread = shell.thread(threadId) ?: return null
+        val cwd = thread.raw.optString("cwd").takeIf { it.isNotBlank() && it != "null" }
+            ?: shell.projects.firstOrNull { it.id == thread.projectId }?.workspaceRoot ?: return null
+        val rows = if (trigger.getString("kind") == "path") {
+            native.paths(captured.transport.call("projects.searchEntries", org.json.JSONObject().put("cwd", cwd)
+                .put("query", trigger.getString("query")).put("limit", 40)) as org.json.JSONObject)
+        } else {
+            val config = captured.transport.call("server.getConfig") as org.json.JSONObject
+            val selection = state.value.modelSelection?.let(::orgJson)
+            val providers = config.optJSONArray("providers") ?: return null
+            val provider = (0 until providers.length()).map { providers.getJSONObject(it) }
+                .firstOrNull { it.optString("instanceId") == selection?.optString("instanceId") } ?: return null
+            native.catalog(provider, cwd, trigger.getString("kind"), trigger.getString("query"))
+        }
+        if (supervisor.value?.connection?.value !== captured) return null
+        // Model options already have a dedicated real control; do not expose an inert /model row.
+        val usable = org.json.JSONArray()
+        for (index in 0 until rows.length()) if (rows.getJSONObject(index).optString("insert").isNotEmpty()) usable.put(rows.getJSONObject(index))
+        return trigger to usable
+    }
+    suspend fun recallableDrafts(): List<String> {
+        val messages = state.value.view.timeline?.optJSONArray("timeline") ?: org.json.JSONArray()
+        val choices = dev.avillagran.ot3android.core.composer.NativeComposer().recall(messages)
+        return (0 until choices.length()).map { choices.getString(it) }
+    }
+
+    private var sharedDeliveryMode: String? = null
+    fun adoptSharedModel(payload: org.json.JSONObject) {
+        sharedDeliveryMode = payload.optJSONObject("preferences")?.optString("deliveryMode")?.takeIf { it in setOf("auto", "queue", "steer") }
+        payload.optJSONObject("modelSelection")?.let { model ->
+            val provider = model.optString("providerId").takeIf(String::isNotBlank)
+            val name = model.optString("modelId").takeIf(String::isNotBlank)
+            if (provider != null && name != null) {
+                val options = org.json.JSONArray()
+                listOf("effort", "reasoningEffort", "speedMode").forEach { key -> if (model.has(key)) options.put(org.json.JSONObject().put("id", key).put("value", model.get(key))) }
+                saveModelSelection(org.json.JSONObject().put("instanceId", provider).put("model", name).put("options", options))
+            }
+        }
+    }
+
     fun selectModel(row: org.json.JSONObject) {
         if (state.value.sending || local.value.queueEdit != null || !row.optBoolean("available")) return
         // Values are the exact identities in models.catalog, not provider/display-name guesses.
@@ -459,6 +622,8 @@ class ThreadViewModel(
 
     private fun saveModelSelection(selection: org.json.JSONObject) {
         val bytes = selection.toString()
+        if (local.value.selectedModel?.let { dev.avillagran.ot3android.core.composer.SharedDraftRepository.canonical(orgJson(it)) } ==
+            dev.avillagran.ot3android.core.composer.SharedDraftRepository.canonical(selection)) return
         local.update { it.copy(selectedModel = bytes) }
         modelSave?.cancel()
         modelSave = appScope.launch {

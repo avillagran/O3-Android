@@ -15,16 +15,20 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
-/** Explicit text-only synchronization. Local URIs/uploads are never exported as grants. */
+/** Review, resolve and transfer shared drafts. Local URIs never become resource grants. */
 @Composable
 fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapshot,
-    onAdopt: (ComposerSnapshot, String) -> Unit, onClose: () -> Unit) {
+    onAdopt: (ComposerSnapshot, String) -> Unit, onClose: () -> Unit,
+    targets: List<SharedDraftTarget> = emptyList(),
+    prepareTransfer: (suspend (JSONObject, SharedDraftTarget) -> JSONObject)? = null) {
     val worker = rememberCoroutineScope()
     val opening = remember { snapshot }
     var originalCursor by remember { mutableStateOf<String?>(null) }
     var originalRevision by remember { mutableStateOf<Any?>(null) }
     var state by remember { mutableStateOf<JSONObject?>(null) }
     var busy by remember { mutableStateOf(false) }
+    var targetSearch by remember { mutableStateOf("") }
+    var selectedTarget by remember { mutableStateOf<SharedDraftTarget?>(null) }
     var failed by remember { mutableStateOf(false) }
     fun matches(a: JSONObject, b: JSONObject) = listOf("environment", "project", "kind", "id").all { a.optString(it) == b.optString(it) }
     val scope = remember { SharedDraftRepository.scope(opening.scope) }
@@ -42,6 +46,7 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
         }
     }
     LaunchedEffect(repository) {
+        run()
         val cached = repository.cached()
         state = cached
         originalCursor = cached.optString("cursor").takeIf { it.isNotEmpty() }
@@ -69,9 +74,15 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
                 Text(thread.getJSONObject("payload").optString("text").take(512))
                 TextButton(enabled = !busy, onClick = { onAdopt(opening, thread.getJSONObject("payload").getString("text")); onClose() }) { Text(stringResource(R.string.shared_draft_adopt)) }
                 TextButton(enabled = !busy && pending == 0 && conflicts.length() == 0, onClick = {
-                    run(JSONObject().put("op", "transfer").put("scope", scope).put("expected", thread.getString("revision"))
+                    run(JSONObject().put("op", "transfer").put("scope", scope).put("expected", thread.getString("revision")).put("_ot3aSource", JSONObject(thread.toString()))
                         .put("target", SharedDraftRepository.scope(opening.scope, "stash", UUID.randomUUID().toString())).put("targetExpected", JSONObject.NULL))
                 }) { Text(stringResource(R.string.composer_stash)) }
+            }
+            if (thread != null && !thread.optBoolean("deleted") && prepareTransfer != null) {
+                OutlinedTextField(targetSearch, { targetSearch = it }, label = { Text(stringResource(R.string.ot3_search_threads_placeholder)) })
+                targets.filter { it.scope != opening.scope && it.label.contains(targetSearch, ignoreCase = true) }.take(100).forEach { target ->
+                    TextButton(enabled = !busy && pending == 0 && conflicts.length() == 0, onClick = { selectedTarget = target }) { Text(target.label) }
+                }
             }
             for (i in 0 until docs.length()) {
                 val doc = docs.getJSONObject(i)
@@ -80,7 +91,7 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
                     stash.optString("environment") == opening.scope.environment && !doc.optBoolean("deleted")) {
                     Text(doc.getJSONObject("payload").optString("text").take(160))
                     TextButton(enabled = !busy && pending == 0 && conflicts.length() == 0, onClick = {
-                        val command = JSONObject().put("op", "transfer").put("scope", stash).put("expected", doc.getString("revision"))
+                        val command = JSONObject().put("op", "transfer").put("scope", stash).put("expected", doc.getString("revision")).put("_ot3aSource", JSONObject(doc.toString()))
                             .put("target", scope).put("targetExpected", thread?.opt("revision") ?: JSONObject.NULL)
                         if (thread != null && !thread.optBoolean("deleted")) command.put("backup", SharedDraftRepository.scope(opening.scope, "stash", UUID.randomUUID().toString()))
                         run(command)
@@ -91,14 +102,86 @@ fun SharedDraftPanel(repository: SharedDraftRepository, snapshot: ComposerSnapsh
                 val conflict = conflicts.getJSONObject(i)
                 Text(stringResource(R.string.shared_draft_conflict), color = MaterialTheme.colorScheme.error)
                 val original = conflict.getJSONObject("local")
-                Text(original.optJSONObject("payload")?.optString("text").orEmpty())
-                // Never auto-rebase. Keeping a branch in the editor is safe and leaves the
-                // durable conflict untouched; a future explicit resolution may issue new CAS.
-                original.optJSONObject("payload")?.let { payload ->
-                    TextButton(enabled = !busy, onClick = { onAdopt(opening, payload.optString("text")); onClose() }) { Text(stringResource(R.string.shared_draft_adopt)) }
-                }
+                val editors = state?.optJSONObject("editors")
+                val branch = editors?.keys()?.asSequence()?.map { editors.getJSONObject(it) }
+                    ?.firstOrNull { matches(it.getJSONObject("scope"), original.getJSONObject("scope")) }
+                val branchPayload = branch?.optJSONObject("payload") ?: original.optJSONObject("_ot3aSource")?.optJSONObject("payload") ?: original.optJSONObject("payload")
+                Text(branchPayload?.optString("text").orEmpty())
+                val remote = (0 until docs.length()).map { docs.getJSONObject(it) }
+                    .firstOrNull { matches(it.getJSONObject("scope"), original.getJSONObject("scope")) }
+                if (remote != null && !remote.optBoolean("deleted")) Text(remote.getJSONObject("payload").optString("text"))
+                TextButton(enabled = !busy, onClick = {
+                    busy = true
+                    worker.launch {
+                        try {
+                            repository.keepRemote(conflict.getString("mutationId"))
+                            state = repository.synchronize()
+                        } catch (cancelled: CancellationException) { throw cancelled }
+                        catch (_: Exception) { failed = true }
+                        finally { busy = false }
+                    }
+                }) { Text(stringResource(R.string.shared_draft_keep_remote)) }
+                if (branchPayload != null && original.optString("op") != "put") TextButton(enabled = !busy, onClick = {
+                    busy = true
+                    worker.launch {
+                        try {
+                            repository.resolve(conflict.getString("mutationId"), JSONObject().put("op", "put")
+                                .put("scope", SharedDraftRepository.scope(opening.scope, "stash", UUID.randomUUID().toString()))
+                                .put("expected", JSONObject.NULL).put("payload", branchPayload))
+                            repository.synchronize(); state = repository.synchronize()
+                        } catch (cancelled: CancellationException) { throw cancelled }
+                        catch (_: Exception) { failed = true }
+                        finally { busy = false }
+                    }
+                }) { Text(stringResource(R.string.composer_stash)) }
+                TextButton(enabled = !busy && (original.optString("op") !in setOf("delete", "transfer") || (remote != null && !remote.optBoolean("deleted"))), onClick = {
+                    busy = true
+                    worker.launch {
+                        try {
+                            val command = JSONObject(original.toString()).apply { remove("mutationId"); remove("baseCursor"); remove("editorKey") }
+                                .put("expected", remote?.opt("revision") ?: JSONObject.NULL)
+                            if (command.optString("op") == "put" && branchPayload != null) command.put("payload", branchPayload)
+                            if (command.optString("op") == "transfer") {
+                                if (!command.has("payload") && branchPayload != null) command.put("payload", branchPayload)
+                                val target = (0 until docs.length()).map { docs.getJSONObject(it) }.firstOrNull {
+                                    matches(it.getJSONObject("scope"), command.getJSONObject("target")) }
+                                command.put("targetExpected", target?.opt("revision") ?: JSONObject.NULL)
+                                command.remove("backup")
+                                if (target != null && !target.optBoolean("deleted")) command.put("backup", SharedDraftRepository.scope(opening.scope, "stash", UUID.randomUUID().toString()))
+                            }
+                            repository.resolve(conflict.getString("mutationId"), command)
+                            repository.synchronize()
+                            state = repository.synchronize()
+                        } catch (cancelled: CancellationException) { throw cancelled }
+                        catch (_: Exception) { failed = true }
+                        finally { busy = false }
+                    }
+                }) { Text(stringResource(R.string.shared_draft_keep_local)) }
+
             }
             if (busy) CircularProgressIndicator()
         }
     }, confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.ot3_dialog_close)) } })
+    selectedTarget?.let { target -> AlertDialog(onDismissRequest = { selectedTarget = null },
+        title = { Text(stringResource(R.string.shared_draft_restore)) }, text = { Text(target.label) },
+        confirmButton = { TextButton(enabled = !busy && thread != null, onClick = {
+            selectedTarget = null; busy = true; failed = false
+            val source = JSONObject(thread!!.toString())
+            val base = state!!.getString("cursor")
+            val destination = SharedDraftRepository.scope(target.scope)
+            val prior = (0 until docs.length()).map { docs.getJSONObject(it) }.firstOrNull { matches(it.getJSONObject("scope"), destination) }
+            worker.launch {
+                try {
+                    val payload = prepareTransfer!!(source.getJSONObject("payload"), target)
+                    val command = JSONObject().put("op", "transfer").put("scope", source.getJSONObject("scope")).put("expected", source.get("revision")).put("_ot3aSource", source)
+                        .put("target", destination).put("targetExpected", prior?.opt("revision") ?: JSONObject.NULL).put("payload", payload)
+                    if (prior != null && !prior.optBoolean("deleted")) command.put("backup", SharedDraftRepository.scope(target.scope, "stash", UUID.randomUUID().toString()))
+                    repository.stage(command, base)
+                    repository.synchronize(); state = repository.synchronize()
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { failed = true; state = repository.cached() }
+                finally { busy = false }
+            }
+        }) { Text(stringResource(R.string.shared_draft_restore)) } },
+        dismissButton = { TextButton(onClick = { selectedTarget = null }) { Text(stringResource(R.string.ot3_dialog_cancel)) } }) }
 }

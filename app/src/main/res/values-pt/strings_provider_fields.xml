@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Caminho do executável</string>
+    <string name="provider_field_home_path">Caminho da pasta pessoal</string>
+    <string name="provider_field_shadow_home_path">Caminho da pasta pessoal alternativa</string>
+    <string name="provider_field_launch_args">Argumentos de inicialização</string>
+    <string name="provider_field_auto_compact_window">Compactar automaticamente após</string>
+    <string name="provider_field_server_url">URL do servidor</string>
+    <string name="provider_field_server_password">Senha do servidor</string>
+    <string name="provider_field_auth_method">Método de entrada</string>
+    <string name="provider_field_api_key">Chave API</string>
+    <string name="provider_field_gcp_project">Projeto GCP</string>
+    <string name="provider_field_gcp_location">Localização GCP</string>
+    <string name="provider_field_source">Origem ACP</string>
+    <string name="provider_field_agent_id">ID do agente do registro</string>
+    <string name="provider_field_command_path">Executável alternativo</string>
+    <string name="provider_field_auth_method_id">ID do método de autenticação</string>
+    <string name="provider_field_environment">Variáveis de ambiente</string>
+    <string name="provider_field_name">Nome</string>
+    <string name="provider_field_value">Valor</string>
+    <string name="provider_field_sensitive">Confidencial</string>
+    <string name="provider_field_distribution">Distribuição</string>
+    <string name="provider_field_command_args">Argumentos do comando (um por linha)</string>
+    <string name="provider_field_add_variable">Adicionar variável</string>
+    <string name="provider_field_remove_variable">Remover variável</string>
+    <string name="provider_field_automatic">Automático</string>
+    <string name="provider_field_binary_distribution">Executável</string>
+</resources>

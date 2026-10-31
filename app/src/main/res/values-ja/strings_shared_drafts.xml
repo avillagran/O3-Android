@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">共有下書き</string>
+    <string name="shared_draft_note">テキストは自動的に同期されます。添付ファイルへのアクセスには元のホストが必要です。キューの編集と送信試行はこの端末に残ります。</string>
+    <string name="shared_draft_failed">同期に失敗しました。ローカルのコピーと保留中のコマンドは保持されています。</string>
+    <string name="shared_draft_pending">保留中のコマンド：%1$d</string>
+    <string name="shared_draft_save">管理先にテキストを保存</string>
+    <string name="shared_draft_adopt">エディターでテキストを使用</string>
+    <string name="shared_draft_restore">対象のバックアップ付きで復元</string>
+    <string name="shared_draft_conflict">競合：解決する前に両方のコピーを確認してください。</string>
+    <string name="shared_draft_authority">下書き管理先のエンドポイントID</string>
+    <string name="shared_draft_select">下書き管理先を選択</string>
+    <string name="shared_draft_keep_remote">リモートのコピーを保持</string>
+    <string name="shared_draft_keep_local">ローカルの操作を保持</string>
+</resources>

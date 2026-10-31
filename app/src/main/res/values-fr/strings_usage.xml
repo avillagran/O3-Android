@@ -8,6 +8,6 @@
     <string name="usage_mode_off">Désactivées</string>
     <string name="usage_sound_policy">Un son du canal par lot. Le suivi en arrière-plan conserve son avis silencieux.</string>
     <string name="usage_channel_denied">Les notifications sont bloquées dans les paramètres Android.</string>
-    <string name="usage_pool_unavailable">Rapports individuels uniquement. Les quotas partagés exacts, les identités ambiguës et les actions de crédits de réinitialisation nécessitent une bibliothèque partagée plus récente.</string>
+    <string name="usage_pool_unavailable">Rapports par compte. Les réserves partagées apparaissent dans la barre d’utilisation.</string>
     <string name="usage_auth_required">Connectez-vous à ce fournisseur sur le serveur, puis actualisez.</string>
 </resources>

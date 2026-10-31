@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">공유 초안</string>
+    <string name="shared_draft_note">텍스트가 자동으로 동기화됩니다. 첨부 파일에 접근하려면 원본 호스트가 필요합니다. 대기열 편집 및 전송 시도는 로컬에 유지됩니다.</string>
+    <string name="shared_draft_failed">동기화에 실패했습니다. 로컬 사본과 대기 중인 명령이 보존됩니다.</string>
+    <string name="shared_draft_pending">대기 중인 명령: %1$d</string>
+    <string name="shared_draft_save">관리 저장소에 텍스트 저장</string>
+    <string name="shared_draft_adopt">편집기에서 텍스트 사용</string>
+    <string name="shared_draft_restore">대상 백업과 함께 복원</string>
+    <string name="shared_draft_conflict">충돌: 해결하기 전에 두 사본을 검토하세요.</string>
+    <string name="shared_draft_authority">초안 관리 저장소 엔드포인트 ID</string>
+    <string name="shared_draft_select">초안 관리 저장소 선택</string>
+    <string name="shared_draft_keep_remote">원격 사본 유지</string>
+    <string name="shared_draft_keep_local">로컬 작업 유지</string>
+</resources>

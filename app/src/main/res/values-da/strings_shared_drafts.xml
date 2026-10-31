@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Delte kladder</string>
+    <string name="shared_draft_note">Tekst synkroniseres automatisk. Adgang til vedhæftninger kræver kildeværten. Køændringer og afsendelsesforsøg forbliver lokale.</string>
+    <string name="shared_draft_failed">Synkronisering mislykkedes. Lokale kopier og ventende kommandoer er bevaret.</string>
+    <string name="shared_draft_pending">Ventende kommandoer: %1$d</string>
+    <string name="shared_draft_save">Gem tekst hos autoriteten</string>
+    <string name="shared_draft_adopt">Brug tekst i editoren</string>
+    <string name="shared_draft_restore">Gendan med sikkerhedskopi af målet</string>
+    <string name="shared_draft_conflict">Konflikt: gennemgå begge kopier før løsning.</string>
+    <string name="shared_draft_authority">Slutpunkts-ID for kladdeautoritet</string>
+    <string name="shared_draft_select">Vælg kladdeautoritet</string>
+    <string name="shared_draft_keep_remote">Behold fjernkopi</string>
+    <string name="shared_draft_keep_local">Behold lokal handling</string>
+</resources>

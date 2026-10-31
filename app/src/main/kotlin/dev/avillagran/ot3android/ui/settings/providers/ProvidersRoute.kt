@@ -38,7 +38,30 @@ fun ProvidersRoute(controller: ProviderAdministration, onBack: () -> Unit, openU
             if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             state.errorCode?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             if (state.uncertain) Text(stringResource(R.string.providers_unknown_result))
-            Text(stringResource(R.string.providers_configuration_unbound), style = MaterialTheme.typography.bodySmall)
+            if (state.uncertain && state.configuration != null) {
+                var reviewed by remember(state.configuration.toString()) { mutableStateOf(false) }
+                Row { Checkbox(reviewed, { reviewed = it }); Text(stringResource(R.string.providers_unknown_result)) }
+                TextButton(enabled = reviewed && !state.busy, onClick = controller::reviewedConfiguration) { Text(stringResource(R.string.providers_continue)) }
+            }
+        }
+        state.configuration?.let { configuration ->
+            val drivers = ModelPresentation.objects(configuration.optJSONArray("drivers"))
+            val instances = ModelPresentation.objects(configuration.optJSONArray("instances"))
+            items(instances, key = { "configuration_" + it.getString("id") }) { instance ->
+                drivers.firstOrNull { it.getString("id") == instance.getString("driver") }?.let { driver ->
+                    ProviderConfigurationForm(instance, driver, state.canConfigure && !state.busy && !state.uncertain) { input ->
+                        scope.launch { controller.configure(input); controller.refresh() }
+                    }
+                    HorizontalDivider()
+                }
+            }
+            items(drivers, key = { "create_" + it.getString("id") }) { driver ->
+                var open by remember { mutableStateOf(false) }
+                TextButton(onClick = { open = !open }, enabled = state.canConfigure && !state.busy && !state.uncertain) { Text("+ " + driver.optString("label")) }
+                if (open) ProviderConfigurationForm(null, driver, state.canConfigure && !state.busy && !state.uncertain) { input ->
+                    scope.launch { controller.configure(input); controller.refresh() }
+                }
+            }
         }
         items(state.providers, key = { it.getString("instanceId") }) { provider ->
             val id = provider.getString("instanceId")

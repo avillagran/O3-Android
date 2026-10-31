@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Borradores compartidos</string>
+    <string name="shared_draft_note">El texto se sincroniza automáticamente. El acceso a los adjuntos requiere el host de origen. Las ediciones de cola y los intentos de envío quedan locales.</string>
+    <string name="shared_draft_failed">Falló la sincronización. Se conservan las copias locales y los comandos pendientes.</string>
+    <string name="shared_draft_pending">Comandos pendientes: %1$d</string>
+    <string name="shared_draft_save">Guardar texto en la autoridad</string>
+    <string name="shared_draft_adopt">Usar texto en el editor</string>
+    <string name="shared_draft_restore">Restaurar con copia del destino</string>
+    <string name="shared_draft_conflict">Conflicto: revisa ambas copias antes de resolver.</string>
+    <string name="shared_draft_authority">ID del endpoint de la autoridad de borradores</string>
+    <string name="shared_draft_select">Seleccionar autoridad de borradores</string>
+    <string name="shared_draft_keep_remote">Conservar copia remota</string>
+    <string name="shared_draft_keep_local">Conservar operación local</string>
+</resources>

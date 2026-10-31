@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
     <string name="bridge_admin_title">OmaBridge administration</string>
-    <string name="bridge_admin_local_note">Identity, pairing files, administrator and service grants, bridge consent, all-hosts approvals, gateway domain policy and local relay settings must be changed on the owner device. Remote access requires a separate management grant.</string>
+    <string name="bridge_admin_local_note">Owner-only controls stay on the owner device. Remote administration requires a separate management grant.</string>
     <string name="bridge_admin_name">Device name</string>
     <string name="bridge_admin_rename">Rename</string>
     <string name="bridge_admin_invite">Create invitation</string>
     <string name="bridge_admin_endpoints">Read endpoints</string>
-    <string name="bridge_admin_failed">Request unavailable or refused. Check the management grant on the owner device.</string>
+    <string name="bridge_admin_failed">Request refused or unavailable. Check the management grant on the owner device.</string>
     <string name="bridge_admin_confirm">Confirm device change</string>
     <string name="pr_diff">Diff</string>
-    <string name="pr_diff_more_pending">More diff pages are available; full diff pagination is pending.</string>
+    <string name="pr_diff_more_pending">More diff pages are available.</string>
+    <string name="bridge_admin_publish">Publish</string>
+    <string name="bridge_admin_unpublish">Unpublish</string>
+    <string name="bridge_admin_service">Service</string>
+    <string name="bridge_admin_ttl">Lifetime (seconds)</string>
+    <string name="bridge_admin_all_hosts">All hosts</string>
+    <string name="bridge_admin_relay">Public HTTPS relay URL</string>
+    <string name="bridge_admin_relay_set">Set relay</string>
+    <string name="bridge_admin_relay_start">Start relay hosting</string>
+    <string name="bridge_admin_relay_stop">Stop relay hosting</string>
+    <string name="bridge_admin_gateway">Gateway hostname</string>
+    <string name="bridge_admin_port">Port (optional)</string>
+    <string name="bridge_admin_gateway_start">Enable gateway</string>
+    <string name="bridge_admin_gateway_stop">Disable gateway</string>
+    <string name="bridge_admin_revoke">Revoke access</string>
+    <string name="bridge_admin_share">Share invitation</string>
 </resources>

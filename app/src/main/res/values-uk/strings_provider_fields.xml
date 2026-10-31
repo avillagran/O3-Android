@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Шлях до програми</string>
+    <string name="provider_field_home_path">Домашній каталог</string>
+    <string name="provider_field_shadow_home_path">Альтернативний домашній каталог</string>
+    <string name="provider_field_launch_args">Аргументи запуску</string>
+    <string name="provider_field_auto_compact_window">Автостиснення після</string>
+    <string name="provider_field_server_url">URL сервера</string>
+    <string name="provider_field_server_password">Пароль сервера</string>
+    <string name="provider_field_auth_method">Спосіб входу</string>
+    <string name="provider_field_api_key">Ключ API</string>
+    <string name="provider_field_gcp_project">Проєкт GCP</string>
+    <string name="provider_field_gcp_location">Регіон GCP</string>
+    <string name="provider_field_source">Джерело ACP</string>
+    <string name="provider_field_agent_id">ID агента в реєстрі</string>
+    <string name="provider_field_command_path">Альтернативна програма</string>
+    <string name="provider_field_auth_method_id">ID способу автентифікації</string>
+    <string name="provider_field_environment">Змінні середовища</string>
+    <string name="provider_field_name">Назва</string>
+    <string name="provider_field_value">Значення</string>
+    <string name="provider_field_sensitive">Конфіденційно</string>
+    <string name="provider_field_distribution">Дистрибутив</string>
+    <string name="provider_field_command_args">Аргументи команди (по одному в рядку)</string>
+    <string name="provider_field_add_variable">Додати змінну</string>
+    <string name="provider_field_remove_variable">Видалити змінну</string>
+    <string name="provider_field_automatic">Автоматично</string>
+    <string name="provider_field_binary_distribution">Виконуваний файл</string>
+</resources>

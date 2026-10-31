@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shared_draft_title">Rascunhos compartilhados</string>
+    <string name="shared_draft_note">O texto sincroniza automaticamente. O acesso aos anexos exige o host de origem. Edições da fila e tentativas de envio ficam locais.</string>
+    <string name="shared_draft_failed">Falha na sincronização. Cópias locais e comandos pendentes foram preservados.</string>
+    <string name="shared_draft_pending">Comandos pendentes: %1$d</string>
+    <string name="shared_draft_save">Salvar texto na autoridade</string>
+    <string name="shared_draft_adopt">Usar texto no editor</string>
+    <string name="shared_draft_restore">Restaurar com cópia do destino</string>
+    <string name="shared_draft_conflict">Conflito: revise as duas cópias antes de resolver.</string>
+    <string name="shared_draft_authority">ID do endpoint da autoridade de rascunhos</string>
+    <string name="shared_draft_select">Selecionar autoridade de rascunhos</string>
+    <string name="shared_draft_keep_remote">Manter cópia remota</string>
+    <string name="shared_draft_keep_local">Manter operação local</string>
+</resources>

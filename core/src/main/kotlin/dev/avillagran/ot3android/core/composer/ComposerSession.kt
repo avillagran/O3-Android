@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.core.composer
 
 /** Stable server identity, never a display name, local connection id or checkout path. */
 data class ComposerScope(val environment: String, val project: String, val thread: String, val queueMessage: String? = null)
+data class SharedDraftTarget(val localEnvironment: String, val scope: ComposerScope, val label: String)
 data class ComposerSelection(val start: Int, val end: Int)
 data class ComposerAttachment(
     val id: String,

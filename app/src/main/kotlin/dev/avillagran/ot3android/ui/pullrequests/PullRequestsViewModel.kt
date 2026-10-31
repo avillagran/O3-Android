@@ -167,6 +167,31 @@ class PullRequestViewModel(
             catch (_: Exception) { writeReceipt?.invoke(false); saved["writeUnresolved"] = false; writeState.value = false to false }
         }
     }
+    private val diffPages = MutableStateFlow<JSONObject?>(null)
+    private val diffLoading = MutableStateFlow(false)
+    private var diffGeneration = 0L
+    fun moreDiff() {
+        val connection = activeConnection ?: return
+        val content = state.value.content ?: return
+        val cursor = content.optString("nextCursor").takeIf { !content.isNull("nextCursor") && it.isNotEmpty() } ?: return
+        if (state.value.tab != "diff" || state.value.busy || diffLoading.value) return
+        val generation = diffGeneration
+        diffLoading.value = true
+        viewModelScope.launch {
+            try {
+                val page = connection.transport.pullRequestDiff(reference, cursor)
+                if (activeConnection === connection && generation == diffGeneration) {
+                    val files = linkedMapOf<String, JSONObject>()
+                    listOf(content.optJSONArray("files"), page.optJSONArray("files")).forEach { rows ->
+                        for (i in 0 until (rows?.length() ?: 0)) rows!!.getJSONObject(i).let { files[it.getString("path")] = it }
+                    }
+                    diffPages.value = JSONObject(page.toString()).put("files", org.json.JSONArray(files.values.toList()))
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { /* Retain the current page and its retry cursor. */ }
+            finally { if (generation == diffGeneration) diffLoading.value = false }
+        }
+    }
     private val tab = saved.getStateFlow("tab", "detail")
     private val refresh = MutableStateFlow(0)
     val state = connection(environmentId).flatMapLatest { current ->
@@ -176,6 +201,7 @@ class PullRequestViewModel(
         else channelFlow {
             var detail: JSONObject? = null
             combine(tab, refresh) { page, _ -> page }.collectLatest { page ->
+                diffGeneration++; diffPages.value = null; diffLoading.value = false
                 send(PullRequestState(page, busy = true, detail = detail))
                 try {
                     detail = checkNotNull(read(current, "detail", reference))
@@ -185,7 +211,9 @@ class PullRequestViewModel(
                 catch (_: Exception) { send(PullRequestState(page, failed = true, detail = detail)) }
             }
         }
-    }.combine(writeState) { page, writing -> page.copy(writing = writing.first, writeUnknown = writing.second) }
+    }.combine(diffPages) { page, extra -> if (page.tab == "diff" && extra != null) page.copy(content = extra) else page }
+        .combine(diffLoading) { page, loading -> if (page.tab == "diff" && loading) page.copy(busy = true) else page }
+        .combine(writeState) { page, writing -> page.copy(writing = writing.first, writeUnknown = writing.second) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), PullRequestState())
     fun selectTab(value: String) { if (value in listOf("detail", "checks", "activity", "diff")) saved["tab"] = value }
     fun refresh() { refresh.update { it + 1 } }

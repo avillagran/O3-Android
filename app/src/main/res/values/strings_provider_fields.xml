@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Binary path</string>
+    <string name="provider_field_home_path">Home path</string>
+    <string name="provider_field_shadow_home_path">Shadow home path</string>
+    <string name="provider_field_launch_args">Launch arguments</string>
+    <string name="provider_field_auto_compact_window">Auto-compact after</string>
+    <string name="provider_field_server_url">Server URL</string>
+    <string name="provider_field_server_password">Server password</string>
+    <string name="provider_field_auth_method">Sign-in method</string>
+    <string name="provider_field_api_key">API key</string>
+    <string name="provider_field_gcp_project">GCP project</string>
+    <string name="provider_field_gcp_location">GCP location</string>
+    <string name="provider_field_source">ACP source</string>
+    <string name="provider_field_agent_id">Registry agent ID</string>
+    <string name="provider_field_command_path">Executable override</string>
+    <string name="provider_field_auth_method_id">Authentication method ID</string>
+    <string name="provider_field_environment">Environment variables</string>
+    <string name="provider_field_name">Name</string>
+    <string name="provider_field_value">Value</string>
+    <string name="provider_field_sensitive">Sensitive</string>
+    <string name="provider_field_distribution">Distribution</string>
+    <string name="provider_field_command_args">Command arguments (one per line)</string>
+    <string name="provider_field_add_variable">Add variable</string>
+    <string name="provider_field_remove_variable">Remove variable</string>
+    <string name="provider_field_automatic">Automatic</string>
+    <string name="provider_field_binary_distribution">Executable</string>
+</resources>

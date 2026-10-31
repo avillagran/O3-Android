@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bridge_admin_title">OmaBridge管理</string>
+    <string name="bridge_admin_local_note">所有者専用の操作は所有者の端末で行います。リモート管理には別途管理権限が必要です。</string>
+    <string name="bridge_admin_name">端末名</string>
+    <string name="bridge_admin_rename">名前を変更</string>
+    <string name="bridge_admin_invite">招待を作成</string>
+    <string name="bridge_admin_endpoints">エンドポイントを取得</string>
+    <string name="bridge_admin_failed">要求が拒否されたか利用できません。所有者の端末で管理権限を確認してください。</string>
+    <string name="bridge_admin_confirm">端末の変更を確認</string>
+    <string name="pr_diff">差分</string>
+    <string name="pr_diff_more_pending">差分の続きがあります。</string>
+    <string name="bridge_admin_publish">公開</string>
+    <string name="bridge_admin_unpublish">公開を停止</string>
+    <string name="bridge_admin_service">サービス</string>
+    <string name="bridge_admin_ttl">有効期間（秒）</string>
+    <string name="bridge_admin_all_hosts">すべてのホスト</string>
+    <string name="bridge_admin_relay">公開HTTPSリレーURL</string>
+    <string name="bridge_admin_relay_set">リレーを設定</string>
+    <string name="bridge_admin_relay_start">リレーホストを開始</string>
+    <string name="bridge_admin_relay_stop">リレーホストを停止</string>
+    <string name="bridge_admin_gateway">ゲートウェイのホスト名</string>
+    <string name="bridge_admin_port">ポート（任意）</string>
+    <string name="bridge_admin_gateway_start">ゲートウェイを有効化</string>
+    <string name="bridge_admin_gateway_stop">ゲートウェイを無効化</string>
+    <string name="bridge_admin_revoke">アクセスを取り消す</string>
+    <string name="bridge_admin_share">招待を共有</string>
+</resources>

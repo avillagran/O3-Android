@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">Program yolu</string>
+    <string name="provider_field_home_path">Ev dizini yolu</string>
+    <string name="provider_field_shadow_home_path">Alternatif ev dizini yolu</string>
+    <string name="provider_field_launch_args">Başlatma bağımsız değişkenleri</string>
+    <string name="provider_field_auto_compact_window">Otomatik sıkıştırma eşiği</string>
+    <string name="provider_field_server_url">Sunucu URL’si</string>
+    <string name="provider_field_server_password">Sunucu parolası</string>
+    <string name="provider_field_auth_method">Oturum açma yöntemi</string>
+    <string name="provider_field_api_key">API anahtarı</string>
+    <string name="provider_field_gcp_project">GCP projesi</string>
+    <string name="provider_field_gcp_location">GCP konumu</string>
+    <string name="provider_field_source">ACP kaynağı</string>
+    <string name="provider_field_agent_id">Kayıt aracısı kimliği</string>
+    <string name="provider_field_command_path">Alternatif çalıştırılabilir dosya</string>
+    <string name="provider_field_auth_method_id">Kimlik doğrulama yöntemi kimliği</string>
+    <string name="provider_field_environment">Ortam değişkenleri</string>
+    <string name="provider_field_name">Ad</string>
+    <string name="provider_field_value">Değer</string>
+    <string name="provider_field_sensitive">Gizli</string>
+    <string name="provider_field_distribution">Dağıtım</string>
+    <string name="provider_field_command_args">Komut bağımsız değişkenleri (satır başına bir tane)</string>
+    <string name="provider_field_add_variable">Değişken ekle</string>
+    <string name="provider_field_remove_variable">Değişkeni kaldır</string>
+    <string name="provider_field_automatic">Otomatik</string>
+    <string name="provider_field_binary_distribution">Çalıştırılabilir dosya</string>
+</resources>

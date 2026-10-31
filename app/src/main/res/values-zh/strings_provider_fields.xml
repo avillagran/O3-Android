@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_field_binary_path">可执行文件路径</string>
+    <string name="provider_field_home_path">主目录路径</string>
+    <string name="provider_field_shadow_home_path">备用主目录路径</string>
+    <string name="provider_field_launch_args">启动参数</string>
+    <string name="provider_field_auto_compact_window">自动压缩阈值</string>
+    <string name="provider_field_server_url">服务器 URL</string>
+    <string name="provider_field_server_password">服务器密码</string>
+    <string name="provider_field_auth_method">登录方式</string>
+    <string name="provider_field_api_key">API 密钥</string>
+    <string name="provider_field_gcp_project">GCP 项目</string>
+    <string name="provider_field_gcp_location">GCP 位置</string>
+    <string name="provider_field_source">ACP 来源</string>
+    <string name="provider_field_agent_id">注册表代理 ID</string>
+    <string name="provider_field_command_path">备用可执行文件</string>
+    <string name="provider_field_auth_method_id">身份验证方式 ID</string>
+    <string name="provider_field_environment">环境变量</string>
+    <string name="provider_field_name">名称</string>
+    <string name="provider_field_value">值</string>
+    <string name="provider_field_sensitive">敏感</string>
+    <string name="provider_field_distribution">分发方式</string>
+    <string name="provider_field_command_args">命令参数（每行一个）</string>
+    <string name="provider_field_add_variable">添加变量</string>
+    <string name="provider_field_remove_variable">删除变量</string>
+    <string name="provider_field_automatic">自动</string>
+    <string name="provider_field_binary_distribution">可执行文件</string>
+</resources>
