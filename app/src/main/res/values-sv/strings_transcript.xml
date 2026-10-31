@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Sök</string>
+    <string name="transcript_close_find">Stäng sökning</string>
+    <string name="transcript_find_loaded">Sök i inlästa meddelanden</string>
+    <string name="transcript_previous">Föregående</string>
+    <string name="transcript_next">Nästa</string>
+    <string name="transcript_latest">Gå till senaste ↓</string>
+    <string name="transcript_history_unavailable">Äldre historik är inte tillgänglig i denna version</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Implementera plan</string>
+    <string name="transcript_compacting">Komprimerar kontext</string>
+    <string name="transcript_compacted">Kontext komprimerad</string>
+    <string name="transcript_handoff_pending">Kontextöverföring väntar</string>
+    <string name="transcript_handoff">Kontextöverföring</string>
+    <string name="transcript_open_thread">Öppna tråd</string>
+    <string name="transcript_secret_saved">Säkert och privat sparat</string>
+    <string name="transcript_secret_declined">Avböjt</string>
+    <string name="transcript_secret_unavailable">Säkra svar är inte tillgängliga med denna SDK</string>
+    <string name="transcript_secret_ended">Begäran avslutad</string>
+    <string name="transcript_quote">Citera</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Spara</string>
+    <string name="transcript_secret_decline">Avböj</string>
+    <string name="transcript_secret_sent">Svar skickat; väntar på bekräftelse</string>
+    <string name="transcript_secret_uncertain">Leverans osäker. Kontrollera begäran i den ursprungliga tråden innan du försöker igen.</string>
+    <string name="transcript_plan_feedback">Återkoppling på planen</string>
+    <string name="transcript_plan_follow_up">Skicka återkoppling</string>
+    <string name="transcript_plan_new_thread">I ny tråd</string>
+    <string name="transcript_plan_cancel">Avbryt åtgärd</string>
+    <string name="transcript_plan_retry">Försök igen</string>
+    <string name="transcript_secret_private">Hålls privat och läggs aldrig till i samtalet</string>
+</resources>

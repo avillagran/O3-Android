@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Søk</string>
+    <string name="transcript_close_find">Lukk søk</string>
+    <string name="transcript_find_loaded">Søk i innlastede meldinger</string>
+    <string name="transcript_previous">Forrige</string>
+    <string name="transcript_next">Neste</string>
+    <string name="transcript_latest">Gå til nyeste ↓</string>
+    <string name="transcript_history_unavailable">Eldre historikk er ikke tilgjengelig i denne versjonen</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Implementer plan</string>
+    <string name="transcript_compacting">Komprimerer kontekst</string>
+    <string name="transcript_compacted">Kontekst komprimert</string>
+    <string name="transcript_handoff_pending">Kontekstoverføring venter</string>
+    <string name="transcript_handoff">Kontekstoverføring</string>
+    <string name="transcript_open_thread">Åpne tråd</string>
+    <string name="transcript_secret_saved">Lagret sikkert og privat</string>
+    <string name="transcript_secret_declined">Avvist</string>
+    <string name="transcript_secret_unavailable">Sikkert svar er ikke tilgjengelig med denne SDK-en</string>
+    <string name="transcript_secret_ended">Forespørsel avsluttet</string>
+    <string name="transcript_quote">Siter</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Lagre</string>
+    <string name="transcript_secret_decline">Avvis</string>
+    <string name="transcript_secret_sent">Svar sendt; venter på bekreftelse</string>
+    <string name="transcript_secret_uncertain">Levering usikker. Kontroller forespørselen i den opprinnelige tråden før du prøver igjen.</string>
+    <string name="transcript_plan_feedback">Tilbakemelding på planen</string>
+    <string name="transcript_plan_follow_up">Send tilbakemelding</string>
+    <string name="transcript_plan_new_thread">I ny tråd</string>
+    <string name="transcript_plan_cancel">Avbryt handling</string>
+    <string name="transcript_plan_retry">Prøv handling igjen</string>
+    <string name="transcript_secret_private">Holdes privat og legges aldri til samtalen</string>
+</resources>

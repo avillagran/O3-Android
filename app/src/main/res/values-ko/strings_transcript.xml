@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">찾기</string>
+    <string name="transcript_close_find">검색 닫기</string>
+    <string name="transcript_find_loaded">불러온 메시지 검색</string>
+    <string name="transcript_previous">이전</string>
+    <string name="transcript_next">다음</string>
+    <string name="transcript_latest">최신으로 이동 ↓</string>
+    <string name="transcript_history_unavailable">이 버전에서는 이전 기록을 사용할 수 없습니다</string>
+    <string name="transcript_plan">계획</string>
+    <string name="transcript_implement">계획 구현</string>
+    <string name="transcript_compacting">컨텍스트 압축 중</string>
+    <string name="transcript_compacted">컨텍스트 압축됨</string>
+    <string name="transcript_handoff_pending">컨텍스트 전달 대기 중</string>
+    <string name="transcript_handoff">컨텍스트 전달</string>
+    <string name="transcript_open_thread">스레드 열기</string>
+    <string name="transcript_secret_saved">안전하고 비공개로 저장됨</string>
+    <string name="transcript_secret_declined">거절됨</string>
+    <string name="transcript_secret_unavailable">이 SDK에서는 보안 응답을 사용할 수 없습니다</string>
+    <string name="transcript_secret_ended">요청 종료</string>
+    <string name="transcript_quote">인용</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">저장</string>
+    <string name="transcript_secret_decline">거절</string>
+    <string name="transcript_secret_sent">응답 전송됨; 확인 대기 중</string>
+    <string name="transcript_secret_uncertain">전달 여부가 불확실합니다. 다시 시도하기 전에 원래 스레드에서 요청을 확인하세요.</string>
+    <string name="transcript_plan_feedback">계획 피드백</string>
+    <string name="transcript_plan_follow_up">피드백 보내기</string>
+    <string name="transcript_plan_new_thread">새 스레드에서</string>
+    <string name="transcript_plan_cancel">작업 취소</string>
+    <string name="transcript_plan_retry">작업 재시도</string>
+    <string name="transcript_secret_private">비공개로 유지되며 대화에 추가되지 않습니다</string>
+</resources>

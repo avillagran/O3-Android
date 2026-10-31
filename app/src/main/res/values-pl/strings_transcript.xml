@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">Szukaj</string>
+    <string name="transcript_close_find">Zamknij wyszukiwanie</string>
+    <string name="transcript_find_loaded">Szukaj we wczytanych wiadomościach</string>
+    <string name="transcript_previous">Poprzedni</string>
+    <string name="transcript_next">Następny</string>
+    <string name="transcript_latest">Przejdź do najnowszej ↓</string>
+    <string name="transcript_history_unavailable">Starsza historia nie jest dostępna w tej wersji</string>
+    <string name="transcript_plan">Plan</string>
+    <string name="transcript_implement">Wdróż plan</string>
+    <string name="transcript_compacting">Kompresowanie kontekstu</string>
+    <string name="transcript_compacted">Kontekst skompresowany</string>
+    <string name="transcript_handoff_pending">Przekazanie kontekstu oczekuje</string>
+    <string name="transcript_handoff">Przekazanie kontekstu</string>
+    <string name="transcript_open_thread">Otwórz wątek</string>
+    <string name="transcript_secret_saved">Zapisano bezpiecznie i prywatnie</string>
+    <string name="transcript_secret_declined">Odrzucono</string>
+    <string name="transcript_secret_unavailable">Bezpieczna odpowiedź nie jest dostępna z tym SDK</string>
+    <string name="transcript_secret_ended">Żądanie zakończone</string>
+    <string name="transcript_quote">Cytuj</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">Zapisz</string>
+    <string name="transcript_secret_decline">Odrzuć</string>
+    <string name="transcript_secret_sent">Odpowiedź wysłana; oczekiwanie na potwierdzenie</string>
+    <string name="transcript_secret_uncertain">Dostarczenie niepewne. Sprawdź żądanie w pierwotnym wątku przed ponowną próbą.</string>
+    <string name="transcript_plan_feedback">Uwagi do planu</string>
+    <string name="transcript_plan_follow_up">Wyślij uwagi</string>
+    <string name="transcript_plan_new_thread">W nowym wątku</string>
+    <string name="transcript_plan_cancel">Anuluj operację</string>
+    <string name="transcript_plan_retry">Ponów operację</string>
+    <string name="transcript_secret_private">Pozostaje prywatne i nigdy nie jest dodawane do rozmowy</string>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept transcript UI; not part of the imported native catalog. -->
+<resources>
+    <string name="transcript_find">検索</string>
+    <string name="transcript_close_find">検索を閉じる</string>
+    <string name="transcript_find_loaded">読み込み済みのメッセージを検索</string>
+    <string name="transcript_previous">前へ</string>
+    <string name="transcript_next">次へ</string>
+    <string name="transcript_latest">最新へ ↓</string>
+    <string name="transcript_history_unavailable">このバージョンでは過去の履歴を利用できません</string>
+    <string name="transcript_plan">計画</string>
+    <string name="transcript_implement">計画を実装</string>
+    <string name="transcript_compacting">コンテキスト圧縮中</string>
+    <string name="transcript_compacted">コンテキスト圧縮済み</string>
+    <string name="transcript_handoff_pending">コンテキスト引き継ぎ待ち</string>
+    <string name="transcript_handoff">コンテキスト引き継ぎ</string>
+    <string name="transcript_open_thread">スレッドを開く</string>
+    <string name="transcript_secret_saved">安全かつ非公開で保存済み</string>
+    <string name="transcript_secret_declined">拒否済み</string>
+    <string name="transcript_secret_unavailable">この SDK では安全な回答を利用できません</string>
+    <string name="transcript_secret_ended">リクエスト終了</string>
+    <string name="transcript_quote">引用</string>
+    <string name="transcript_matches">%1$d / %2$d</string>
+    <string name="transcript_position">%1$d / %2$d</string>
+    <string name="transcript_secret_save">保存</string>
+    <string name="transcript_secret_decline">拒否</string>
+    <string name="transcript_secret_sent">回答を送信しました。確認待ちです</string>
+    <string name="transcript_secret_uncertain">送信結果が不明です。再試行前に元のスレッドでリクエストを確認してください。</string>
+    <string name="transcript_plan_feedback">計画へのフィードバック</string>
+    <string name="transcript_plan_follow_up">フィードバックを送信</string>
+    <string name="transcript_plan_new_thread">新しいスレッドで</string>
+    <string name="transcript_plan_cancel">操作をキャンセル</string>
+    <string name="transcript_plan_retry">操作を再試行</string>
+    <string name="transcript_secret_private">非公開で保持され、会話には追加されません</string>
+</resources>
