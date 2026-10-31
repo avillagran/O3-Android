@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">Fournisseurs</string>
+    <string name="providers_back">Retour</string>
+    <string name="providers_refresh">Actualiser</string>
+    <string name="providers_update">Mettre à jour</string>
+    <string name="providers_install">Installer</string>
+    <string name="providers_sign_in">Se connecter</string>
+    <string name="providers_sign_out">Se déconnecter</string>
+    <string name="providers_cancel">Annuler</string>
+    <string name="providers_continue">Continuer</string>
+    <string name="providers_open_sign_in">Ouvrir la page de connexion</string>
+    <string name="providers_auth_status">Actualiser l’état</string>
+    <string name="providers_install_status">Vérifier l’état</string>
+    <string name="providers_terminal_input">Entrée</string>
+    <string name="providers_interaction_unavailable">Indisponible</string>
+    <string name="providers_configuration_unbound">La configuration est indisponible dans cette version.</string>
+    <string name="providers_modes_unavailable">Ce fournisseur ne propose pas de choix de permissions.</string>
+    <string name="providers_unknown_result">Résultat inconnu. Actualisez pour vérifier avant de retenter la même action.</string>
+    <string name="providers_unavailable_value">Sélection indisponible: %1$s</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">المزودون</string>
+    <string name="providers_back">رجوع</string>
+    <string name="providers_refresh">تحديث</string>
+    <string name="providers_update">تحديث</string>
+    <string name="providers_install">ثبّت</string>
+    <string name="providers_sign_in">تسجيل الدخول</string>
+    <string name="providers_sign_out">تسجيل الخروج</string>
+    <string name="providers_cancel">إلغاء</string>
+    <string name="providers_continue">متابعة</string>
+    <string name="providers_open_sign_in">افتح صفحة تسجيل الدخول</string>
+    <string name="providers_auth_status">تحديث الحالة</string>
+    <string name="providers_install_status">التحقق من الحالة</string>
+    <string name="providers_terminal_input">المدخلات</string>
+    <string name="providers_interaction_unavailable">غير متاح</string>
+    <string name="providers_configuration_unbound">الإعداد غير متاح في هذا الإصدار.</string>
+    <string name="providers_modes_unavailable">لا يعلن هذا المزوّد عن خيارات الأذونات.</string>
+    <string name="providers_unknown_result">النتيجة غير معروفة. حدّث للتحقق قبل إعادة المحاولة بنفس الإجراء.</string>
+    <string name="providers_unavailable_value">الخيار المحدد غير متاح: %1$s</string>
+</resources>

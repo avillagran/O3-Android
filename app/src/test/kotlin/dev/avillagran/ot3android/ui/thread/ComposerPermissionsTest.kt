@@ -34,4 +34,14 @@ class ComposerPermissionsTest {
             "approval-required", false, { error("offline refresh") }, { error("offline command") }) } }
         rule.onNodeWithTag("composer_permissions").assertIsNotEnabled()
     }
+
+    @Test fun providerWithoutSupportedModesCannotInventFallbackOrChangeCurrentMode() {
+        rule.setContent { Ot3Theme { ComposerPermissions("""{"providers":[{"instanceId":"work"}]}""",
+            """{"instanceId":"work"}""", "auto", true, {}, { error("unbound fallback") }) } }
+        rule.onNodeWithTag("composer_permissions").performClick()
+        rule.onNodeWithText("This provider does not advertise permission choices.").assertExists()
+        rule.onNodeWithTag("permission_auto").assertDoesNotExist()
+        rule.onNodeWithTag("permission_approval-required").assertDoesNotExist()
+        rule.onNodeWithContentDescription("Thread permissions: Auto").assertExists()
+    }
 }

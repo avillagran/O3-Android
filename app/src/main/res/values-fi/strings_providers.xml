@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P07 strings, sourced from the pinned native catalog. -->
+<resources>
+    <string name="providers_title">Palveluntarjoajat</string>
+    <string name="providers_back">Takaisin</string>
+    <string name="providers_refresh">Päivitä</string>
+    <string name="providers_update">Päivitä</string>
+    <string name="providers_install">Asenna</string>
+    <string name="providers_sign_in">Kirjaudu sisään</string>
+    <string name="providers_sign_out">Kirjaudu ulos</string>
+    <string name="providers_cancel">Peruuta</string>
+    <string name="providers_continue">Jatka</string>
+    <string name="providers_open_sign_in">Avaa kirjautumissivu</string>
+    <string name="providers_auth_status">Päivitä tila</string>
+    <string name="providers_install_status">Tarkista tila</string>
+    <string name="providers_terminal_input">Syöte</string>
+    <string name="providers_interaction_unavailable">Ei saatavilla</string>
+    <string name="providers_configuration_unbound">Määritys ei ole käytettävissä tässä versiossa.</string>
+    <string name="providers_modes_unavailable">Tämä palveluntarjoaja ei ilmoita käyttöoikeusvaihtoehtoja.</string>
+    <string name="providers_unknown_result">Tulos on epäselvä. Päivitä ja tarkista ennen saman toiminnon uusintaa.</string>
+    <string name="providers_unavailable_value">Valinta ei ole käytettävissä: %1$s</string>
+</resources>
