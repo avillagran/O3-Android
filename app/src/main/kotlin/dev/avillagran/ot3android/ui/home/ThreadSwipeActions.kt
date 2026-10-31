@@ -60,7 +60,7 @@ internal fun ThreadSwipeActions(row: HomeRow, onAction: (SwipeAction) -> Unit, m
         if (shown < -1f) Row(Modifier.matchParentSize().background(Ot3Theme.colors.surface),
             horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             listOfNotNull(row.swipe.primary, row.swipe.secondary).forEach { action ->
-                TextButton(onClick = { offset = 0f; onAction(action) },
+                TextButton(enabled = offset < 0f && !dragging, onClick = { if (offset < 0f && !dragging) { offset = 0f; onAction(action) } },
                     modifier = Modifier.width(88.dp).fillMaxHeight().testTag("thread_swipe_${row.key}_${action.name}")) {
                     Text(swipeText(action))
                 }
