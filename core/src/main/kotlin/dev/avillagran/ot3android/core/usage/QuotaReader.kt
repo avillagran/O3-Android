@@ -16,6 +16,10 @@ data class QuotaUpdate(
 )
 
 class QuotaReader(private val domain: DomainCalls = DomainEngine.shared) {
+    suspend fun present(environments: org.json.JSONArray, now: Long): JSONObject = domain.domain(
+        "quotaSources.present", JSONObject().put("environments", environments).put("now", now),
+    ) as JSONObject
+
     /** Each collection starts a fresh native reducer and one server-config subscription. */
     fun stream(transport: T3Transport): Flow<QuotaUpdate> = flow {
         var state: JSONObject? = null

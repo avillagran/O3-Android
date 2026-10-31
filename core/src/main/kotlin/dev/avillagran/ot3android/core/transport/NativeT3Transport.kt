@@ -77,6 +77,32 @@ class NativeT3Transport(
         }
     }
 
+    override suspend fun registryIconBytes(url: String, requestId: String): ByteArray = native {
+        requireNotNull(client.registryIconBytes(url, requestId).bytes)
+    }
+    override suspend fun cancelRegistryIcon(requestId: String) { native { client.cancelRegistryIcon(requestId) } }
+    override suspend fun historyPage(threadId: String, cursor: String): JSONObject = native {
+        client.historyPage(threadId, cursor) as JSONObject
+    }
+    override suspend fun pullRequestDiff(reference: JSONObject, cursor: String?): JSONObject = native {
+        client.pullRequestDiff(reference, cursor) as JSONObject
+    }
+    override suspend fun document(resource: JSONObject): JSONObject = native { client.document(resource) as JSONObject }
+
+    override fun commandOutput(reference: JSONObject): Flow<T3Batch> = channelFlow {
+        val subscription = client.subscribeFn("orchestration.subscribeCommandOutput", JSONObject().put("threadId", reference.getString("threadId")).put("itemId", reference.getString("itemId")))
+        launch {
+            try {
+                while (isActive) {
+                    val batch = subscription.poll(POLL_TIMEOUT_MS)
+                    if (batch.items.length() > 0 || batch.closed) send(batch)
+                    if (batch.closed) break
+                }
+            } finally { channel.close() }
+        }
+        awaitClose { subscription.close() }
+    }.buffer(0).flowOn(io)
+
     override suspend fun shell(): JSONObject = request(SHELL_PATH) as JSONObject
 
     /** A GET on the connected environment, as `T3Client.request`; tests only, the UI uses [shell]. */
