@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Показать код</string>
+    <string name="ot3_render_show_preview">Показать предпросмотр</string>
+    <string name="ot3_render_run">Запустить в терминале</string>
+    <string name="ot3_render_open">Открыть предпросмотр</string>
+    <string name="ot3_render_offline">Предпросмотр недоступен без сети</string>
+    <string name="ot3_render_expired">Разрешение предпросмотра истекло</string>
+    <string name="ot3_render_unsupported">Визуальный рендерер недоступен</string>
+</resources>

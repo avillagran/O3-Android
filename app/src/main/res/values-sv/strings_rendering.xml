@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Visa kod</string>
+    <string name="ot3_render_show_preview">Visa förhandsvisning</string>
+    <string name="ot3_render_run">Kör i terminal</string>
+    <string name="ot3_render_open">Öppna förhandsvisning</string>
+    <string name="ot3_render_offline">Förhandsvisning saknas offline</string>
+    <string name="ot3_render_expired">Förhandsvisningens behörighet har löpt ut</string>
+    <string name="ot3_render_unsupported">Visuell renderare är inte tillgänglig</string>
+</resources>
