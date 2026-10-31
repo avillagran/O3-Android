@@ -138,3 +138,9 @@ data object SourceControlPreferences
 
 @Serializable
 data object ProvidersPreferences
+
+@Serializable
+data class HostMaintenance(val page: String, val environmentId: String? = null, val projectId: String? = null)
+
+@Serializable
+data class ThreadGit(val environmentId: String, val threadId: String)

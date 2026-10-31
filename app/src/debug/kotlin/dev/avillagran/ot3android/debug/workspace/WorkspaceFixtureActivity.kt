@@ -54,6 +54,12 @@ class WorkspaceFixtureActivity : ComponentActivity() {
             }
             val screens = remember(navigator, fixture) {
                 object : Ot3Screens by AppScreens(navigator) {
+                    @Composable override fun Git(route: ThreadGit) {
+                        GitOperationsPage(navigator, route, fixture.connections, fixture.gitJournal, fixture.admission, fixture.outbox)
+                    }
+                    @Composable override fun Maintenance(route: HostMaintenance) {
+                        HostMaintenancePage(navigator, route, fixture.repository, fixture.connections, fixture.maintenanceReceipts)
+                    }
                     @Composable override fun SettingsPlaceholder(name: String, title: Int) {
                         AppScreens(navigator).SettingsPlaceholder(name, title)
                     }
@@ -125,10 +131,12 @@ class WorkspaceFixtureActivity : ComponentActivity() {
                                 fixture.drafts, fixture.outbox, fixture.sender, fixture.viewModelScope,
                                 preferences = if (fixture.caching) (application as dev.avillagran.ot3android.Ot3Application).graph.composerPreferences else null,
                                 threadCache = fixture.cache,
+                                gitJournal = if (intent.getStringExtra("request") == "checkpoint") fixture.gitJournal else null,
+                                checkoutAdmission = fixture.admission,
                                 cacheAuthority = { "fixture-server" },
                                 attachmentDirectory = if (intent.getBooleanExtra("parity", false)) noBackupFilesDir.resolve("fixture-composer-attachments") else null)
                         }
-                        ThreadScreen(vm, { navigator.back() }, onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) }, quotaStrip = {
+                        ThreadScreen(vm, { navigator.back() }, onGit = { navigator.push(ThreadGit(route.environmentId, route.threadId)) }, onChanges = { navigator.push(ThreadChanges(route.environmentId, route.threadId, "working-tree")) }, quotaStrip = {
                             dev.avillagran.ot3android.ui.usage.QuotaStripHost(route.environmentId, false, fixture.quotas, fixture.repository.environments,
                                 onOpenLimits = { navigator.push(dev.avillagran.ot3android.ui.navigation.QuotaLimits(route.environmentId)) })
                         })
@@ -160,6 +168,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         if (offline) connections.supervisor("node")?.stopAndJoin()
         else connections.startIfCurrent(connections.supervisor("node"))
     }
+    var checkpointCommand: JSONObject? = null
     var queueHold: kotlinx.coroutines.CompletableDeferred<Unit>? = null
     var queueUnknownFirst = false
     var queueRejectNext = false
@@ -251,8 +260,9 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
             }
             summary.put("buckets", JSONArray(buckets))
         }
-        onCall("server.getConfig") { if (request == "providers") providerFixtureConfig() else JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
-        onCall("orchestration.dispatchCommand") {
+        onCall("server.getConfig") { if (request == "checkpoint") JSONObject("""{"providers":[{"instanceId":"fixture-provider","enabled":true,"supportsConversationRollback":true}]}""") else if (request == "providers") providerFixtureConfig() else JSONObject("""{"settings":{"favorites":[]},"providers":[{"enabled":true,"instanceId":"fixture-provider","displayName":"Fixture provider","status":"ready","supportedRuntimeModes":["approval-required","auto-accept-edits","auto","full-access"],"models":[{"slug":"fixture-model","name":"Fixture model","shortName":"Fixture","capabilities":{"optionDescriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]}}]}]}""") }
+        onCall("orchestration.dispatchCommand") { args ->
+            if (request == "checkpoint" && args.optString("type") == "checkpoint.rollback") checkpointCommand = JSONObject(args.toString())
             if (request in listOf("queue", "editor")) {
                 queueDispatches++
                 queueHold?.await()
@@ -277,14 +287,39 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
             JSONObject().put("item", fixtureItems().objects().firstOrNull { it.optString("id") == args.optString("itemId") })
         }
     }
+    val gitJournal = dev.avillagran.ot3android.core.git.GitJournal(application.noBackupFilesDir.resolve("fixture-git-journal"))
+    val admission = dev.avillagran.ot3android.core.git.CheckoutAdmission(gitJournal)
+    val maintenanceReceipts = dev.avillagran.ot3android.core.maintenance.FileMaintenanceReceipts(application.noBackupFilesDir.resolve("fixture-maintenance-receipts"))
+    val maintenanceHosts = java.util.concurrent.CopyOnWriteArrayList<FakeT3Transport>()
+    private fun maintenanceTransport(): T3Transport {
+        val fake = FakeT3Transport()
+        fake.onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
+        fake.onFetchDescriptor("http://remote.invalid") { JSONObject().put("environmentId", "remote") }
+        fake.onShell { fixtureShell() }
+        fake.onCall("server.getSettings") { JSONObject().put("defaultProjectScripts", JSONArray()) }
+        fake.onCall("vcs.refreshStatus") { JSONObject("""{"isRepo":true,"hasPrimaryRemote":true,"isDefaultRef":false,"refName":"feature/test","hasWorkingTreeChanges":false,"hasUpstream":true,"aheadCount":0,"behindCount":1,"pr":null,"workingTree":{"files":[],"insertions":0,"deletions":0}}""") }
+        fake.onCall("vcs.pull") { JSONObject().put("status", "pulled") }
+        val reads = listOf("diagnostics.storageCleanupReport", "orchestration.getArchivedShellSnapshot", "scheduledTasks.list", "agentSessions.scan", "server.getProcessDiagnostics", "server.getResourceTelemetryHistory")
+        fake.describe = JSONObject().put("functions", JSONArray(reads.map { JSONObject().put("fn", it).put("scope", "orchestration:read") }))
+        reads.forEach { fn -> fake.onCall(fn) { JSONObject().put("snapshotSequence", 1).put("threads", JSONArray()).put("tasks", JSONArray()).put("candidates", JSONArray()).put("processes", JSONArray()).put("finishedAt", "fixture-report").put("bytesFreed", 0) } }
+        maintenanceHosts.add(fake)
+        return object : T3Transport by fake {
+            override suspend fun authSession() = JSONObject().put("authenticated", true).put("scopes", JSONArray().put("orchestration:read").put("source-control:write"))
+        }
+    }
     val connections = ConnectionManager(repository, cursors, object : T3TransportFactory {
-        override fun create(): T3Transport = transport
+        override fun create(): T3Transport = if (request == "wiring") maintenanceTransport() else if (request == "checkpoint") object : T3Transport by transport {
+            override suspend fun authSession() = JSONObject().put("authenticated", true).put("scopes", JSONArray().put("orchestration:operate"))
+        } else transport
     }, viewModelScope)
     val drafts = DraftRepository(database.draftDao())
     val outbox = OutboxRepository(database.outboxDao())
-    val sender = MessageSender(outbox, viewModelScope)
+    val sender = if (request in listOf("wiring", "checkpoint")) MessageSender(outbox, viewModelScope, admission = admission) else MessageSender(outbox, viewModelScope)
     init {
-        viewModelScope.launch { repository.save("node", "node · Linux", "http://fixture.invalid", "node", null) }
+        viewModelScope.launch {
+            repository.save("node", "node · Linux", "http://fixture.invalid", "node", null)
+            if (request == "wiring") repository.save("remote", "remote · Linux", "http://remote.invalid", "remote", null)
+        }
     }
     private fun fixtureShell(): JSONObject = JSONObject().put("snapshotSequence", 1)
         .put("projects", JSONArray().put(JSONObject().put("id", "project").put("title", "ot3-Android").put("workspaceRoot", "/work/ot3-android")))
@@ -327,7 +362,27 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
         return JSONObject().put("settings", JSONObject().put("favorites", JSONArray())).put("providers", rows)
     }
 
+    private fun checkpointSnapshot(): JSONObject {
+        val projection = JSONObject("""{
+          "thread":{"id":"chat","title":"Checkpoint fixture","activeProviderThreadId":"provider-one","modelSelection":{"instanceId":"fixture-provider","model":"fixture-model"}},
+          "providerThreads":[{"id":"provider-one","providerInstanceId":"fixture-provider","providerSessionId":"session-one"}],
+          "checkpointScopes":[{"id":"scope-one","threadId":"chat","cwd":"/work/ot3-android","providerThreadId":"provider-one"}],
+          "checkpoints":[
+            {"id":"checkpoint-initial","threadId":"chat","scopeId":"scope-one","runId":null,"ordinalWithinScope":0,"appRunOrdinal":null,"status":"ready"},
+            {"id":"checkpoint-one","threadId":"chat","scopeId":"scope-one","runId":"run-one","ordinalWithinScope":1,"appRunOrdinal":1,"status":"ready"}],
+          "runs":[{"id":"run-one","ordinal":1,"status":"completed"}],
+          "turnItems":[{"id":"user-one","type":"user_message","messageId":"message-one","runId":"run-one","inputIntent":"turn_start"}],
+          "messages":[{"id":"message-one","role":"user","runId":"run-one","text":"Original checkpoint prompt","attachments":[],"context":[],"createdAt":"2026-10-31T10:00:00Z"}]
+        }""")
+        checkpointCommand?.let {
+            projection.getJSONObject("thread").put("rollbackRequestId", it.getString("commandId"))
+            projection.getJSONArray("runs").getJSONObject(0).put("status", "rolled_back")
+        }
+        return JSONObject().put("snapshotSequence", if (checkpointCommand == null) 1 else 2).put("projection", projection)
+    }
+
     private fun bounded(): JSONObject {
+        if (request == "checkpoint") return checkpointSnapshot()
         val messages = JSONArray()
         repeat(60) { i -> messages.put(JSONObject().put("id", "m$i").put("role", if (i % 2 == 0) "user" else "assistant")
             .put("text", if (rich && i == 59) """# Reader implementation

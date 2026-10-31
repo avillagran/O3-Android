@@ -25,8 +25,8 @@ class GitOperations(
     val supportsStackedActions: Boolean get() = stackedAction != null
 
     suspend fun read(transport: T3Transport, target: JSONObject): JSONObject {
-        val input = JSONObject(target.toString()).put("requestId", UUID.randomUUID().toString())
         val shell = transport.shell()
+        val input = gitTarget(target, shell).put("requestId", UUID.randomUUID().toString())
         val scope = domain.domain("gitControls.scope", input.put("shell", shell)) as JSONObject
         val projects = shell.getJSONArray("projects")
         val project = (0 until projects.length()).map { projects.getJSONObject(it) }.first { it.getString("id") == scope.getString("projectId") }

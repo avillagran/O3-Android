@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 
 /** What the composer shows: the draft, whether it is being sent, and the commands left unconfirmed. */
 data class ComposerState(
@@ -60,6 +61,7 @@ class ThreadComposer(
     private val transport: () -> T3Transport?,
     private val onResult: (SendResult) -> Unit = {},
 ) {
+    private val draftSaveMutex = kotlinx.coroutines.sync.Mutex()
     private val _state = MutableStateFlow(ComposerState())
     val state: StateFlow<ComposerState> = _state.asStateFlow()
 
@@ -146,8 +148,30 @@ class ThreadComposer(
         }
     }
 
-    private suspend fun saveDraft(text: String) {
-        if (!draftLoaded || text == savedDraft) return
+    /** Text-only rewind recovery. Call while the shared journal excludes sends. */
+    suspend fun recoverOnce(id: String, restored: String, append: suspend (String, String) -> String): Boolean = draftSaveMutex.withLock {
+        if (!recoveryReady()) return@withLock false
+        // An already-consumed id must not replace newer typing with an older Room row.
+        if (drafts.recoveryApplied(environmentId, threadId, id)) return@withLock true
+        val before = _state.value
+        if (before.sending || before.unconfirmed.isNotEmpty()) return@withLock false
+        if (!_state.compareAndSet(before, before.copy(sending = true))) return@withLock false
+        try {
+            val merged = append(before.draft, restored)
+            val applied = drafts.recoverOnce(environmentId, threadId, id, merged)
+            savedDraft = applied
+            editedSinceInit = true
+            _state.value = before.copy(draft = applied, draftToken = null, sending = false)
+            true
+        } finally { _state.update { it.copy(sending = false) } }
+    }
+
+    suspend fun recoveryApplied(id: String) = drafts.recoveryApplied(environmentId, threadId, id)
+
+    fun recoveryReady() = draftLoaded && !_state.value.sending && _state.value.unconfirmed.isEmpty()
+
+    private suspend fun saveDraft(text: String) = draftSaveMutex.withLock {
+        if (!draftLoaded || text == savedDraft || text != _state.value.draft) return@withLock
         drafts.save(environmentId, threadId, text)
         savedDraft = text
     }

@@ -67,7 +67,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     var openedImage by rememberSaveable(threadKey, imageGeneration) { mutableStateOf<String?>(null) }
     openedImage?.let { descriptor -> ReaderImageDialog(JSONObject(descriptor)) { releaseEditor(); openedImage = null } }
     var openedInspector by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
-    openedInspector?.let { reference -> ToolInspectorDialog(JSONObject(reference), onInspect) { releaseEditor(); openedInspector = null } }
+    openedInspector?.let { reference -> ToolInspectorDialog(JSONObject(reference), onInspect, threadKey?.let { dev.avillagran.ot3android.core.tools.ToolInspectorOwner(it.substringBefore('/'), it.substringAfter('/')) }) { releaseEditor(); openedInspector = null } }
     var openedDiff by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
     openedDiff?.let { summary ->
         val review = LocalReaderReview.current
@@ -238,6 +238,10 @@ private fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Transc
     val id = row.getString("id")
     if (role == "user") {
         UserMessage(row, actions.quote)
+        val checkpoint = LocalReaderCheckpoint.current
+        if (id in checkpoint.messages) TextButton(onClick = { checkpoint.open(id) }, modifier = Modifier.testTag("checkpoint_preview_$id")) {
+            Text(stringResource(R.string.ot3_git_rewind))
+        }
         return
     }
     val colors = Ot3Theme.colors
