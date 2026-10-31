@@ -25,7 +25,7 @@ fun GitControlsSurface(
     snapshot: JSONObject?, connected: Boolean, canWrite: Boolean, canTerminalWrite: Boolean,
     supportsStackedActions: Boolean, record: JSONObject?, loading: Boolean, error: String?,
     onRefresh: () -> Unit, onConfirm: (JSONObject) -> Unit, onReview: ((String) -> Unit)?,
-    onOpenNative: () -> Unit, onReconcile: (String) -> Unit,
+    onOpenNative: (() -> Unit)?, onReconcile: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val identity = snapshot?.toString().orEmpty()
@@ -66,7 +66,7 @@ fun GitControlsSurface(
                 "complete" -> R.string.ot3_git_complete; "failed" -> R.string.ot3_git_failed
                 "reviewed" -> R.string.ot3_git_reviewed; else -> R.string.ot3_git_unknown
             }))
-            TextButton(onClick = onOpenNative) { Text(stringResource(R.string.ot3_git_open_native)) }
+            if (onOpenNative != null) TextButton(onClick = onOpenNative) { Text(stringResource(R.string.ot3_git_open_native)) }
             if (locked) {
                 GitCheck(stringResource(R.string.ot3_git_verified), reconciled) { reconciled = it }
                 TextButton(onClick = { reconciled = false; onReconcile(record.getString("id")) }, enabled = reconciled) { Text(stringResource(R.string.ot3_git_clear_resolved)) }

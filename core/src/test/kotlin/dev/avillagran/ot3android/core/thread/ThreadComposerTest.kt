@@ -39,6 +39,22 @@ class ThreadComposerTest {
         ).also { runCurrent() }
     }
 
+    @Test fun checkpointRecoveryPreservesNewTypingAndConsumesIdAcrossRecreation() = runTest {
+        val composer = composer()
+        composer.onDraftChange("New typing")
+        assertTrue(composer.recoverOnce("rewind", "Original prompt") { a, b -> "$a\n\n$b" })
+        assertEquals("New typing\n\nOriginal prompt", persistedDraft())
+        composer.onDraftChange("Edited after recovery")
+        assertTrue(composer.recoverOnce("rewind", "Original prompt") { a, b -> "$a\n\n$b" })
+        assertEquals("Edited after recovery", composer.state.value.draft)
+        advanceTimeBy(ThreadComposer.DRAFT_DEBOUNCE_MS + 1); runCurrent()
+        val reopened = composer()
+        assertTrue(reopened.recoverOnce("rewind", "Original prompt") { a, b -> "$a\n\n$b" })
+        assertEquals("Edited after recovery", reopened.state.value.draft)
+        assertTrue(reopened.recoveryApplied("rewind"))
+        assertEquals(0, dispatches())
+    }
+
     private fun persistedDraft() = draftDao.rows.value[DraftRepository.key("env-1", "t1")]?.text
 
     private fun dispatches() = fake.calls.count { it.fn == MessageSender.DISPATCH }

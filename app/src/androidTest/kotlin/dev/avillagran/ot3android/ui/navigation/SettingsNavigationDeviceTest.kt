@@ -57,7 +57,16 @@ class SettingsNavigationDeviceTest {
                 rule.onNodeWithTag(SettingsTags.ROOT).assertIsDisplayed()
             }
             scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
-            rule.waitForIdle()
+            // Rotation replaces the Compose root asynchronously. Wait for the
+            // resumed landscape window before Espresso tries to idle its root.
+            var landscapeReady = false
+            rule.waitUntil(15_000) {
+                scenario.onActivity {
+                    val decor = it.window.decorView
+                    landscapeReady = decor.isLaidOut && decor.width > decor.height && decor.hasWindowFocus()
+                }
+                landscapeReady
+            }
             rule.onNodeWithTag(SettingsTags.BACK).assertIsDisplayed().performClick()
             rule.onNodeWithTag(HomeTags.ROOT).assertIsDisplayed()
             rule.onNodeWithTag(NavTags.BAR).assertIsDisplayed()

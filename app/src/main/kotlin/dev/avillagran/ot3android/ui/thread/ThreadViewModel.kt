@@ -115,6 +115,8 @@ class ThreadViewModel(
     private val cacheAuthority: suspend () -> String? = { environmentId },
     cacheAuthorityUpdates: Flow<String?>? = null,
     attachmentDirectory: java.io.File? = null,
+    private val gitJournal: dev.avillagran.ot3android.core.git.GitJournal? = null,
+    private val checkoutAdmission: dev.avillagran.ot3android.core.git.CheckoutAdmission? = null,
     private val clientPreferences: dev.avillagran.ot3android.core.settings.GeneralClientPreferences? = null,
 ) : ViewModel() {
     val durableComposerAvailable = attachmentDirectory != null
@@ -169,6 +171,7 @@ class ThreadViewModel(
     }
     fun importAttachment(context: android.content.Context, uri: String) {
         if (attachmentStorageError.value || local.value.queueBusy || !state.value.connected || state.value.sending || attachmentPending.value != null || attachmentDraft.value.size >= 100) return
+        if (checkpoint.value.busy || checkpoint.value.record?.let { org.json.JSONObject(it).optString("state") !in setOf("complete", "failed", "reviewed") } == true) return
         val id = java.util.UUID.randomUUID().toString()
         attachmentDraft.value += dev.avillagran.ot3android.core.composer.ComposerAttachment(id, "attachment", dev.avillagran.ot3android.core.composer.UploadStatus.Uploading)
         persistAttachments()
@@ -253,6 +256,9 @@ class ThreadViewModel(
         .map { shell -> shell?.thread(threadId) }
         .distinctUntilChanged()
 
+    // Retain only this thread's last authenticated composer identity while offline.
+    // Delivery remains gated by connection/staleness and attachment authority.
+    private var lastComposerScope: dev.avillagran.ot3android.core.composer.ComposerScope? = null
     val state: StateFlow<ThreadUiState> = combine(
         session.view,
         connection,
@@ -260,12 +266,14 @@ class ThreadViewModel(
         local,
         composer.state,
     ) { view, connection, shellRow, local, composer ->
+        val liveScope = (connection.first as? ConnectionState.Connected)?.descriptor?.environmentId?.let { server ->
+            shellRow?.projectId?.let { project -> dev.avillagran.ot3android.core.composer.ComposerScope(server, project, threadId) }
+        }
+        if (liveScope != null) lastComposerScope = liveScope
         ThreadUiState(
             view = view,
             title = view.title ?: shellRow?.title,
-            composerScope = (connection.first as? ConnectionState.Connected)?.descriptor?.environmentId?.let { server ->
-                shellRow?.projectId?.let { project -> dev.avillagran.ot3android.core.composer.ComposerScope(server, project, threadId) }
-            },
+            composerScope = liveScope ?: lastComposerScope,
             modelSelection = local.selectedModel ?: view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
             connection = connection.first,
             queueConnection = connection.second,
@@ -527,13 +535,172 @@ class ThreadViewModel(
         }
     }
 
+    val checkpointMessages = MutableStateFlow<Set<String>>(emptySet())
+    val checkpoint = MutableStateFlow(CheckpointUi())
+    private val rollback by lazy { gitJournal?.let { dev.avillagran.ot3android.core.git.CheckpointRollback(it) } }
+    private val checkpointTarget get() = org.json.JSONObject().put("environment", environmentId).put("thread", threadId)
+    init {
+        if (gitJournal != null) viewModelScope.launch {
+            session.view.collect {
+                val projection = session.projectionSnapshot()
+                val ids = mutableSetOf<String>()
+                if (projection != null) {
+                    val messages = projection.optJSONArray("messages") ?: org.json.JSONArray()
+                    for (i in 0 until messages.length()) {
+                        val message = messages.getJSONObject(i)
+                        // Generic attachment recovery is unavailable; never rewind away the only bytes.
+                        if (!recoverableCheckpointText(message)) continue
+                        try {
+                            if (dev.avillagran.ot3android.core.transport.DomainEngine.shared.domain("checkpointRevert.canPreview",
+                                org.json.JSONObject().put("projection", projection).put("message", message)) == true) ids.add(message.getString("id"))
+                        } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                        catch (_: Exception) { }
+                    }
+                }
+                checkpointMessages.value = ids
+                val pending = gitJournal.records().lastOrNull { record -> record.optString("kind") == "rollback" &&
+                    record.optJSONObject("input")?.optString("environment") == environmentId &&
+                    record.optJSONObject("input")?.optString("thread") == threadId && record.optString("state") !in setOf("complete", "failed", "reviewed") }
+                if (pending != null && projection != null) {
+                    try {
+                        var observed = rollback!!.observe(pending.getString("id"), environmentId, projection)
+                        if (observed.optString("state") == "recovering" && composer.recoveryApplied(observed.getString("id"))) {
+                            gitJournal.transition(observed.getString("id"), "complete")
+                            observed = gitJournal.find(observed.getString("id"))!!
+                        }
+                        val before = checkpoint.value
+                        val firstDiscovery = before.record?.let { org.json.JSONObject(it).optString("id") } != observed.getString("id")
+                        val unresolved = observed.optString("state") !in setOf("complete", "failed", "reviewed")
+                        checkpoint.value = before.copy(record = observed.toString(), open = before.open || (firstDiscovery && unresolved))
+                    } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                    catch (_: Exception) {
+                        val before = checkpoint.value
+                        val firstDiscovery = before.record?.let { org.json.JSONObject(it).optString("id") } != pending.getString("id")
+                        checkpoint.value = before.copy(record = pending.toString(), open = before.open || firstDiscovery, failed = true)
+                    }
+                }
+            }
+        }
+    }
+    private fun recoverableCheckpointText(message: org.json.JSONObject): Boolean {
+        if (message.optJSONArray("attachments")?.length() != 0) return false
+        return when (val context = message.opt("context")) {
+            null, org.json.JSONObject.NULL -> true
+            is org.json.JSONObject -> context.length() == 0
+            is org.json.JSONArray -> context.length() == 0
+            else -> false
+        }
+    }
+    private suspend fun checkpointSafety(): org.json.JSONObject {
+        val live = transport() ?: error("checkpoint_offline")
+        val auth = live.authSession()
+        val permissions = auth.optJSONArray("permissions") ?: auth.optJSONArray("scopes")
+        val config = live.call("server.getConfig") as org.json.JSONObject
+        val projection = session.projectionSnapshot() ?: error("checkpoint_projection_unavailable")
+        val thread = projection.getJSONObject("thread")
+        val instance = thread.optString("providerInstanceId").takeIf { it.isNotBlank() }
+            ?: thread.optJSONObject("modelSelection")?.optString("instanceId")
+        val providers = config.optJSONArray("providers") ?: org.json.JSONArray()
+        val provider = (0 until providers.length()).map { providers.getJSONObject(it) }.find { it.optString("instanceId") == instance && it.optBoolean("enabled") }
+        check(transport() === live)
+        return org.json.JSONObject().put("canOperate", auth.optBoolean("authenticated") && permissions != null &&
+            (0 until permissions.length()).any { permissions.optString(it) == "orchestration:operate" })
+            .put("connected", state.value.connected && !state.value.view.stale)
+            .put("supportsConversationRollback", provider?.opt("supportsConversationRollback") == true)
+            .put("working", state.value.view.working).put("sendBusy", state.value.sending || local.value.queueBusy || local.value.respondingRequest != null || state.value.unconfirmed.isNotEmpty())
+            .put("pendingAttachments", attachmentDraft.value.isNotEmpty() || attachmentCommand != null || attachmentStorageError.value)
+            .put("connecting", !state.value.connected).put("rewinding", false)
+    }
+    fun previewCheckpoint(messageId: String) {
+        if (messageId !in checkpointMessages.value || rollback == null || checkpoint.value.busy) return
+        val existing = gitJournal?.records()?.lastOrNull { it.optString("kind") == "rollback" &&
+            it.optJSONObject("input")?.optString("environment") == environmentId && it.optJSONObject("input")?.optString("thread") == threadId &&
+            it.optString("state") !in setOf("complete", "failed", "reviewed") }
+        if (existing != null) { checkpoint.value = CheckpointUi(open = true, record = existing.toString()); return }
+        checkpoint.value = CheckpointUi(open = true, busy = true)
+        viewModelScope.launch {
+            try {
+                val projection = session.projectionSnapshot() ?: error("checkpoint_projection_unavailable")
+                val preview = rollback!!.preview(projection, messageId, checkpointSafety())
+                check(recoverableCheckpointText(preview.getJSONObject("message")))
+                checkpoint.value = CheckpointUi(open = true, preview = preview.toString(), canRestoreFiles = shellRow.first()?.raw?.optString("worktreePath")?.let { it.isNotBlank() && it != "null" } == true)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { checkpoint.value = CheckpointUi(open = true, failed = true) }
+        }
+    }
+    fun closeCheckpoint() { checkpoint.value = checkpoint.value.copy(open = false) }
+    fun confirmCheckpoint(restoreFiles: Boolean, acknowledged: Boolean) {
+        val preview = checkpoint.value.preview ?: return
+        if (checkpoint.value.busy || checkpoint.value.record != null) return
+        checkpoint.value = checkpoint.value.copy(busy = true)
+        // Keep dispatch alive beyond navigation, but never replay it on re-entry.
+        appScope.launch {
+            try {
+                val current = transport() ?: error("checkpoint_offline")
+                checkoutAdmission!!.git(environmentId, { outbox.observeEnvironment(environmentId).first().isEmpty() }) {
+                    val safety = checkpointSafety()
+                    check(transport() === current)
+                    val fresh = current.boundedThread(threadId).getJSONObject("projection")
+                    check(fresh.getJSONObject("thread").getString("id") == threadId && transport() === current)
+                    val captured = org.json.JSONObject(preview)
+                    val message = dev.avillagran.ot3android.core.transport.DomainEngine.shared.domain("checkpointRevert.recoveryMessage",
+                        org.json.JSONObject().put("projection", fresh).put("reference", captured.getJSONObject("reference"))) as org.json.JSONObject
+                    check(recoverableCheckpointText(message) && message.getString("text") == captured.getJSONObject("message").getString("text"))
+                    check(attachmentDraft.value.isEmpty() && attachmentCommand == null && durableComposerAvailable && composer.recoveryReady())
+                    val record = rollback!!.confirm(current, checkpointTarget, org.json.JSONObject(preview), fresh, safety, restoreFiles, acknowledged, true)
+                    checkpoint.value = checkpoint.value.copy(record = record.toString(), busy = false)
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) {
+                val saved = gitJournal?.find(org.json.JSONObject(preview).getString("requestId"))
+                checkpoint.value = checkpoint.value.copy(record = saved?.toString(), busy = false, failed = true)
+            }
+        }
+    }
+    fun refreshCheckpoint() {
+        val current = checkpoint.value
+        val record = current.record
+        if (record == null) {
+            current.preview?.let { previewCheckpoint(org.json.JSONObject(it).getJSONObject("reference").getString("messageId")) }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val live = transport() ?: error("checkpoint_offline")
+                val projection = live.boundedThread(threadId).getJSONObject("projection")
+                check(transport() === live && projection.getJSONObject("thread").getString("id") == threadId)
+                val observed = rollback!!.observe(org.json.JSONObject(record).getString("id"), environmentId, projection)
+                checkpoint.value = current.copy(record = observed.toString(), failed = false)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { checkpoint.value = current.copy(failed = true) }
+        }
+    }
+    fun recoverCheckpoint() {
+        val record = checkpoint.value.record ?: return
+        if (checkpoint.value.busy) return
+        checkpoint.value = checkpoint.value.copy(busy = true)
+        appScope.launch {
+            try {
+                val recovered = rollback!!.recover(org.json.JSONObject(record).getString("id")) { id, message ->
+                    check(message.getJSONArray("attachments").length() == 0 && attachmentDraft.value.isEmpty() && attachmentCommand == null)
+                    composer.recoverOnce(id, message.getString("text"), rollback!!::appendPrompt)
+                }
+                checkpoint.value = checkpoint.value.copy(record = recovered.toString(), busy = false)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { checkpoint.value = checkpoint.value.copy(busy = false, failed = true) }
+        }
+    }
+
     /** On-demand read; scope and response validation belong to Rust. Never dispatches. */
     suspend fun inspect(reference: org.json.JSONObject): org.json.JSONObject? {
-        val transport = transport() ?: return null
+        val owner = supervisor.value ?: return null
+        val current = owner.connection.value ?: return null
+        val transport = current.transport
         val args = org.json.JSONObject().put("reference", reference).put("environment", environmentId).put("threadId", threadId)
         val domain = dev.avillagran.ot3android.core.transport.DomainEngine.shared
         val request = domain.domain("toolInspector.request", args) as org.json.JSONObject
         val response = transport.call(request.getString("method"), request.getJSONObject("payload")) as org.json.JSONObject
+        if (supervisor.value !== owner || owner.connection.value !== current) return null
         return domain.domain("toolInspector.parse", org.json.JSONObject(args.toString()).put("response", response)) as org.json.JSONObject
     }
 
@@ -639,3 +806,5 @@ internal fun queueEditArguments(row: org.json.JSONObject): org.json.JSONObject =
     .apply { row.optJSONObject("context")?.let { put("context", it) } }
 
 private val attachmentImportLock = kotlinx.coroutines.sync.Mutex()
+
+ data class CheckpointUi(val canRestoreFiles: Boolean = false, val open: Boolean = false, val busy: Boolean = false, val failed: Boolean = false, val preview: String? = null, val record: String? = null)

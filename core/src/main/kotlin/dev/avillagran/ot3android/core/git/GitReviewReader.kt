@@ -47,6 +47,9 @@ class GitReviewReader(private val domain: DomainCalls = DomainEngine.shared) {
         return transport.call("vcs.listRefs", args) as JSONObject
     }
 
-    private suspend fun scope(transport: T3Transport, target: JSONObject): JSONObject = domain.domain("gitControls.scope",
-        JSONObject(target.toString()).put("shell", transport.shell()).put("requestId", UUID.randomUUID().toString())) as JSONObject
+    private suspend fun scope(transport: T3Transport, target: JSONObject): JSONObject {
+        val shell = transport.shell()
+        return domain.domain("gitControls.scope", gitTarget(target, shell).put("shell", shell)
+            .put("requestId", UUID.randomUUID().toString())) as JSONObject
+    }
 }
