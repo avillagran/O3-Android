@@ -27,12 +27,13 @@ class RevealStyleDeviceTest {
                 rule.waitUntil(15_000) { rule.onNodeWithTag("nav_tab_Settings").isDisplayed() }
                 rule.onNodeWithTag("nav_tab_Settings").performClick()
                 rule.onNodeWithTag("settings_Appearance").performClick()
-                rule.onNodeWithTag("appearance_reveal_style_NEBULA").performScrollTo().assertIsSelected()
+                // P02 unifies reveal controls with the persisted local appearance options.
+                rule.onNodeWithTag("preference_transitionStyle_nebula").performScrollTo().assertIsSelected()
                 for (style in RevealStyle.entries) {
-                    rule.onNodeWithTag("appearance_reveal_style_${style.name}").performScrollTo().performClick()
+                    rule.onNodeWithTag("preference_transitionStyle_${style.name.lowercase()}").performScrollTo().performClick()
                     rule.waitUntil(15_000) { runBlocking { prefs.settings.first().revealStyle == style } }
                     scenario.recreate()
-                    rule.onNodeWithTag("appearance_reveal_style_${style.name}").performScrollTo().assertIsSelected()
+                    rule.onNodeWithTag("preference_transitionStyle_${style.name.lowercase()}").performScrollTo().assertIsSelected()
                     assertEquals(style, prefs.settings.first().revealStyle)
                 }
             }

@@ -15,6 +15,10 @@ import org.junit.Test
 /** Actual Home → thread → image; deterministic server + binary fixture, not a live asset grant. */
 class ReaderImagesDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
+    // Each fixture uses the same synthetic authority; do not inherit another test's bytes.
+    @org.junit.Before fun clearImageCache() {
+        dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
+    }
     @Test fun tokyoNight() = navigate(true)
     @Test fun latte() = navigate(false)
 
@@ -42,7 +46,8 @@ class ReaderImagesDeviceTest {
             rule.onNodeWithTag("thread_image_close").performClick()
             rule.onNodeWithTag("thread_image_reader-shot_2048").assertDoesNotExist()
             scenario.onActivity { activity ->
-                assertTrue(activity.fixture.transport.log.count { it.method == "image" } >= 2)
+                assertEquals("Viewer and rotation reuse the cached thumbnail bytes", 1,
+                    activity.fixture.transport.log.count { it.method == "image" })
                 assertTrue(activity.fixture.transport.calls.none { it.fn == "orchestration.dispatchCommand" })
             }
         }

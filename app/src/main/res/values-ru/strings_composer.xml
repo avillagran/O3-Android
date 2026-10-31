@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Прикрепить файлы</string>
+    <string name="composer_paste">Вставить</string>
+    <string name="composer_undo">Отменить</string>
+    <string name="composer_redo">Повторить</string>
+    <string name="composer_history">История</string>
+    <string name="composer_continue_list">Продолжить список</string>
+    <string name="composer_stash">Сохранить черновик</string>
+    <string name="composer_project_drafts">Черновики проекта</string>
+    <string name="composer_quick_replies">Быстрые ответы</string>
+    <string name="composer_build">Выполнение</string>
+    <string name="composer_plan">Планирование</string>
+    <string name="composer_implement">Выполнить план</string>
+    <string name="composer_feedback">Обсудить план</string>
+    <string name="composer_opposite">Другой способ один раз</string>
+    <string name="composer_background">Отправить в фоне</string>
+    <string name="composer_send_new">Отправить и начать новую ветку</string>
+    <string name="composer_remove">Убрать</string>
+    <string name="composer_restore">Восстановить</string>
+    <string name="composer_delete">Удалить</string>
+    <string name="composer_refresh">Обновить</string>
+    <string name="composer_uncertain">Результат отправки неизвестен. Проверьте существующую команду перед изменением или повторной отправкой.</string>
+    <string name="composer_uploading">Загрузка %1$s…</string>
+    <string name="composer_upload_failed">Ошибка загрузки: %1$s</string>
+    <string name="composer_attachment_count">Вложения: %1$d</string>
+</resources>

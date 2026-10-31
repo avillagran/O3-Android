@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Bestanden bijvoegen</string>
+    <string name="composer_paste">Plakken</string>
+    <string name="composer_undo">Ongedaan maken</string>
+    <string name="composer_redo">Opnieuw</string>
+    <string name="composer_history">Geschiedenis</string>
+    <string name="composer_continue_list">Lijst voortzetten</string>
+    <string name="composer_stash">Concept bewaren</string>
+    <string name="composer_project_drafts">Projectconcepten</string>
+    <string name="composer_quick_replies">Snelle antwoorden</string>
+    <string name="composer_build">Bouwen</string>
+    <string name="composer_plan">Plannen</string>
+    <string name="composer_implement">Plan uitvoeren</string>
+    <string name="composer_feedback">Plan bespreken</string>
+    <string name="composer_opposite">Eenmalig anders bezorgen</string>
+    <string name="composer_background">Op achtergrond verzenden</string>
+    <string name="composer_send_new">Verzenden en nieuwe thread starten</string>
+    <string name="composer_remove">Verwijderen</string>
+    <string name="composer_restore">Herstellen</string>
+    <string name="composer_delete">Wissen</string>
+    <string name="composer_refresh">Vernieuwen</string>
+    <string name="composer_uncertain">Verzendresultaat onbekend. Controleer de bestaande opdracht vóór bewerken of opnieuw verzenden.</string>
+    <string name="composer_uploading">%1$s uploaden…</string>
+    <string name="composer_upload_failed">Upload mislukt: %1$s</string>
+    <string name="composer_attachment_count">Bijlagen: %1$d</string>
+</resources>

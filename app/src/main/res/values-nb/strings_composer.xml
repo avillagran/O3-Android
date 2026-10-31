@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Legg ved filer</string>
+    <string name="composer_paste">Lim inn</string>
+    <string name="composer_undo">Angre</string>
+    <string name="composer_redo">Gjør om</string>
+    <string name="composer_history">Historikk</string>
+    <string name="composer_continue_list">Fortsett liste</string>
+    <string name="composer_stash">Lagre utkast</string>
+    <string name="composer_project_drafts">Prosjektutkast</string>
+    <string name="composer_quick_replies">Hurtigsvar</string>
+    <string name="composer_build">Bygg</string>
+    <string name="composer_plan">Planlegg</string>
+    <string name="composer_implement">Gjennomfør plan</string>
+    <string name="composer_feedback">Kommenter plan</string>
+    <string name="composer_opposite">Motsatt levering én gang</string>
+    <string name="composer_background">Send i bakgrunnen</string>
+    <string name="composer_send_new">Send og start ny tråd</string>
+    <string name="composer_remove">Fjern</string>
+    <string name="composer_restore">Gjenopprett</string>
+    <string name="composer_delete">Slett</string>
+    <string name="composer_refresh">Oppdater</string>
+    <string name="composer_uncertain">Ukjent senderesultat. Kontroller eksisterende kommando før redigering eller nytt forsøk.</string>
+    <string name="composer_uploading">Laster opp %1$s…</string>
+    <string name="composer_upload_failed">Opplasting mislyktes: %1$s</string>
+    <string name="composer_attachment_count">Vedlegg: %1$d</string>
+</resources>

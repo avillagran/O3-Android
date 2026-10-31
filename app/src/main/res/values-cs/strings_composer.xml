@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Připojit soubory</string>
+    <string name="composer_paste">Vložit</string>
+    <string name="composer_undo">Zpět</string>
+    <string name="composer_redo">Znovu</string>
+    <string name="composer_history">Historie</string>
+    <string name="composer_continue_list">Pokračovat v seznamu</string>
+    <string name="composer_stash">Uložit koncept</string>
+    <string name="composer_project_drafts">Koncepty projektu</string>
+    <string name="composer_quick_replies">Rychlé odpovědi</string>
+    <string name="composer_build">Vytvořit</string>
+    <string name="composer_plan">Plánovat</string>
+    <string name="composer_implement">Provést plán</string>
+    <string name="composer_feedback">Připomínkovat plán</string>
+    <string name="composer_opposite">Jednou opačné doručení</string>
+    <string name="composer_background">Odeslat na pozadí</string>
+    <string name="composer_send_new">Odeslat a zahájit nové vlákno</string>
+    <string name="composer_remove">Odebrat</string>
+    <string name="composer_restore">Obnovit</string>
+    <string name="composer_delete">Smazat</string>
+    <string name="composer_refresh">Aktualizovat</string>
+    <string name="composer_uncertain">Výsledek odeslání není znám. Před úpravou nebo dalším odesláním ověřte stávající příkaz.</string>
+    <string name="composer_uploading">Nahrávání %1$s…</string>
+    <string name="composer_upload_failed">Nahrávání selhalo: %1$s</string>
+    <string name="composer_attachment_count">Přílohy: %1$d</string>
+</resources>

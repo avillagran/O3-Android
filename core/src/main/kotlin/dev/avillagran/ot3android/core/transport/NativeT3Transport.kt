@@ -61,6 +61,22 @@ class NativeT3Transport(
     override suspend fun image(id: String, name: String, mimeType: String): ByteArray =
         native { client.image(id, name, mimeType) }
 
+    override suspend fun mediaAttachment(id: String, name: String, mimeType: String): ByteArray = native {
+        requireNotNull(client.assetBytes(JSONObject().put("_tag", "attachment").put("attachmentId", id)
+            .put("fileName", name).put("mimeType", mimeType).put("disposition", "inline"), 50L * 1024 * 1024).bytes)
+    }
+
+    override suspend fun mediaImage(threadId: String, path: String): ByteArray = native {
+        val asset = client.assetBytes(JSONObject().put("_tag", "media-file")
+            .put("threadId", threadId).put("path", path), 10L * 1024 * 1024)
+        require(asset.status.getString("mimeType") in setOf("image/png", "image/jpeg", "image/gif", "image/webp", "image/heic", "image/heif", "image/avif")) { "invalid_image" }
+        requireNotNull(asset.bytes).also { bytes ->
+            val actual = dev.avillagran.ot3android.core.thread.PublicMarkdownImage.mime(bytes)
+            val declared = asset.status.getString("mimeType")
+            require(actual == declared || (actual in setOf("image/heic", "image/heif", "image/avif") && declared in setOf("image/heic", "image/heif", "image/avif"))) { "invalid_image" }
+        }
+    }
+
     override suspend fun shell(): JSONObject = request(SHELL_PATH) as JSONObject
 
     /** A GET on the connected environment, as `T3Client.request`; tests only, the UI uses [shell]. */

@@ -88,6 +88,7 @@ val importOmarchyThemes by tasks.registering(Test::class) {
 
 dependencies {
     api(project(":t3-lib"))
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(libs.androidx.core.ktx)
     api(libs.kotlinx.coroutines.android)
 

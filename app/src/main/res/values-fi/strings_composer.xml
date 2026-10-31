@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Liitä tiedostoja</string>
+    <string name="composer_paste">Liitä</string>
+    <string name="composer_undo">Kumoa</string>
+    <string name="composer_redo">Tee uudelleen</string>
+    <string name="composer_history">Historia</string>
+    <string name="composer_continue_list">Jatka luetteloa</string>
+    <string name="composer_stash">Tallenna luonnos</string>
+    <string name="composer_project_drafts">Projektin luonnokset</string>
+    <string name="composer_quick_replies">Pikavastaukset</string>
+    <string name="composer_build">Toteuta</string>
+    <string name="composer_plan">Suunnittele</string>
+    <string name="composer_implement">Toteuta suunnitelma</string>
+    <string name="composer_feedback">Kommentoi suunnitelmaa</string>
+    <string name="composer_opposite">Vastakkainen toimitus kerran</string>
+    <string name="composer_background">Lähetä taustalla</string>
+    <string name="composer_send_new">Lähetä ja aloita uusi ketju</string>
+    <string name="composer_remove">Poista liite</string>
+    <string name="composer_restore">Palauta</string>
+    <string name="composer_delete">Poista</string>
+    <string name="composer_refresh">Päivitä</string>
+    <string name="composer_uncertain">Lähetyksen tulos on tuntematon. Tarkista nykyinen komento ennen muokkaamista tai uutta lähetystä.</string>
+    <string name="composer_uploading">Ladataan %1$s…</string>
+    <string name="composer_upload_failed">Lataus epäonnistui: %1$s</string>
+    <string name="composer_attachment_count">Liitteet: %1$d</string>
+</resources>

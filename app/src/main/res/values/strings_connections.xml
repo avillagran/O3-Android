@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P13 connection and invitation safety copy. -->
+<resources>
+    <string name="connections_title">Connections</string>
+    <string name="connections_peer_review">Verify the complete peer ID before pairing.</string>
+    <string name="connections_all_hosts_warning">This invitation may allow access to all hosts. Review its scope with the issuer before continuing.</string>
+    <string name="connections_peer_confirm">I verified this exact peer ID and accept the access scope.</string>
+    <string name="connections_pair_pending">Approval stays on the authorized host. After approval, import the invitation again.</string>
+    <string name="connections_host_authority">Administration is unavailable in this mobile SDK. Manage routes, sharing, clients, cloud, network, publishing, consent, gateways, relay and installation on the authorized host.</string>
+    <string name="connections_local_id">This device ID</string>
+    <string name="connections_bridge_id">Selected bridge ID</string>
+</resources>

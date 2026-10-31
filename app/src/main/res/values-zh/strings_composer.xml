@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">附加文件</string>
+    <string name="composer_paste">粘贴</string>
+    <string name="composer_undo">撤销</string>
+    <string name="composer_redo">重做</string>
+    <string name="composer_history">历史记录</string>
+    <string name="composer_continue_list">继续列表</string>
+    <string name="composer_stash">暂存草稿</string>
+    <string name="composer_project_drafts">项目草稿</string>
+    <string name="composer_quick_replies">快捷回复</string>
+    <string name="composer_build">构建</string>
+    <string name="composer_plan">规划</string>
+    <string name="composer_implement">实施计划</string>
+    <string name="composer_feedback">计划反馈</string>
+    <string name="composer_opposite">仅本次使用另一发送方式</string>
+    <string name="composer_background">后台发送</string>
+    <string name="composer_send_new">发送并开始新线程</string>
+    <string name="composer_remove">移除</string>
+    <string name="composer_restore">恢复</string>
+    <string name="composer_delete">删除</string>
+    <string name="composer_refresh">刷新</string>
+    <string name="composer_uncertain">发送结果未知。编辑或再次发送前请核对现有命令。</string>
+    <string name="composer_uploading">正在上传 %1$s…</string>
+    <string name="composer_upload_failed">上传失败：%1$s</string>
+    <string name="composer_attachment_count">附件：%1$d</string>
+</resources>

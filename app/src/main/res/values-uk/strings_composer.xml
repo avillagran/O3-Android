@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Прикріпити файли</string>
+    <string name="composer_paste">Вставити</string>
+    <string name="composer_undo">Скасувати</string>
+    <string name="composer_redo">Повторити</string>
+    <string name="composer_history">Історія</string>
+    <string name="composer_continue_list">Продовжити список</string>
+    <string name="composer_stash">Зберегти чернетку</string>
+    <string name="composer_project_drafts">Чернетки проєкту</string>
+    <string name="composer_quick_replies">Швидкі відповіді</string>
+    <string name="composer_build">Виконання</string>
+    <string name="composer_plan">Планування</string>
+    <string name="composer_implement">Виконати план</string>
+    <string name="composer_feedback">Обговорити план</string>
+    <string name="composer_opposite">Інший спосіб один раз</string>
+    <string name="composer_background">Надіслати у фоні</string>
+    <string name="composer_send_new">Надіслати й почати нову гілку</string>
+    <string name="composer_remove">Прибрати</string>
+    <string name="composer_restore">Відновити</string>
+    <string name="composer_delete">Видалити</string>
+    <string name="composer_refresh">Оновити</string>
+    <string name="composer_uncertain">Результат надсилання невідомий. Перевірте наявну команду перед зміною чи повторним надсиланням.</string>
+    <string name="composer_uploading">Завантаження %1$s…</string>
+    <string name="composer_upload_failed">Помилка завантаження: %1$s</string>
+    <string name="composer_attachment_count">Вкладення: %1$d</string>
+</resources>

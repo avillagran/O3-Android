@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 tuntia</string>
+    <string name="general_text_1" formatted="false">24 tuntia</string>
+    <string name="general_text_2" formatted="false">Salli uusien agentti-istuntojen käynnistää ja ohjata paikallisia ja etälaitteita automaattisesti määritetyillä työkaluilla.</string>
+    <string name="general_text_3" formatted="false">Lisätään uusien ja uudelleen luotujen otsikoiden kehotteeseen.</string>
+    <string name="general_text_4" formatted="false">Hyväksy muutokset</string>
+    <string name="general_text_5" formatted="false">Päätä käyttämättömyyden jälkeen (päivää)</string>
+    <string name="general_text_6" formatted="false">Automaattinen</string>
+    <string name="general_text_7" formatted="false">Arkistoi säikeet automaattisesti, kun niihin liittyvät pull requestit on yhdistetty.</string>
+    <string name="general_text_8" formatted="false">Arkistoi säikeet automaattisesti tämän monen toimettoman päivän jälkeen.</string>
+    <string name="general_text_9" formatted="false">Taustatoiminta</string>
+    <string name="general_text_10" formatted="false">Tasapainota taustapäivitykset suorituskyvyn ja akun kulutuksen kanssa.</string>
+    <string name="general_text_11" formatted="false">Tasapainotettu</string>
+    <string name="general_text_12" formatted="false">Virransäästö</string>
+    <string name="general_text_13" formatted="false">Ennen välimuistin vanhenemista (beta)</string>
+    <string name="general_text_14" formatted="false">Haaran nimen etuliite</string>
+    <string name="general_text_15" formatted="false">Haarojen nimeäminen</string>
+    <string name="general_text_16" formatted="false">Haarojen nimeämisohjeet</string>
+    <string name="general_text_17" formatted="false">Tarkista asennettujen palveluntarjoajien päivitykset taustalla.</string>
+    <string name="general_text_18" formatted="false">Tarkista palveluntarjoajien päivitykset</string>
+    <string name="general_text_19" formatted="false">Valitse, miten uusien työpuiden haarat nimetään.</string>
+    <string name="general_text_20" formatted="false">Valitse, milloin vastaukset näkyvät agentin työskennellessä.</string>
+    <string name="general_text_21" formatted="false">Tiivistä joutilaat ketjut</string>
+    <string name="general_text_22" formatted="false">Jatka aktiivisia säikeitä, kun palvelin on käynnistynyt uudelleen päivitystä varten.</string>
+    <string name="general_text_23" formatted="false">Sovinnaiset commitit</string>
+    <string name="general_text_24" formatted="false">Nykyinen työkopio</string>
+    <string name="general_text_25" formatted="false">Mukautettu</string>
+    <string name="general_text_26" formatted="false">Uusien säikeiden oletusmalli. Projektit voivat ohittaa sen.</string>
+    <string name="general_text_27" formatted="false">Uusien säikeiden oletuskäyttöoikeudet. Projektit voivat ohittaa ne.</string>
+    <string name="general_text_28" formatted="false">Ota tarkistusoppaat käyttöön</string>
+    <string name="general_text_29" formatted="false">Noudata vetopyyntömalleja</string>
+    <string name="general_text_30" formatted="false">Jatkoviestien toiminta</string>
+    <string name="general_text_31" formatted="false">Täysi käyttöoikeus</string>
+    <string name="general_settings_title" formatted="false">Yleiset</string>
+    <string name="general_text_33" formatted="false">Miten uudet työpuut täyttävät git-alimoduulit. Projektit voivat ohittaa asetuksen.</string>
+    <string name="general_text_34" formatted="false">Peri</string>
+    <string name="general_text_35" formatted="false">Peritty ympäristöstä</string>
+    <string name="general_text_36" formatted="false">Ohjeet työpuiden haaranimien luomiseen.</string>
+    <string name="general_text_37" formatted="false">Jätä säikeet, joilla on avoimia pull requesteja, automaattisen arkistoinnin ulkopuolelle.</string>
+    <string name="general_text_38" formatted="false">Säilytä keskustelut, joilla on pull request</string>
+    <string name="general_text_39" formatted="false">Pidä otsikot muutaman sanan mittaisina. Aloita pääaiheesta.</string>
+    <string name="general_text_40" formatted="false">Pitää oletushaaran ajan tasalla, kun työkopiossa ei ole paikallisia muutoksia tai committeja. Projektit voivat ohittaa asetuksen.</string>
+    <string name="general_text_41" formatted="false">Kieli</string>
+    <string name="general_text_42" formatted="false">Viimeksi käytetty</string>
+    <string name="general_text_43" formatted="false">Alueasetus</string>
+    <string name="general_text_44" formatted="false">Lokien päätepiste</string>
+    <string name="general_text_45" formatted="false">Yhdistä</string>
+    <string name="general_text_46" formatted="false">Mittareiden päätepiste</string>
+    <string name="general_text_47" formatted="false">Eri lähteet</string>
+    <string name="general_text_48" formatted="false">Eri arvot</string>
+    <string name="general_text_49" formatted="false">Malli</string>
+    <string name="general_text_50" formatted="false">Otsikoihin ja muuhun luotuun tekstiin käytettävä malli.</string>
+    <string name="general_text_51" formatted="false">Pull requestien tarkastusoppaiden luomiseen käytettävä malli.</string>
+    <string name="general_text_52" formatted="false">Malli commit-viestien ja pull requestien kirjoittamiseen.</string>
+    <string name="general_text_53" formatted="false">Siirrä käyttörajaan pysähtyneet säikeet Snoozed-osioon nollaukseen asti. Yhdistä automaattiseen jatkamiseen, jotta ne heräävät ja jatkuvat.</string>
+    <string name="general_text_54" formatted="false">Ei koskaan</string>
+    <string name="general_text_55" formatted="false">Uusi työpuu</string>
+    <string name="general_text_56" formatted="false">Ei mitään</string>
+    <string name="general_text_57" formatted="false">Pois</string>
+    <string name="general_text_58" formatted="false">Päällä</string>
+    <string name="general_text_59" formatted="false">Kappale</string>
+    <string name="general_text_60" formatted="false">Suorituskyky</string>
+    <string name="general_text_61" formatted="false">Käyttöoikeudet</string>
+    <string name="general_text_62" formatted="false">Suunnittelutila (vanha)</string>
+    <string name="general_text_63" formatted="false">Automaattisesti luotujen työpuiden haaranimien etuliite.</string>
+    <string name="general_text_64" formatted="false">Projektikohtainen ohitus</string>
+    <string name="general_text_65" formatted="false">Nouda muutokset automaattisesti</string>
+    <string name="general_text_66" formatted="false">Pull requestin yhdistämistapa</string>
+    <string name="general_text_67" formatted="false">Pull requestit käyttävät aluksi tätä menetelmää. ”Viimeksi käytetty” ottaa käyttöön tämän laitteen viimeisimmän valinnan.</string>
+    <string name="general_text_68" formatted="false">Jonoon</string>
+    <string name="general_text_69" formatted="false">Pikavastaukset</string>
+    <string name="general_text_70" formatted="false">Siirrä kantaa</string>
+    <string name="general_text_71" formatted="false">Rekursiivinen</string>
+    <string name="general_text_72" formatted="false">Päivitä</string>
+    <string name="general_text_73" formatted="false">Poista agentin maininta yhdistettäessä</string>
+    <string name="general_text_74" formatted="false">Poistaa tunnistetut agenttien tekijämaininnat yhdistämisviesteistä ja säilyttää ihmiskirjoittajat.</string>
+    <string name="general_text_75" formatted="false">Tietovaraston käytännöt</string>
+    <string name="general_text_76" formatted="false">Nollaa</string>
+    <string name="general_text_77" formatted="false">Vastausten suoratoisto</string>
+    <string name="general_text_78" formatted="false">Tulos tuntematon. Päivitä ennen uutta yritystä.</string>
+    <string name="general_text_79" formatted="false">Jatka palvelinpäivitysten jälkeen</string>
+    <string name="general_text_80" formatted="false">Jatka rajoitettuja keskusteluja automaattisesti</string>
+    <string name="general_text_81" formatted="false">Jatka käyttörajaan pysähtyneitä säikeitä ilmoitettuna nollausajankohtana. Kukin säie voi perua ajastetun jatkamisen.</string>
+    <string name="general_text_82" formatted="false">Tarkistusoppaiden ohjeet</string>
+    <string name="general_text_83" formatted="false">Tarkastusoppaiden malli</string>
+    <string name="general_text_84" formatted="false">Tallenna</string>
+    <string name="general_text_85" formatted="false">Tallennettu</string>
+    <string name="general_text_86" formatted="false">Semanttinen</string>
+    <string name="general_text_87" formatted="false">Lähettää jäljitykset, mittarit ja lokit vastaanottimeen, joka käyttää OTLP HTTP:tä. Käynnistä palvelin uudelleen, jotta muutos tulee voimaan.</string>
+    <string name="general_text_88" formatted="false">Päätä yhdistettyjen pull requestien keskustelut</string>
+    <string name="general_text_89" formatted="false">Siirrä käyttörajoitetut keskustelut</string>
+    <string name="general_text_90" formatted="false">Versionhallinnan tekstimalli</string>
+    <string name="general_text_91" formatted="false">Yhdistä commitit</string>
+    <string name="general_text_92" formatted="false">Aloita uudet worktrees kohteesta origin</string>
+    <string name="general_text_93" formatted="false">Aloita uudet työpuut etävaraston perushaarasta, jos se on saatavilla.</string>
+    <string name="general_text_94" formatted="false">Staattinen</string>
+    <string name="general_text_95" formatted="false">Ohjaa</string>
+    <string name="general_text_96" formatted="false">Valvottu</string>
+    <string name="general_text_97" formatted="false">Tekstintuoton malli</string>
+    <string name="general_text_98" formatted="false">Tämä laite</string>
+    <string name="general_text_99" formatted="false">Ketjujen otsikko-ohjeet</string>
+    <string name="general_text_100" formatted="false">Ajan esitysmuoto</string>
+    <string name="general_text_101" formatted="false">Ylin taso</string>
+    <string name="general_text_102" formatted="false">Jäljitysten päätepiste</string>
+    <string name="general_text_103" formatted="false">Vuoro</string>
+    <string name="general_text_104" formatted="false">Ei saatavilla</string>
+    <string name="general_text_105" formatted="false">Käytä perittyä arvoa</string>
+    <string name="general_text_106" formatted="false">Milloin yli 200 000 tunnisteen joutilas Claude-ketju tiivistetään: kun palaat, juuri ennen kehotevälimuistin vanhenemista tai ei koskaan. Kukin Claude-palveluntarjoaja voi ohittaa tämän.</string>
+    <string name="general_text_107" formatted="false">Kun palaat</string>
+    <string name="general_text_108" formatted="false">Uusien säikeiden aloituspaikka. Projektit ja niiden t3.json voivat ohittaa asetuksen.</string>
+    <string name="general_text_109" formatted="false">Työtila</string>
+    <string name="general_text_110" formatted="false">Worktrees-alimoduulit</string>
+    <string name="general_text_111" formatted="false">Kirjoitusohjeet</string>
+    <string name="general_text_112" formatted="false">Kirjoitustyyli</string>
+    <string name="general_text_113" formatted="false">oletus</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

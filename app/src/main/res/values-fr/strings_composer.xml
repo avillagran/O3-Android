@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Joindre des fichiers</string>
+    <string name="composer_paste">Coller</string>
+    <string name="composer_undo">Annuler</string>
+    <string name="composer_redo">Rétablir</string>
+    <string name="composer_history">Historique</string>
+    <string name="composer_continue_list">Continuer la liste</string>
+    <string name="composer_stash">Mettre de côté</string>
+    <string name="composer_project_drafts">Brouillons du projet</string>
+    <string name="composer_quick_replies">Réponses rapides</string>
+    <string name="composer_build">Construire</string>
+    <string name="composer_plan">Planifier</string>
+    <string name="composer_implement">Appliquer le plan</string>
+    <string name="composer_feedback">Commenter le plan</string>
+    <string name="composer_opposite">Livraison inverse une fois</string>
+    <string name="composer_background">Envoyer en arrière-plan</string>
+    <string name="composer_send_new">Envoyer et créer un fil</string>
+    <string name="composer_remove">Retirer</string>
+    <string name="composer_restore">Restaurer</string>
+    <string name="composer_delete">Supprimer</string>
+    <string name="composer_refresh">Actualiser</string>
+    <string name="composer_uncertain">Résultat inconnu. Vérifiez la commande existante avant de modifier ou de renvoyer.</string>
+    <string name="composer_uploading">Envoi de %1$s…</string>
+    <string name="composer_upload_failed">Échec du transfert : %1$s</string>
+    <string name="composer_attachment_count">Pièces jointes : %1$d</string>
+</resources>

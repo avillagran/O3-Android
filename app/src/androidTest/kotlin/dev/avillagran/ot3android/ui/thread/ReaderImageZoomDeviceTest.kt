@@ -20,6 +20,10 @@ import java.io.File
 /** Real Home/thread/native projection + synthetic binary transport. No live assets or phone. */
 class ReaderImageZoomDeviceTest {
     @get:Rule val rule = createEmptyComposeRule()
+    // Each fixture uses the same synthetic authority; do not inherit another test's bytes.
+    @org.junit.Before fun clearImageCache() {
+        dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
+    }
     @Test fun tokyoTouchPinchPanDoubleTapCopyClose() = gestures(true)
     @Test fun latteTouchPinchPanDoubleTapCopyClose() = gestures(false)
     @Test fun rotateAndRecreatePreserveScopedNormalizedView() = launch(true) { scenario ->
@@ -32,6 +36,8 @@ class ReaderImageZoomDeviceTest {
         rule.onNodeWithTag("thread_image_close").performClick()
     }
     @Test fun failedReadCanRetryBeforeZoomWithoutDispatch() = launch(true) { scenario ->
+        // The thumbnail populated the cache; evict it to exercise a real failed viewer read.
+        dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment("node")
         scenario.onActivity { it.fixture.transport.onImage = { _, _, _ -> error("synthetic_image_failure") } }
         rule.onNodeWithTag("thread_image_reader-shot_640").performClick()
         rule.waitUntil(10_000) { rule.onAllNodesWithText("Retry").fetchSemanticsNodes().isNotEmpty() }

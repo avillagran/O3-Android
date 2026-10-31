@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">Adjuntar archivos</string>
+    <string name="composer_paste">Pegar</string>
+    <string name="composer_undo">Deshacer</string>
+    <string name="composer_redo">Rehacer</string>
+    <string name="composer_history">Historial</string>
+    <string name="composer_continue_list">Continuar lista</string>
+    <string name="composer_stash">Guardar borrador</string>
+    <string name="composer_project_drafts">Borradores del proyecto</string>
+    <string name="composer_quick_replies">Respuestas rápidas</string>
+    <string name="composer_build">Construir</string>
+    <string name="composer_plan">Planificar</string>
+    <string name="composer_implement">Implementar plan</string>
+    <string name="composer_feedback">Comentar plan</string>
+    <string name="composer_opposite">Entrega opuesta una vez</string>
+    <string name="composer_background">Enviar en segundo plano</string>
+    <string name="composer_send_new">Enviar e iniciar otro hilo</string>
+    <string name="composer_remove">Quitar</string>
+    <string name="composer_restore">Restaurar</string>
+    <string name="composer_delete">Eliminar</string>
+    <string name="composer_refresh">Actualizar</string>
+    <string name="composer_uncertain">Resultado del envío desconocido. Comprueba el comando existente antes de editar o enviar de nuevo.</string>
+    <string name="composer_uploading">Subiendo %1$s…</string>
+    <string name="composer_upload_failed">Error al subir: %1$s</string>
+    <string name="composer_attachment_count">Adjuntos: %1$d</string>
+</resources>

@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 часов</string>
+    <string name="general_text_1" formatted="false">24 часа</string>
+    <string name="general_text_2" formatted="false">Разрешить новым сеансам агента запускать локальные и удалённые устройства и управлять ими с автоматической настройкой инструментов.</string>
+    <string name="general_text_3" formatted="false">Добавляется к запросу для новых и перегенерированных заголовков.</string>
+    <string name="general_text_4" formatted="false">Принимать правки</string>
+    <string name="general_text_5" formatted="false">Закрывать после бездействия (дни)</string>
+    <string name="general_text_6" formatted="false">Автоматически</string>
+    <string name="general_text_7" formatted="false">Автоматически убирает ветки после слияния связанных запросов на изменения.</string>
+    <string name="general_text_8" formatted="false">Автоматически убирает ветки после указанного числа дней без активности.</string>
+    <string name="general_text_9" formatted="false">Фоновая активность</string>
+    <string name="general_text_10" formatted="false">Уравновешивает фоновое обновление с производительностью и расходом батареи.</string>
+    <string name="general_text_11" formatted="false">Сбалансированный</string>
+    <string name="general_text_12" formatted="false">Экономия заряда</string>
+    <string name="general_text_13" formatted="false">До истечения кэша (бета)</string>
+    <string name="general_text_14" formatted="false">Префикс имени ветки</string>
+    <string name="general_text_15" formatted="false">Именование веток</string>
+    <string name="general_text_16" formatted="false">Инструкции по именованию веток</string>
+    <string name="general_text_17" formatted="false">Проверяет обновления установленных провайдеров в фоновом режиме.</string>
+    <string name="general_text_18" formatted="false">Проверять обновления провайдеров</string>
+    <string name="general_text_19" formatted="false">Выберите способ именования веток для новых рабочих деревьев.</string>
+    <string name="general_text_20" formatted="false">Выберите, когда показывать ответы во время работы агента.</string>
+    <string name="general_text_21" formatted="false">Сжимать неактивные треды</string>
+    <string name="general_text_22" formatted="false">Продолжает активные ветки после перезапуска сервера для обновления.</string>
+    <string name="general_text_23" formatted="false">Стандартные коммиты</string>
+    <string name="general_text_24" formatted="false">Текущая рабочая копия</string>
+    <string name="general_text_25" formatted="false">Пользовательский</string>
+    <string name="general_text_26" formatted="false">Модель по умолчанию для новых веток. В проектах её можно переопределить.</string>
+    <string name="general_text_27" formatted="false">Разрешения по умолчанию для новых веток. В проектах их можно переопределить.</string>
+    <string name="general_text_28" formatted="false">Включить руководства по проверке</string>
+    <string name="general_text_29" formatted="false">Следовать шаблонам pull request</string>
+    <string name="general_text_30" formatted="false">Поведение дополнительных сообщений</string>
+    <string name="general_text_31" formatted="false">Полный доступ</string>
+    <string name="general_settings_title" formatted="false">Общие</string>
+    <string name="general_text_33" formatted="false">Как новые рабочие деревья заполняют подмодули git. Проекты могут изменить это поведение.</string>
+    <string name="general_text_34" formatted="false">Наследовать</string>
+    <string name="general_text_35" formatted="false">Унаследовано из окружения</string>
+    <string name="general_text_36" formatted="false">Инструкции по созданию имён веток рабочих деревьев.</string>
+    <string name="general_text_37" formatted="false">Не убирает автоматически ветки с открытыми запросами на изменения.</string>
+    <string name="general_text_38" formatted="false">Сохранять ветки с pull request</string>
+    <string name="general_text_39" formatted="false">Короткие заголовки. Начинайте с главной темы.</string>
+    <string name="general_text_40" formatted="false">Обновляет ветку по умолчанию, если в рабочей копии нет локальных изменений или коммитов. Проекты могут переопределить настройку.</string>
+    <string name="general_text_41" formatted="false">Язык</string>
+    <string name="general_text_42" formatted="false">Последний использованный</string>
+    <string name="general_text_43" formatted="false">Региональные настройки</string>
+    <string name="general_text_44" formatted="false">Конечная точка логов</string>
+    <string name="general_text_45" formatted="false">Слияние</string>
+    <string name="general_text_46" formatted="false">Конечная точка метрик</string>
+    <string name="general_text_47" formatted="false">Разные источники</string>
+    <string name="general_text_48" formatted="false">Разные значения</string>
+    <string name="general_text_49" formatted="false">Модель</string>
+    <string name="general_text_50" formatted="false">Модель для заголовков и другого создаваемого текста.</string>
+    <string name="general_text_51" formatted="false">Модель для создания руководств по ревью запросов на изменения.</string>
+    <string name="general_text_52" formatted="false">Модель для сообщений коммитов и запросов на изменения.</string>
+    <string name="general_text_53" formatted="false">Перемещает ветки, остановленные из-за лимита использования, в Snoozed до времени сброса. Включите автовозобновление, чтобы затем разбудить и продолжить их.</string>
+    <string name="general_text_54" formatted="false">Никогда</string>
+    <string name="general_text_55" formatted="false">Новое рабочее дерево</string>
+    <string name="general_text_56" formatted="false">Нет</string>
+    <string name="general_text_57" formatted="false">Выкл.</string>
+    <string name="general_text_58" formatted="false">Вкл.</string>
+    <string name="general_text_59" formatted="false">Абзац</string>
+    <string name="general_text_60" formatted="false">Производительность</string>
+    <string name="general_text_61" formatted="false">Разрешения</string>
+    <string name="general_text_62" formatted="false">Режим плана (устаревший)</string>
+    <string name="general_text_63" formatted="false">Префикс для автоматически создаваемых имён веток рабочих деревьев.</string>
+    <string name="general_text_64" formatted="false">Переопределено в проекте</string>
+    <string name="general_text_65" formatted="false">Автоматически получать изменения</string>
+    <string name="general_text_66" formatted="false">Способ слияния pull request</string>
+    <string name="general_text_67" formatted="false">Для запросов на изменения сначала используется этот способ. «Последний использованный» повторяет последний выбор на этом устройстве.</string>
+    <string name="general_text_68" formatted="false">В очередь</string>
+    <string name="general_text_69" formatted="false">Быстрые ответы</string>
+    <string name="general_text_70" formatted="false">Перебазирование</string>
+    <string name="general_text_71" formatted="false">Рекурсивно</string>
+    <string name="general_text_72" formatted="false">Обновить</string>
+    <string name="general_text_73" formatted="false">Удалять упоминание агента при слиянии</string>
+    <string name="general_text_74" formatted="false">Удаляет распознанные строки с указанием агентов из сообщений о слиянии, сохраняя соавторов-людей.</string>
+    <string name="general_text_75" formatted="false">Соглашения репозитория</string>
+    <string name="general_text_76" formatted="false">Сбросить</string>
+    <string name="general_text_77" formatted="false">Поток ответов</string>
+    <string name="general_text_78" formatted="false">Результат неизвестен. Обновите перед повторной попыткой.</string>
+    <string name="general_text_79" formatted="false">Возобновлять после обновлений сервера</string>
+    <string name="general_text_80" formatted="false">Автоматически возобновлять ветки после лимита</string>
+    <string name="general_text_81" formatted="false">Возобновляет ветки после остановки из-за лимита использования в указанное время сброса. В каждой ветке можно отменить запланированное продолжение.</string>
+    <string name="general_text_82" formatted="false">Инструкции для руководств по проверке</string>
+    <string name="general_text_83" formatted="false">Модель создания руководств по ревью</string>
+    <string name="general_text_84" formatted="false">Сохранить</string>
+    <string name="general_text_85" formatted="false">Сохранено</string>
+    <string name="general_text_86" formatted="false">Семантическое</string>
+    <string name="general_text_87" formatted="false">Отправляет трассы, метрики и логи в приёмник OTLP HTTP. Перезапустите сервер, чтобы применить.</string>
+    <string name="general_text_88" formatted="false">Завершать ветки объединённых pull request</string>
+    <string name="general_text_89" formatted="false">Откладывать ветки с лимитом использования</string>
+    <string name="general_text_90" formatted="false">Модель написания текстов для системы контроля версий</string>
+    <string name="general_text_91" formatted="false">Объединить коммиты</string>
+    <string name="general_text_92" formatted="false">Создавать новые worktrees из origin</string>
+    <string name="general_text_93" formatted="false">Создаёт новые рабочие деревья от удалённой базовой ветки, если она доступна.</string>
+    <string name="general_text_94" formatted="false">Статическое</string>
+    <string name="general_text_95" formatted="false">Направить</string>
+    <string name="general_text_96" formatted="false">Под наблюдением</string>
+    <string name="general_text_97" formatted="false">Модель генерации текста</string>
+    <string name="general_text_98" formatted="false">Это устройство</string>
+    <string name="general_text_99" formatted="false">Инструкции для заголовков тредов</string>
+    <string name="general_text_100" formatted="false">Формат времени</string>
+    <string name="general_text_101" formatted="false">Верхний уровень</string>
+    <string name="general_text_102" formatted="false">Конечная точка трасс</string>
+    <string name="general_text_103" formatted="false">Ход</string>
+    <string name="general_text_104" formatted="false">Недоступно</string>
+    <string name="general_text_105" formatted="false">Использовать унаследованное значение</string>
+    <string name="general_text_106" formatted="false">Когда сжимать неактивный тред Claude больше 200 000 токенов: после вашего возвращения, перед истечением кэша промпта или никогда. Каждый провайдер Claude может это переопределить.</string>
+    <string name="general_text_107" formatted="false">Когда вы вернётесь</string>
+    <string name="general_text_108" formatted="false">Место запуска новых веток. Проекты и их файл t3.json могут переопределить его.</string>
+    <string name="general_text_109" formatted="false">Рабочая область</string>
+    <string name="general_text_110" formatted="false">Подмодули worktrees</string>
+    <string name="general_text_111" formatted="false">Инструкции по написанию</string>
+    <string name="general_text_112" formatted="false">Стиль написания</string>
+    <string name="general_text_113" formatted="false">по умолчанию</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

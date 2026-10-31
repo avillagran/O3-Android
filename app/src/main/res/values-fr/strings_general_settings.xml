@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 heures</string>
+    <string name="general_text_1" formatted="false">24 heures</string>
+    <string name="general_text_2" formatted="false">Autorise les nouvelles sessions d’agent à démarrer et contrôler les appareils locaux et distants, avec les outils configurés automatiquement.</string>
+    <string name="general_text_3" formatted="false">Ajouté au prompt des titres nouveaux et régénérés.</string>
+    <string name="general_text_4" formatted="false">Accepter les modifications</string>
+    <string name="general_text_5" formatted="false">Clore après inactivité (jours)</string>
+    <string name="general_text_6" formatted="false">Automatique</string>
+    <string name="general_text_7" formatted="false">Classe automatiquement les fils une fois leurs demandes de fusion intégrées.</string>
+    <string name="general_text_8" formatted="false">Classe automatiquement les fils après ce nombre de jours d\'inactivité.</string>
+    <string name="general_text_9" formatted="false">Activité en arrière-plan</string>
+    <string name="general_text_10" formatted="false">Équilibre les actualisations en arrière-plan avec les performances et l\'autonomie.</string>
+    <string name="general_text_11" formatted="false">Équilibré</string>
+    <string name="general_text_12" formatted="false">Économie de batterie</string>
+    <string name="general_text_13" formatted="false">Avant l\'expiration du cache (bêta)</string>
+    <string name="general_text_14" formatted="false">Préfixe du nom de branche</string>
+    <string name="general_text_15" formatted="false">Nommage des branches</string>
+    <string name="general_text_16" formatted="false">Consignes de nommage des branches</string>
+    <string name="general_text_17" formatted="false">Vérifie en arrière-plan si des mises à jour sont disponibles pour les fournisseurs installés.</string>
+    <string name="general_text_18" formatted="false">Vérifier les mises à jour des fournisseurs</string>
+    <string name="general_text_19" formatted="false">Choisissez le nommage des branches créées pour les nouveaux arbres de travail.</string>
+    <string name="general_text_20" formatted="false">Choisissez quand afficher les réponses pendant que l\'agent travaille.</string>
+    <string name="general_text_21" formatted="false">Compacter les fils inactifs</string>
+    <string name="general_text_22" formatted="false">Poursuit les fils actifs après le redémarrage du serveur dû à une mise à jour.</string>
+    <string name="general_text_23" formatted="false">Commits conventionnels</string>
+    <string name="general_text_24" formatted="false">Copie de travail actuelle</string>
+    <string name="general_text_25" formatted="false">Personnalisé</string>
+    <string name="general_text_26" formatted="false">Modèle par défaut des nouveaux fils de discussion. Les projets peuvent le remplacer.</string>
+    <string name="general_text_27" formatted="false">Autorisations par défaut des nouveaux fils de discussion. Les projets peuvent les remplacer.</string>
+    <string name="general_text_28" formatted="false">Activer les guides de revue</string>
+    <string name="general_text_29" formatted="false">Suivre les modèles de pull requests</string>
+    <string name="general_text_30" formatted="false">Comportement des relances</string>
+    <string name="general_text_31" formatted="false">Accès complet</string>
+    <string name="general_settings_title" formatted="false">Général</string>
+    <string name="general_text_33" formatted="false">Méthode de peuplement des sous-modules git dans les nouveaux arbres de travail. Les projets peuvent la modifier.</string>
+    <string name="general_text_34" formatted="false">Hériter</string>
+    <string name="general_text_35" formatted="false">Hérité de l\'environnement</string>
+    <string name="general_text_36" formatted="false">Instructions de génération des noms de branches des arbres de travail.</string>
+    <string name="general_text_37" formatted="false">Exclut du classement automatique les fils associés à des demandes de fusion ouvertes.</string>
+    <string name="general_text_38" formatted="false">Conserver les fils avec des pull requests</string>
+    <string name="general_text_39" formatted="false">Titres de quelques mots. Commencez par le sujet principal.</string>
+    <string name="general_text_40" formatted="false">Maintient la branche par défaut à jour lorsque la copie de travail ne comporte ni modifications ni commits locaux. Les projets peuvent modifier ce réglage.</string>
+    <string name="general_text_41" formatted="false">Langue</string>
+    <string name="general_text_42" formatted="false">Dernier utilisé</string>
+    <string name="general_text_43" formatted="false">Paramètres régionaux</string>
+    <string name="general_text_44" formatted="false">Point de terminaison des journaux</string>
+    <string name="general_text_45" formatted="false">Fusionner</string>
+    <string name="general_text_46" formatted="false">Point de terminaison des métriques</string>
+    <string name="general_text_47" formatted="false">Sources différentes</string>
+    <string name="general_text_48" formatted="false">Valeurs différentes</string>
+    <string name="general_text_49" formatted="false">Modèle</string>
+    <string name="general_text_50" formatted="false">Modèle utilisé pour les titres et autres textes générés.</string>
+    <string name="general_text_51" formatted="false">Modèle utilisé pour générer les guides de revue des demandes de fusion.</string>
+    <string name="general_text_52" formatted="false">Modèle utilisé pour rédiger les messages de commit et de demande de fusion.</string>
+    <string name="general_text_53" formatted="false">Place les fils arrêtés par une limite d\'utilisation dans Snoozed jusqu\'à la réinitialisation. Associez cette option à la reprise automatique pour les réactiver et les poursuivre.</string>
+    <string name="general_text_54" formatted="false">Jamais</string>
+    <string name="general_text_55" formatted="false">Nouvel arbre de travail</string>
+    <string name="general_text_56" formatted="false">Aucun</string>
+    <string name="general_text_57" formatted="false">Désactivé</string>
+    <string name="general_text_58" formatted="false">Activé</string>
+    <string name="general_text_59" formatted="false">Paragraphe</string>
+    <string name="general_text_60" formatted="false">Performances</string>
+    <string name="general_text_61" formatted="false">Autorisations</string>
+    <string name="general_text_62" formatted="false">Mode plan (hérité)</string>
+    <string name="general_text_63" formatted="false">Préfixe ajouté aux noms de branches générés automatiquement pour les arbres de travail.</string>
+    <string name="general_text_64" formatted="false">Valeur définie dans le projet</string>
+    <string name="general_text_65" formatted="false">Récupérer les changements automatiquement</string>
+    <string name="general_text_66" formatted="false">Méthode de fusion des pull requests</string>
+    <string name="general_text_67" formatted="false">Les demandes de fusion utilisent d\'abord cette méthode. « Dernière utilisée » reprend le choix le plus récent sur cet appareil.</string>
+    <string name="general_text_68" formatted="false">En file</string>
+    <string name="general_text_69" formatted="false">Réponses rapides</string>
+    <string name="general_text_70" formatted="false">Rebaser</string>
+    <string name="general_text_71" formatted="false">Récursif</string>
+    <string name="general_text_72" formatted="false">Actualiser</string>
+    <string name="general_text_73" formatted="false">Retirer les crédits de l’agent à la fusion</string>
+    <string name="general_text_74" formatted="false">Supprime des messages de fusion les mentions d\'attribution aux agents reconnues, tout en conservant les coauteurs humains.</string>
+    <string name="general_text_75" formatted="false">Conventions du dépôt</string>
+    <string name="general_text_76" formatted="false">Réinitialiser</string>
+    <string name="general_text_77" formatted="false">Diffusion des réponses</string>
+    <string name="general_text_78" formatted="false">Résultat inconnu. Actualisez avant de réessayer.</string>
+    <string name="general_text_79" formatted="false">Reprendre après les mises à jour du serveur</string>
+    <string name="general_text_80" formatted="false">Reprendre automatiquement les fils limités</string>
+    <string name="general_text_81" formatted="false">Reprend les fils arrêtés par une limite d\'utilisation à l\'heure de réinitialisation annoncée. Chaque fil peut annuler sa reprise programmée.</string>
+    <string name="general_text_82" formatted="false">Consignes des guides de revue</string>
+    <string name="general_text_83" formatted="false">Modèle de guide de revue</string>
+    <string name="general_text_84" formatted="false">Enregistrer</string>
+    <string name="general_text_85" formatted="false">Enregistré</string>
+    <string name="general_text_86" formatted="false">Sémantique</string>
+    <string name="general_text_87" formatted="false">Envoie traces, métriques et journaux à un récepteur OTLP HTTP. Redémarrez le serveur pour appliquer.</string>
+    <string name="general_text_88" formatted="false">Clore les fils des pull requests fusionnées</string>
+    <string name="general_text_89" formatted="false">Reporter les fils limités en usage</string>
+    <string name="general_text_90" formatted="false">Modèle de rédaction pour le contrôle de version</string>
+    <string name="general_text_91" formatted="false">Regrouper les commits</string>
+    <string name="general_text_92" formatted="false">Créer les nouveaux worktrees depuis origin</string>
+    <string name="general_text_93" formatted="false">Crée les nouveaux arbres de travail à partir de la branche de base distante quand elle est disponible.</string>
+    <string name="general_text_94" formatted="false">Statique</string>
+    <string name="general_text_95" formatted="false">Réorienter</string>
+    <string name="general_text_96" formatted="false">Supervisé</string>
+    <string name="general_text_97" formatted="false">Modèle de génération de texte</string>
+    <string name="general_text_98" formatted="false">Cet appareil</string>
+    <string name="general_text_99" formatted="false">Consignes pour les titres de fil</string>
+    <string name="general_text_100" formatted="false">Format de l’heure</string>
+    <string name="general_text_101" formatted="false">Niveau supérieur</string>
+    <string name="general_text_102" formatted="false">Point de terminaison des traces</string>
+    <string name="general_text_103" formatted="false">Tour</string>
+    <string name="general_text_104" formatted="false">Indisponible</string>
+    <string name="general_text_105" formatted="false">Utiliser la valeur héritée</string>
+    <string name="general_text_106" formatted="false">Quand compacter un fil Claude inactif de plus de 200 000 jetons : à votre retour, juste avant l\'expiration de son cache de prompt, ou jamais. Chaque fournisseur Claude peut le remplacer.</string>
+    <string name="general_text_107" formatted="false">À votre retour</string>
+    <string name="general_text_108" formatted="false">Emplacement de démarrage des nouveaux fils de discussion. Les projets et leur fichier t3.json peuvent le modifier.</string>
+    <string name="general_text_109" formatted="false">Espace de travail</string>
+    <string name="general_text_110" formatted="false">Sous-modules des worktrees</string>
+    <string name="general_text_111" formatted="false">Consignes de rédaction</string>
+    <string name="general_text_112" formatted="false">Style de rédaction</string>
+    <string name="general_text_113" formatted="false">par défaut</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>
