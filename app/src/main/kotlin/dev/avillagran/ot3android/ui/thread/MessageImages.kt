@@ -66,11 +66,11 @@ internal fun MessageAttachments(row: JSONObject) {
     }
 }
 
-/** Bounds are read before decoding. Neither compressed bytes nor full-size pixels are cached. */
-internal fun decodeReaderImage(bytes: ByteArray, maxEdge: Int, onNaturalWidth: (Int) -> Unit = {}): Bitmap {
+/** Validate source bounds before allocating sampled pixels. */
+internal fun decodeReaderImage(bytes: ByteArray, maxEdge: Int, inline: Boolean = false, onNaturalWidth: (Int) -> Unit = {}): Bitmap {
     val bounds = readerImageBounds(bytes, 40_000_000)
     onNaturalWidth(bounds.outWidth)
-    val sample = readerImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
+    val sample = if (inline) readerInlineImageSample(bounds.outWidth, bounds.outHeight, maxEdge) else readerImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
     val options = BitmapFactory.Options().apply {
         inSampleSize = sample
         inPreferredConfig = Bitmap.Config.ARGB_8888
@@ -94,6 +94,18 @@ internal fun readerImageSample(width: Int, height: Int, maxEdge: Int): Int {
         (height.toLong() + sample - 1) / sample > maxEdge) sample *= 2
     return sample
 }
+
+/** Preserve every displayed pixel, except at the explicit 4 MP inline safety ceiling. */
+internal fun readerInlineImageSample(width: Int, height: Int, displayWidthPx: Int): Int {
+    require(width > 0 && height > 0 && displayWidthPx > 0)
+    var sample = 1
+    while (width.toLong() / (sample.toLong() * 2) >= displayWidthPx) sample *= 2
+    while (readerImageAllocation(width, height, sample) > 16L * 1024 * 1024) sample *= 2
+    return sample
+}
+
+internal fun readerImageAllocation(width: Int, height: Int, sample: Int): Long =
+    ((width.toLong() + sample - 1) / sample) * ((height.toLong() + sample - 1) / sample) * 4
 
 internal val LocalOpenReaderImage = compositionLocalOf<(JSONObject) -> Unit> { {} }
 
@@ -159,52 +171,67 @@ internal fun readerImageNearViewport(top: Float, bottom: Float, left: Float, rig
 
 @Composable
 private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}) {
+    var displayWidth by remember(identity, source.generation) { mutableIntStateOf(0) }
     var near by remember(identity, source.generation) { mutableStateOf(false) }
     val density = LocalDensity.current
-    var height by remember(identity, source.generation) { mutableIntStateOf(160) }
-    Box(modifier.testTag("thread_image_${attachment.optString("id")}_$maxEdge").onGloballyPositioned { coordinates ->
+    var height by remember(identity, source.generation) { mutableIntStateOf(0) }
+    Box(modifier.testTag("thread_image_${attachment.optString("id")}_$maxEdge").onSizeChanged { displayWidth = it.width }.onGloballyPositioned { coordinates ->
         val root = coordinates.findRootCoordinates().size
         val position = coordinates.positionInRoot()
         near = readerImageNearViewport(position.y, position.y + coordinates.size.height,
             position.x, position.x + coordinates.size.width, root.width, root.height)
     }) {
-        if (near) key(identity, source.generation, maxEdge) {
-            ActiveImageRead(attachment, identity, source, maxEdge,
-                Modifier.fillMaxWidth().onSizeChanged { height = it.height }, zoom, onNaturalWidth)
-        } else Spacer(Modifier.fillMaxWidth().height(with(density) { height.toDp() }))
+        if (near && displayWidth > 0) key(identity, source.generation) {
+            ActiveImageRead(attachment, identity, source, if (zoom == null) displayWidth else maxEdge,
+                Modifier.fillMaxWidth().onSizeChanged { height = it.height }, zoom, onNaturalWidth, height.takeIf { it > 0 } ?: displayWidth)
+        } else Spacer(if (height > 0) Modifier.fillMaxWidth().height(with(density) { height.toDp() }) else Modifier.fillMaxWidth().aspectRatio(1f))
     }
 }
 
 @Composable
-private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}) {
+private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, loadingHeightPx: Int = 160) {
+    val cachedBytes = remember(identity, source.generation) { arrayOfNulls<ByteArray>(1) }
     var retry by remember(identity, source.generation) { mutableIntStateOf(0) }
     var complete by remember(identity, source.generation, retry) { mutableStateOf(false) }
-    val bitmap by key(identity, source.generation, retry, maxEdge) {
-        produceState<Bitmap?>(null) {
-            var lease: ReaderBitmapBudget.Lease? = null
-            var thumbnailLease: ReaderBitmapBudget.Lease? = null
-            try {
-                var naturalWidth = 0
-                val decoded = if (source.generation == null) null else {
-                    if (maxEdge <= 640) thumbnailLease = ReaderBitmapBudget.thumbnails.acquire(maxEdge * maxEdge * 4)
-                    lease = ReaderBitmapBudget.shared.acquire(maxEdge * maxEdge * 4)
+    val bitmap by produceState<Bitmap?>(null, identity, source.generation, retry, maxEdge) {
+        value = null
+        complete = false
+        var lease: ReaderBitmapBudget.Lease? = null
+        var thumbnailLease: ReaderBitmapBudget.Lease? = null
+        try {
+            var naturalWidth = 0
+            val decoded = if (source.generation == null) null else {
+                // Gate pending reads too: eager Markdown placeholders can otherwise
+                // read many compressed images while waiting for their pixel budget.
+                if (zoom == null) thumbnailLease = ReaderBitmapBudget.thumbnails.acquire(640 * 640 * 4)
+                lease = ReaderBitmapBudget.shared.acquire(640 * 640 * 4)
+                val bytes = cachedBytes[0] ?: imageReads.withPermit { source.read(attachment) }?.also { cachedBytes[0] = it }
+                if (bytes == null) null else {
+                    val bounds = withContext(Dispatchers.Default) { readerImageBounds(bytes, 40_000_000) }
+                    val sample = if (zoom == null) readerInlineImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
+                        else readerImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
+                    val reservation = readerImageAllocation(bounds.outWidth, bounds.outHeight, sample).toInt()
+                    lease.close(); lease = null
+                    thumbnailLease?.close(); thumbnailLease = null
+                    if (zoom == null) thumbnailLease = ReaderBitmapBudget.thumbnails.acquire(reservation)
+                    lease = ReaderBitmapBudget.shared.acquire(reservation)
                     imageReads.withPermit {
-                        val bytes = source.read(attachment)
-                        if (bytes == null) null else withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge) { naturalWidth = it } }
+                        withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge, inline = zoom == null) { naturalWidth = it } }
                     }
                 }
-                if (source.isCurrent()) { onNaturalWidth(naturalWidth); value = decoded }
-                complete = true
-                if (value != null) kotlinx.coroutines.awaitCancellation()
-            } catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { complete = true }
-            finally { value = null; lease?.close(); thumbnailLease?.close() }
-        }
+            }
+            if (source.isCurrent()) { onNaturalWidth(naturalWidth); value = decoded }
+            complete = true
+            if (value != null) kotlinx.coroutines.awaitCancellation()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { complete = true }
+        finally { lease?.close(); thumbnailLease?.close(); value = null }
     }
-    Surface(shape = RoundedCornerShape(8.dp), modifier = modifier, color = MaterialTheme.colorScheme.surfaceVariant) {
+    val stableModifier = if (bitmap == null) modifier.heightIn(min = with(LocalDensity.current) { loadingHeightPx.toDp() }) else modifier
+    Surface(shape = RoundedCornerShape(8.dp), modifier = stableModifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val decoded = bitmap
         if (decoded != null) {
-            if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, modifier = if (attachment.has("source")) Modifier.fillMaxWidth().aspectRatio(decoded.width.toFloat() / decoded.height) else Modifier.fillMaxSize())
+            if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, filterQuality = androidx.compose.ui.graphics.FilterQuality.High, modifier = if (attachment.has("source")) Modifier.fillMaxWidth().aspectRatio(decoded.width.toFloat() / decoded.height) else Modifier.fillMaxSize())
             else ZoomedReaderImage(decoded, attachment.optString("name"), zoom)
         }
         else Column(Modifier.padding(12.dp)) {
@@ -274,7 +301,7 @@ private fun ZoomedReaderImage(bitmap: Bitmap, name: String, zoom: ReaderImageZoo
         .pointerInput(zoom) { detectTapGestures(onDoubleTap = zoom::doubleTap) }
         .pointerInput(zoom) { detectTransformGestures { centroid, pan, factor, _ -> zoom.transform(centroid, pan, factor) } }
     ) {
-        Image(bitmap.asImageBitmap(), name, contentScale = ContentScale.Fit,
+        Image(bitmap.asImageBitmap(), name, contentScale = ContentScale.Fit, filterQuality = androidx.compose.ui.graphics.FilterQuality.High,
             modifier = Modifier.fillMaxSize().graphicsLayer {
                 scaleX = zoom.scale; scaleY = zoom.scale
                 translationX = zoom.translation.x; translationY = zoom.translation.y

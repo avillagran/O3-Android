@@ -46,8 +46,15 @@ centralize this adapter, but is not required to use the existing binary channel.
 `MarkdownBlocks` consumes Rust image blocks and spans. It reuses `AttachmentImage`,
 `ImageRead`, `ReaderImageDialog`, clipboard and connection-generation/lifecycle guards.
 Inline images become their own phone-width line, preserving surrounding text order.
-Tables keep their existing horizontally scrollable cells. Thumbnails are bounded to
-640 pixels per edge and fullscreen decodes to 2048; originals over 40 million pixels
+Tables keep their existing horizontally scrollable cells. Inline sampling uses the
+measured physical image width (logical dp width × density),
+keeping decoded width at least that large when the source allows it. Logical Markdown
+width remains min(availableWidthDp, naturalWidth.dp). A 962×622 image displayed at
+1510 physical pixels retains all source pixels. Power-of-two downsampling applies only
+when the source exceeds display width, with a 16 MiB decoded inline safety ceiling.
+Width changes re-decode retained compressed bytes without another transport read.
+Scaling uses high-quality filtering. Fullscreen decodes remain bounded to 2048;
+originals over 40 million pixels
 are refused before allocation. Compressed bytes use a process-local LRU (32 MiB / 128 entries), outside Compose state.
 It keys each image by environment, thread, existing cache-authority digest and SHA-256
 of the descriptor, retaining no source URL or bearer token in keys. Reopening the same
@@ -56,11 +63,14 @@ An authority/route change cannot read the previous entries. Environment deletion
 its entries and invalidates in-flight cache writes. Process death drops this memory
 cache; it does not persist credentials or media to disk.
 
+The initial placeholder is square; loading and local re-decodes retain the measured
+height so layout changes do not cascade into reads of intermediate images on a jump.
 Each image retains only a lightweight layout placeholder outside a viewport plus one
 screen of prefetch on either side, including images nested in lists/tables. Leaving that
 area cancels reads and drops bitmap state while preserving its measured layout height.
 A shared 32 MiB reservation budget covers decoding and displayed bitmaps: thumbnails
-can reserve at most 16 MiB, leaving 16 MiB for one 2048-edge fullscreen decode. Reservations
+can reserve at most 16 MiB, leaving 16 MiB for one 2048-edge fullscreen decode.
+Reservations use the sampled dimensions rather than a fixed thumbnail square and
 are acquired before decode and released on cancellation/disposal; pending reservations
 cancel without leaking capacity. ARGB_8888/sRGB sampling bounds allocations. The
 200-image regression scrolls directly to the end and asserts intermediate images never
@@ -217,3 +227,19 @@ skips in its finished totals. Fresh JVM runs: core 187 passed/170 skipped; app
 369 passed/16 skipped. Roborazzi, both-module lint, 261-string × 20-locale catalog
 check and bridge-required debug assembly passed. Emulator stopped afterwards.
 Host-JNI/opt-in checks remain skipped; no physical-device or live-host validation.
+
+## Inline decode sharpness (2026-10-31)
+
+Sampling tests cover 962×622 at 1510 physical pixels (sample 1), smaller/larger
+width transitions, an 8192×4096 source and the inline allocation ceiling. A Compose
+regression at density 3.4 grows measured width from 476 to 952 pixels, requiring a
+481×311 → 962×622 re-decode with exactly one byte read and no retained old reservation.
+The existing 200-image viewport regression passes without relaxing its assertions.
+
+Validation with Temurin 21 and the configured Android SDK: core 187 passed / 170
+skipped, app 371 passed / 16 skipped, zero failures/errors; Roborazzi verified all
+94 existing goldens unchanged. Both-module lint, catalog check (261 strings × 20
+locales) and bridge-required debug assembly passed. The API 34 emulator passed all
+8 ReaderImagesDeviceTest / ReaderImageCopyDeviceTest / ReaderImageZoomDeviceTest
+cases, including rotation and cache reuse. The emulator was stopped afterwards.
+No phone or live-host acceptance was performed; host-JNI/opt-in skips remain.

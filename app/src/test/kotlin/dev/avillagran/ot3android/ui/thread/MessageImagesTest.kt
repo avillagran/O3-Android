@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
@@ -138,6 +139,48 @@ class MessageImagesTest {
         rule.waitUntil(5000) { reads == 2 }
         rule.onNodeWithText("Close").performClick()
         rule.onNodeWithText("Retry").assertDoesNotExist()
+    }
+
+    @Test fun growingInlineWidthRedecodesCachedBytesWithoutAnotherRead() {
+        val image = Bitmap.createBitmap(962, 622, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { image.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        image.recycle()
+        var wide by mutableStateOf(false)
+        var reads = 0
+        val descriptor = JSONObject().put("id", "resize").put("name", "Resize").put("source", "/resize.png")
+        rule.setContent { Ot3Theme {
+            CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(3.4f),
+                LocalReaderImages provides ReaderImages("resize") { reads++; bytes }
+            ) {
+                Box(Modifier.requiredWidth(if (wide) 280.dp else 140.dp)) {
+                    AttachmentImage(descriptor, markdown = true)
+                }
+            }
+        } }
+        rule.waitUntil(5000) {
+            rule.onAllNodesWithContentDescription("Resize").fetchSemanticsNodes().isNotEmpty() &&
+                ReaderBitmapBudget.shared.used == 481 * 311 * 4
+        }
+        rule.onNodeWithContentDescription("Resize").assertIsDisplayed()
+        rule.runOnIdle { wide = true }
+        rule.waitForIdle()
+        rule.waitUntil(5000) {
+            rule.onAllNodesWithContentDescription("Resize").fetchSemanticsNodes().isNotEmpty() &&
+                ReaderBitmapBudget.shared.used == 962 * 622 * 4
+        }
+        rule.onNodeWithContentDescription("Resize").assertIsDisplayed()
+        rule.runOnIdle { assertEquals(1, reads) }
+    }
+
+    @Test fun inlineSamplingPreservesPhysicalDisplayPixelsWithinBudget() {
+        assertEquals(1, readerInlineImageSample(962, 622, 1510))
+        assertEquals(1, readerInlineImageSample(962, 622, 640))
+        assertEquals(2, readerInlineImageSample(962, 622, 480))
+        assertEquals(1, readerInlineImageSample(962, 622, 960)) // rotation grows width
+        assertEquals(4, readerInlineImageSample(8192, 4096, 1510))
+        val sample = readerInlineImageSample(1000, 40000, 1510)
+        assertTrue(readerImageAllocation(1000, 40000, sample) <= 16L * 1024 * 1024)
     }
 
     @Test fun extremeDimensionsStayInsidePixelBudgetAndInvalidDataFails() {
