@@ -130,6 +130,7 @@ class EnvironmentRepository(
 
     /** Removes the row, its token and its shell cursor together. */
     suspend fun delete(id: String) = mutations.withLock {
+        dev.avillagran.ot3android.core.thread.ReaderImageCache.shared.clearEnvironment(id)
         try {
             managed?.find(id)?.let { managed.upsert(it.copy(status = "credential_deleting")) }
             dao.deleteById(id)

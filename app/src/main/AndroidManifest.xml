@@ -13,6 +13,8 @@
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- Arbitrary public HTTP image hosts require cleartext opt-in for Desktop parity.
+         PublicImageHttp validates/pins every destination and redirect; host files use Rust assets. -->
     <application
         android:name=".Ot3Application"
         android:allowBackup="false"

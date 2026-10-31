@@ -1,8 +1,5 @@
 package dev.avillagran.ot3android.core.thread
 
-import java.net.HttpURLConnection
-import java.net.Proxy
-import java.net.URI
 import kotlin.io.encoding.Base64
 
 /** Public media never sees the environment transport or any of its credentials. */
@@ -16,41 +13,7 @@ object PublicMarkdownImage {
             require(source.length <= 14 * 1024 * 1024)
             Base64.decode(source.substringAfter(','))
         } else {
-            val deadline = System.nanoTime() + 20_000_000_000L
-            fun remainingMs(): Int = ((deadline - System.nanoTime()) / 1_000_000).toInt().also { require(it > 0) }
-            var uri = URI(source)
-            var result: ByteArray? = null
-            for (redirect in 0..3) {
-                require(uri.scheme in setOf("http", "https") && uri.rawUserInfo == null && uri.host != null)
-                val connection = uri.toURL().openConnection(Proxy.NO_PROXY) as HttpURLConnection
-                try {
-                    connection.instanceFollowRedirects = false
-                    connection.connectTimeout = remainingMs()
-                    connection.readTimeout = remainingMs()
-                    val status = connection.responseCode
-                    if (status in setOf(301, 302, 303, 307, 308)) {
-                        require(redirect < 3)
-                        uri = uri.resolve(requireNotNull(connection.getHeaderField("Location")))
-                    } else {
-                        require(status in 200..299)
-                        require(connection.contentLengthLong <= LIMIT)
-                        result = connection.inputStream.use { input ->
-                            val output = java.io.ByteArrayOutputStream()
-                            val buffer = ByteArray(8192)
-                            while (true) {
-                                connection.readTimeout = remainingMs()
-                                val count = input.read(buffer, 0, minOf(buffer.size, LIMIT + 1 - output.size()))
-                                if (count < 0) break
-                                output.write(buffer, 0, count)
-                                require(output.size() <= LIMIT)
-                            }
-                            output.toByteArray()
-                        }
-                        break
-                    }
-                } finally { connection.disconnect() }
-            }
-            requireNotNull(result)
+            PublicImageHttp.read(source)
         }
         require(bytes.size <= LIMIT)
         require(mime(bytes) in setOf("image/png", "image/jpeg", "image/gif", "image/webp"))

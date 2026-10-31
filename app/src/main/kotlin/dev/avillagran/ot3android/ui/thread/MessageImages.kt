@@ -11,6 +11,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.findRootCoordinates
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.*
 import dev.avillagran.ot3android.ui.kit.Ot3IconButton
@@ -67,7 +71,11 @@ internal fun decodeReaderImage(bytes: ByteArray, maxEdge: Int, onNaturalWidth: (
     val bounds = readerImageBounds(bytes, 40_000_000)
     onNaturalWidth(bounds.outWidth)
     val sample = readerImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
-    val options = BitmapFactory.Options().apply { inSampleSize = sample }
+    val options = BitmapFactory.Options().apply {
+        inSampleSize = sample
+        inPreferredConfig = Bitmap.Config.ARGB_8888
+        if (android.os.Build.VERSION.SDK_INT >= 26) inPreferredColorSpace = android.graphics.ColorSpace.get(android.graphics.ColorSpace.Named.SRGB)
+    }
     return requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)) { "image_decode_failed" }
 }
 
@@ -144,26 +152,56 @@ internal fun ReaderImageDialog(attachment: JSONObject, close: () -> Unit) {
     }
 }
 
+/** Keep lightweight layout placeholders for eagerly composed Markdown blocks, but
+ * load/retain pixels only within one screen of the viewport (including nested cells). */
+internal fun readerImageNearViewport(top: Float, bottom: Float, left: Float, right: Float, width: Int, height: Int): Boolean =
+    width > 0 && height > 0 && bottom > -height && top < height * 2f && right > -width && left < width * 2f
+
 @Composable
 private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}) {
+    var near by remember(identity, source.generation) { mutableStateOf(false) }
+    val density = LocalDensity.current
+    var height by remember(identity, source.generation) { mutableIntStateOf(160) }
+    Box(modifier.testTag("thread_image_${attachment.optString("id")}_$maxEdge").onGloballyPositioned { coordinates ->
+        val root = coordinates.findRootCoordinates().size
+        val position = coordinates.positionInRoot()
+        near = readerImageNearViewport(position.y, position.y + coordinates.size.height,
+            position.x, position.x + coordinates.size.width, root.width, root.height)
+    }) {
+        if (near) key(identity, source.generation, maxEdge) {
+            ActiveImageRead(attachment, identity, source, maxEdge,
+                Modifier.fillMaxWidth().onSizeChanged { height = it.height }, zoom, onNaturalWidth)
+        } else Spacer(Modifier.fillMaxWidth().height(with(density) { height.toDp() }))
+    }
+}
+
+@Composable
+private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}) {
     var retry by remember(identity, source.generation) { mutableIntStateOf(0) }
     var complete by remember(identity, source.generation, retry) { mutableStateOf(false) }
-    val bitmap by produceState<Bitmap?>(null, identity, source.generation, retry) {
-        try {
-            var naturalWidth = 0
-            val decoded = if (source.generation == null) null else imageReads.withPermit {
-                val bytes = source.read(attachment)
-                if (bytes == null) null else withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge) { naturalWidth = it } }
-            }
-            // Native callbacks may resume on a worker. Publish Compose/Bitmap state on Main.
-            withContext(Dispatchers.Main.immediate) {
+    val bitmap by key(identity, source.generation, retry, maxEdge) {
+        produceState<Bitmap?>(null) {
+            var lease: ReaderBitmapBudget.Lease? = null
+            var thumbnailLease: ReaderBitmapBudget.Lease? = null
+            try {
+                var naturalWidth = 0
+                val decoded = if (source.generation == null) null else {
+                    if (maxEdge <= 640) thumbnailLease = ReaderBitmapBudget.thumbnails.acquire(maxEdge * maxEdge * 4)
+                    lease = ReaderBitmapBudget.shared.acquire(maxEdge * maxEdge * 4)
+                    imageReads.withPermit {
+                        val bytes = source.read(attachment)
+                        if (bytes == null) null else withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge) { naturalWidth = it } }
+                    }
+                }
                 if (source.isCurrent()) { onNaturalWidth(naturalWidth); value = decoded }
-            }
-        } catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { /* Native validation/decode failure: an explicit retry starts a new read. */ }
-        finally { withContext(Dispatchers.Main.immediate) { complete = true } }
+                complete = true
+                if (value != null) kotlinx.coroutines.awaitCancellation()
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { complete = true }
+            finally { value = null; lease?.close(); thumbnailLease?.close() }
+        }
     }
-    Surface(shape = RoundedCornerShape(8.dp), modifier = modifier.testTag("thread_image_${attachment.optString("id")}_$maxEdge"), color = MaterialTheme.colorScheme.surfaceVariant) {
+    Surface(shape = RoundedCornerShape(8.dp), modifier = modifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val decoded = bitmap
         if (decoded != null) {
             if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, modifier = if (attachment.has("source")) Modifier.fillMaxWidth().aspectRatio(decoded.width.toFloat() / decoded.height) else Modifier.fillMaxSize())
@@ -252,50 +290,58 @@ private fun ReaderMediaDialog(attachment: JSONObject, close: () -> Unit) {
     val lifecycle by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
     if (!lifecycle.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) return
     var retry by remember(attachment.toString(), source.generation) { mutableIntStateOf(0) }
-    var failed by remember(attachment.toString(), source.generation, retry) { mutableStateOf(false) }
-    var prepared by remember(attachment.toString(), source.generation, retry) { mutableStateOf(false) }
-    val file by produceState<java.io.File?>(null, attachment.toString(), source.generation, retry) {
-        var created: java.io.File? = null
-        try {
-            val bytes = imageReads.withPermit { requireNotNull(source.read(attachment)) }
-            require(bytes.isNotEmpty() && bytes.size <= 50 * 1024 * 1024 && source.isCurrent())
-            withContext(Dispatchers.IO) {
-                val directory = java.io.File(context.cacheDir, "reader-media").apply { check(mkdirs() || isDirectory) }
-                created = java.io.File.createTempFile("media-", ".bin", directory)
-                created!!.outputStream().use { it.write(bytes) }
-            }
-            if (source.isCurrent()) value = created
-            kotlinx.coroutines.awaitCancellation()
-        } catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { failed = true }
-        finally {
-            withContext(kotlinx.coroutines.NonCancellable + Dispatchers.IO) { created?.delete() }
-        }
-    }
     Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxSize()) {
-            Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(attachment.optString("name"), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    TextButton(onClick = close) { Text(stringResource(R.string.ot3_dialog_close)) }
+        key(attachment.toString(), source.generation, retry) {
+            var active by remember { mutableStateOf(true) }
+            DisposableEffect(Unit) { onDispose { active = false } }
+            var failed by remember { mutableStateOf(false) }
+            var prepared by remember { mutableStateOf(false) }
+            val file by produceState<java.io.File?>(null) {
+                var created: java.io.File? = null
+                try {
+                    val bytes = imageReads.withPermit { requireNotNull(source.read(attachment)) }
+                    require(bytes.isNotEmpty() && bytes.size <= 50 * 1024 * 1024 && source.isCurrent())
+                    withContext(Dispatchers.IO) {
+                        created = ReaderMediaFiles.create(java.io.File(context.cacheDir, "reader-media"), bytes)
+                    }
+                    if (source.isCurrent()) value = created
+                    kotlinx.coroutines.awaitCancellation()
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { failed = true }
+                finally {
+                    withContext(kotlinx.coroutines.NonCancellable + Dispatchers.IO) { created?.let(ReaderMediaFiles::release) }
                 }
-                if (failed) TextButton(onClick = { retry++ }) { Text(stringResource(R.string.ot3_dialog_retry)) }
-                else {
-                    if (!prepared) Ot3Spinner(size = 16.dp)
-                    file?.let { local ->
-                        key(local.path) {
-                            androidx.compose.ui.viewinterop.AndroidView(
-                                modifier = Modifier.fillMaxWidth().weight(1f),
-                                factory = { viewContext ->
-                                    android.widget.VideoView(viewContext).apply {
-                                        setMediaController(android.widget.MediaController(viewContext).also { it.setAnchorView(this) })
-                                        setOnPreparedListener { prepared = true; start() }
-                                        setOnErrorListener { _, _, _ -> failed = true; true }
-                                        setVideoURI(android.net.Uri.fromFile(local))
-                                    }
-                                },
-                                onRelease = { it.stopPlayback() },
-                            )
+            }
+            // Release the failed/forgotten attempt before Retry can allocate another 50 MiB.
+            val attemptFile = file
+            DisposableEffect(attemptFile, failed) {
+                if (failed) attemptFile?.let(ReaderMediaFiles::release)
+                onDispose { attemptFile?.let(ReaderMediaFiles::release) }
+            }
+            Surface(Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(attachment.optString("name"), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        TextButton(onClick = close) { Text(stringResource(R.string.ot3_dialog_close)) }
+                    }
+                    if (failed) TextButton(onClick = { retry++ }) { Text(stringResource(R.string.ot3_dialog_retry)) }
+                    else {
+                        if (!prepared) Ot3Spinner(size = 16.dp)
+                        file?.let { local ->
+                            key(local.path) {
+                                androidx.compose.ui.viewinterop.AndroidView(
+                                    modifier = Modifier.fillMaxWidth().weight(1f),
+                                    factory = { viewContext ->
+                                        android.widget.VideoView(viewContext).apply {
+                                            setMediaController(android.widget.MediaController(viewContext).also { it.setAnchorView(this) })
+                                            setOnPreparedListener { if (active && source.isCurrent()) { prepared = true; start() } }
+                                            setOnErrorListener { _, _, _ -> if (active && source.isCurrent()) failed = true; true }
+                                            setVideoURI(android.net.Uri.fromFile(local))
+                                        }
+                                    },
+                                    onRelease = { it.setOnPreparedListener(null); it.setOnErrorListener(null); it.stopPlayback() },
+                                )
+                            }
                         }
                     }
                 }

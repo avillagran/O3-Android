@@ -23,6 +23,7 @@ class Ot3Application : Application() {
         graph = AppGraph(this)
         graph.appScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             runCatching { dev.avillagran.ot3android.ui.thread.ImageClipboard.cleanup(this@Ot3Application) }
+            dev.avillagran.ot3android.ui.thread.ReaderMediaFiles.prune(java.io.File(cacheDir, "reader-media"))
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(ConnectionLifecycle(graph))
         watchNetwork()

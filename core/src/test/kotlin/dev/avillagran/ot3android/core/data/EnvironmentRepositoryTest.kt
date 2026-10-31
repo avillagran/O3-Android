@@ -16,6 +16,17 @@ class EnvironmentRepositoryTest {
     private var ids = 0
     private val repository = EnvironmentRepository(dao, { tokens }, cursors, clock = { now }, newId = { "id-${++ids}" })
 
+    @Test fun deletingEnvironmentAlsoInvalidatesImageCacheAndPendingWrites() = runTest {
+        repository.save(null, "Workstation", "http://box:3773", "env-1", "secret-1")
+        val cache = dev.avillagran.ot3android.core.thread.ReaderImageCache.shared
+        val scope = cache.scope("id-1", "t", "digest")
+        cache.put(scope, "image", byteArrayOf(1))
+        repository.delete("id-1")
+        cache.put(scope, "late", byteArrayOf(2))
+        assertNull(cache.get(scope, "image"))
+        assertNull(cache.get(scope, "late"))
+    }
+
     @Test
     fun saveCreatesARowAndStoresTheTokenApart() = runTest {
         val saved = repository.save(null, "Workstation", "http://box:3773", "env-1", "secret-1")

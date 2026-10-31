@@ -109,7 +109,7 @@ class ThreadViewModel(
     private val appScope: CoroutineScope,
     private val preferences: dev.avillagran.ot3android.core.data.prefs.ComposerPreferences? = null,
     threadCache: dev.avillagran.ot3android.core.thread.ThreadCache? = null,
-    cacheAuthority: suspend () -> String? = { environmentId },
+    private val cacheAuthority: suspend () -> String? = { environmentId },
     cacheAuthorityUpdates: Flow<String?>? = null,
 ) : ViewModel() {
     val editorIdentity: String get() = org.json.JSONArray().put(environmentId).put(threadId).toString()
@@ -433,19 +433,27 @@ class ThreadViewModel(
         val current = owner.connection.value ?: return null
         val source = attachment.optString("source")
         val playable = source.isEmpty() && dev.avillagran.ot3android.core.thread.MessageMedia.mime(attachment.optString("name"), attachment.optString("mimeType")) != null
-        val bytes = if (playable) {
-            current.transport.mediaAttachment(attachment.getString("id"), attachment.optString("name"), attachment.optString("mimeType"))
-        } else if (source.isEmpty()) {
-            current.transport.image(attachment.getString("id"), attachment.optString("name"), attachment.getString("mimeType"))
-        } else if (dev.avillagran.ot3android.core.thread.PublicMarkdownImage.isPublic(source)) {
-            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                dev.avillagran.ot3android.core.thread.PublicMarkdownImage.read(source)
+        val cache = dev.avillagran.ot3android.core.thread.ReaderImageCache.shared
+        val authority = if (playable) null else cacheAuthority()
+        val cacheScope = authority?.let { cache.scope(environmentId, threadId, it) }
+        val descriptor = attachment.toString()
+        return cache.read(cacheScope, descriptor, current = {
+            supervisor.value === owner && owner.connection.value === current && (playable || cacheAuthority() == authority)
+        }) {
+            val bytes = if (playable) {
+                current.transport.mediaAttachment(attachment.getString("id"), attachment.optString("name"), attachment.optString("mimeType"))
+            } else if (source.isEmpty()) {
+                current.transport.image(attachment.getString("id"), attachment.optString("name"), attachment.getString("mimeType"))
+            } else if (dev.avillagran.ot3android.core.thread.PublicMarkdownImage.isPublic(source)) {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    dev.avillagran.ot3android.core.thread.PublicMarkdownImage.read(source)
+                }
+            } else {
+                current.transport.mediaImage(threadId, dev.avillagran.ot3android.core.thread.MarkdownImageSource.hostPath(source))
             }
-        } else {
-            current.transport.mediaImage(threadId, dev.avillagran.ot3android.core.thread.MarkdownImageSource.hostPath(source))
+            if (!playable) dev.avillagran.ot3android.core.thread.PublicMarkdownImage.mime(bytes)
+            bytes
         }
-        if (!playable) dev.avillagran.ot3android.core.thread.PublicMarkdownImage.mime(bytes)
-        return bytes.takeIf { supervisor.value === owner && owner.connection.value === current }
     }
 
     suspend fun readDiff(summary: org.json.JSONObject, ignoreWhitespace: Boolean): org.json.JSONObject? {

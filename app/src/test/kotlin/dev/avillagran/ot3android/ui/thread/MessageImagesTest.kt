@@ -4,6 +4,12 @@ import android.app.Application
 import android.graphics.Bitmap
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -24,6 +30,76 @@ import java.io.ByteArrayOutputStream
 class MessageImagesTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
     private val row = JSONObject("""{"id":"prompt","role":"user","text":"Revisa la captura","attachments":[{"id":"shot","name":"Captura.png","type":"image","mimeType":"image/png"}]}""")
+
+    @Test fun twoHundredMarkdownImagesReadOnlyNearViewportAndReleasePixelsOnScroll() {
+        val image = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { image.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        image.recycle()
+        val reads = mutableSetOf<String>()
+        val blocks = org.json.JSONArray().apply {
+            repeat(200) { put(JSONObject().put("type", "image").put("id", "image-$it").put("url", "/image-$it.png").put("alt", "Image $it")) }
+        }
+        rule.setContent { Ot3Theme {
+            CompositionLocalProvider(LocalReaderImages provides ReaderImages("viewport") { descriptor ->
+                reads.add(descriptor.getString("id")); bytes
+            }) {
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                    MarkdownBlocks(blocks)
+                    Text("End", Modifier.testTag("image-end"))
+                }
+            }
+        } }
+        rule.waitUntil(5000) { reads.isNotEmpty() }
+        rule.waitForIdle()
+        assertTrue("Only nearby images should read: ${reads.size}", reads.size < 30)
+        assertTrue(ReaderBitmapBudget.shared.used <= ReaderBitmapBudget.shared.limit)
+        rule.onNodeWithTag("image-end").performScrollTo()
+        rule.waitUntil(5000) { "image-199" in reads }
+        rule.waitForIdle()
+        assertTrue("Scrolling should not read intermediate images: ${reads.size}", reads.size < 60)
+        rule.onNodeWithContentDescription("Image 0").assertDoesNotExist()
+        rule.onNodeWithContentDescription("Image 199").assertIsDisplayed()
+        assertTrue(ReaderBitmapBudget.shared.used <= ReaderBitmapBudget.shared.limit)
+    }
+
+    @Test fun playbackRetryOwnsANewFileAndIgnoresOldCallbacks() {
+        var reads = 0
+        val media = JSONObject().put("id", "clip-retry").put("name", "Retry.mp4").put("type", "file").put("mimeType", "video/mp4")
+        rule.setContent { Ot3Theme {
+            CompositionLocalProvider(LocalReaderImages provides ReaderImages("playback-retry") { reads++; byteArrayOf(1, 2, 3) }) {
+                ReaderImageDialog(media) {}
+            }
+        } }
+        fun videoViews(): List<android.widget.VideoView> {
+            fun walk(view: android.view.View): List<android.widget.VideoView> = when (view) {
+                is android.widget.VideoView -> listOf(view)
+                is android.view.ViewGroup -> (0 until view.childCount).flatMap { walk(view.getChildAt(it)) }
+                else -> emptyList()
+            }
+            return org.robolectric.shadows.ShadowDialog.getLatestDialog()?.window?.decorView?.let { walk(it) } ?: emptyList()
+        }
+        rule.waitUntil(5000) { videoViews().isNotEmpty() }
+        val old = videoViews().single()
+        val shadow = org.robolectric.Shadows.shadowOf(old)
+        val oldFile = java.io.File(android.net.Uri.parse(shadow.videoURIString).path!!)
+        val staleError = shadow.onErrorListener
+        val stalePrepared = shadow.onPreparedListener
+        assertTrue(oldFile.exists())
+        rule.runOnIdle { staleError.onError(null, 1, 0) }
+        rule.onNodeWithText("Retry").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick) { it() }
+        rule.waitForIdle()
+        rule.waitUntil(5000) { reads == 2 }
+        rule.waitUntil(5000) { videoViews().any { it !== old } }
+        val next = videoViews().single()
+        val nextFile = java.io.File(android.net.Uri.parse(org.robolectric.Shadows.shadowOf(next).videoURIString).path!!)
+        assertNotEquals(oldFile, nextFile)
+        assertFalse(oldFile.exists())
+        assertTrue(nextFile.exists())
+        rule.runOnIdle { staleError.onError(null, 1, 0); stalePrepared.onPrepared(null) }
+        rule.onNodeWithText("Retry").assertDoesNotExist()
+        rule.runOnIdle { org.robolectric.Shadows.shadowOf(next).onPreparedListener.onPrepared(null) }
+        assertTrue(next.isPlaying)
+    }
 
     @Test fun markdownImagesInListsTablesAndTextReuseTheReaderAndViewer() {
         val bitmap = Bitmap.createBitmap(100, 20, Bitmap.Config.ARGB_8888)
