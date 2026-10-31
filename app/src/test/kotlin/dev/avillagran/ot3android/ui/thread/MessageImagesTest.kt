@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import kotlinx.coroutines.CompletableDeferred
@@ -29,6 +29,8 @@ import java.io.ByteArrayOutputStream
 @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
 @Config(application = Application::class, sdk = [36])
 class MessageImagesTest {
+    // La regla v2 encola las continuaciones: el decoder no debe reanudar el
+    // recompositor sin confinarlo al hilo de UI al volver de Dispatchers.Default.
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
     private val row = JSONObject("""{"id":"prompt","role":"user","text":"Revisa la captura","attachments":[{"id":"shot","name":"Captura.png","type":"image","mimeType":"image/png"}]}""")
 
