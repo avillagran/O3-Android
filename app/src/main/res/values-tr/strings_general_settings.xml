@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 saat</string>
+    <string name="general_text_1" formatted="false">24 saat</string>
+    <string name="general_text_2" formatted="false">Yeni ajan oturumlarının gerekli araçları otomatik kurarak yerel ve uzak cihazları başlatmasına ve kontrol etmesine izin ver.</string>
+    <string name="general_text_3" formatted="false">Yeni ve yeniden oluşturulan başlıkların istemine eklenir.</string>
+    <string name="general_text_4" formatted="false">Düzenlemeleri kabul et</string>
+    <string name="general_text_5" formatted="false">Hareketsizlik sonrası kapat (gün)</string>
+    <string name="general_text_6" formatted="false">Otomatik</string>
+    <string name="general_text_7" formatted="false">İlgili çekme istekleri birleştirildiğinde iş parçacıklarını otomatik olarak arşivler.</string>
+    <string name="general_text_8" formatted="false">İş parçacıklarını bu kadar gün işlem yapılmadığında otomatik olarak arşivler.</string>
+    <string name="general_text_9" formatted="false">Arka plan etkinliği</string>
+    <string name="general_text_10" formatted="false">Arka plan yenilemelerini performans ve pil kullanımıyla dengeler.</string>
+    <string name="general_text_11" formatted="false">Dengeli</string>
+    <string name="general_text_12" formatted="false">Pil tasarrufu</string>
+    <string name="general_text_13" formatted="false">Önbellek dolmadan önce (beta)</string>
+    <string name="general_text_14" formatted="false">Dal adı öneki</string>
+    <string name="general_text_15" formatted="false">Dal adlandırma</string>
+    <string name="general_text_16" formatted="false">Dal adlandırma talimatları</string>
+    <string name="general_text_17" formatted="false">Yüklü sağlayıcıların güncellemelerini arka planda denetler.</string>
+    <string name="general_text_18" formatted="false">Sağlayıcı güncellemelerini denetle</string>
+    <string name="general_text_19" formatted="false">Yeni çalışma ağaçları için oluşturulan dalların nasıl adlandırılacağını seçin.</string>
+    <string name="general_text_20" formatted="false">Aracı çalışırken yanıtların ne zaman görüneceğini seçin.</string>
+    <string name="general_text_21" formatted="false">Boştaki konuları sıkıştır</string>
+    <string name="general_text_22" formatted="false">Sunucu güncelleme için yeniden başladıktan sonra etkin iş parçacıklarını sürdürür.</string>
+    <string name="general_text_23" formatted="false">Geleneksel commit biçimi</string>
+    <string name="general_text_24" formatted="false">Geçerli çalışma kopyası</string>
+    <string name="general_text_25" formatted="false">Özel</string>
+    <string name="general_text_26" formatted="false">Yeni iş parçacıkları için varsayılan model. Projeler bunu geçersiz kılabilir.</string>
+    <string name="general_text_27" formatted="false">Yeni iş parçacıkları için varsayılan izinler. Projeler bunları geçersiz kılabilir.</string>
+    <string name="general_text_28" formatted="false">İnceleme kılavuzlarını etkinleştir</string>
+    <string name="general_text_29" formatted="false">Pull request şablonlarını izle</string>
+    <string name="general_text_30" formatted="false">Takip mesajı davranışı</string>
+    <string name="general_text_31" formatted="false">Tam erişim</string>
+    <string name="general_settings_title" formatted="false">Genel</string>
+    <string name="general_text_33" formatted="false">Yeni çalışma ağaçlarında git alt modüllerinin nasıl doldurulacağı. Projeler bunu geçersiz kılabilir.</string>
+    <string name="general_text_34" formatted="false">Devral</string>
+    <string name="general_text_35" formatted="false">Ortamdan devralındı</string>
+    <string name="general_text_36" formatted="false">Çalışma ağacı dal adlarının oluşturulmasına yönelik yönergeler.</string>
+    <string name="general_text_37" formatted="false">Açık çekme isteği olan iş parçacıklarını otomatik arşivlemenin dışında tutar.</string>
+    <string name="general_text_38" formatted="false">Pull request içeren konuşmaları koru</string>
+    <string name="general_text_39" formatted="false">Başlıklar birkaç kelime olsun. Ana konuyla başlayın.</string>
+    <string name="general_text_40" formatted="false">Çalışma kopyasında yerel değişiklik veya commit yoksa varsayılan dalı güncel tutar. Projeler bunu geçersiz kılabilir.</string>
+    <string name="general_text_41" formatted="false">Dil</string>
+    <string name="general_text_42" formatted="false">Son kullanılan</string>
+    <string name="general_text_43" formatted="false">Yerel ayar</string>
+    <string name="general_text_44" formatted="false">Günlük uç noktası</string>
+    <string name="general_text_45" formatted="false">Birleştir</string>
+    <string name="general_text_46" formatted="false">Metrik uç noktası</string>
+    <string name="general_text_47" formatted="false">Farklı kaynaklar</string>
+    <string name="general_text_48" formatted="false">Farklı değerler</string>
+    <string name="general_text_49" formatted="false">Model</string>
+    <string name="general_text_50" formatted="false">Başlıklar ve diğer oluşturulan metinler için kullanılan model.</string>
+    <string name="general_text_51" formatted="false">Çekme isteği inceleme kılavuzlarını oluşturmak için kullanılan model.</string>
+    <string name="general_text_52" formatted="false">Commit ve çekme isteği iletilerini yazmak için kullanılan model.</string>
+    <string name="general_text_53" formatted="false">Kullanım sınırı nedeniyle duran iş parçacıklarını sıfırlama zamanına kadar Snoozed bölümüne taşır. Uyandırıp sürdürmek için otomatik devam ile birlikte kullanın.</string>
+    <string name="general_text_54" formatted="false">Hiçbir zaman</string>
+    <string name="general_text_55" formatted="false">Yeni çalışma ağacı</string>
+    <string name="general_text_56" formatted="false">Yok</string>
+    <string name="general_text_57" formatted="false">Kapalı</string>
+    <string name="general_text_58" formatted="false">Açık</string>
+    <string name="general_text_59" formatted="false">Paragraf</string>
+    <string name="general_text_60" formatted="false">Performans</string>
+    <string name="general_text_61" formatted="false">İzinler</string>
+    <string name="general_text_62" formatted="false">Plan modu (eski)</string>
+    <string name="general_text_63" formatted="false">Otomatik oluşturulan çalışma ağacı dal adlarına eklenen önek.</string>
+    <string name="general_text_64" formatted="false">Proje geçersiz kılması</string>
+    <string name="general_text_65" formatted="false">Değişiklikleri otomatik çek</string>
+    <string name="general_text_66" formatted="false">Pull request birleştirme yöntemi</string>
+    <string name="general_text_67" formatted="false">Çekme istekleri bu yöntemle başlar. \'Son kullanılan\' bu cihazdaki en son seçimi yeniden kullanır.</string>
+    <string name="general_text_68" formatted="false">Kuyruğa al</string>
+    <string name="general_text_69" formatted="false">Hızlı yanıtlar</string>
+    <string name="general_text_70" formatted="false">Yeniden temellendir</string>
+    <string name="general_text_71" formatted="false">Özyinelemeli</string>
+    <string name="general_text_72" formatted="false">Yenile</string>
+    <string name="general_text_73" formatted="false">Birleştirmede ajan atfını kaldır</string>
+    <string name="general_text_74" formatted="false">Birleştirme iletilerindeki tanınan aracı katkı satırlarını kaldırır; insan ortak yazarları korur.</string>
+    <string name="general_text_75" formatted="false">Depo kuralları</string>
+    <string name="general_text_76" formatted="false">Sıfırla</string>
+    <string name="general_text_77" formatted="false">Yanıt akışı</string>
+    <string name="general_text_78" formatted="false">Sonuç bilinmiyor. Tekrar denemeden önce yenileyin.</string>
+    <string name="general_text_79" formatted="false">Sunucu güncellemelerinden sonra sürdür</string>
+    <string name="general_text_80" formatted="false">Sınırlandırılmış konuşmaları otomatik sürdür</string>
+    <string name="general_text_81" formatted="false">Kullanım sınırı nedeniyle duran iş parçacıklarını bildirilen sıfırlama zamanında sürdürür. Her iş parçacığı planlanan devamını iptal edebilir.</string>
+    <string name="general_text_82" formatted="false">İnceleme kılavuzu talimatları</string>
+    <string name="general_text_83" formatted="false">İnceleme kılavuzu modeli</string>
+    <string name="general_text_84" formatted="false">Kaydet</string>
+    <string name="general_text_85" formatted="false">Kaydedildi</string>
+    <string name="general_text_86" formatted="false">Anlamsal</string>
+    <string name="general_text_87" formatted="false">İzlemeleri, metrikleri ve günlükleri bir OTLP HTTP alıcısına gönderir. Uygulamak için sunucuyu yeniden başlatın.</string>
+    <string name="general_text_88" formatted="false">Birleştirilen pull request konuşmalarını tamamla</string>
+    <string name="general_text_89" formatted="false">Kullanım sınırına ulaşan konuşmaları ertele</string>
+    <string name="general_text_90" formatted="false">Sürüm denetimi metin yazma modeli</string>
+    <string name="general_text_91" formatted="false">Commitleri birleştir</string>
+    <string name="general_text_92" formatted="false">Yeni worktree öğelerini origin üzerinden başlat</string>
+    <string name="general_text_93" formatted="false">Yeni çalışma ağaçlarını varsa uzak temel daldan başlatır.</string>
+    <string name="general_text_94" formatted="false">Statik</string>
+    <string name="general_text_95" formatted="false">Yönlendir</string>
+    <string name="general_text_96" formatted="false">Denetimli</string>
+    <string name="general_text_97" formatted="false">Metin oluşturma modeli</string>
+    <string name="general_text_98" formatted="false">Bu cihaz</string>
+    <string name="general_text_99" formatted="false">Konu başlığı talimatları</string>
+    <string name="general_text_100" formatted="false">Saat biçimi</string>
+    <string name="general_text_101" formatted="false">Üst düzey</string>
+    <string name="general_text_102" formatted="false">İzleme uç noktası</string>
+    <string name="general_text_103" formatted="false">Tur</string>
+    <string name="general_text_104" formatted="false">Kullanılamıyor</string>
+    <string name="general_text_105" formatted="false">Devralınan değeri kullan</string>
+    <string name="general_text_106" formatted="false">200.000 belirteci aşan boştaki bir Claude konusunun ne zaman sıkıştırılacağı: döndüğünüzde, istem önbelleği dolmadan hemen önce veya hiçbir zaman. Her Claude sağlayıcısı bunu geçersiz kılabilir.</string>
+    <string name="general_text_107" formatted="false">Döndüğünüzde</string>
+    <string name="general_text_108" formatted="false">Yeni iş parçacıklarının başladığı yer. Projeler ve t3.json dosyaları bunu geçersiz kılabilir.</string>
+    <string name="general_text_109" formatted="false">Çalışma alanı</string>
+    <string name="general_text_110" formatted="false">Worktree alt modülleri</string>
+    <string name="general_text_111" formatted="false">Yazım talimatları</string>
+    <string name="general_text_112" formatted="false">Yazım tarzı</string>
+    <string name="general_text_113" formatted="false">varsayılan</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

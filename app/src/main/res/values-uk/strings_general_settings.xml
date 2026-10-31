@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 годин</string>
+    <string name="general_text_1" formatted="false">24 години</string>
+    <string name="general_text_2" formatted="false">Дозволити новим сеансам агента запускати локальні й віддалені пристрої та керувати ними з автоматичним налаштуванням інструментів.</string>
+    <string name="general_text_3" formatted="false">Додається до запиту для нових і перегенерованих заголовків.</string>
+    <string name="general_text_4" formatted="false">Приймати зміни</string>
+    <string name="general_text_5" formatted="false">Закривати після бездіяльності (дні)</string>
+    <string name="general_text_6" formatted="false">Автоматично</string>
+    <string name="general_text_7" formatted="false">Автоматично прибирає гілки після злиття пов’язаних запитів на зміни.</string>
+    <string name="general_text_8" formatted="false">Автоматично прибирає гілки після вказаної кількості днів без активності.</string>
+    <string name="general_text_9" formatted="false">Фонова активність</string>
+    <string name="general_text_10" formatted="false">Збалансовує фонове оновлення з продуктивністю та витратою заряду.</string>
+    <string name="general_text_11" formatted="false">Збалансований</string>
+    <string name="general_text_12" formatted="false">Економія заряду</string>
+    <string name="general_text_13" formatted="false">До завершення кешу (бета)</string>
+    <string name="general_text_14" formatted="false">Префікс назви гілки</string>
+    <string name="general_text_15" formatted="false">Іменування гілок</string>
+    <string name="general_text_16" formatted="false">Інструкції з іменування гілок</string>
+    <string name="general_text_17" formatted="false">Перевіряє оновлення встановлених провайдерів у фоновому режимі.</string>
+    <string name="general_text_18" formatted="false">Перевіряти оновлення провайдерів</string>
+    <string name="general_text_19" formatted="false">Оберіть спосіб найменування гілок для нових робочих дерев.</string>
+    <string name="general_text_20" formatted="false">Оберіть, коли показувати відповіді під час роботи агента.</string>
+    <string name="general_text_21" formatted="false">Стискати неактивні треди</string>
+    <string name="general_text_22" formatted="false">Продовжує активні гілки після перезапуску сервера для оновлення.</string>
+    <string name="general_text_23" formatted="false">Стандартні коміти</string>
+    <string name="general_text_24" formatted="false">Поточна робоча копія</string>
+    <string name="general_text_25" formatted="false">Власний</string>
+    <string name="general_text_26" formatted="false">Стандартна модель для нових гілок. У проєктах її можна перевизначити.</string>
+    <string name="general_text_27" formatted="false">Стандартні дозволи для нових гілок. У проєктах їх можна перевизначити.</string>
+    <string name="general_text_28" formatted="false">Увімкнути посібники з перевірки</string>
+    <string name="general_text_29" formatted="false">Дотримуватися шаблонів pull request</string>
+    <string name="general_text_30" formatted="false">Поведінка додаткових повідомлень</string>
+    <string name="general_text_31" formatted="false">Повний доступ</string>
+    <string name="general_settings_title" formatted="false">Загальні</string>
+    <string name="general_text_33" formatted="false">Як нові робочі дерева заповнюють підмодулі git. Проєкти можуть змінити цю поведінку.</string>
+    <string name="general_text_34" formatted="false">Успадкувати</string>
+    <string name="general_text_35" formatted="false">Успадковано із середовища</string>
+    <string name="general_text_36" formatted="false">Інструкції зі створення назв гілок робочих дерев.</string>
+    <string name="general_text_37" formatted="false">Не прибирає автоматично гілки з відкритими запитами на зміни.</string>
+    <string name="general_text_38" formatted="false">Зберігати гілки з pull request</string>
+    <string name="general_text_39" formatted="false">Короткі заголовки. Починайте з головної теми.</string>
+    <string name="general_text_40" formatted="false">Оновлює стандартну гілку, якщо в робочій копії немає локальних змін чи комітів. Проєкти можуть перевизначити налаштування.</string>
+    <string name="general_text_41" formatted="false">Мова</string>
+    <string name="general_text_42" formatted="false">Останній використаний</string>
+    <string name="general_text_43" formatted="false">Регіональні налаштування</string>
+    <string name="general_text_44" formatted="false">Кінцева точка журналів</string>
+    <string name="general_text_45" formatted="false">Злиття</string>
+    <string name="general_text_46" formatted="false">Кінцева точка метрик</string>
+    <string name="general_text_47" formatted="false">Різні джерела</string>
+    <string name="general_text_48" formatted="false">Різні значення</string>
+    <string name="general_text_49" formatted="false">Модель</string>
+    <string name="general_text_50" formatted="false">Модель для заголовків та іншого створюваного тексту.</string>
+    <string name="general_text_51" formatted="false">Модель для створення посібників із перевірки запитів на зміни.</string>
+    <string name="general_text_52" formatted="false">Модель для повідомлень комітів і запитів на зміни.</string>
+    <string name="general_text_53" formatted="false">Переміщує гілки, зупинені через ліміт використання, у Snoozed до часу скидання. Увімкніть автовідновлення, щоб потім активувати й продовжити їх.</string>
+    <string name="general_text_54" formatted="false">Ніколи</string>
+    <string name="general_text_55" formatted="false">Нове робоче дерево</string>
+    <string name="general_text_56" formatted="false">Немає</string>
+    <string name="general_text_57" formatted="false">Вимкнено</string>
+    <string name="general_text_58" formatted="false">Увімкнено</string>
+    <string name="general_text_59" formatted="false">Абзац</string>
+    <string name="general_text_60" formatted="false">Продуктивність</string>
+    <string name="general_text_61" formatted="false">Дозволи</string>
+    <string name="general_text_62" formatted="false">Режим плану (застарілий)</string>
+    <string name="general_text_63" formatted="false">Префікс для автоматично створюваних назв гілок робочих дерев.</string>
+    <string name="general_text_64" formatted="false">Перевизначено у проєкті</string>
+    <string name="general_text_65" formatted="false">Автоматично отримувати зміни</string>
+    <string name="general_text_66" formatted="false">Спосіб злиття pull request</string>
+    <string name="general_text_67" formatted="false">Для запитів на зміни спочатку використовується цей спосіб. «Востаннє використаний» повторює останній вибір на цьому пристрої.</string>
+    <string name="general_text_68" formatted="false">До черги</string>
+    <string name="general_text_69" formatted="false">Швидкі відповіді</string>
+    <string name="general_text_70" formatted="false">Перебазування</string>
+    <string name="general_text_71" formatted="false">Рекурсивно</string>
+    <string name="general_text_72" formatted="false">Оновити</string>
+    <string name="general_text_73" formatted="false">Видаляти згадку агента під час злиття</string>
+    <string name="general_text_74" formatted="false">Видаляє розпізнані рядки із зазначенням агентів із повідомлень про злиття, зберігаючи співавторів-людей.</string>
+    <string name="general_text_75" formatted="false">Правила репозиторію</string>
+    <string name="general_text_76" formatted="false">Скинути</string>
+    <string name="general_text_77" formatted="false">Потік відповідей</string>
+    <string name="general_text_78" formatted="false">Результат невідомий. Оновіть перед повторною спробою.</string>
+    <string name="general_text_79" formatted="false">Відновлювати після оновлень сервера</string>
+    <string name="general_text_80" formatted="false">Автоматично поновлювати гілки після ліміту</string>
+    <string name="general_text_81" formatted="false">Відновлює гілки після зупинки через ліміт використання у вказаний час скидання. У кожній гілці можна скасувати заплановане продовження.</string>
+    <string name="general_text_82" formatted="false">Інструкції для посібників з перевірки</string>
+    <string name="general_text_83" formatted="false">Модель створення посібників із перевірки</string>
+    <string name="general_text_84" formatted="false">Зберегти</string>
+    <string name="general_text_85" formatted="false">Збережено</string>
+    <string name="general_text_86" formatted="false">Семантичне</string>
+    <string name="general_text_87" formatted="false">Надсилає траси, метрики й журнали до приймача OTLP HTTP. Перезапустіть сервер, щоб застосувати.</string>
+    <string name="general_text_88" formatted="false">Завершувати гілки об’єднаних pull request</string>
+    <string name="general_text_89" formatted="false">Відкладати гілки з обмеженням використання</string>
+    <string name="general_text_90" formatted="false">Модель написання текстів для системи контролю версій</string>
+    <string name="general_text_91" formatted="false">Об’єднати коміти</string>
+    <string name="general_text_92" formatted="false">Створювати нові worktrees з origin</string>
+    <string name="general_text_93" formatted="false">Створює нові робочі дерева від віддаленої базової гілки, якщо вона доступна.</string>
+    <string name="general_text_94" formatted="false">Статичне</string>
+    <string name="general_text_95" formatted="false">Спрямувати</string>
+    <string name="general_text_96" formatted="false">Під наглядом</string>
+    <string name="general_text_97" formatted="false">Модель генерації тексту</string>
+    <string name="general_text_98" formatted="false">Цей пристрій</string>
+    <string name="general_text_99" formatted="false">Інструкції для заголовків тредів</string>
+    <string name="general_text_100" formatted="false">Формат часу</string>
+    <string name="general_text_101" formatted="false">Верхній рівень</string>
+    <string name="general_text_102" formatted="false">Кінцева точка трас</string>
+    <string name="general_text_103" formatted="false">Хід</string>
+    <string name="general_text_104" formatted="false">Недоступно</string>
+    <string name="general_text_105" formatted="false">Використати успадковане значення</string>
+    <string name="general_text_106" formatted="false">Коли стискати неактивний тред Claude понад 200 000 токенів: після вашого повернення, перед завершенням кешу промпту або ніколи. Кожен провайдер Claude може це перевизначити.</string>
+    <string name="general_text_107" formatted="false">Коли ви повернетеся</string>
+    <string name="general_text_108" formatted="false">Місце запуску нових гілок. Проєкти та їхній файл t3.json можуть перевизначити його.</string>
+    <string name="general_text_109" formatted="false">Робоча область</string>
+    <string name="general_text_110" formatted="false">Підмодулі worktrees</string>
+    <string name="general_text_111" formatted="false">Інструкції з написання</string>
+    <string name="general_text_112" formatted="false">Стиль написання</string>
+    <string name="general_text_113" formatted="false">за замовчуванням</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

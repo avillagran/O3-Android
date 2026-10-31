@@ -1,0 +1,62 @@
+package dev.avillagran.ot3android.ui.thread.composer
+
+import android.app.Application
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.*
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.StateRestorationTester
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.text.TextRange
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import dev.avillagran.ot3android.core.composer.*
+import dev.avillagran.ot3android.ui.theme.Ot3Theme
+import org.junit.Assert.*
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [35], application = Application::class)
+class ComposerParityTest {
+    @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+    private val scope = ComposerScope("host", "project", "thread")
+    private fun initial() = ComposerSnapshot(scope, text = "Look at the file", selection = ComposerSelection(16, 16),
+        attachments = listOf(ComposerAttachment("file", "notes.md", UploadStatus.Ready, "descriptor")))
+    @Test fun selectionAndChipsSurviveSavedStateRestoration() {
+        val session = ComposerSession(initial()); var state by mutableStateOf(session.snapshot)
+        val restoration = StateRestorationTester(rule)
+        restoration.setContent { Ot3Theme {
+            ComposerParity(state, emptySet(), { _, text, selection, composing -> session.edit(text, selection, composing); state = session.snapshot }, {})
+        } }
+        rule.onNodeWithTag("thread_composer").performTextInputSelection(TextRange(2, 7))
+        rule.runOnIdle { assertEquals(ComposerSelection(2, 7), state.selection) }
+        restoration.emulateSavedInstanceStateRestore()
+        rule.onNodeWithText("notes.md").assertIsDisplayed()
+        rule.onNodeWithTag("thread_composer").assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(2, 7)))
+    }
+    @Test fun uncertainSendDisablesAllAlternateDispatchesAndEditing() {
+        val requests = mutableListOf<ComposerRequest>()
+        rule.setContent { Ot3Theme {
+            ComposerParity(initial().copy(uncertainCommand = "durable-id"),
+                setOf(ComposerAction.SendAndNew, ComposerAction.OppositeOnce), { _, _, _, _ -> fail("locked editor") }, requests::add)
+        } }
+        rule.onNodeWithText("Send and start new thread").assertIsNotEnabled()
+        rule.onNodeWithText("Opposite delivery once").assertIsNotEnabled()
+        rule.onNodeWithTag("thread_composer").assertIsNotEnabled()
+        assertTrue(requests.isEmpty())
+    }
+    @Test fun failedUploadBlocksSendButCanBeRemoved() {
+        val session = ComposerSession(initial().copy(attachments = listOf(ComposerAttachment("u", "notes.md", UploadStatus.Failed, error = "failed"))))
+        var state by mutableStateOf(session.snapshot)
+        rule.setContent { Ot3Theme {
+            ComposerParity(state, emptySet(), { _, _, _, _ -> }, { request ->
+                if (request is ComposerRequest.RemoveAttachment) { session.removeAttachment(request.id); state = session.snapshot }
+            })
+        } }
+        rule.onNodeWithContentDescription("Send").assertIsNotEnabled()
+        rule.onNodeWithText("Remove").performClick()
+        rule.onNodeWithContentDescription("Send").assertIsEnabled()
+    }
+}

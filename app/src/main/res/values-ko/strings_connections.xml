@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept P13 connection and invitation safety copy. -->
+<resources>
+    <string name="connections_title">연결</string>
+    <string name="connections_peer_review">페어링 전에 전체 피어 ID를 확인하세요.</string>
+    <string name="connections_all_hosts_warning">이 초대는 모든 호스트에 대한 접근을 허용할 수 있습니다. 계속하기 전에 발급자와 범위를 확인하세요.</string>
+    <string name="connections_peer_confirm">이 정확한 피어 ID를 확인했으며 접근 범위에 동의합니다.</string>
+    <string name="connections_pair_pending">승인은 권한이 있는 호스트에서 이루어집니다. 승인 후 초대를 다시 가져오세요.</string>
+    <string name="connections_host_authority">이 모바일 SDK는 관리 기능을 제공하지 않습니다. 경로, 공유, 클라이언트, 클라우드, 네트워크, 게시, 동의, 게이트웨이, 릴레이 및 설치는 권한이 있는 호스트에서 관리하세요.</string>
+    <string name="connections_local_id">이 기기 ID</string>
+    <string name="connections_bridge_id">선택한 브리지 ID</string>
+</resources>

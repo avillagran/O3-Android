@@ -6,6 +6,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -40,23 +42,38 @@ import org.json.JSONObject
 private data class DiffRead(val complete: Boolean = false, val data: JSONObject? = null)
 
 @Composable
-internal fun ThreadDiffDialog(
+internal fun ThreadDiffDialog(summary: JSONObject, read: suspend (JSONObject, Boolean) -> JSONObject?, onClose: () -> Unit) {
+    ThreadReviewDialog(summary, read, onClose, enhancedControls = false)
+}
+
+/** P20 review slot with shared preferences and per-file native reads. */
+@Composable
+fun ThreadReviewDialog(
     summary: JSONObject,
     read: suspend (JSONObject, Boolean) -> JSONObject?,
     onClose: () -> Unit,
+    enhancedControls: Boolean = true,
+    settings: dev.avillagran.ot3android.ui.git.DiffReviewSettings? = null,
+    onSettingsChange: ((dev.avillagran.ot3android.ui.git.DiffReviewSettings) -> Unit)? = null,
+    readFile: (suspend (JSONObject, Boolean, String) -> JSONObject?)? = null,
+    reviewControls: (@Composable () -> Unit)? = null,
 ) {
     var showWhitespace by rememberSaveable { mutableStateOf(false) }
     var wordWrap by rememberSaveable(summary.toString()) { mutableStateOf(true) }
     var selectedPath by rememberSaveable(summary.toString()) { mutableStateOf("") }
     var preferSplit by rememberSaveable(summary.toString()) { mutableStateOf(false) }
+    var showContext by rememberSaveable { mutableStateOf(true) }
+    var showTree by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(settings, summary.toString()) { settings?.let { preferSplit = it.split; wordWrap = it.wordWrap; showContext = it.showContext } }
     var retry by remember { mutableIntStateOf(0) }
     val hunkFolds = rememberSaveable(summary.toString(), showWhitespace, stateSaver = HunkFolds.Saver) { mutableStateOf(HunkFolds("")) }
     val splitHunkFolds = rememberSaveable(summary.toString(), showWhitespace, stateSaver = HunkFolds.Saver) { mutableStateOf(HunkFolds("")) }
     val whitespaceLabel = stringResource(R.string.ot3_diff_show_whitespace)
     val currentRead by rememberUpdatedState(read)
-    val result by produceState(DiffRead(), summary.toString(), showWhitespace, retry) {
+    val currentFileRead by rememberUpdatedState(readFile)
+    val result by produceState(DiffRead(), summary.toString(), showWhitespace, retry, selectedPath.takeIf { readFile != null }) {
         value = DiffRead()
-        val completed = try { DiffRead(true, currentRead(JSONObject(summary.toString()), !showWhitespace)) }
+        val completed = try { DiffRead(true, if (currentFileRead != null) currentFileRead!!.invoke(JSONObject(summary.toString()), !showWhitespace, selectedPath) else currentRead(JSONObject(summary.toString()), !showWhitespace)) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { DiffRead(true) }
         // JNI completes off-thread; publish the dialog state on the Android UI dispatcher.
@@ -84,10 +101,10 @@ internal fun ThreadDiffDialog(
                     if (wide) {
                         Checkbox(checked = showWhitespace, onCheckedChange = { showWhitespace = it }, modifier = Modifier.testTag("thread_diff_whitespace").semantics { contentDescription = whitespaceLabel })
                         Text(whitespaceLabel, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(2f))
-                        TextButton(onClick = { preferSplit = !preferSplit }, modifier = Modifier.testTag("thread_diff_layout")) {
+                        TextButton(onClick = { preferSplit = !preferSplit; onSettingsChange?.invoke(dev.avillagran.ot3android.ui.git.DiffReviewSettings(preferSplit, wordWrap, showContext)) }, modifier = Modifier.testTag("thread_diff_layout")) {
                             Text(stringResource(if (preferSplit) R.string.ot3_diff_unified else R.string.ot3_diff_split))
                         }
-                        TextButton(onClick = { wordWrap = !wordWrap }, modifier = Modifier.testTag("thread_diff_wrap")) {
+                        TextButton(onClick = { wordWrap = !wordWrap; onSettingsChange?.invoke(dev.avillagran.ot3android.ui.git.DiffReviewSettings(preferSplit, wordWrap, showContext)) }, modifier = Modifier.testTag("thread_diff_wrap")) {
                             Text(stringResource(if (wordWrap) R.string.ot3_diff_no_wrap else R.string.ot3_diff_wrap))
                         }
                     }
@@ -96,17 +113,26 @@ internal fun ThreadDiffDialog(
                 if (!wide) Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = showWhitespace, onCheckedChange = { showWhitespace = it }, modifier = Modifier.testTag("thread_diff_whitespace").semantics { contentDescription = whitespaceLabel })
                     Text(whitespaceLabel, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { wordWrap = !wordWrap }, modifier = Modifier.testTag("thread_diff_wrap")) {
+                    TextButton(onClick = { wordWrap = !wordWrap; onSettingsChange?.invoke(dev.avillagran.ot3android.ui.git.DiffReviewSettings(preferSplit, wordWrap, showContext)) }, modifier = Modifier.testTag("thread_diff_wrap")) {
                         Text(stringResource(if (wordWrap) R.string.ot3_diff_no_wrap else R.string.ot3_diff_wrap))
                     }
                 }
+                if (enhancedControls) Row(Modifier.horizontalScroll(rememberScrollState())) {
+                    TextButton(onClick = { showContext = !showContext; onSettingsChange?.invoke(dev.avillagran.ot3android.ui.git.DiffReviewSettings(preferSplit, wordWrap, showContext)) }) {
+                        Text(stringResource(if (showContext) R.string.ot3_git_hide_context else R.string.ot3_git_show_context))
+                    }
+                    if (wide) TextButton(onClick = { showTree = !showTree }) { Text(stringResource(R.string.ot3_git_files)) }
+                    TextButton(onClick = { retry++ }, enabled = result.complete) { Text(stringResource(R.string.ot3_git_refresh)) }
+                }
+                reviewControls?.invoke()
+                if (result.data?.optBoolean("truncated") == true) Text(stringResource(R.string.ot3_git_truncated))
                 when {
                     !result.complete -> Text(stringResource(R.string.ot3_loading_diff))
                     result.data == null -> Column {
                         Text(stringResource(R.string.ot3_diff_missing), color = Ot3Theme.colors.failed)
                         TextButton(onClick = { retry++ }, modifier = Modifier.testTag("thread_diff_retry")) { Text(stringResource(R.string.ot3_dialog_retry)) }
                     }
-                    else -> DiffFileBrowser(result.data!!, selectedPath, { selectedPath = it; hunkFolds.value = HunkFolds(""); splitHunkFolds.value = HunkFolds("") }, Modifier.weight(1f), wordWrap, summary.toString() + ":" + showWhitespace, if (split) splitHunkFolds else hunkFolds, split)
+                    else -> DiffFileBrowser(result.data!!, selectedPath, { selectedPath = it; hunkFolds.value = HunkFolds(""); splitHunkFolds.value = HunkFolds("") }, Modifier.weight(1f), wordWrap, summary.toString() + ":" + showWhitespace, if (split) splitHunkFolds else hunkFolds, split, showContext, wide && showTree, enhancedControls)
                 }
             }
             }
@@ -116,7 +142,7 @@ internal fun ThreadDiffDialog(
 
 /** Native file order and paths; this selection is local reading state, not a new read. */
 @Composable
-internal fun DiffFileBrowser(view: JSONObject, selectedPath: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier, wordWrap: Boolean = true, readingScope: String = "", hunkFolds: MutableState<HunkFolds> = rememberSaveable(stateSaver = HunkFolds.Saver) { mutableStateOf(HunkFolds("")) }, split: Boolean = false) {
+internal fun DiffFileBrowser(view: JSONObject, selectedPath: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier, wordWrap: Boolean = true, readingScope: String = "", hunkFolds: MutableState<HunkFolds> = rememberSaveable(stateSaver = HunkFolds.Saver) { mutableStateOf(HunkFolds("")) }, split: Boolean = false, showContext: Boolean = true, showTree: Boolean = false, hunkNavigation: Boolean = false) {
     val files = view.optJSONArray("files").objects()
     val selectedIndex = files.indexOfFirst { it.optString("path") == selectedPath }
         .takeIf { it >= 0 } ?: files.indexOfFirst { it.optString("oldPath") == selectedPath }.coerceAtLeast(0)
@@ -145,14 +171,21 @@ internal fun DiffFileBrowser(view: JSONObject, selectedPath: String, onSelect: (
                     enabled = selectedIndex < files.lastIndex, modifier = Modifier.testTag("thread_diff_next"))
             }
         }
+        if (showTree) LazyColumn(Modifier.fillMaxWidth().heightIn(max = 180.dp).testTag("thread_diff_tree")) {
+            files.forEach { file -> item(file.getString("path")) {
+                TextButton(onClick = { onSelect(file.getString("path")) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("${file.optString("kind")} · ${file.getString("path")}  +${file.optInt("additions")} −${file.optInt("deletions")}")
+                }
+            } }
+        }
         // Changing files starts at its header; a whitespace refresh keeps the selected path.
-        key(selected?.optString("path")) { DiffLines(view, Modifier.weight(1f), selectedIndex, wordWrap, readingScope, hunkFolds, split) }
+        key(selected?.optString("path")) { DiffLines(view, Modifier.weight(1f), selectedIndex, wordWrap, readingScope, hunkFolds, split, showContext, hunkNavigation) }
     }
 }
 
 /** Unified patch rows: native owns content; font metrics determine unwrapped width. */
 @Composable
-internal fun DiffLines(view: JSONObject, modifier: Modifier = Modifier, selectedIndex: Int? = null, wordWrap: Boolean = true, readingScope: String = "", hunkFolds: MutableState<HunkFolds> = rememberSaveable(stateSaver = HunkFolds.Saver) { mutableStateOf(HunkFolds("")) }, split: Boolean = false) {
+internal fun DiffLines(view: JSONObject, modifier: Modifier = Modifier, selectedIndex: Int? = null, wordWrap: Boolean = true, readingScope: String = "", hunkFolds: MutableState<HunkFolds> = rememberSaveable(stateSaver = HunkFolds.Saver) { mutableStateOf(HunkFolds("")) }, split: Boolean = false, showContext: Boolean = true, hunkNavigation: Boolean = false) {
     val colors = Ot3Theme.colors
     val owner = remember(view.toString(), selectedIndex, readingScope, split) {
         diffFingerprint(readingScope + ":" + selectedIndex + ":" + split + ":" + view)
@@ -174,11 +207,33 @@ internal fun DiffLines(view: JSONObject, modifier: Modifier = Modifier, selected
             } ?: 0
         } ?: 0
     }
-    BoxWithConstraints(modifier.fillMaxWidth()) {
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val hunkPositions = mutableListOf<Int>()
+    var position = 0
+    files.forEachIndexed { fileIndex, file ->
+        position++
+        var hunk = -1
+        file.optJSONArray(if (split) "splitRows" else "rows").objects().forEachIndexed { index, row ->
+            val kind = row.optString("kind").ifEmpty { row.optJSONObject("left")?.optString("kind").orEmpty() }
+            if (kind == "hunk") { hunk = index; hunkPositions.add(position) }
+            if ((kind != "hunk" && "$fileIndex:$hunk" in folded) || (!showContext && kind == "context")) return@forEachIndexed
+            position++
+        }
+    }
+    Column(modifier.fillMaxWidth()) {
+        if (hunkNavigation) Row {
+            val current = listState.firstVisibleItemIndex
+            val previous = hunkPositions.lastOrNull { it < current }
+            val next = hunkPositions.firstOrNull { it > current }
+            TextButton(onClick = { previous?.let { scope.launch { listState.scrollToItem(it) } } }, enabled = previous != null) { Text(stringResource(R.string.ot3_git_previous_hunk)) }
+            TextButton(onClick = { next?.let { scope.launch { listState.scrollToItem(it) } } }, enabled = next != null) { Text(stringResource(R.string.ot3_git_next_hunk)) }
+        }
+    BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
         val viewportWidth = maxWidth
         val contentWidth = maxOf(viewportWidth, (with(density) { measuredWidth.toDp() } + 55.dp) * (if (split) 2 else 1))
         Box(if (wordWrap) Modifier else Modifier.horizontalScroll(rememberScrollState()).testTag("thread_diff_horizontal")) {
-            LazyColumn(Modifier.width(if (wordWrap) viewportWidth else contentWidth).fillMaxHeight().testTag("thread_diff_lines")) {
+            LazyColumn(Modifier.width(if (wordWrap) viewportWidth else contentWidth).fillMaxHeight().testTag("thread_diff_lines"), state = listState) {
                 if (files.isEmpty()) item("empty") { Text(stringResource(R.string.ot3_diff_empty)) }
                 files.forEachIndexed { fileIndex, file ->
                     item("header_$fileIndex") {
@@ -192,7 +247,9 @@ internal fun DiffLines(view: JSONObject, modifier: Modifier = Modifier, selected
                     val rows = file.optJSONArray(if (split) "splitRows" else "rows").objects()
                     var hunk = -1
                     rows.forEachIndexed { index, row ->
-                        val isHunk = row.optString("kind") == "hunk"
+                        val rowKind = row.optString("kind").ifEmpty { row.optJSONObject("left")?.optString("kind").orEmpty() }
+                        val isHunk = rowKind == "hunk"
+                        if (!showContext && rowKind == "context") return@forEachIndexed
                         if (isHunk) hunk = index
                         // Rust supplies row kinds. Like T3DiffReview.visibleRows, the header
                         // stays visible while following rows are hidden until the next header.
@@ -241,6 +298,8 @@ internal fun DiffLines(view: JSONObject, modifier: Modifier = Modifier, selected
             }
         }
     }
+}
+
 }
 
 internal data class HunkFolds(val owner: String, val indices: Set<String> = emptySet()) {

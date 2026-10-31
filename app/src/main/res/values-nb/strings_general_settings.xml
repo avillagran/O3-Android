@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 timer</string>
+    <string name="general_text_1" formatted="false">24 timer</string>
+    <string name="general_text_2" formatted="false">La nye agentøkter starte og styre lokale og eksterne enheter med automatisk oppsatte verktøy.</string>
+    <string name="general_text_3" formatted="false">Legges til i prompten for nye og regenererte trådtitler.</string>
+    <string name="general_text_4" formatted="false">Godta endringer</string>
+    <string name="general_text_5" formatted="false">Avslutt etter inaktivitet (dager)</string>
+    <string name="general_text_6" formatted="false">Automatisk</string>
+    <string name="general_text_7" formatted="false">Arkiver tråder automatisk etter at pull requestene deres er slått sammen.</string>
+    <string name="general_text_8" formatted="false">Arkiver tråder automatisk etter så mange dager uten aktivitet.</string>
+    <string name="general_text_9" formatted="false">Bakgrunnsaktivitet</string>
+    <string name="general_text_10" formatted="false">Balanser oppdateringer i bakgrunnen mot ytelse og batteribruk.</string>
+    <string name="general_text_11" formatted="false">Balansert</string>
+    <string name="general_text_12" formatted="false">Batterisparing</string>
+    <string name="general_text_13" formatted="false">Før bufferen utløper (beta)</string>
+    <string name="general_text_14" formatted="false">Prefiks for grennavn</string>
+    <string name="general_text_15" formatted="false">Navngivning av grener</string>
+    <string name="general_text_16" formatted="false">Instruksjoner for grennavn</string>
+    <string name="general_text_17" formatted="false">Se etter oppdateringer for installerte leverandører i bakgrunnen.</string>
+    <string name="general_text_18" formatted="false">Se etter leverandøroppdateringer</string>
+    <string name="general_text_19" formatted="false">Velg hvordan grener opprettet for nye arbeidstrær skal navngis.</string>
+    <string name="general_text_20" formatted="false">Velg når svar skal vises mens agenten arbeider.</string>
+    <string name="general_text_21" formatted="false">Komprimer inaktive tråder</string>
+    <string name="general_text_22" formatted="false">Fortsett aktive tråder etter at serveren startes på nytt for en oppdatering.</string>
+    <string name="general_text_23" formatted="false">Konvensjonelle commits</string>
+    <string name="general_text_24" formatted="false">Gjeldende arbeidskopi</string>
+    <string name="general_text_25" formatted="false">Tilpasset</string>
+    <string name="general_text_26" formatted="false">Standardmodell for nye tråder. Prosjekter kan overstyre den.</string>
+    <string name="general_text_27" formatted="false">Standardtillatelser for nye tråder. Prosjekter kan overstyre dem.</string>
+    <string name="general_text_28" formatted="false">Aktiver gjennomgangsveiledninger</string>
+    <string name="general_text_29" formatted="false">Følg maler for pull requests</string>
+    <string name="general_text_30" formatted="false">Oppfølgingsatferd</string>
+    <string name="general_text_31" formatted="false">Full tilgang</string>
+    <string name="general_settings_title" formatted="false">Generelt</string>
+    <string name="general_text_33" formatted="false">Hvordan nye arbeidstrær fyller git-undermoduler. Prosjekter kan overstyre det.</string>
+    <string name="general_text_34" formatted="false">Arv</string>
+    <string name="general_text_35" formatted="false">Arvet fra miljøet</string>
+    <string name="general_text_36" formatted="false">Instruksjoner for å generere grennavn for arbeidstrær.</string>
+    <string name="general_text_37" formatted="false">Unnta tråder med åpne pull requests fra automatisk arkivering.</string>
+    <string name="general_text_38" formatted="false">Behold tråder med pull requests</string>
+    <string name="general_text_39" formatted="false">Hold titler til noen få ord. Start med hovedemnet.</string>
+    <string name="general_text_40" formatted="false">Holder standardgrenen oppdatert når arbeidskopien ikke har lokale endringer eller commits. Prosjekter kan overstyre dette.</string>
+    <string name="general_text_41" formatted="false">Språk</string>
+    <string name="general_text_42" formatted="false">Sist brukt</string>
+    <string name="general_text_43" formatted="false">Lokal innstilling</string>
+    <string name="general_text_44" formatted="false">Endepunkt for logger</string>
+    <string name="general_text_45" formatted="false">Slå sammen</string>
+    <string name="general_text_46" formatted="false">Endepunkt for måledata</string>
+    <string name="general_text_47" formatted="false">Ulike kilder</string>
+    <string name="general_text_48" formatted="false">Ulike verdier</string>
+    <string name="general_text_49" formatted="false">Modell</string>
+    <string name="general_text_50" formatted="false">Modell som brukes til titler og annen generert tekst.</string>
+    <string name="general_text_51" formatted="false">Modell som lager gjennomgangsguider for pull requests.</string>
+    <string name="general_text_52" formatted="false">Modell som skriver commit- og pull-request-meldinger.</string>
+    <string name="general_text_53" formatted="false">Flytt tråder som stopper på grunn av bruksgrensen til Snoozed frem til nullstillingstidspunktet. Kombiner med automatisk gjenopptakelse for å vekke og fortsette dem.</string>
+    <string name="general_text_54" formatted="false">Aldri</string>
+    <string name="general_text_55" formatted="false">Nytt arbeidstre</string>
+    <string name="general_text_56" formatted="false">Ingen</string>
+    <string name="general_text_57" formatted="false">Av</string>
+    <string name="general_text_58" formatted="false">På</string>
+    <string name="general_text_59" formatted="false">Avsnitt</string>
+    <string name="general_text_60" formatted="false">Ytelse</string>
+    <string name="general_text_61" formatted="false">Tillatelser</string>
+    <string name="general_text_62" formatted="false">Planmodus (eldre)</string>
+    <string name="general_text_63" formatted="false">Prefiks som legges til automatisk genererte grennavn for arbeidstrær.</string>
+    <string name="general_text_64" formatted="false">Prosjektoverstyring</string>
+    <string name="general_text_65" formatted="false">Hent endringer automatisk</string>
+    <string name="general_text_66" formatted="false">Metode for sammenslåing av pull requests</string>
+    <string name="general_text_67" formatted="false">Pull requests starter med denne metoden. «Sist brukt» gjenbruker det siste valget på enheten.</string>
+    <string name="general_text_68" formatted="false">Sett i kø</string>
+    <string name="general_text_69" formatted="false">Hurtigsvar</string>
+    <string name="general_text_70" formatted="false">Rebase</string>
+    <string name="general_text_71" formatted="false">Rekursiv</string>
+    <string name="general_text_72" formatted="false">Oppdater</string>
+    <string name="general_text_73" formatted="false">Fjern agenthenvisning ved sammenslåing</string>
+    <string name="general_text_74" formatted="false">Fjern gjenkjente agentkrediteringer fra flettemeldinger, men behold menneskelige medforfattere.</string>
+    <string name="general_text_75" formatted="false">Arkivets konvensjoner</string>
+    <string name="general_text_76" formatted="false">Tilbakestill</string>
+    <string name="general_text_77" formatted="false">Svarstrømming</string>
+    <string name="general_text_78" formatted="false">Ukjent resultat. Oppdater før du prøver igjen.</string>
+    <string name="general_text_79" formatted="false">Gjenoppta etter serveroppdateringer</string>
+    <string name="general_text_80" formatted="false">Gjenoppta begrensede tråder automatisk</string>
+    <string name="general_text_81" formatted="false">Fortsett tråder som stoppet på grunn av bruksgrensen ved oppgitt nullstillingstidspunkt. Hver tråd kan avbryte planlagt fortsettelse.</string>
+    <string name="general_text_82" formatted="false">Instruksjoner for gjennomgangsveiledninger</string>
+    <string name="general_text_83" formatted="false">Modell for gjennomgangsguider</string>
+    <string name="general_text_84" formatted="false">Lagre</string>
+    <string name="general_text_85" formatted="false">Lagret</string>
+    <string name="general_text_86" formatted="false">Semantisk</string>
+    <string name="general_text_87" formatted="false">Sender spor, måledata og logger til en OTLP HTTP-mottaker. Start serveren på nytt for å bruke.</string>
+    <string name="general_text_88" formatted="false">Avslutt tråder for sammenslåtte pull requests</string>
+    <string name="general_text_89" formatted="false">Utsett bruksbegrensede tråder</string>
+    <string name="general_text_90" formatted="false">Skrivemodell for versjonskontroll</string>
+    <string name="general_text_91" formatted="false">Samle commits</string>
+    <string name="general_text_92" formatted="false">Start nye worktrees fra origin</string>
+    <string name="general_text_93" formatted="false">Start nye arbeidstrær fra den eksterne basisgrenen når den finnes.</string>
+    <string name="general_text_94" formatted="false">Statisk</string>
+    <string name="general_text_95" formatted="false">Styr om</string>
+    <string name="general_text_96" formatted="false">Overvåket</string>
+    <string name="general_text_97" formatted="false">Modell for tekstgenerering</string>
+    <string name="general_text_98" formatted="false">Denne enheten</string>
+    <string name="general_text_99" formatted="false">Instruksjoner for trådtitler</string>
+    <string name="general_text_100" formatted="false">Tidsformat</string>
+    <string name="general_text_101" formatted="false">Øverste nivå</string>
+    <string name="general_text_102" formatted="false">Endepunkt for spor</string>
+    <string name="general_text_103" formatted="false">Tur</string>
+    <string name="general_text_104" formatted="false">Utilgjengelig</string>
+    <string name="general_text_105" formatted="false">Bruk arvet verdi</string>
+    <string name="general_text_106" formatted="false">Når en inaktiv Claude-tråd over 200 000 tokens komprimeres: når du kommer tilbake, rett før prompt-bufferen utløper, eller aldri. Hver Claude-leverandør kan overstyre dette.</string>
+    <string name="general_text_107" formatted="false">Når du kommer tilbake</string>
+    <string name="general_text_108" formatted="false">Hvor nye tråder starter. Prosjekter og deres t3.json kan overstyre dette.</string>
+    <string name="general_text_109" formatted="false">Arbeidsområde</string>
+    <string name="general_text_110" formatted="false">Undermoduler for worktrees</string>
+    <string name="general_text_111" formatted="false">Skriveinstruksjoner</string>
+    <string name="general_text_112" formatted="false">Skrivestil</string>
+    <string name="general_text_113" formatted="false">standard</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

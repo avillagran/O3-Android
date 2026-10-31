@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-maintained composer UI strings. -->
+<resources>
+    <string name="composer_attach">إرفاق ملفات</string>
+    <string name="composer_paste">لصق</string>
+    <string name="composer_undo">تراجع</string>
+    <string name="composer_redo">إعادة</string>
+    <string name="composer_history">السجل</string>
+    <string name="composer_continue_list">متابعة القائمة</string>
+    <string name="composer_stash">حفظ المسودة</string>
+    <string name="composer_project_drafts">مسودات المشروع</string>
+    <string name="composer_quick_replies">ردود سريعة</string>
+    <string name="composer_build">تنفيذ</string>
+    <string name="composer_plan">تخطيط</string>
+    <string name="composer_implement">تنفيذ الخطة</string>
+    <string name="composer_feedback">تعليق على الخطة</string>
+    <string name="composer_opposite">إرسال معاكس لمرة واحدة</string>
+    <string name="composer_background">إرسال في الخلفية</string>
+    <string name="composer_send_new">إرسال وبدء محادثة جديدة</string>
+    <string name="composer_remove">إزالة</string>
+    <string name="composer_restore">استعادة</string>
+    <string name="composer_delete">حذف</string>
+    <string name="composer_refresh">تحديث</string>
+    <string name="composer_uncertain">نتيجة الإرسال غير معروفة. تحقق من الأمر الحالي قبل التحرير أو الإرسال مجددًا.</string>
+    <string name="composer_uploading">جارٍ رفع %1$s…</string>
+    <string name="composer_upload_failed">فشل الرفع: %1$s</string>
+    <string name="composer_attachment_count">المرفقات: %1$d</string>
+</resources>

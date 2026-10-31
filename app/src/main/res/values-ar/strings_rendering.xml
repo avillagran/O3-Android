@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">عرض الكود</string>
+    <string name="ot3_render_show_preview">عرض المعاينة</string>
+    <string name="ot3_render_run">تشغيل في الطرفية</string>
+    <string name="ot3_render_open">فتح المعاينة</string>
+    <string name="ot3_render_offline">المعاينة غير متاحة دون اتصال</string>
+    <string name="ot3_render_expired">انتهت صلاحية إذن المعاينة</string>
+    <string name="ot3_render_unsupported">العارض المرئي غير متاح</string>
+</resources>

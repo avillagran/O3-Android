@@ -23,7 +23,10 @@ class SettingsNavigationDeviceTest {
             rule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
             rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
             rule.onNodeWithTag(SettingsTags.BACK).assertIsDisplayed()
-            listOf("Appearance", "Notifications", "Environments", "Usage", "Archive", "Licenses").forEach { page ->
+            // P02 exposes delivered pages only; placeholders must not become dead navigation.
+            rule.onNodeWithTag("settings_Archive").assertDoesNotExist()
+            rule.onNodeWithTag("settings_Licenses").assertDoesNotExist()
+            listOf("Appearance", "Notifications", "Environments", "Usage").forEach { page ->
                 rule.onNodeWithTag("settings_$page").performScrollTo().performClick()
                 rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
                 val back = hasContentDescription("Back") or hasText("Back")

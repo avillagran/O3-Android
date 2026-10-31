@@ -17,7 +17,7 @@ class BridgePairScreenTest {
     @get:Rule val rule = createComposeRule()
     private fun service() = PairingService(NativeT3TransportFactory(), fakeRepository(), dev.avillagran.ot3android.core.transport.PairingClient(), {}, {})
     private fun link() = "omabridge://pair/" + Base64.encodeToString(
-        "{\"version\":1,\"name\":\"Fixture\",\"manage\":false}".toByteArray(),
+        "{\"version\":1,\"name\":\"Fixture\",\"manage\":false,\"address\":{\"id\":\"${"a".repeat(64)}\"},\"expires\":4102444800}".toByteArray(),
         Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
 
     @Test fun scannedInvitationStaysPendingUntilApprovedAndClearsSecretAfterSaving() {
@@ -27,11 +27,22 @@ class BridgePairScreenTest {
         val inbox = PairingInbox()
         rule.setContent { Ot3Theme { PairScreen(model, inbox.link, inbox::take, {}, {}, {}) } }
         inbox.offer(link(), scanned = true)
+        rule.waitUntil(5000) { model.state.value.bridge == "review" }
+        assertEquals(0, calls)
+        rule.onNodeWithText("This invitation may allow access to all hosts. Review its scope with the issuer before continuing.").assertExists()
+        rule.onNodeWithTag("bridge_peer_id").assertTextEquals("a".repeat(64))
+        rule.onNodeWithTag("bridge_peer_pair").assertIsNotEnabled()
+        rule.onNodeWithTag("bridge_peer_consent").performScrollTo().performClick()
+        rule.onNodeWithTag("bridge_peer_pair").performScrollTo().performClick()
         rule.waitUntil(5000) { model.state.value.bridge == "pending" }
-        rule.onNodeWithTag("bridge_pair_status").assertTextEquals("Waiting for approval on your bridge. After approving, tap Continue.")
         assertEquals(1, calls)
+        assertEquals("", model.state.value.link)
         approved = true
-        rule.onNodeWithTag(PairScreenTags.CONTINUE).performClick()
+        inbox.offer(link(), scanned = true)
+        rule.waitUntil(5000) { model.state.value.bridge == "review" }
+        rule.onNodeWithTag("bridge_peer_pair").assertIsNotEnabled()
+        rule.onNodeWithTag("bridge_peer_consent").performScrollTo().performClick()
+        rule.onNodeWithTag("bridge_peer_pair").performScrollTo().performClick()
         rule.waitUntil(5000) { model.state.value.bridge == "approved" }
         assertEquals("", model.state.value.link)
         rule.onNodeWithTag("bridge_pair_status").assertTextEquals("Bridge saved. Authorized computers appear automatically in Home.")

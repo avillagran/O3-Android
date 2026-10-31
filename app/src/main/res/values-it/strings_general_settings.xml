@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 ore</string>
+    <string name="general_text_1" formatted="false">24 ore</string>
+    <string name="general_text_2" formatted="false">Consenti alle nuove sessioni agente di avviare e controllare dispositivi locali e remoti, configurando automaticamente gli strumenti.</string>
+    <string name="general_text_3" formatted="false">Aggiunto al prompt dei titoli nuovi e rigenerati.</string>
+    <string name="general_text_4" formatted="false">Accetta modifiche</string>
+    <string name="general_text_5" formatted="false">Chiudi dopo inattività (giorni)</string>
+    <string name="general_text_6" formatted="false">Automatico</string>
+    <string name="general_text_7" formatted="false">Archivia automaticamente le conversazioni dopo l\'unione delle relative richieste di integrazione.</string>
+    <string name="general_text_8" formatted="false">Archivia automaticamente le conversazioni dopo questo numero di giorni di inattività.</string>
+    <string name="general_text_9" formatted="false">Attività in background</string>
+    <string name="general_text_10" formatted="false">Bilancia gli aggiornamenti in background con le prestazioni e il consumo della batteria.</string>
+    <string name="general_text_11" formatted="false">Bilanciato</string>
+    <string name="general_text_12" formatted="false">Risparmio batteria</string>
+    <string name="general_text_13" formatted="false">Prima che scada la cache (beta)</string>
+    <string name="general_text_14" formatted="false">Prefisso del nome del branch</string>
+    <string name="general_text_15" formatted="false">Nomi dei branch</string>
+    <string name="general_text_16" formatted="false">Istruzioni per i nomi dei branch</string>
+    <string name="general_text_17" formatted="false">Controlla in background gli aggiornamenti dei provider installati.</string>
+    <string name="general_text_18" formatted="false">Controlla aggiornamenti fornitori</string>
+    <string name="general_text_19" formatted="false">Scegli come denominare i rami creati per i nuovi alberi di lavoro.</string>
+    <string name="general_text_20" formatted="false">Scegli quando mostrare le risposte mentre l\'agente lavora.</string>
+    <string name="general_text_21" formatted="false">Compatta i thread inattivi</string>
+    <string name="general_text_22" formatted="false">Riprende le conversazioni attive dopo il riavvio del server per un aggiornamento.</string>
+    <string name="general_text_23" formatted="false">Commit convenzionali</string>
+    <string name="general_text_24" formatted="false">Copia di lavoro attuale</string>
+    <string name="general_text_25" formatted="false">Personalizzato</string>
+    <string name="general_text_26" formatted="false">Modello predefinito per le nuove conversazioni. I progetti possono sostituirlo.</string>
+    <string name="general_text_27" formatted="false">Autorizzazioni predefinite per le nuove conversazioni. I progetti possono sostituirle.</string>
+    <string name="general_text_28" formatted="false">Abilita guide di revisione</string>
+    <string name="general_text_29" formatted="false">Segui i modelli di pull request</string>
+    <string name="general_text_30" formatted="false">Comportamento dei messaggi successivi</string>
+    <string name="general_text_31" formatted="false">Accesso completo</string>
+    <string name="general_settings_title" formatted="false">Generale</string>
+    <string name="general_text_33" formatted="false">Come vengono popolati i sottomoduli git nei nuovi alberi di lavoro. I progetti possono modificare questa impostazione.</string>
+    <string name="general_text_34" formatted="false">Eredita</string>
+    <string name="general_text_35" formatted="false">Ereditato dall\'ambiente</string>
+    <string name="general_text_36" formatted="false">Istruzioni per generare i nomi dei rami degli alberi di lavoro.</string>
+    <string name="general_text_37" formatted="false">Esclude dall\'archiviazione automatica le conversazioni con richieste di integrazione aperte.</string>
+    <string name="general_text_38" formatted="false">Mantieni conversazioni con pull request</string>
+    <string name="general_text_39" formatted="false">Titoli di poche parole. Inizia dall\'argomento principale.</string>
+    <string name="general_text_40" formatted="false">Mantiene aggiornato il ramo predefinito quando la copia di lavoro non presenta modifiche o commit locali. I progetti possono modificare questa impostazione.</string>
+    <string name="general_text_41" formatted="false">Lingua</string>
+    <string name="general_text_42" formatted="false">Ultimo usato</string>
+    <string name="general_text_43" formatted="false">Impostazioni locali</string>
+    <string name="general_text_44" formatted="false">Endpoint dei log</string>
+    <string name="general_text_45" formatted="false">Unisci</string>
+    <string name="general_text_46" formatted="false">Endpoint delle metriche</string>
+    <string name="general_text_47" formatted="false">Origini diverse</string>
+    <string name="general_text_48" formatted="false">Valori diversi</string>
+    <string name="general_text_49" formatted="false">Modello</string>
+    <string name="general_text_50" formatted="false">Modello usato per i titoli e altri testi generati.</string>
+    <string name="general_text_51" formatted="false">Modello usato per generare guide di revisione delle richieste di integrazione.</string>
+    <string name="general_text_52" formatted="false">Modello usato per scrivere messaggi di commit e richieste di integrazione.</string>
+    <string name="general_text_53" formatted="false">Sposta le conversazioni interrotte dai limiti d\'uso in Snoozed fino all\'ora di ripristino. Abbina la ripresa automatica per riattivarle e proseguirle.</string>
+    <string name="general_text_54" formatted="false">Mai</string>
+    <string name="general_text_55" formatted="false">Nuovo albero di lavoro</string>
+    <string name="general_text_56" formatted="false">Nessuno</string>
+    <string name="general_text_57" formatted="false">Disattivato</string>
+    <string name="general_text_58" formatted="false">Attivato</string>
+    <string name="general_text_59" formatted="false">Paragrafo</string>
+    <string name="general_text_60" formatted="false">Prestazioni</string>
+    <string name="general_text_61" formatted="false">Autorizzazioni</string>
+    <string name="general_text_62" formatted="false">Modalità piano (precedente)</string>
+    <string name="general_text_63" formatted="false">Prefisso aggiunto ai nomi dei rami degli alberi di lavoro generati automaticamente.</string>
+    <string name="general_text_64" formatted="false">Valore definito nel progetto</string>
+    <string name="general_text_65" formatted="false">Scarica automaticamente le modifiche</string>
+    <string name="general_text_66" formatted="false">Metodo di merge delle pull request</string>
+    <string name="general_text_67" formatted="false">Le richieste di integrazione partono con questo metodo. «Ultimo usato» riutilizza la scelta più recente su questo dispositivo.</string>
+    <string name="general_text_68" formatted="false">In coda</string>
+    <string name="general_text_69" formatted="false">Risposte rapide</string>
+    <string name="general_text_70" formatted="false">Ribasa</string>
+    <string name="general_text_71" formatted="false">Ricorsivo</string>
+    <string name="general_text_72" formatted="false">Aggiorna</string>
+    <string name="general_text_73" formatted="false">Rimuovi i crediti dell’agente al merge</string>
+    <string name="general_text_74" formatted="false">Rimuove dalle descrizioni delle fusioni le attribuzioni riconosciute agli agenti, mantenendo i coautori umani.</string>
+    <string name="general_text_75" formatted="false">Convenzioni del repository</string>
+    <string name="general_text_76" formatted="false">Ripristina</string>
+    <string name="general_text_77" formatted="false">Trasmissione risposte</string>
+    <string name="general_text_78" formatted="false">Risultato sconosciuto. Aggiorna prima di riprovare.</string>
+    <string name="general_text_79" formatted="false">Riprendi dopo gli aggiornamenti del server</string>
+    <string name="general_text_80" formatted="false">Riprendi automaticamente le conversazioni limitate</string>
+    <string name="general_text_81" formatted="false">Riprende le conversazioni interrotte dai limiti d\'uso all\'ora di ripristino indicata. Ogni conversazione può annullare la ripresa programmata.</string>
+    <string name="general_text_82" formatted="false">Istruzioni per le guide di revisione</string>
+    <string name="general_text_83" formatted="false">Modello per le guide di revisione</string>
+    <string name="general_text_84" formatted="false">Salva</string>
+    <string name="general_text_85" formatted="false">Salvato</string>
+    <string name="general_text_86" formatted="false">Semantico</string>
+    <string name="general_text_87" formatted="false">Invia tracce, metriche e log a un ricevitore OTLP HTTP. Riavvia il server per applicare.</string>
+    <string name="general_text_88" formatted="false">Chiudi conversazioni delle pull request unite</string>
+    <string name="general_text_89" formatted="false">Rimanda conversazioni con limite di utilizzo</string>
+    <string name="general_text_90" formatted="false">Modello di scrittura per il controllo versione</string>
+    <string name="general_text_91" formatted="false">Combina i commit</string>
+    <string name="general_text_92" formatted="false">Crea nuovi worktree da origin</string>
+    <string name="general_text_93" formatted="false">Crea nuovi alberi di lavoro dal ramo base remoto quando disponibile.</string>
+    <string name="general_text_94" formatted="false">Statico</string>
+    <string name="general_text_95" formatted="false">Reindirizzare</string>
+    <string name="general_text_96" formatted="false">Supervisionato</string>
+    <string name="general_text_97" formatted="false">Modello per la generazione di testo</string>
+    <string name="general_text_98" formatted="false">Questo dispositivo</string>
+    <string name="general_text_99" formatted="false">Istruzioni per i titoli dei thread</string>
+    <string name="general_text_100" formatted="false">Formato ora</string>
+    <string name="general_text_101" formatted="false">Livello superiore</string>
+    <string name="general_text_102" formatted="false">Endpoint delle tracce</string>
+    <string name="general_text_103" formatted="false">Turno</string>
+    <string name="general_text_104" formatted="false">Non disponibile</string>
+    <string name="general_text_105" formatted="false">Usa il valore ereditato</string>
+    <string name="general_text_106" formatted="false">Quando compattare un thread Claude inattivo oltre 200.000 token: al tuo ritorno, poco prima che scada la cache del prompt o mai. Ogni provider Claude può sovrascriverlo.</string>
+    <string name="general_text_107" formatted="false">Al tuo ritorno</string>
+    <string name="general_text_108" formatted="false">Dove iniziano le nuove conversazioni. I progetti e il relativo file t3.json possono modificare questa impostazione.</string>
+    <string name="general_text_109" formatted="false">Area di lavoro</string>
+    <string name="general_text_110" formatted="false">Sottomoduli dei worktree</string>
+    <string name="general_text_111" formatted="false">Istruzioni di scrittura</string>
+    <string name="general_text_112" formatted="false">Stile di scrittura</string>
+    <string name="general_text_113" formatted="false">predefinito</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

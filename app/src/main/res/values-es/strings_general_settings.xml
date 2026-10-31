@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 horas</string>
+    <string name="general_text_1" formatted="false">24 horas</string>
+    <string name="general_text_2" formatted="false">Permite que las sesiones nuevas de agentes inicien y controlen dispositivos locales y remotos, con configuración automática de las herramientas necesarias.</string>
+    <string name="general_text_3" formatted="false">Se añade a la instrucción de los títulos nuevos y regenerados.</string>
+    <string name="general_text_4" formatted="false">Aceptar ediciones</string>
+    <string name="general_text_5" formatted="false">Cerrar tras inactividad (días)</string>
+    <string name="general_text_6" formatted="false">Automático</string>
+    <string name="general_text_7" formatted="false">Si sus solicitudes de incorporación se fusionan, archiva automáticamente los hilos.</string>
+    <string name="general_text_8" formatted="false">Archiva automáticamente los hilos tras estos días de inactividad.</string>
+    <string name="general_text_9" formatted="false">Actividad en segundo plano</string>
+    <string name="general_text_10" formatted="false">Equilibra las actualizaciones en segundo plano con el rendimiento y el consumo de batería.</string>
+    <string name="general_text_11" formatted="false">Equilibrado</string>
+    <string name="general_text_12" formatted="false">Ahorro de batería</string>
+    <string name="general_text_13" formatted="false">Antes de que caduque la caché (beta)</string>
+    <string name="general_text_14" formatted="false">Prefijo del nombre de rama</string>
+    <string name="general_text_15" formatted="false">Nombres de ramas</string>
+    <string name="general_text_16" formatted="false">Instrucciones para nombres de ramas</string>
+    <string name="general_text_17" formatted="false">Busca actualizaciones de los proveedores instalados en segundo plano.</string>
+    <string name="general_text_18" formatted="false">Buscar actualizaciones de proveedores</string>
+    <string name="general_text_19" formatted="false">Elige cómo se nombran las ramas creadas para los árboles de trabajo nuevos.</string>
+    <string name="general_text_20" formatted="false">Elige cuándo se muestran las respuestas mientras el agente trabaja.</string>
+    <string name="general_text_21" formatted="false">Compactar hilos inactivos</string>
+    <string name="general_text_22" formatted="false">Continúa los hilos activos después de que el servidor se reinicie por una actualización.</string>
+    <string name="general_text_23" formatted="false">Commits convencionales</string>
+    <string name="general_text_24" formatted="false">Copia de trabajo actual</string>
+    <string name="general_text_25" formatted="false">Personalizado</string>
+    <string name="general_text_26" formatted="false">Modelo predeterminado para los hilos nuevos. Los proyectos pueden sustituirlo.</string>
+    <string name="general_text_27" formatted="false">Permisos predeterminados para los hilos nuevos. Los proyectos pueden sustituirlos.</string>
+    <string name="general_text_28" formatted="false">Habilitar guías de revisión</string>
+    <string name="general_text_29" formatted="false">Respetar plantillas de pull requests</string>
+    <string name="general_text_30" formatted="false">Comportamiento de seguimiento</string>
+    <string name="general_text_31" formatted="false">Acceso completo</string>
+    <string name="general_settings_title" formatted="false">General</string>
+    <string name="general_text_33" formatted="false">Cómo incorporan los submódulos de git los nuevos árboles de trabajo. Los proyectos pueden modificarlo.</string>
+    <string name="general_text_34" formatted="false">Heredar</string>
+    <string name="general_text_35" formatted="false">Heredado del entorno</string>
+    <string name="general_text_36" formatted="false">Instrucciones para generar los nombres de las ramas de los árboles de trabajo.</string>
+    <string name="general_text_37" formatted="false">No archives automáticamente los hilos con solicitudes de incorporación abiertas.</string>
+    <string name="general_text_38" formatted="false">Conservar hilos con pull requests</string>
+    <string name="general_text_39" formatted="false">Títulos de pocas palabras. Empieza por el tema principal.</string>
+    <string name="general_text_40" formatted="false">Mantiene actualizada la rama predeterminada cuando la copia de trabajo no tiene cambios ni confirmaciones locales. Los proyectos pueden modificarlo.</string>
+    <string name="general_text_41" formatted="false">Idioma</string>
+    <string name="general_text_42" formatted="false">Último utilizado</string>
+    <string name="general_text_43" formatted="false">Configuración regional</string>
+    <string name="general_text_44" formatted="false">Endpoint de registros</string>
+    <string name="general_text_45" formatted="false">Fusionar</string>
+    <string name="general_text_46" formatted="false">Endpoint de métricas</string>
+    <string name="general_text_47" formatted="false">Fuentes diferentes</string>
+    <string name="general_text_48" formatted="false">Valores diferentes</string>
+    <string name="general_text_49" formatted="false">Modelo</string>
+    <string name="general_text_50" formatted="false">Modelo utilizado para los títulos y otros textos generados.</string>
+    <string name="general_text_51" formatted="false">Modelo utilizado para generar guías de revisión de solicitudes de incorporación.</string>
+    <string name="general_text_52" formatted="false">Modelo utilizado para redactar mensajes de confirmación y solicitudes de incorporación.</string>
+    <string name="general_text_53" formatted="false">Mueve los hilos detenidos por límites de uso a Snoozed hasta la hora de restablecimiento. Combínalo con la reanudación automática para despertarlos y continuarlos.</string>
+    <string name="general_text_54" formatted="false">Nunca</string>
+    <string name="general_text_55" formatted="false">Nuevo árbol de trabajo</string>
+    <string name="general_text_56" formatted="false">Ninguno</string>
+    <string name="general_text_57" formatted="false">Desactivado</string>
+    <string name="general_text_58" formatted="false">Activado</string>
+    <string name="general_text_59" formatted="false">Párrafo</string>
+    <string name="general_text_60" formatted="false">Rendimiento</string>
+    <string name="general_text_61" formatted="false">Permisos</string>
+    <string name="general_text_62" formatted="false">Modo plan (anterior)</string>
+    <string name="general_text_63" formatted="false">Etiketa añadida al comienzo de los nombres de ramas generados automáticamente para árboles de trabajo.</string>
+    <string name="general_text_64" formatted="false">Valor definido en el proyecto</string>
+    <string name="general_text_65" formatted="false">Traer cambios automáticamente</string>
+    <string name="general_text_66" formatted="false">Método de fusión de pull requests</string>
+    <string name="general_text_67" formatted="false">Las solicitudes de incorporación usan este método inicialmente. «Último utilizado» reutiliza la opción más reciente de este dispositivo.</string>
+    <string name="general_text_68" formatted="false">A la cola</string>
+    <string name="general_text_69" formatted="false">Respuestas rápidas</string>
+    <string name="general_text_70" formatted="false">Rebasar</string>
+    <string name="general_text_71" formatted="false">Recursivo</string>
+    <string name="general_text_72" formatted="false">Actualizar</string>
+    <string name="general_text_73" formatted="false">Eliminar créditos del agente al fusionar</string>
+    <string name="general_text_74" formatted="false">Quita las líneas de atribución a agentes de los mensajes de fusión, pero conserva a los coautores humanos.</string>
+    <string name="general_text_75" formatted="false">Convenciones del repositorio</string>
+    <string name="general_text_76" formatted="false">Restablecer</string>
+    <string name="general_text_77" formatted="false">Transmisión de respuestas</string>
+    <string name="general_text_78" formatted="false">Resultado desconocido. Actualiza antes de reintentar.</string>
+    <string name="general_text_79" formatted="false">Reanudar tras actualizar el servidor</string>
+    <string name="general_text_80" formatted="false">Reanudar automáticamente hilos con límite de uso</string>
+    <string name="general_text_81" formatted="false">Reanuda los hilos detenidos por límites de uso a la hora indicada de restablecimiento. Cada hilo puede cancelar su reanudación programada.</string>
+    <string name="general_text_82" formatted="false">Instrucciones para guías de revisión</string>
+    <string name="general_text_83" formatted="false">Modelo de guías de revisión</string>
+    <string name="general_text_84" formatted="false">Guardar</string>
+    <string name="general_text_85" formatted="false">Guardado</string>
+    <string name="general_text_86" formatted="false">Semántico</string>
+    <string name="general_text_87" formatted="false">Envía trazas, métricas y registros a un receptor OTLP HTTP. Reinicia el servidor para aplicarlo.</string>
+    <string name="general_text_88" formatted="false">Cerrar hilos de pull requests fusionadas</string>
+    <string name="general_text_89" formatted="false">Posponer hilos con límite de uso</string>
+    <string name="general_text_90" formatted="false">Modelo de redacción para control de versiones</string>
+    <string name="general_text_91" formatted="false">Combinar commits</string>
+    <string name="general_text_92" formatted="false">Crear nuevos worktrees desde origin</string>
+    <string name="general_text_93" formatted="false">Crea árboles de trabajo nuevos desde la rama base remota cuando esté disponible.</string>
+    <string name="general_text_94" formatted="false">Estático</string>
+    <string name="general_text_95" formatted="false">Redirigir</string>
+    <string name="general_text_96" formatted="false">Supervisado</string>
+    <string name="general_text_97" formatted="false">Modelo de generación de texto</string>
+    <string name="general_text_98" formatted="false">Este dispositivo</string>
+    <string name="general_text_99" formatted="false">Instrucciones para títulos de hilos</string>
+    <string name="general_text_100" formatted="false">Formato de hora</string>
+    <string name="general_text_101" formatted="false">Nivel superior</string>
+    <string name="general_text_102" formatted="false">Endpoint de trazas</string>
+    <string name="general_text_103" formatted="false">Turno</string>
+    <string name="general_text_104" formatted="false">No disponible</string>
+    <string name="general_text_105" formatted="false">Usar valor heredado</string>
+    <string name="general_text_106" formatted="false">Cuándo compactar un hilo inactivo de Claude con más de 200.000 tokens: al volver, justo antes de que caduque su caché de prompt o nunca. Cada proveedor de Claude puede cambiarlo.</string>
+    <string name="general_text_107" formatted="false">Al volver</string>
+    <string name="general_text_108" formatted="false">Dónde comienzan los hilos nuevos. Los proyectos y su archivo t3.json pueden sustituir esta opción.</string>
+    <string name="general_text_109" formatted="false">Espacio de trabajo</string>
+    <string name="general_text_110" formatted="false">Submódulos de worktrees</string>
+    <string name="general_text_111" formatted="false">Instrucciones de redacción</string>
+    <string name="general_text_112" formatted="false">Estilo de redacción</string>
+    <string name="general_text_113" formatted="false">predeterminada</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

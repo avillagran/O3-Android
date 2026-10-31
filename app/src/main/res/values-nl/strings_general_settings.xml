@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 uur</string>
+    <string name="general_text_1" formatted="false">24 uur</string>
+    <string name="general_text_2" formatted="false">Laat nieuwe agentsessies lokale en externe apparaten starten en bedienen, met automatisch ingestelde hulpmiddelen.</string>
+    <string name="general_text_3" formatted="false">Toegevoegd aan de prompt voor nieuwe en opnieuw gegenereerde titels.</string>
+    <string name="general_text_4" formatted="false">Wijzigingen accepteren</string>
+    <string name="general_text_5" formatted="false">Afronden na inactiviteit (dagen)</string>
+    <string name="general_text_6" formatted="false">Automatisch</string>
+    <string name="general_text_7" formatted="false">Archiveert threads automatisch nadat hun pull requests zijn samengevoegd.</string>
+    <string name="general_text_8" formatted="false">Archiveert threads automatisch na dit aantal dagen inactiviteit.</string>
+    <string name="general_text_9" formatted="false">Achtergrondactiviteit</string>
+    <string name="general_text_10" formatted="false">Weegt achtergrondverversing af tegen prestaties en batterijverbruik.</string>
+    <string name="general_text_11" formatted="false">Gebalanceerd</string>
+    <string name="general_text_12" formatted="false">Batterijbesparing</string>
+    <string name="general_text_13" formatted="false">Voordat de cache verloopt (bèta)</string>
+    <string name="general_text_14" formatted="false">Voorvoegsel branchnaam</string>
+    <string name="general_text_15" formatted="false">Branchnamen</string>
+    <string name="general_text_16" formatted="false">Instructies voor branchnamen</string>
+    <string name="general_text_17" formatted="false">Controleert op de achtergrond of er updates zijn voor geïnstalleerde aanbieders.</string>
+    <string name="general_text_18" formatted="false">Providerupdates controleren</string>
+    <string name="general_text_19" formatted="false">Kies hoe branches voor nieuwe werkbomen worden genoemd.</string>
+    <string name="general_text_20" formatted="false">Kies wanneer antwoorden zichtbaar worden terwijl de agent bezig is.</string>
+    <string name="general_text_21" formatted="false">Inactieve threads comprimeren</string>
+    <string name="general_text_22" formatted="false">Hervat actieve threads nadat de server voor een update opnieuw is gestart.</string>
+    <string name="general_text_23" formatted="false">Conventionele commits</string>
+    <string name="general_text_24" formatted="false">Huidige werkmap</string>
+    <string name="general_text_25" formatted="false">Aangepast</string>
+    <string name="general_text_26" formatted="false">Standaardmodel voor nieuwe threads. Projecten kunnen dit overschrijven.</string>
+    <string name="general_text_27" formatted="false">Standaardmachtigingen voor nieuwe threads. Projecten kunnen deze overschrijven.</string>
+    <string name="general_text_28" formatted="false">Reviewgidsen inschakelen</string>
+    <string name="general_text_29" formatted="false">Pullrequestsjablonen volgen</string>
+    <string name="general_text_30" formatted="false">Gedrag van vervolgberichten</string>
+    <string name="general_text_31" formatted="false">Volledige toegang</string>
+    <string name="general_settings_title" formatted="false">Algemeen</string>
+    <string name="general_text_33" formatted="false">Hoe nieuwe werkbomen git-submodules vullen. Projecten kunnen dit overschrijven.</string>
+    <string name="general_text_34" formatted="false">Overnemen</string>
+    <string name="general_text_35" formatted="false">Overgenomen van de omgeving</string>
+    <string name="general_text_36" formatted="false">Instructies voor het genereren van branchnamen voor werkbomen.</string>
+    <string name="general_text_37" formatted="false">Sluit threads met openstaande pull requests uit van automatisch archiveren.</string>
+    <string name="general_text_38" formatted="false">Threads met pull requests behouden</string>
+    <string name="general_text_39" formatted="false">Houd titels kort. Begin met het hoofdonderwerp.</string>
+    <string name="general_text_40" formatted="false">Houdt de standaardbranch actueel als de werkmap geen lokale wijzigingen of commits bevat. Projecten kunnen dit overschrijven.</string>
+    <string name="general_text_41" formatted="false">Taal</string>
+    <string name="general_text_42" formatted="false">Laatst gebruikt</string>
+    <string name="general_text_43" formatted="false">Landinstelling</string>
+    <string name="general_text_44" formatted="false">Logs-endpoint</string>
+    <string name="general_text_45" formatted="false">Samenvoegen</string>
+    <string name="general_text_46" formatted="false">Metrics-endpoint</string>
+    <string name="general_text_47" formatted="false">Verschillende bronnen</string>
+    <string name="general_text_48" formatted="false">Verschillende waarden</string>
+    <string name="general_text_49" formatted="false">Model</string>
+    <string name="general_text_50" formatted="false">Model voor titels en andere gegenereerde tekst.</string>
+    <string name="general_text_51" formatted="false">Model voor het genereren van beoordelingsgidsen voor pull requests.</string>
+    <string name="general_text_52" formatted="false">Model voor commit- en pull-requestberichten.</string>
+    <string name="general_text_53" formatted="false">Verplaatst threads die door gebruikslimieten zijn gestopt tot de hersteltijd naar Snoozed. Combineer dit met automatisch hervatten om ze daarna voort te zetten.</string>
+    <string name="general_text_54" formatted="false">Nooit</string>
+    <string name="general_text_55" formatted="false">Nieuwe werkboom</string>
+    <string name="general_text_56" formatted="false">Geen</string>
+    <string name="general_text_57" formatted="false">Uit</string>
+    <string name="general_text_58" formatted="false">Aan</string>
+    <string name="general_text_59" formatted="false">Alinea</string>
+    <string name="general_text_60" formatted="false">Prestaties</string>
+    <string name="general_text_61" formatted="false">Machtigingen</string>
+    <string name="general_text_62" formatted="false">Planmodus (oud)</string>
+    <string name="general_text_63" formatted="false">Voorvoegsel voor automatisch gegenereerde branchnamen van werkbomen.</string>
+    <string name="general_text_64" formatted="false">Projectoverschrijving</string>
+    <string name="general_text_65" formatted="false">Wijzigingen automatisch ophalen</string>
+    <string name="general_text_66" formatted="false">Samenvoegmethode voor pullrequests</string>
+    <string name="general_text_67" formatted="false">Pull requests beginnen met deze methode. ‘Laatst gebruikt’ hergebruikt de recentste keuze op dit apparaat.</string>
+    <string name="general_text_68" formatted="false">In wachtrij</string>
+    <string name="general_text_69" formatted="false">Snelle antwoorden</string>
+    <string name="general_text_70" formatted="false">Rebasen</string>
+    <string name="general_text_71" formatted="false">Recursief</string>
+    <string name="general_text_72" formatted="false">Vernieuwen</string>
+    <string name="general_text_73" formatted="false">Agentvermelding bij samenvoegen verwijderen</string>
+    <string name="general_text_74" formatted="false">Verwijdert herkende vermeldingen van agents uit samenvoegberichten, maar behoudt menselijke mede-auteurs.</string>
+    <string name="general_text_75" formatted="false">Repositoryconventies</string>
+    <string name="general_text_76" formatted="false">Opnieuw instellen</string>
+    <string name="general_text_77" formatted="false">Antwoordstreaming</string>
+    <string name="general_text_78" formatted="false">Resultaat onbekend. Vernieuw voordat je het opnieuw probeert.</string>
+    <string name="general_text_79" formatted="false">Hervatten na serverupdates</string>
+    <string name="general_text_80" formatted="false">Beperkte threads automatisch hervatten</string>
+    <string name="general_text_81" formatted="false">Hervat threads die door gebruikslimieten zijn gestopt op de aangegeven hersteltijd. Elke thread kan de geplande hervatting annuleren.</string>
+    <string name="general_text_82" formatted="false">Instructies voor reviewgidsen</string>
+    <string name="general_text_83" formatted="false">Model voor beoordelingsgidsen</string>
+    <string name="general_text_84" formatted="false">Opslaan</string>
+    <string name="general_text_85" formatted="false">Opgeslagen</string>
+    <string name="general_text_86" formatted="false">Semantisch</string>
+    <string name="general_text_87" formatted="false">Stuurt traces, metrics en logs naar een OTLP HTTP-ontvanger. Herstart de server om toe te passen.</string>
+    <string name="general_text_88" formatted="false">Threads van samengevoegde pull requests afsluiten</string>
+    <string name="general_text_89" formatted="false">Threads met gebruikslimiet uitstellen</string>
+    <string name="general_text_90" formatted="false">Schrijfmodel voor versiebeheer</string>
+    <string name="general_text_91" formatted="false">Commits combineren</string>
+    <string name="general_text_92" formatted="false">Nieuwe worktrees vanaf origin starten</string>
+    <string name="general_text_93" formatted="false">Maak nieuwe werkbomen aan vanuit de externe basisbranch als die beschikbaar is.</string>
+    <string name="general_text_94" formatted="false">Statisch</string>
+    <string name="general_text_95" formatted="false">Bijsturen</string>
+    <string name="general_text_96" formatted="false">Onder toezicht</string>
+    <string name="general_text_97" formatted="false">Model voor tekstgeneratie</string>
+    <string name="general_text_98" formatted="false">Dit apparaat</string>
+    <string name="general_text_99" formatted="false">Instructies voor threadtitels</string>
+    <string name="general_text_100" formatted="false">Tijdnotatie</string>
+    <string name="general_text_101" formatted="false">Hoogste niveau</string>
+    <string name="general_text_102" formatted="false">Traces-endpoint</string>
+    <string name="general_text_103" formatted="false">Beurt</string>
+    <string name="general_text_104" formatted="false">Niet beschikbaar</string>
+    <string name="general_text_105" formatted="false">Overgenomen waarde gebruiken</string>
+    <string name="general_text_106" formatted="false">Wanneer een inactieve Claude-thread van meer dan 200.000 tokens wordt gecomprimeerd: als je terugkomt, vlak voordat de promptcache verloopt, of nooit. Elke Claude-provider kan dit overschrijven.</string>
+    <string name="general_text_107" formatted="false">Als je terugkomt</string>
+    <string name="general_text_108" formatted="false">Waar nieuwe threads beginnen. Projecten en hun t3.json-bestand kunnen dit overschrijven.</string>
+    <string name="general_text_109" formatted="false">Werkruimte</string>
+    <string name="general_text_110" formatted="false">Submodules van worktrees</string>
+    <string name="general_text_111" formatted="false">Schrijfinstructies</string>
+    <string name="general_text_112" formatted="false">Schrijfstijl</string>
+    <string name="general_text_113" formatted="false">standaard</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

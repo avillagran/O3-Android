@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Afficher le code</string>
+    <string name="ot3_render_show_preview">Afficher l’aperçu</string>
+    <string name="ot3_render_run">Exécuter dans le terminal</string>
+    <string name="ot3_render_open">Ouvrir l’aperçu</string>
+    <string name="ot3_render_offline">Aperçu indisponible hors connexion</string>
+    <string name="ot3_render_expired">Autorisation de l’aperçu expirée</string>
+    <string name="ot3_render_unsupported">Moteur de rendu indisponible</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ot3_render_show_code">Mostra codice</string>
+    <string name="ot3_render_show_preview">Mostra anteprima</string>
+    <string name="ot3_render_run">Esegui nel terminale</string>
+    <string name="ot3_render_open">Apri anteprima</string>
+    <string name="ot3_render_offline">Anteprima non disponibile offline</string>
+    <string name="ot3_render_expired">Autorizzazione anteprima scaduta</string>
+    <string name="ot3_render_unsupported">Renderer visivo non disponibile</string>
+</resources>
