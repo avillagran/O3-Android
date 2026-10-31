@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">De actie kon niet worden bevestigd. Controleer de status van de thread voordat je het opnieuw probeert.</string>
+    <string name="bridge_full_access">Volledige toegang via bridge</string>
+    <string name="bridge_full_access_ended">Volledige toegang beëindigd — wachten op bridge</string>
 </resources>

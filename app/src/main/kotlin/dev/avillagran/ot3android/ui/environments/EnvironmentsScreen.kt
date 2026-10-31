@@ -44,6 +44,17 @@ object EnvironmentsScreenTags {
     const val CONFIRM_DELETE = "environments_confirm_delete"
 }
 
+/** Full access and read-only stay distinct: a row must not promise what its token cannot do. */
+@androidx.annotation.StringRes
+internal fun bridgeRowLabel(status: String): Int = when (status) {
+    "revoked" -> R.string.bridge_revoked
+    "expired" -> R.string.bridge_expired
+    "authorized" -> R.string.bridge_authorized
+    dev.avillagran.ot3android.core.data.local.NATIVE_AUTHORIZED -> R.string.bridge_full_access
+    dev.avillagran.ot3android.core.data.local.NATIVE_EXPIRED -> R.string.bridge_full_access_ended
+    else -> R.string.bridge_needs_authority
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnvironmentsScreen(
@@ -112,12 +123,7 @@ fun EnvironmentsScreen(
                         supportingContent = {
                             androidx.compose.foundation.layout.Column {
                                 Text(item.environment.baseUrl)
-                                item.bridgeStatus?.let { status -> Text(stringResource(when (status) {
-                                    "revoked" -> R.string.bridge_revoked
-                                    "expired" -> R.string.bridge_expired
-                                    "authorized" -> R.string.bridge_authorized
-                                    else -> R.string.bridge_needs_authority
-                                })) }
+                                item.bridgeStatus?.let { status -> Text(stringResource(bridgeRowLabel(status))) }
                             }
                         },
                         trailingContent = {

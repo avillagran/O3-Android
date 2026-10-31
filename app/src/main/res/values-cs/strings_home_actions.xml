@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Akci se nepodařilo potvrdit. Před dalším pokusem zkontrolujte stav vlákna.</string>
+    <string name="bridge_full_access">Plný přístup přes most</string>
+    <string name="bridge_full_access_ended">Plný přístup skončil — čeká se na most</string>
 </resources>

@@ -4,6 +4,8 @@ import androidx.room.withTransaction
 import dev.avillagran.ot3android.core.connection.ConnectionManager
 import dev.avillagran.ot3android.core.data.local.BridgeManagedEntity
 import dev.avillagran.ot3android.core.data.local.EnvironmentEntity
+import dev.avillagran.ot3android.core.data.local.NATIVE_AUTHORIZED
+import dev.avillagran.ot3android.core.data.local.NATIVE_EXPIRED
 import dev.avillagran.ot3android.core.data.local.Ot3Database
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -75,14 +77,18 @@ class BridgeCatalogController(
         }
         val local = JSONArray()
         previous.forEach { row ->
+            val origin = origins[row.id]
             local.put(JSONObject().put("id", row.id).put("environmentId", row.environmentId)
-                .put("baseUrl", row.baseUrl).put("provenance", origins[row.id]?.provenance)
-                .put("authorizationExpiresAt", origins[row.id]?.takeIf { it.status == "authorized" }?.authorizationExpiresAt))
+                .put("baseUrl", row.baseUrl).put("provenance", origin?.provenance).put("status", origin?.status)
+                .put("authorizationExpiresAt", origin?.takeIf { it.status in SESSION_STATUSES }?.authorizationExpiresAt))
         }
         val plan = invoke("projection", JSONObject().put("local", local))
         val stops = plan.getJSONArray("stop")
         // Await stream termination outside Room's transaction: shutdown may write cursors.
-        for (i in 0 until stops.length()) stopConnection(stops.getString(i))
+        val stopped = (0 until stops.length()).map { stops.getString(it) }
+        stopped.forEach { stopConnection(it) }
+        val withdrawn = mutableListOf<String>()
+        val rerouted = mutableListOf<String>()
         mutations.withLock {
             database.withTransaction {
                 val rows = plan.getJSONArray("upserts")
@@ -104,26 +110,63 @@ class BridgeCatalogController(
                         latest?.lastConnectedAt, latest?.sortOrder ?: nextOrder++))
                     managed.upsert(BridgeManagedEntity(id, row.getString("provenance"), row.getString("status"),
                         if (row.isNull("authorizationExpiresAt")) null else row.getLong("authorizationExpiresAt")))
+                    if (row.getString("status") == "revoked") withdrawn += id
+                    // A native row outlives a route change and no enrollment will restart it.
+                    else if (row.getString("status") == NATIVE_AUTHORIZED && id in stopped && !row.isNull("baseUrl")) rerouted += id
                 }
             }
         }
-        val enrollment = plan.getJSONArray("enroll")
-        for (i in 0 until enrollment.length()) {
+        withdrawn.forEach { withdraw(it) }
+        rerouted.forEach { connections.startIfCurrent(connections.supervisor(it)) }
+        val needsAuthority = { mutableStatus.value = "available_requires_authority" }
+        attempt(plan.getJSONArray("enroll"), needsAuthority, ::enrollUnlocked)
+        // SDKs older than the all-hosts path answer without these two lists.
+        attempt(plan.optJSONArray("hostEnroll"), needsAuthority, ::hostPairUnlocked)
+        // A renewal can wait for the next refresh: the row keeps what it has.
+        attempt(plan.optJSONArray("renew"), {}, ::hostPairUnlocked)
+    }
+
+    private suspend fun attempt(ids: JSONArray?, onFailure: () -> Unit, enrollment: suspend (String) -> Unit) {
+        if (ids == null) return
+        for (i in 0 until ids.length()) {
             try {
-                enrollUnlocked(enrollment.getString(i))
+                enrollment(ids.getString(i))
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
-                mutableStatus.value = "available_requires_authority"
+                onFailure()
             }
         }
+    }
+
+    /**
+     * Runs after "revoked" commits, when the gate already refuses a new connection: one that
+     * started during the plan's shutdown stops here. A failed delete stays denied, and every
+     * refresh retries it for as long as the row is withdrawn.
+     */
+    private suspend fun withdraw(id: String) {
+        try {
+            stopConnection(id)
+            mutations.withLock {
+                // An explicit local credential saved meanwhile is not the bridge's to remove.
+                if (database.bridgeManagedDao().find(id)?.status == "revoked") tokens().delete(id)
+            }
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Exception) { }
     }
 
     /** One bridge-approved enrollment per environment; no manual pairing code per host. */
     suspend fun enroll(environmentId: String) = mutex.withLock { enrollUnlocked(environmentId) }
 
-    private suspend fun enrollUnlocked(environmentId: String) {
-        val receipt = invoke("enroll", JSONObject().put("environmentId", environmentId))
+    private suspend fun enrollUnlocked(environmentId: String) =
+        install(invoke("enroll", JSONObject().put("environmentId", environmentId)), "authorized")
+
+    /** Enrolls an all-hosts environment or renews its session: both are a new write session. */
+    private suspend fun hostPairUnlocked(environmentId: String) =
+        install(invoke("hostPair", JSONObject().put("environmentId", environmentId)), NATIVE_AUTHORIZED)
+
+    private suspend fun install(receipt: JSONObject, status: String) {
         val managed = database.bridgeManagedDao()
         val (row, origin) = mutations.withLock {
             val origins = managed.all().associateBy { it.id }
@@ -131,20 +174,34 @@ class BridgeCatalogController(
                 it.environmentId == receipt.getString("environmentId") &&
                     origins[it.id]?.provenance == receipt.getString("provenance")
             } ?: return
-            row to checkNotNull(origins[row.id])
+            val origin = checkNotNull(origins[row.id])
+            // A read-only session must never replace a write session.
+            if (status == "authorized" && (origin.status == NATIVE_AUTHORIZED || origin.status == NATIVE_EXPIRED)) return
+            row to origin
         }
         stopConnection(row.id)
-        mutations.withLock {
-            // Stream shutdown suspends. An explicit local save/removal wins and
-            // must never receive the old bridge's credential or ownership.
-            if (managed.find(row.id) != origin || database.environmentDao().findById(row.id)
-                    ?.copy(lastConnectedAt = row.lastConnectedAt) != row) return
-            managed.upsert(origin.copy(status = "credential_updating"))
-            tokens().setToken(row.id, receipt.getString("accessToken"))
-            managed.upsert(origin.copy(status = "authorized",
-                authorizationExpiresAt = receipt.getLong("expiresAt")))
+        try {
+            mutations.withLock {
+                // Stream shutdown suspends. An explicit local save/removal wins and
+                // must never receive the old bridge's credential or ownership.
+                if (managed.find(row.id) != origin || database.environmentDao().findById(row.id)
+                        ?.copy(lastConnectedAt = row.lastConnectedAt) != row) return@withLock
+                managed.upsert(origin.copy(status = "credential_updating"))
+                try {
+                    tokens().setToken(row.id, receipt.getString("accessToken"))
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    // Whichever session the store kept is a write session for this host.
+                    if (origin.status == NATIVE_AUTHORIZED && (origin.authorizationExpiresAt ?: 0L) > clock()) managed.upsert(origin)
+                    throw failure
+                }
+                managed.upsert(origin.copy(status = status, authorizationExpiresAt = receipt.getLong("expiresAt")))
+            }
+        } finally {
+            // Also after a refused install: the stream it stopped may still be entitled.
+            connections.startIfCurrent(connections.supervisor(row.id))
         }
-        connections.startIfCurrent(connections.supervisor(row.id))
     }
 
     /** Initial load, resume and reconnect all call the same serialized refresh. */
@@ -178,4 +235,9 @@ class BridgeCatalogController(
 
     private suspend fun invoke(op: String, request: JSONObject = JSONObject()): JSONObject =
         native(request.put("op", op).put("handle", checkNotNull(handle)))
+
+    private companion object {
+        /** The native projection reads an expiry only from rows holding a session. */
+        val SESSION_STATUSES = setOf("authorized", NATIVE_AUTHORIZED, NATIVE_EXPIRED)
+    }
 }

@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">无法确认该操作。请检查会话状态后再试。</string>
+    <string name="bridge_full_access">通过桥接获得完全访问权限</string>
+    <string name="bridge_full_access_ended">完全访问权限已结束 — 正在等待桥接</string>
 </resources>

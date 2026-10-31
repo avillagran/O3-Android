@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">No se pudo confirmar la acción. Revisa el estado del hilo antes de volver a intentarlo.</string>
+    <string name="bridge_full_access">Acceso completo por el puente</string>
+    <string name="bridge_full_access_ended">Acceso completo finalizado: esperando al puente</string>
 </resources>

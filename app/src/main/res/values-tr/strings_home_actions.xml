@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">İşlem onaylanamadı. Yeniden denemeden önce konu durumunu kontrol edin.</string>
+    <string name="bridge_full_access">Köprü üzerinden tam erişim</string>
+    <string name="bridge_full_access_ended">Tam erişim sona erdi — köprü bekleniyor</string>
 </resources>

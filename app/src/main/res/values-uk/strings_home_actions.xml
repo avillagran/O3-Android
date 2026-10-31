@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Не вдалося підтвердити дію. Перевірте стан обговорення, перш ніж повторити спробу.</string>
+    <string name="bridge_full_access">Повний доступ через міст</string>
+    <string name="bridge_full_access_ended">Повний доступ завершено — очікування мосту</string>
 </resources>

@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Kunne ikke bekrefte handlingen. Sjekk trådstatusen før du prøver igjen.</string>
+    <string name="bridge_full_access">Full tilgang via bro</string>
+    <string name="bridge_full_access_ended">Full tilgang er avsluttet – venter på broen</string>
 </resources>

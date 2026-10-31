@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.core.data
 
 import dev.avillagran.ot3android.core.connection.ShellCursorStore
 import dev.avillagran.ot3android.core.data.local.EnvironmentDao
+import dev.avillagran.ot3android.core.data.local.NATIVE_AUTHORIZED
 import dev.avillagran.ot3android.core.data.local.toDomain
 import dev.avillagran.ot3android.core.data.local.toEntity
 import dev.avillagran.ot3android.core.domain.Environment
@@ -42,9 +43,12 @@ class EnvironmentRepository(
     /** Must be called while [mutations] is held; shared by network and local-cache readers. */
     private suspend fun tokenLocked(id: String): String? {
         // Discovery has no credential. Revoked/expired rows cannot restart streams
-        // from a previously issued session while waiting for re-enrollment.
+        // from a previously issued session while waiting for re-enrollment. A native row
+        // does not depend on the catalog: a stale one leaves it native_authorized, and only
+        // the end of its own session (native_expired) or withdrawal (revoked) closes it.
         val origin = managed?.find(id)
-        if (origin != null && (origin.status != "authorized" || (origin.authorizationExpiresAt ?: 0L) <= clock())) return null
+        val holdsSession = origin?.status == "authorized" || origin?.status == NATIVE_AUTHORIZED
+        if (origin != null && (!holdsSession || (origin.authorizationExpiresAt ?: 0L) <= clock())) return null
         return tokens().token(id)
     }
 

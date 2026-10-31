@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Impossible de confirmer l\'action. Vérifiez l\'état du fil avant de réessayer.</string>
+    <string name="bridge_full_access">Accès complet par le pont</string>
+    <string name="bridge_full_access_ended">Accès complet terminé — en attente du pont</string>
 </resources>

@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Nie udało się potwierdzić działania. Sprawdź stan wątku przed ponowną próbą.</string>
+    <string name="bridge_full_access">Pełny dostęp przez mostek</string>
+    <string name="bridge_full_access_ended">Pełny dostęp wygasł — oczekiwanie na mostek</string>
 </resources>

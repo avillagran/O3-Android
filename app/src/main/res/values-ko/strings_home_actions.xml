@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">작업을 확인할 수 없습니다. 다시 시도하기 전에 스레드 상태를 확인하세요.</string>
+    <string name="bridge_full_access">브리지를 통한 전체 액세스</string>
+    <string name="bridge_full_access_ended">전체 액세스 종료됨 — 브리지 대기 중</string>
 </resources>

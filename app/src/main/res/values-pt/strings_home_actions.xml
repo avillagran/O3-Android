@@ -1,3 +1,5 @@
 <resources>
     <string name="home_action_unconfirmed">Não foi possível confirmar a ação. Verifique o estado da thread antes de tentar novamente.</string>
+    <string name="bridge_full_access">Acesso total pela ponte</string>
+    <string name="bridge_full_access_ended">Acesso total encerrado — aguardando a ponte</string>
 </resources>

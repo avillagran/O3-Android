@@ -258,7 +258,7 @@ explicit `--min-abi 2`. The floor is also applied when an already installed rele
 AAR would be kept.
 
 **Pinning.** `--sha256 <hex>` requires an exact AAR digest on top of the release's own
-`.sha256`. The committed `libs/lib-t3-rust.lock` (two lines, `tag=` and `sha256=`, shown
+`.sha256`. The committed `libs/lib-t3-rust.lock` (`tag=`, `sha256=` and the AAR's `source=` commit, shown
 under "Current target") pins the release path for everyone.
 
 When it exists, `--release` without a tag uses its `tag`, a different tag is refused,
@@ -278,7 +278,7 @@ and prints both commits. Releases, v0.3.4 included, do not publish a host librar
 ## CI recipe
 
 `.github/workflows/android.yml` gets the lib before the Gradle step: it reads `tag=`
-from `libs/lib-t3-rust.lock`, checks out `avillagran/lib-t3-rust` at that tag into
+from `libs/lib-t3-rust.lock`, checks out `avillagran/lib-t3-rust` at that `source=` commit into
 `lib-t3-rust/` (the repository is public, so the default token reads it), restores
 `libs/` and the Cargo registry from a cache keyed on the lock's hash, and runs:
 
