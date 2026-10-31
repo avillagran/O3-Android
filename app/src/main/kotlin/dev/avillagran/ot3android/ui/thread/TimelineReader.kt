@@ -53,6 +53,9 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     followLatestRequest: Int = 0,
     actions: TranscriptActions = TranscriptActions(),
 ) {
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    fun releaseEditor() { focus.clearFocus(force = true); keyboard?.hide() }
     val threadKey = LocalSelectedThreadKey.current
     var finding by rememberSaveable(threadKey) { mutableStateOf(false) }
     var query by rememberSaveable(threadKey) { mutableStateOf("") }
@@ -62,11 +65,11 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     // when rotation changes the viewport. Scope saved state to the selected thread.
     val imageGeneration = LocalReaderImages.current.generation
     var openedImage by rememberSaveable(threadKey, imageGeneration) { mutableStateOf<String?>(null) }
-    openedImage?.let { descriptor -> ReaderImageDialog(JSONObject(descriptor)) { openedImage = null } }
+    openedImage?.let { descriptor -> ReaderImageDialog(JSONObject(descriptor)) { releaseEditor(); openedImage = null } }
     var openedInspector by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
-    openedInspector?.let { reference -> ToolInspectorDialog(JSONObject(reference), onInspect) { openedInspector = null } }
+    openedInspector?.let { reference -> ToolInspectorDialog(JSONObject(reference), onInspect) { releaseEditor(); openedInspector = null } }
     var openedDiff by rememberSaveable(threadKey) { mutableStateOf<String?>(null) }
-    openedDiff?.let { summary -> ThreadDiffDialog(JSONObject(summary), onReadDiff) { openedDiff = null } }
+    openedDiff?.let { summary -> ThreadDiffDialog(JSONObject(summary), onReadDiff) { releaseEditor(); openedDiff = null } }
     val rows = view?.optJSONArray("timeline").objects().ifEmpty {
         fallback.map { JSONObject().put("id", it.id).put("role", it.role).put("text", it.text)
             .put("createdAt", it.createdAt).put("streaming", it.streaming).put("rev", it.rev) }
@@ -119,62 +122,90 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     }
     val scope = rememberCoroutineScope()
     val away by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 80 } }
-    CompositionLocalProvider(LocalOpenReaderImage provides { openedImage = it.toString() }) {
-        Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { finding = !finding }, modifier = Modifier.widthIn(max = 160.dp).testTag("transcript_find")) {
-                    Text(stringResource(if (finding) R.string.transcript_close_find else R.string.transcript_find))
-                }
-                if (rows.size > 1) Slider(
-                    value = list.firstVisibleItemIndex.toFloat().coerceIn(0f, (rows.size - 1).toFloat()),
-                    onValueChange = { value -> followingLatest = false; scope.launch { list.scrollToItem(value.toInt()) } },
-                    valueRange = 0f..(rows.size - 1).toFloat(),
-                    modifier = Modifier.weight(1f).testTag("transcript_minimap"),
-                )
-                Text(stringResource(R.string.transcript_position, (rows.size - list.firstVisibleItemIndex).coerceAtLeast(0), rows.size),
-                    style = MaterialTheme.typography.labelSmall)
+    val searchControls: @Composable () -> Unit = {
+        OutlinedTextField(query, { query = it; selectedMatch = null; matchOffset = 0 },
+            label = { Text(stringResource(R.string.transcript_find_loaded)) }, singleLine = true,
+            modifier = Modifier.fillMaxWidth().testTag("transcript_query"))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.transcript_matches, activeMatch + 1, matches.size), modifier = Modifier.weight(1f))
+            for (direction in listOf(-1, 1)) TextButton(enabled = matches.isNotEmpty(), onClick = {
+                val next = if (activeMatch < 0) { if (direction > 0) 0 else matches.lastIndex }
+                    else Math.floorMod(activeMatch + direction, matches.size)
+                val match = matches[next]
+                selectedMatch = match.rowId; matchOffset = match.offset; followingLatest = false
+                scope.launch { list.scrollToItem(rows.indexOfFirst { it.optString("id") == match.rowId }.coerceAtLeast(0)) }
+            }, modifier = Modifier.testTag(if (direction < 0) "transcript_previous" else "transcript_next")) {
+                Text(stringResource(if (direction < 0) R.string.transcript_previous else R.string.transcript_next))
             }
-            if (away) rows.getOrNull(list.firstVisibleItemIndex)?.takeIf {
-                it.optString("role") in setOf("user", "assistant")
-            }?.readerText("text")?.takeIf(String::isNotBlank)?.let { preview ->
-                Text(preview, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        }
+    }
+    CompositionLocalProvider(LocalOpenReaderImage provides { openedImage = it.toString() }) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            // IME windows can leave less height than the navigation chrome itself.
+            // Keep the lazy viewport usable; find controls move into a dialog.
+            val compactReader = maxHeight < 160.dp
+            Column(Modifier.fillMaxSize()) {
+                if (!compactReader) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = { finding = !finding }, modifier = Modifier.widthIn(max = 160.dp).testTag("transcript_find")) {
+                        Text(stringResource(if (finding) R.string.transcript_close_find else R.string.transcript_find))
+                    }
+                    if (rows.size > 1) Slider(
+                        value = list.firstVisibleItemIndex.toFloat().coerceIn(0f, (rows.size - 1).toFloat()),
+                        onValueChange = { value -> followingLatest = false; scope.launch { list.scrollToItem(value.toInt()) } },
+                        valueRange = 0f..(rows.size - 1).toFloat(),
+                        modifier = Modifier.weight(1f).testTag("transcript_minimap"),
+                    )
+                    Text(stringResource(R.string.transcript_position, (rows.size - list.firstVisibleItemIndex).coerceAtLeast(0), rows.size),
+                        style = MaterialTheme.typography.labelSmall)
+                }
+                // Keep the viewport independent of its visible anchor. Adding/removing a
+                // line here changes the lazy list's extent, which can change the anchor
+                // again at a row boundary (and make scroll-to-descendant oscillate).
+                val preview = if (away) rows.getOrNull(list.firstVisibleItemIndex)?.takeIf {
+                    it.optString("role") in setOf("user", "assistant")
+                }?.readerText("text").orEmpty() else ""
+                if (!compactReader) Text(preview, minLines = 1, maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).testTag("transcript_position_preview"))
-            }
-            if (finding) {
-                OutlinedTextField(query, { query = it; selectedMatch = null; matchOffset = 0 },
-                    label = { Text(stringResource(R.string.transcript_find_loaded)) }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("transcript_query"))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.transcript_matches, activeMatch + 1, matches.size), modifier = Modifier.weight(1f))
-                    for (direction in listOf(-1, 1)) TextButton(enabled = matches.isNotEmpty(), onClick = {
-                        val next = if (activeMatch < 0) { if (direction > 0) 0 else matches.lastIndex }
-                            else Math.floorMod(activeMatch + direction, matches.size)
-                        val match = matches[next]
-                        selectedMatch = match.rowId; matchOffset = match.offset; followingLatest = false
-                        scope.launch { list.scrollToItem(rows.indexOfFirst { it.optString("id") == match.rowId }.coerceAtLeast(0)) }
-                    }, modifier = Modifier.testTag(if (direction < 0) "transcript_previous" else "transcript_next")) {
-                        Text(stringResource(if (direction < 0) R.string.transcript_previous else R.string.transcript_next))
-                    }
-                }
-            }
-            Box(Modifier.weight(1f)) {
-                LazyColumn(state = list, reverseLayout = true, contentPadding = PaddingValues(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
-                    items(rows, key = { it.getString("id") }) { row ->
-                        // rev invalidates content, never the item's saveable expansion or reading anchor.
-                        Column(Modifier.then(if (finding && row.optString("id") == selectedMatch)
-                            Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp)) else Modifier)) {
-                            TimelineRow(row, view?.optJSONObject("planView")?.optJSONObject("ready"), actions, { openedInspector = it.toString() }) { openedDiff = it.toString() }
+                if (finding && !compactReader) searchControls()
+                Box(Modifier.weight(1f)) {
+                    LazyColumn(state = list, reverseLayout = true, contentPadding = PaddingValues(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
+                        items(rows, key = { it.getString("id") }) { row ->
+                            // rev invalidates content, never the item's saveable expansion or reading anchor.
+                            Column(Modifier.then(if (finding && row.optString("id") == selectedMatch)
+                                Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp)) else Modifier)) {
+                                TimelineRow(row, view?.optJSONObject("planView")?.optJSONObject("ready"), actions, { openedInspector = it.toString() }) { openedDiff = it.toString() }
+                            }
+                        }
+                        if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
+                            Text(stringResource(R.string.transcript_history_unavailable), style = MaterialTheme.typography.labelSmall)
                         }
                     }
-                    if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
-                        Text(stringResource(R.string.transcript_history_unavailable), style = MaterialTheme.typography.labelSmall)
+                    if (away) TextButton(onClick = { scope.launch { followingLatest = true; list.animateScrollToItem(0) } },
+                        modifier = Modifier.align(Alignment.BottomEnd).background(Ot3Theme.colors.surface).testTag("thread_jump_latest")) {
+                        Text(stringResource(R.string.transcript_latest))
                     }
                 }
-                if (away) TextButton(onClick = { scope.launch { followingLatest = true; list.animateScrollToItem(0) } },
-                    modifier = Modifier.align(Alignment.BottomEnd).background(Ot3Theme.colors.surface).testTag("thread_jump_latest")) {
-                    Text(stringResource(R.string.transcript_latest))
+            }
+            if (compactReader) {
+                TextButton(onClick = { finding = true }, modifier = Modifier.align(Alignment.TopEnd).testTag("transcript_find")) {
+                    Text(stringResource(R.string.transcript_find))
+                }
+                if (finding) androidx.compose.ui.window.Dialog(onDismissRequest = { finding = false }) {
+                    Surface {
+                        Column(Modifier.padding(12.dp)) {
+                            if (rows.size > 1) Slider(
+                                value = list.firstVisibleItemIndex.toFloat().coerceIn(0f, (rows.size - 1).toFloat()),
+                                onValueChange = { value -> followingLatest = false; scope.launch { list.scrollToItem(value.toInt()) } },
+                                valueRange = 0f..(rows.size - 1).toFloat(),
+                                modifier = Modifier.fillMaxWidth().testTag("transcript_minimap"),
+                            )
+                            searchControls()
+                            TextButton(onClick = { finding = false }) { Text(stringResource(R.string.transcript_close_find)) }
+                        }
+                    }
                 }
             }
         }

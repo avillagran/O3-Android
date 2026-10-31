@@ -35,8 +35,7 @@ class ThreadCacheDeviceTest {
             rule.waitUntil(5_000) { runBlocking { (preferences.readingPosition("node", "chat")?.index ?: 0) >= 10 } }
             val position = preferences.readingPosition("node", "chat")!!
             rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement("Borrador sin conexión")
-            val beforeOffset = rule.onNodeWithTag(ThreadScreenTags.message(position.rowId)).fetchSemanticsNode().boundsInRoot.bottom -
-                rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot.bottom
+            val beforeOffset = bottomOffset(position.rowId)
             val headerBack = rule.onNodeWithContentDescription("Back")
             traceInputTransition(scenario, "cache headerBack", headerBack, surface = {
                 "timeline=${rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().size} " +
@@ -50,8 +49,7 @@ class ThreadCacheDeviceTest {
             rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag(ThreadScreenTags.message(position.rowId)).assertIsDisplayed()
-            val afterOffset = rule.onNodeWithTag(ThreadScreenTags.message(position.rowId)).fetchSemanticsNode().boundsInRoot.bottom -
-                rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot.bottom
+            val afterOffset = bottomOffset(position.rowId)
             assertEquals(beforeOffset, afterOffset, 1f)
             rule.onNodeWithTag(ThreadScreenTags.STALE).assertIsDisplayed()
             rule.onNodeWithText("Saved messages", substring = true).assertIsDisplayed()
@@ -84,4 +82,11 @@ class ThreadCacheDeviceTest {
             scenario.onActivity { assertEquals(0, it.fixture.snapshotReads.get()) }
         }
     }
+    private fun bottomOffset(rowId: String): Float {
+        val message = rule.onNodeWithTag(ThreadScreenTags.message(rowId)).fetchSemanticsNode()
+        val timeline = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode()
+        // Both coordinates must belong to the same frame while the IME resizes.
+        return rule.runOnIdle { message.boundsInRoot.bottom - timeline.boundsInRoot.bottom }
+    }
+
 }

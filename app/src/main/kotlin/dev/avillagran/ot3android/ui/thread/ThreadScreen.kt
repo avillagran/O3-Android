@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -141,7 +142,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
 }
 
 /** Stateless thread screen: top bar, banners, the timeline (newest at the bottom) and the composer. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ThreadContent(
     state: ThreadUiState,
@@ -192,6 +193,11 @@ fun ThreadContent(
     val density = androidx.compose.ui.platform.LocalDensity.current
     val availableEditorHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp -
         with(density) { WindowInsets.ime.getBottom(this).toDp() }
+    // Leave room for the reader when the IME occupies most of a landscape window.
+    // The same options remain available from the header overflow.
+    val compactComposer = availableEditorHeight < 360.dp ||
+        (androidx.compose.foundation.layout.WindowInsets.isImeVisible &&
+            androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
     val compactEditorToolbar = expanded && availableEditorHeight < 220.dp
     val editKey = state.queueEdit?.let { org.json.JSONObject(it).getString("runId") }
     val editors = androidx.compose.runtime.saveable.rememberSaveable(editorIdentity, saver = ComposerEditors.StateSaver) { ComposerEditors() }
@@ -248,17 +254,27 @@ fun ThreadContent(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { if (expanded) toggleEditor() else onBack() }, modifier = Modifier.testTag("composer_back")) {
+                    IconButton(onClick = { if (expanded) toggleEditor() else {
+                        editor.releaseFocus()
+                        focus.clearFocus()
+                        keyboard?.hide()
+                        onBack()
+                    } }, modifier = Modifier.testTag("composer_back")) {
                         Icon(painterResource(R.drawable.ic_arrow_back), stringResource(if (expanded) R.string.ot3_composer_back else R.string.action_back))
                     }
                 },
                 actions = {
                     if (expanded) Ot3IconButton("arrow-up", stringResource(R.string.thread_send), ::submit, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = state.canSend && !state.sending, tint = Ot3Theme.colors.accent)
                     var quotaMenu by remember { mutableStateOf(false) }
+                    var showComposerOptions by remember { mutableStateOf(false) }
                     Box {
-                        Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { quotaMenu = true }, modifier = Modifier.testTag("thread_overflow"))
+                        Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), {
+                            showComposerOptions = expanded || compactComposer
+                            if (compactComposer && !expanded) { editor.releaseFocus(); focus.clearFocus(); keyboard?.hide() }
+                            quotaMenu = true
+                        }, modifier = Modifier.testTag("thread_overflow"))
                         androidx.compose.material3.DropdownMenu(expanded = quotaMenu, onDismissRequest = { quotaMenu = false }) {
-                            if (expanded) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
+                            if (showComposerOptions) Box(Modifier.width(320.dp).testTag("composer_overflow_options")) { toolbar() }
                             dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { quotaMenu = false }
                         }
                     }
@@ -279,7 +295,9 @@ fun ThreadContent(
             )
         },
         bottomBar = {
-            if (!expanded) Column(Modifier.navigationBarsPadding().imePadding()) {
+            if (!expanded) Column(Modifier.navigationBarsPadding().imePadding()
+                .then(if (compactComposer) Modifier.heightIn(max = 64.dp)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier)) {
                 ThreadQueue(
                     state.view.timeline?.optJSONObject("queue"),
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
@@ -307,7 +325,7 @@ fun ThreadContent(
                 QuestionCard(state.view.timeline?.optJSONArray("questions"),
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
                     state.respondingRequest, state.answeredRequests, onResponse = onQuestionResponse)
-                if (!hasQuestion) ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = toolbar)
+                if (!hasQuestion) ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = { if (!compactComposer) toolbar() }, compact = compactComposer)
             }
         },
     ) { padding ->

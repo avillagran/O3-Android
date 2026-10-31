@@ -43,6 +43,46 @@ class TranscriptDeviceTest {
         }
     }
 
+    @Test fun positionPreviewKeepsViewportStableAcrossReadingAnchors() {
+        val data = JSONObject().put("timeline", JSONArray((0..30).map { i ->
+            JSONObject().put("id", "m$i").put("role", "assistant").put("text", "Message $i\n".repeat(6))
+        }))
+        ActivityScenario.launch(WorkspaceFixtureActivity::class.java).use { scenario ->
+            scenario.onActivity { it.setContent { Ot3Theme { TimelineReader(data, emptyList()) } } }
+            val timeline = rule.onNodeWithTag(ThreadScreenTags.TIMELINE)
+            val latestBounds = timeline.fetchSemanticsNode().boundsInRoot
+            timeline.performScrollToIndex(12)
+            assertEquals(latestBounds, timeline.fetchSemanticsNode().boundsInRoot)
+            rule.onNodeWithTag("thread_jump_latest").performClick()
+            assertEquals(latestBounds, timeline.fetchSemanticsNode().boundsInRoot)
+        }
+    }
+
+    @Test fun landscapeImeKeepsMultilineDraftAndReaderReachable() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val draft = "Draft line\n".repeat(12)
+        ActivityScenario.launch<WorkspaceFixtureActivity>(android.content.Intent(context, WorkspaceFixtureActivity::class.java)
+            .putExtra("rich", true)).use { scenario ->
+            scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(dev.avillagran.ot3android.ui.home.HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(dev.avillagran.ot3android.ui.home.HomeTags.row("node/chat")).performClick()
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement(draft)
+            scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+            rule.waitUntil(10_000) {
+                var ready = false
+                scenario.onActivity { ready = it.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
+                    androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true }
+                ready
+            }
+            assertTrue("The reader must retain a viewport above the landscape IME: " + rule.onRoot().printToString(maxDepth = 6),
+                rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInRoot.height > 0f)
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertTextContains(draft)
+            rule.onNodeWithTag("thread_overflow").performClick()
+            rule.onNodeWithTag("composer_overflow_options").assertIsDisplayed()
+        }
+    }
+
     @Test fun secretIsSecureClearedAndSentOnlyOnceWithoutLogging() {
         var calls = 0
         var retained: JSONObject? = null
