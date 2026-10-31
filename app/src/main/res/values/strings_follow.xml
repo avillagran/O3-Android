@@ -1,11 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="follow_title">Notifications</string>
     <string name="follow_enabled">Follow active threads</string>
-    <string name="follow_explanation">OT3 follows your connected computers locally to show working agents, approvals, questions and results. No push server is used. Following uses a foreground service and stops after 15 idle minutes. Allow notifications to enable it.</string>
+    <string name="follow_explanation">O3 follows your connected computers locally to show working agents, approvals, questions and results. No push server is used. Following uses a foreground service and stops after 15 idle minutes. Allow notifications to enable it.</string>
     <string name="follow_service_notice">Following connected computers</string>
     <string name="follow_live_settings">Live Update settings</string>
     <string name="follow_live_allowed">Live Updates allowed. Android decides whether each card is promoted.</string>
-    <string name="follow_live_disabled">Live Updates are disabled for OT3.</string>
+    <string name="follow_live_disabled">Live Updates are disabled for O3.</string>
     <string name="follow_live_unsupported">This Android version shows normal ongoing notifications.</string>
     <string name="follow_permission_denied">Notifications are not allowed. Enable them in system settings to follow threads.</string>
     <string name="follow_stop">Stop following</string>

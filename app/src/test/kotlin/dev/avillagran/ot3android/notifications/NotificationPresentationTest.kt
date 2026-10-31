@@ -160,7 +160,7 @@ class NotificationPresentationTest {
         assertEquals(Notification.VISIBILITY_PRIVATE, state.visibility)
         val public = state.publicVersion
         assertNotNull(public)
-        assertEquals("OT3", public.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        assertEquals("O3", public.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         assertEquals("Working", public.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         assertNull(AwarenessCardBuilder.build(context, parsed, now, LockscreenDetail.Hidden)!!.publicVersion)
         assertEquals(Notification.VISIBILITY_PUBLIC, AwarenessCardBuilder.build(context, parsed, now, LockscreenDetail.Full)!!.visibility)
@@ -237,7 +237,7 @@ class NotificationPresentationTest {
         refreshNotificationPrivacy(context, LockscreenDetail.State)
         manager.activeNotifications.forEach {
             assertEquals(Notification.VISIBILITY_PRIVATE, it.notification.visibility)
-            assertEquals("OT3", it.notification.publicVersion.extras.getString(Notification.EXTRA_TITLE))
+            assertEquals("O3", it.notification.publicVersion.extras.getString(Notification.EXTRA_TITLE))
             assertFalse(it.notification.publicVersion.extras.toString().contains("Private project"))
         }
         assertEquals(original.contentIntent, manager.activeNotifications.first { it.id == 1 }.notification.contentIntent)

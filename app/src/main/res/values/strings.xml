@@ -1,7 +1,7 @@
 <!-- The app's own strings, English only until each screen moves to ot3's catalog (strings_ot3.xml)
      or the mobile-only list (strings_mobile.xml); see docs/ui/strings.md. -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">OT3</string>
+    <string name="app_name">O3</string>
 
     <string name="action_back">Back</string>
     <string name="action_retry">Retry</string>
