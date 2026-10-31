@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 ساعة</string>
+    <string name="general_text_1" formatted="false">24 ساعة</string>
+    <string name="general_text_2" formatted="false">السماح لجلسات الوكيل الجديدة بتشغيل الأجهزة المحلية والبعيدة والتحكم بها مع إعداد الأدوات تلقائيًا.</string>
+    <string name="general_text_3" formatted="false">تُضاف إلى موجّه العناوين الجديدة والمعاد إنشاؤها.</string>
+    <string name="general_text_4" formatted="false">قبول التعديلات</string>
+    <string name="general_text_5" formatted="false">الإغلاق بعد عدم النشاط (أيام)</string>
+    <string name="general_text_6" formatted="false">تلقائي</string>
+    <string name="general_text_7" formatted="false">يرتّب سلاسل المحادثات تلقائيًا بعد دمج طلبات السحب المرتبطة بها.</string>
+    <string name="general_text_8" formatted="false">يرتّب سلاسل المحادثات تلقائيًا بعد هذا العدد من أيام الخمول.</string>
+    <string name="general_text_9" formatted="false">النشاط في الخلفية</string>
+    <string name="general_text_10" formatted="false">يوازن بين التحديث في الخلفية والأداء واستهلاك البطارية.</string>
+    <string name="general_text_11" formatted="false">متوازن</string>
+    <string name="general_text_12" formatted="false">توفير البطارية</string>
+    <string name="general_text_13" formatted="false">قبل انتهاء الذاكرة المؤقتة (تجريبي)</string>
+    <string name="general_text_14" formatted="false">بادئة اسم الفرع</string>
+    <string name="general_text_15" formatted="false">تسمية الفروع</string>
+    <string name="general_text_16" formatted="false">تعليمات تسمية الفروع</string>
+    <string name="general_text_17" formatted="false">يتحقق من تحديثات المزوّدين المثبتين في الخلفية.</string>
+    <string name="general_text_18" formatted="false">التحقق من تحديثات المزودين</string>
+    <string name="general_text_19" formatted="false">اختر طريقة تسمية الفروع المنشأة لأشجار العمل الجديدة.</string>
+    <string name="general_text_20" formatted="false">اختر وقت ظهور الردود أثناء عمل الوكيل.</string>
+    <string name="general_text_21" formatted="false">ضغط المحادثات الخاملة</string>
+    <string name="general_text_22" formatted="false">يواصل سلاسل المحادثات النشطة بعد إعادة تشغيل الخادم للتحديث.</string>
+    <string name="general_text_23" formatted="false">التزامات وفق القواعد</string>
+    <string name="general_text_24" formatted="false">نسخة العمل الحالية</string>
+    <string name="general_text_25" formatted="false">مخصص</string>
+    <string name="general_text_26" formatted="false">النموذج الافتراضي لسلاسل المحادثات الجديدة. يمكن للمشاريع تجاوزه.</string>
+    <string name="general_text_27" formatted="false">الأذونات الافتراضية لسلاسل المحادثات الجديدة. يمكن للمشاريع تجاوزها.</string>
+    <string name="general_text_28" formatted="false">تفعيل أدلة المراجعة</string>
+    <string name="general_text_29" formatted="false">اتباع قوالب طلبات السحب</string>
+    <string name="general_text_30" formatted="false">سلوك الرسائل اللاحقة</string>
+    <string name="general_text_31" formatted="false">وصول كامل</string>
+    <string name="general_settings_title" formatted="false">عام</string>
+    <string name="general_text_33" formatted="false">كيفية جلب وحدات git الفرعية في أشجار العمل الجديدة. يمكن للمشاريع تجاوز هذا الإعداد.</string>
+    <string name="general_text_34" formatted="false">توريث</string>
+    <string name="general_text_35" formatted="false">موروث من البيئة</string>
+    <string name="general_text_36" formatted="false">إرشادات إنشاء أسماء فروع أشجار العمل.</string>
+    <string name="general_text_37" formatted="false">يستثني سلاسل المحادثات ذات طلبات السحب المفتوحة من الترتيب التلقائي.</string>
+    <string name="general_text_38" formatted="false">الاحتفاظ بالمحادثات ذات طلبات السحب</string>
+    <string name="general_text_39" formatted="false">عناوين من كلمات قليلة. ابدأ بالموضوع الرئيسي.</string>
+    <string name="general_text_40" formatted="false">يبقي الفرع الافتراضي محدّثًا عندما لا توجد تغييرات أو إيداعات محلية في نسخة العمل. يمكن للمشاريع تجاوز الإعداد.</string>
+    <string name="general_text_41" formatted="false">اللغة</string>
+    <string name="general_text_42" formatted="false">آخر مستخدم</string>
+    <string name="general_text_43" formatted="false">الإعدادات المحلية</string>
+    <string name="general_text_44" formatted="false">نقطة نهاية السجلات</string>
+    <string name="general_text_45" formatted="false">دمج</string>
+    <string name="general_text_46" formatted="false">نقطة نهاية المقاييس</string>
+    <string name="general_text_47" formatted="false">مصادر مختلفة</string>
+    <string name="general_text_48" formatted="false">قيم مختلفة</string>
+    <string name="general_text_49" formatted="false">النموذج</string>
+    <string name="general_text_50" formatted="false">النموذج المستخدم للعناوين والنصوص الأخرى التي يتم إنشاؤها.</string>
+    <string name="general_text_51" formatted="false">النموذج المستخدم لإنشاء أدلة مراجعة طلبات السحب.</string>
+    <string name="general_text_52" formatted="false">النموذج المستخدم لكتابة رسائل الإيداع وطلبات السحب.</string>
+    <string name="general_text_53" formatted="false">ينقل سلاسل المحادثات المتوقفة بسبب حد الاستخدام إلى Snoozed حتى موعد إعادة الضبط. ادمجه مع الاستئناف التلقائي لتنشيطها ومتابعتها.</string>
+    <string name="general_text_54" formatted="false">أبدًا</string>
+    <string name="general_text_55" formatted="false">شجرة عمل جديدة</string>
+    <string name="general_text_56" formatted="false">بلا</string>
+    <string name="general_text_57" formatted="false">معطّل</string>
+    <string name="general_text_58" formatted="false">مفعّل</string>
+    <string name="general_text_59" formatted="false">فقرة</string>
+    <string name="general_text_60" formatted="false">الأداء</string>
+    <string name="general_text_61" formatted="false">الأذونات</string>
+    <string name="general_text_62" formatted="false">وضع الخطة (القديم)</string>
+    <string name="general_text_63" formatted="false">بادئة تضاف إلى أسماء فروع أشجار العمل التي تُنشأ تلقائيًا.</string>
+    <string name="general_text_64" formatted="false">تجاوز على مستوى المشروع</string>
+    <string name="general_text_65" formatted="false">جلب التغييرات تلقائيًا</string>
+    <string name="general_text_66" formatted="false">طريقة دمج طلبات السحب</string>
+    <string name="general_text_67" formatted="false">تبدأ طلبات السحب بهذه الطريقة. يعيد خيار «آخر استخدام» استخدام أحدث اختيار على هذا الجهاز.</string>
+    <string name="general_text_68" formatted="false">إلى قائمة الانتظار</string>
+    <string name="general_text_69" formatted="false">ردود سريعة</string>
+    <string name="general_text_70" formatted="false">إعادة التأسيس</string>
+    <string name="general_text_71" formatted="false">تكراري</string>
+    <string name="general_text_72" formatted="false">تحديث</string>
+    <string name="general_text_73" formatted="false">إزالة إشارة الوكيل عند الدمج</string>
+    <string name="general_text_74" formatted="false">يزيل أسطر نسب المساهمة المعروفة للوكلاء من رسائل الدمج مع الإبقاء على المؤلفين المشاركين من البشر.</string>
+    <string name="general_text_75" formatted="false">قواعد المستودع</string>
+    <string name="general_text_76" formatted="false">إعادة ضبط</string>
+    <string name="general_text_77" formatted="false">بث الردود</string>
+    <string name="general_text_78" formatted="false">النتيجة غير معروفة. حدّث قبل إعادة المحاولة.</string>
+    <string name="general_text_79" formatted="false">الاستئناف بعد تحديث الخادم</string>
+    <string name="general_text_80" formatted="false">استئناف المحادثات المحدودة تلقائيًا</string>
+    <string name="general_text_81" formatted="false">يستأنف سلاسل المحادثات المتوقفة بسبب حد الاستخدام عند موعد إعادة الضبط المُعلن. يمكن لكل سلسلة إلغاء الاستئناف المجدول.</string>
+    <string name="general_text_82" formatted="false">تعليمات أدلة المراجعة</string>
+    <string name="general_text_83" formatted="false">نموذج أدلة المراجعة</string>
+    <string name="general_text_84" formatted="false">حفظ</string>
+    <string name="general_text_85" formatted="false">تم الحفظ</string>
+    <string name="general_text_86" formatted="false">دلالي</string>
+    <string name="general_text_87" formatted="false">يرسل التتبعات والمقاييس والسجلات إلى مستقبل OTLP HTTP. أعد تشغيل الخادم للتطبيق.</string>
+    <string name="general_text_88" formatted="false">إنهاء محادثات طلبات السحب المدمجة</string>
+    <string name="general_text_89" formatted="false">تأجيل المحادثات المحدودة الاستخدام</string>
+    <string name="general_text_90" formatted="false">نموذج كتابة نصوص التحكم بالإصدارات</string>
+    <string name="general_text_91" formatted="false">دمج الالتزامات</string>
+    <string name="general_text_92" formatted="false">بدء worktrees الجديدة من origin</string>
+    <string name="general_text_93" formatted="false">ينشئ أشجار عمل جديدة من الفرع الأساسي البعيد عند توفره.</string>
+    <string name="general_text_94" formatted="false">ثابت</string>
+    <string name="general_text_95" formatted="false">توجيه</string>
+    <string name="general_text_96" formatted="false">تحت الإشراف</string>
+    <string name="general_text_97" formatted="false">نموذج إنشاء النصوص</string>
+    <string name="general_text_98" formatted="false">هذا الجهاز</string>
+    <string name="general_text_99" formatted="false">تعليمات عناوين المحادثات</string>
+    <string name="general_text_100" formatted="false">تنسيق الوقت</string>
+    <string name="general_text_101" formatted="false">المستوى الأعلى</string>
+    <string name="general_text_102" formatted="false">نقطة نهاية التتبعات</string>
+    <string name="general_text_103" formatted="false">دور</string>
+    <string name="general_text_104" formatted="false">غير متاح</string>
+    <string name="general_text_105" formatted="false">استخدام القيمة الموروثة</string>
+    <string name="general_text_106" formatted="false">متى تُضغط محادثة Claude خاملة تتجاوز 200,000 رمز: عند عودتك، أو قبل انتهاء ذاكرة الموجّه المؤقتة مباشرة، أو أبدًا. يمكن لكل مزوّد Claude تجاوز ذلك.</string>
+    <string name="general_text_107" formatted="false">عند عودتك</string>
+    <string name="general_text_108" formatted="false">المكان الذي تبدأ فيه سلاسل المحادثات الجديدة. يمكن للمشاريع وملف t3.json الخاص بها تجاوزه.</string>
+    <string name="general_text_109" formatted="false">مساحة العمل</string>
+    <string name="general_text_110" formatted="false">وحدات worktrees الفرعية</string>
+    <string name="general_text_111" formatted="false">تعليمات الكتابة</string>
+    <string name="general_text_112" formatted="false">أسلوب الكتابة</string>
+    <string name="general_text_113" formatted="false">افتراضي</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

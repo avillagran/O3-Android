@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 時間制</string>
+    <string name="general_text_1" formatted="false">24 時間制</string>
+    <string name="general_text_2" formatted="false">新しいエージェントセッションで、必要なツールを自動設定してローカルおよびリモートのデバイスを起動・操作できます。</string>
+    <string name="general_text_3" formatted="false">新規および再生成されるスレッドタイトルのプロンプトに追加されます。</string>
+    <string name="general_text_4" formatted="false">編集を自動承認</string>
+    <string name="general_text_5" formatted="false">非アクティブ期間後に完了（日）</string>
+    <string name="general_text_6" formatted="false">自動</string>
+    <string name="general_text_7" formatted="false">関連するプルリクエストがマージされた後、スレッドを自動的に整理します。</string>
+    <string name="general_text_8" formatted="false">指定した日数の間アクティビティがなければ、スレッドを自動的に整理します。</string>
+    <string name="general_text_9" formatted="false">バックグラウンド動作</string>
+    <string name="general_text_10" formatted="false">バックグラウンドでの更新とパフォーマンス・電力消費のバランスを取ります。</string>
+    <string name="general_text_11" formatted="false">バランス</string>
+    <string name="general_text_12" formatted="false">省電力</string>
+    <string name="general_text_13" formatted="false">キャッシュの期限前（ベータ）</string>
+    <string name="general_text_14" formatted="false">ブランチ名の接頭辞</string>
+    <string name="general_text_15" formatted="false">ブランチの命名</string>
+    <string name="general_text_16" formatted="false">ブランチ命名の指示</string>
+    <string name="general_text_17" formatted="false">インストール済みプロバイダーの更新をバックグラウンドで確認します。</string>
+    <string name="general_text_18" formatted="false">プロバイダーの更新を確認</string>
+    <string name="general_text_19" formatted="false">新しいワークツリー用に作成するブランチの命名方法を選択します。</string>
+    <string name="general_text_20" formatted="false">エージェントの作業中に応答を表示するタイミングを選択します。</string>
+    <string name="general_text_21" formatted="false">アイドルスレッドを圧縮</string>
+    <string name="general_text_22" formatted="false">更新に伴うサーバー再起動後に、アクティブなスレッドを続行します。</string>
+    <string name="general_text_23" formatted="false">規約に沿ったコミット</string>
+    <string name="general_text_24" formatted="false">現在の作業コピー</string>
+    <string name="general_text_25" formatted="false">カスタム</string>
+    <string name="general_text_26" formatted="false">新しいスレッドの既定モデル。プロジェクトごとに変更できます。</string>
+    <string name="general_text_27" formatted="false">新しいスレッドの既定の権限。プロジェクトごとに変更できます。</string>
+    <string name="general_text_28" formatted="false">レビュ―ガイドを有効化</string>
+    <string name="general_text_29" formatted="false">プルリクエストのテンプレートに従う</string>
+    <string name="general_text_30" formatted="false">フォローアップの動作</string>
+    <string name="general_text_31" formatted="false">フルアクセス</string>
+    <string name="general_settings_title" formatted="false">一般</string>
+    <string name="general_text_33" formatted="false">新しいワークツリーで git サブモジュールを取得する方法。プロジェクトごとに変更できます。</string>
+    <string name="general_text_34" formatted="false">継承</string>
+    <string name="general_text_35" formatted="false">環境から継承</string>
+    <string name="general_text_36" formatted="false">ワークツリーのブランチ名を生成するための指示。</string>
+    <string name="general_text_37" formatted="false">未完了のプルリクエストがあるスレッドを自動整理の対象から外します。</string>
+    <string name="general_text_38" formatted="false">プルリクエストのあるスレッドを保持</string>
+    <string name="general_text_39" formatted="false">タイトルは数語に。主題から始める。</string>
+    <string name="general_text_40" formatted="false">作業コピーにローカルの変更やコミットがない場合、既定のブランチを最新に保ちます。プロジェクトごとに変更できます。</string>
+    <string name="general_text_41" formatted="false">言語</string>
+    <string name="general_text_42" formatted="false">前回使用</string>
+    <string name="general_text_43" formatted="false">地域設定</string>
+    <string name="general_text_44" formatted="false">ログのエンドポイント</string>
+    <string name="general_text_45" formatted="false">マージ</string>
+    <string name="general_text_46" formatted="false">メトリクスのエンドポイント</string>
+    <string name="general_text_47" formatted="false">複数の設定元</string>
+    <string name="general_text_48" formatted="false">異なる値</string>
+    <string name="general_text_49" formatted="false">モデル</string>
+    <string name="general_text_50" formatted="false">タイトルやその他の文章生成に使用するモデル。</string>
+    <string name="general_text_51" formatted="false">プルリクエストのレビューガイドを生成するモデル。</string>
+    <string name="general_text_52" formatted="false">コミットメッセージやプルリクエストの説明文を作成するモデル。</string>
+    <string name="general_text_53" formatted="false">利用制限で停止したスレッドをリセット時刻まで Snoozed に移します。自動再開と組み合わせると、その後に復帰して続行します。</string>
+    <string name="general_text_54" formatted="false">しない</string>
+    <string name="general_text_55" formatted="false">新しいワークツリー</string>
+    <string name="general_text_56" formatted="false">なし</string>
+    <string name="general_text_57" formatted="false">オフ</string>
+    <string name="general_text_58" formatted="false">オン</string>
+    <string name="general_text_59" formatted="false">段落</string>
+    <string name="general_text_60" formatted="false">パフォーマンス</string>
+    <string name="general_text_61" formatted="false">権限</string>
+    <string name="general_text_62" formatted="false">プランモード（従来）</string>
+    <string name="general_text_63" formatted="false">自動生成されるワークツリーのブランチ名に付ける接頭辞。</string>
+    <string name="general_text_64" formatted="false">プロジェクトで上書き</string>
+    <string name="general_text_65" formatted="false">変更を自動取得</string>
+    <string name="general_text_66" formatted="false">プルリクエストのマージ方法</string>
+    <string name="general_text_67" formatted="false">プルリクエストには最初にこの方法を使用します。「前回使用」を選ぶと、このデバイスで最後に選んだ方法を再利用します。</string>
+    <string name="general_text_68" formatted="false">キューへ</string>
+    <string name="general_text_69" formatted="false">クイック返信</string>
+    <string name="general_text_70" formatted="false">リベース</string>
+    <string name="general_text_71" formatted="false">再帰的</string>
+    <string name="general_text_72" formatted="false">更新</string>
+    <string name="general_text_73" formatted="false">マージ時にエージェントのクレジットを削除</string>
+    <string name="general_text_74" formatted="false">マージメッセージから認識済みのエージェントのクレジット行を削除し、人間の共同作成者は残します。</string>
+    <string name="general_text_75" formatted="false">リポジトリの規約</string>
+    <string name="general_text_76" formatted="false">リセット</string>
+    <string name="general_text_77" formatted="false">応答のストリーミング</string>
+    <string name="general_text_78" formatted="false">結果が不明です。再試行する前に更新してください。</string>
+    <string name="general_text_79" formatted="false">サーバー更新後に再開</string>
+    <string name="general_text_80" formatted="false">レート制限されたスレッドを自動再開</string>
+    <string name="general_text_81" formatted="false">利用制限で停止したスレッドを、通知されたリセット時刻に再開します。各スレッドで予定された再開を取り消せます。</string>
+    <string name="general_text_82" formatted="false">レビューガイドの指示</string>
+    <string name="general_text_83" formatted="false">レビュ―ガイド用モデル</string>
+    <string name="general_text_84" formatted="false">保存</string>
+    <string name="general_text_85" formatted="false">保存済み</string>
+    <string name="general_text_86" formatted="false">意味に基づく</string>
+    <string name="general_text_87" formatted="false">トレース、メトリクス、ログを OTLP HTTP レシーバーに送信します。適用するにはサーバーを再起動してください。</string>
+    <string name="general_text_88" formatted="false">マージ済みプルリクエストのスレッドを完了</string>
+    <string name="general_text_89" formatted="false">使用制限のあるスレッドを延期</string>
+    <string name="general_text_90" formatted="false">バージョン管理用の文章作成モデル</string>
+    <string name="general_text_91" formatted="false">コミットをまとめる</string>
+    <string name="general_text_92" formatted="false">新しい worktree を origin から開始</string>
+    <string name="general_text_93" formatted="false">利用可能な場合はリモートのベースブランチから新しいワークツリーを作成します。</string>
+    <string name="general_text_94" formatted="false">固定</string>
+    <string name="general_text_95" formatted="false">方向修正</string>
+    <string name="general_text_96" formatted="false">監督付き</string>
+    <string name="general_text_97" formatted="false">テキスト生成モデル</string>
+    <string name="general_text_98" formatted="false">このデバイス</string>
+    <string name="general_text_99" formatted="false">スレッドタイトルの指示</string>
+    <string name="general_text_100" formatted="false">時刻形式</string>
+    <string name="general_text_101" formatted="false">最上位</string>
+    <string name="general_text_102" formatted="false">トレースのエンドポイント</string>
+    <string name="general_text_103" formatted="false">ターン</string>
+    <string name="general_text_104" formatted="false">利用不可</string>
+    <string name="general_text_105" formatted="false">継承した値を使用</string>
+    <string name="general_text_106" formatted="false">200,000 トークンを超えるアイドル状態の Claude スレッドを圧縮するタイミング：戻ったとき、プロンプトキャッシュの期限直前、または圧縮しない。各 Claude プロバイダーで上書きできます。</string>
+    <string name="general_text_107" formatted="false">戻ったとき</string>
+    <string name="general_text_108" formatted="false">新しいスレッドの開始場所。プロジェクトとその t3.json で変更できます。</string>
+    <string name="general_text_109" formatted="false">ワークスペース</string>
+    <string name="general_text_110" formatted="false">worktree のサブモジュール</string>
+    <string name="general_text_111" formatted="false">文章作成の指示</string>
+    <string name="general_text_112" formatted="false">文章スタイル</string>
+    <string name="general_text_113" formatted="false">既定</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

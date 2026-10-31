@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 hodin</string>
+    <string name="general_text_1" formatted="false">24 hodin</string>
+    <string name="general_text_2" formatted="false">Povolit novým relacím agenta spouštět a ovládat místní i vzdálená zařízení s automatickým nastavením nástrojů.</string>
+    <string name="general_text_3" formatted="false">Připojí se k zadání nových a znovu vytvořených názvů vláken.</string>
+    <string name="general_text_4" formatted="false">Přijímat úpravy</string>
+    <string name="general_text_5" formatted="false">Uzavřít po nečinnosti (dny)</string>
+    <string name="general_text_6" formatted="false">Automaticky</string>
+    <string name="general_text_7" formatted="false">Automaticky uklidí vlákna po sloučení jejich pull requestů.</string>
+    <string name="general_text_8" formatted="false">Automaticky uklidí vlákna po tomto počtu dní nečinnosti.</string>
+    <string name="general_text_9" formatted="false">Aktivita na pozadí</string>
+    <string name="general_text_10" formatted="false">Vyvažuje obnovování na pozadí s výkonem a spotřebou baterie.</string>
+    <string name="general_text_11" formatted="false">Vyvážený</string>
+    <string name="general_text_12" formatted="false">Úspora baterie</string>
+    <string name="general_text_13" formatted="false">Před vypršením mezipaměti (beta)</string>
+    <string name="general_text_14" formatted="false">Předpona názvu větve</string>
+    <string name="general_text_15" formatted="false">Pojmenování větví</string>
+    <string name="general_text_16" formatted="false">Pokyny pro pojmenování větví</string>
+    <string name="general_text_17" formatted="false">Na pozadí kontroluje aktualizace nainstalovaných poskytovatelů.</string>
+    <string name="general_text_18" formatted="false">Kontrolovat aktualizace poskytovatelů</string>
+    <string name="general_text_19" formatted="false">Zvolte, jak se mají pojmenovávat větve vytvářené pro nové pracovní stromy.</string>
+    <string name="general_text_20" formatted="false">Zvolte, kdy se mají odpovědi zobrazovat během práce agenta.</string>
+    <string name="general_text_21" formatted="false">Komprimovat nečinná vlákna</string>
+    <string name="general_text_22" formatted="false">Pokračuje v aktivních vláknech po restartu serveru kvůli aktualizaci.</string>
+    <string name="general_text_23" formatted="false">Konvenční commity</string>
+    <string name="general_text_24" formatted="false">Aktuální pracovní kopie</string>
+    <string name="general_text_25" formatted="false">Vlastní</string>
+    <string name="general_text_26" formatted="false">Výchozí model pro nová vlákna. Projekty ho mohou přepsat.</string>
+    <string name="general_text_27" formatted="false">Výchozí oprávnění pro nová vlákna. Projekty je mohou přepsat.</string>
+    <string name="general_text_28" formatted="false">Povolit průvodce revizí</string>
+    <string name="general_text_29" formatted="false">Dodržovat šablony pull requestů</string>
+    <string name="general_text_30" formatted="false">Chování navazujících zpráv</string>
+    <string name="general_text_31" formatted="false">Úplný přístup</string>
+    <string name="general_settings_title" formatted="false">Obecné</string>
+    <string name="general_text_33" formatted="false">Jak nové pracovní stromy naplní podmoduly git. Projekty mohou toto nastavení přepsat.</string>
+    <string name="general_text_34" formatted="false">Zdědit</string>
+    <string name="general_text_35" formatted="false">Zděděno z prostředí</string>
+    <string name="general_text_36" formatted="false">Pokyny pro generování názvů větví pracovních stromů.</string>
+    <string name="general_text_37" formatted="false">Vyloučí vlákna s otevřenými pull requesty z automatického uklízení.</string>
+    <string name="general_text_38" formatted="false">Ponechat vlákna s pull requesty</string>
+    <string name="general_text_39" formatted="false">Názvy o několika slovech. Začněte hlavním tématem.</string>
+    <string name="general_text_40" formatted="false">Udržuje výchozí větev aktuální, pokud pracovní kopie nemá místní změny ani commity. Projekty mohou nastavení přepsat.</string>
+    <string name="general_text_41" formatted="false">Jazyk</string>
+    <string name="general_text_42" formatted="false">Naposledy použité</string>
+    <string name="general_text_43" formatted="false">Místní nastavení</string>
+    <string name="general_text_44" formatted="false">Koncový bod protokolů</string>
+    <string name="general_text_45" formatted="false">Sloučit</string>
+    <string name="general_text_46" formatted="false">Koncový bod metrik</string>
+    <string name="general_text_47" formatted="false">Různé zdroje</string>
+    <string name="general_text_48" formatted="false">Různé hodnoty</string>
+    <string name="general_text_49" formatted="false">Model</string>
+    <string name="general_text_50" formatted="false">Model používaný pro názvy a další generovaný text.</string>
+    <string name="general_text_51" formatted="false">Model pro generování průvodců revizí pull requestů.</string>
+    <string name="general_text_52" formatted="false">Model používaný k psaní zpráv commitů a pull requestů.</string>
+    <string name="general_text_53" formatted="false">Přesune vlákna zastavená limitem využití do Snoozed až do obnovení limitu. Kombinujte s automatickým obnovením, aby se znovu aktivovala a pokračovala.</string>
+    <string name="general_text_54" formatted="false">Nikdy</string>
+    <string name="general_text_55" formatted="false">Nový pracovní strom</string>
+    <string name="general_text_56" formatted="false">Žádné</string>
+    <string name="general_text_57" formatted="false">Vypnuto</string>
+    <string name="general_text_58" formatted="false">Zapnuto</string>
+    <string name="general_text_59" formatted="false">Odstavec</string>
+    <string name="general_text_60" formatted="false">Výkon</string>
+    <string name="general_text_61" formatted="false">Oprávnění</string>
+    <string name="general_text_62" formatted="false">Režim plánu (starší)</string>
+    <string name="general_text_63" formatted="false">Předpona přidávaná k automaticky generovaným názvům větví pracovních stromů.</string>
+    <string name="general_text_64" formatted="false">Přepsáno projektem</string>
+    <string name="general_text_65" formatted="false">Automaticky stahovat změny</string>
+    <string name="general_text_66" formatted="false">Způsob sloučení pull requestů</string>
+    <string name="general_text_67" formatted="false">Pull requesty začínají touto metodou. „Naposledy použité“ znovu použije poslední volbu na tomto zařízení.</string>
+    <string name="general_text_68" formatted="false">Do fronty</string>
+    <string name="general_text_69" formatted="false">Rychlé odpovědi</string>
+    <string name="general_text_70" formatted="false">Přesadit</string>
+    <string name="general_text_71" formatted="false">Rekurzivní</string>
+    <string name="general_text_72" formatted="false">Obnovit</string>
+    <string name="general_text_73" formatted="false">Při sloučení odebrat zmínku o agentovi</string>
+    <string name="general_text_74" formatted="false">Odstraní rozpoznané řádky s uvedením agentů ze zpráv o sloučení, ale ponechá lidské spoluautory.</string>
+    <string name="general_text_75" formatted="false">Konvence repozitáře</string>
+    <string name="general_text_76" formatted="false">Obnovit výchozí</string>
+    <string name="general_text_77" formatted="false">Streamování odpovědí</string>
+    <string name="general_text_78" formatted="false">Výsledek není znám. Před dalším pokusem obnovte.</string>
+    <string name="general_text_79" formatted="false">Pokračovat po aktualizaci serveru</string>
+    <string name="general_text_80" formatted="false">Automaticky obnovovat omezená vlákna</string>
+    <string name="general_text_81" formatted="false">Obnoví vlákna zastavená limitem využití v oznámeném čase obnovení limitu. Každé vlákno může své plánované pokračování zrušit.</string>
+    <string name="general_text_82" formatted="false">Pokyny pro průvodce revizí</string>
+    <string name="general_text_83" formatted="false">Model pro průvodce revizí</string>
+    <string name="general_text_84" formatted="false">Uložit</string>
+    <string name="general_text_85" formatted="false">Uloženo</string>
+    <string name="general_text_86" formatted="false">Sémantické</string>
+    <string name="general_text_87" formatted="false">Odesílá trasování, metriky a protokoly do přijímače OTLP HTTP. Pro použití restartujte server.</string>
+    <string name="general_text_88" formatted="false">Uzavřít vlákna sloučených pull requestů</string>
+    <string name="general_text_89" formatted="false">Odložit vlákna s limitem použití</string>
+    <string name="general_text_90" formatted="false">Model pro psaní textů správy verzí</string>
+    <string name="general_text_91" formatted="false">Spojit commity</string>
+    <string name="general_text_92" formatted="false">Vytvářet nové worktrees z origin</string>
+    <string name="general_text_93" formatted="false">Zakládá nové pracovní stromy ze vzdálené základní větve, pokud je dostupná.</string>
+    <string name="general_text_94" formatted="false">Statické</string>
+    <string name="general_text_95" formatted="false">Přesměrovat</string>
+    <string name="general_text_96" formatted="false">Pod dohledem</string>
+    <string name="general_text_97" formatted="false">Model pro generování textu</string>
+    <string name="general_text_98" formatted="false">Toto zařízení</string>
+    <string name="general_text_99" formatted="false">Pokyny pro názvy vláken</string>
+    <string name="general_text_100" formatted="false">Formát času</string>
+    <string name="general_text_101" formatted="false">Nejvyšší úroveň</string>
+    <string name="general_text_102" formatted="false">Koncový bod trasování</string>
+    <string name="general_text_103" formatted="false">Tah</string>
+    <string name="general_text_104" formatted="false">Nedostupné</string>
+    <string name="general_text_105" formatted="false">Použít zděděnou hodnotu</string>
+    <string name="general_text_106" formatted="false">Kdy komprimovat nečinné vlákno Claude nad 200 000 tokenů: po vašem návratu, těsně před vypršením mezipaměti promptu, nebo nikdy. Každý poskytovatel Claude to může přepsat.</string>
+    <string name="general_text_107" formatted="false">Po návratu</string>
+    <string name="general_text_108" formatted="false">Kde začínají nová vlákna. Projekty a jejich soubor t3.json mohou nastavení přepsat.</string>
+    <string name="general_text_109" formatted="false">Pracovní prostor</string>
+    <string name="general_text_110" formatted="false">Podmoduly worktrees</string>
+    <string name="general_text_111" formatted="false">Pokyny pro psaní</string>
+    <string name="general_text_112" formatted="false">Styl psaní</string>
+    <string name="general_text_113" formatted="false">výchozí</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>

@@ -1,0 +1,117 @@
+<resources>
+    <string name="general_text_0" formatted="false">12 小时制</string>
+    <string name="general_text_1" formatted="false">24 小时制</string>
+    <string name="general_text_2" formatted="false">允许新的代理会话启动和控制本地及远程设备，并自动配置所需工具。</string>
+    <string name="general_text_3" formatted="false">附加到新标题和重新生成标题的提示中。</string>
+    <string name="general_text_4" formatted="false">自动接受编辑</string>
+    <string name="general_text_5" formatted="false">闲置后自动完成（天）</string>
+    <string name="general_text_6" formatted="false">自动</string>
+    <string name="general_text_7" formatted="false">关联的拉取请求合并后自动归档话题。</string>
+    <string name="general_text_8" formatted="false">话题闲置达到指定天数后自动归档。</string>
+    <string name="general_text_9" formatted="false">后台活动</string>
+    <string name="general_text_10" formatted="false">平衡后台刷新、性能和电池消耗。</string>
+    <string name="general_text_11" formatted="false">均衡</string>
+    <string name="general_text_12" formatted="false">省电</string>
+    <string name="general_text_13" formatted="false">缓存过期前（测试版）</string>
+    <string name="general_text_14" formatted="false">分支名前缀</string>
+    <string name="general_text_15" formatted="false">分支命名</string>
+    <string name="general_text_16" formatted="false">分支命名说明</string>
+    <string name="general_text_17" formatted="false">在后台检查已安装提供商的更新。</string>
+    <string name="general_text_18" formatted="false">检查提供商更新</string>
+    <string name="general_text_19" formatted="false">选择为新工作树创建的分支的命名方式。</string>
+    <string name="general_text_20" formatted="false">选择代理工作期间何时显示回复。</string>
+    <string name="general_text_21" formatted="false">压缩空闲会话</string>
+    <string name="general_text_22" formatted="false">服务器因更新而重启后继续运行中的话题。</string>
+    <string name="general_text_23" formatted="false">约定式提交</string>
+    <string name="general_text_24" formatted="false">当前工作副本</string>
+    <string name="general_text_25" formatted="false">自定义</string>
+    <string name="general_text_26" formatted="false">新话题的默认模型。项目可以覆盖此设置。</string>
+    <string name="general_text_27" formatted="false">新话题的默认权限。项目可以覆盖此设置。</string>
+    <string name="general_text_28" formatted="false">启用审查指南</string>
+    <string name="general_text_29" formatted="false">遵循拉取请求模板</string>
+    <string name="general_text_30" formatted="false">后续消息行为</string>
+    <string name="general_text_31" formatted="false">完全访问</string>
+    <string name="general_settings_title" formatted="false">常规</string>
+    <string name="general_text_33" formatted="false">新工作树填充 git 子模块的方式。项目可以覆盖此设置。</string>
+    <string name="general_text_34" formatted="false">继承</string>
+    <string name="general_text_35" formatted="false">继承自环境</string>
+    <string name="general_text_36" formatted="false">生成工作树分支名称的说明。</string>
+    <string name="general_text_37" formatted="false">有未关闭拉取请求的话题不会自动归档。</string>
+    <string name="general_text_38" formatted="false">保留有拉取请求的会话</string>
+    <string name="general_text_39" formatted="false">标题只用几个词，先写主要主题。</string>
+    <string name="general_text_40" formatted="false">工作副本没有本地更改或提交时，保持默认分支为最新状态。项目可以覆盖此设置。</string>
+    <string name="general_text_41" formatted="false">语言</string>
+    <string name="general_text_42" formatted="false">上次使用</string>
+    <string name="general_text_43" formatted="false">区域设置</string>
+    <string name="general_text_44" formatted="false">日志端点</string>
+    <string name="general_text_45" formatted="false">合并</string>
+    <string name="general_text_46" formatted="false">指标端点</string>
+    <string name="general_text_47" formatted="false">不同来源</string>
+    <string name="general_text_48" formatted="false">不同的值</string>
+    <string name="general_text_49" formatted="false">模型</string>
+    <string name="general_text_50" formatted="false">用于生成标题和其他文本的模型。</string>
+    <string name="general_text_51" formatted="false">用于生成拉取请求审查指南的模型。</string>
+    <string name="general_text_52" formatted="false">用于撰写提交消息和拉取请求说明的模型。</string>
+    <string name="general_text_53" formatted="false">将因使用限制而停止的话题移至 Snoozed，直到额度重置时间。结合自动恢复功能可唤醒并继续这些话题。</string>
+    <string name="general_text_54" formatted="false">从不</string>
+    <string name="general_text_55" formatted="false">新工作树</string>
+    <string name="general_text_56" formatted="false">无</string>
+    <string name="general_text_57" formatted="false">关闭</string>
+    <string name="general_text_58" formatted="false">开启</string>
+    <string name="general_text_59" formatted="false">段落</string>
+    <string name="general_text_60" formatted="false">性能</string>
+    <string name="general_text_61" formatted="false">权限</string>
+    <string name="general_text_62" formatted="false">计划模式（旧版）</string>
+    <string name="general_text_63" formatted="false">添加到自动生成的工作树分支名称前的前缀。</string>
+    <string name="general_text_64" formatted="false">项目覆盖设置</string>
+    <string name="general_text_65" formatted="false">自动拉取更改</string>
+    <string name="general_text_66" formatted="false">拉取请求合并方式</string>
+    <string name="general_text_67" formatted="false">拉取请求默认使用此方式。“上次使用”会沿用这台设备上最近选择的方式。</string>
+    <string name="general_text_68" formatted="false">加入队列</string>
+    <string name="general_text_69" formatted="false">快捷回复</string>
+    <string name="general_text_70" formatted="false">变基</string>
+    <string name="general_text_71" formatted="false">递归</string>
+    <string name="general_text_72" formatted="false">刷新</string>
+    <string name="general_text_73" formatted="false">合并时移除代理署名</string>
+    <string name="general_text_74" formatted="false">从合并消息中移除识别出的代理署名，保留人工共同作者。</string>
+    <string name="general_text_75" formatted="false">仓库约定</string>
+    <string name="general_text_76" formatted="false">重置</string>
+    <string name="general_text_77" formatted="false">响应流式传输</string>
+    <string name="general_text_78" formatted="false">结果未知。请刷新后再重试。</string>
+    <string name="general_text_79" formatted="false">服务器更新后继续</string>
+    <string name="general_text_80" formatted="false">自动恢复受限会话</string>
+    <string name="general_text_81" formatted="false">在通知的额度重置时间恢复因使用限制而停止的话题。每个话题都可以取消预定的继续操作。</string>
+    <string name="general_text_82" formatted="false">审查指南说明</string>
+    <string name="general_text_83" formatted="false">审查指南模型</string>
+    <string name="general_text_84" formatted="false">保存</string>
+    <string name="general_text_85" formatted="false">已保存</string>
+    <string name="general_text_86" formatted="false">语义</string>
+    <string name="general_text_87" formatted="false">将追踪、指标和日志发送到 OTLP HTTP 接收器。重启服务器后生效。</string>
+    <string name="general_text_88" formatted="false">完成已合并拉取请求的会话</string>
+    <string name="general_text_89" formatted="false">推迟使用量受限的会话</string>
+    <string name="general_text_90" formatted="false">版本控制文案生成模型</string>
+    <string name="general_text_91" formatted="false">压缩提交</string>
+    <string name="general_text_92" formatted="false">从 origin 创建新 worktree</string>
+    <string name="general_text_93" formatted="false">如有可用的远程基准分支，则从该分支创建新工作树。</string>
+    <string name="general_text_94" formatted="false">固定</string>
+    <string name="general_text_95" formatted="false">引导</string>
+    <string name="general_text_96" formatted="false">监督模式</string>
+    <string name="general_text_97" formatted="false">文本生成模型</string>
+    <string name="general_text_98" formatted="false">此设备</string>
+    <string name="general_text_99" formatted="false">会话标题说明</string>
+    <string name="general_text_100" formatted="false">时间格式</string>
+    <string name="general_text_101" formatted="false">顶层</string>
+    <string name="general_text_102" formatted="false">追踪端点</string>
+    <string name="general_text_103" formatted="false">轮次</string>
+    <string name="general_text_104" formatted="false">不可用</string>
+    <string name="general_text_105" formatted="false">使用继承值</string>
+    <string name="general_text_106" formatted="false">何时压缩超过 200,000 个令牌的空闲 Claude 会话：你返回时、提示缓存过期前，或从不。每个 Claude 提供方都可以覆盖此设置。</string>
+    <string name="general_text_107" formatted="false">你返回时</string>
+    <string name="general_text_108" formatted="false">新话题的起始位置。项目及其 t3.json 文件可以覆盖此设置。</string>
+    <string name="general_text_109" formatted="false">工作区</string>
+    <string name="general_text_110" formatted="false">worktree 子模块</string>
+    <string name="general_text_111" formatted="false">写作说明</string>
+    <string name="general_text_112" formatted="false">写作风格</string>
+    <string name="general_text_113" formatted="false">默认</string>
+    <string name="general_text_114" formatted="false">worktree</string>
+</resources>
