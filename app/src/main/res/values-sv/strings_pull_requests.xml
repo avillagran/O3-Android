@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Bekräfta</string>
+  <string name="pr_close">Stäng</string>
+  <string name="pr_reopen">Öppna igen</string>
+  <string name="pr_ready">Redo för granskning</string>
+  <string name="pr_draft">Gör till utkast</string>
+  <string name="pr_reply">Lämna en kommentar</string>
+  <string name="pr_comment">Kommentera</string>
+  <string name="pr_approve">Godkänn</string>
+  <string name="pr_request_changes">Begär ändringar</string>
+  <string name="pr_write_unknown">Resultatet är okänt. Kontrollera hos leverantören innan du utför en ny åtgärd.</string>
+  <string name="pr_merge">Slå samman</string>
+</resources>

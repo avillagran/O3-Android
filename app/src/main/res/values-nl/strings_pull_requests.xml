@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Bevestigen</string>
+  <string name="pr_close">Sluiten</string>
+  <string name="pr_reopen">Heropenen</string>
+  <string name="pr_ready">Klaar voor review</string>
+  <string name="pr_draft">Omzetten naar concept</string>
+  <string name="pr_reply">Laat een reactie achter</string>
+  <string name="pr_comment">Reageren</string>
+  <string name="pr_approve">Goedkeuren</string>
+  <string name="pr_request_changes">Wijzigingen vragen</string>
+  <string name="pr_write_unknown">Het resultaat is onbekend. Controleer de provider voordat je een andere actie uitvoert.</string>
+  <string name="pr_merge">Samenvoegen</string>
+</resources>

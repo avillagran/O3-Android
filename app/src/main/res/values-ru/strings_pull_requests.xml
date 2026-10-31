@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Подтвердить</string>
+  <string name="pr_close">Закрыть</string>
+  <string name="pr_reopen">Открыть снова</string>
+  <string name="pr_ready">Готово к ревью</string>
+  <string name="pr_draft">Сделать черновиком</string>
+  <string name="pr_reply">Оставьте комментарий</string>
+  <string name="pr_comment">Комментировать</string>
+  <string name="pr_approve">Разрешить</string>
+  <string name="pr_request_changes">Запросить изменения</string>
+  <string name="pr_write_unknown">Результат действия неизвестен. Проверьте его у провайдера перед следующим действием.</string>
+  <string name="pr_merge">Слияние</string>
+</resources>

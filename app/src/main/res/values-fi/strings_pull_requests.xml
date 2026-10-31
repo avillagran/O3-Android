@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Vahvista</string>
+  <string name="pr_close">Sulje</string>
+  <string name="pr_reopen">Avaa uudelleen</string>
+  <string name="pr_ready">Valmis tarkistettavaksi</string>
+  <string name="pr_draft">Muuta luonnokseksi</string>
+  <string name="pr_reply">Jätä kommentti</string>
+  <string name="pr_comment">Kommentoi</string>
+  <string name="pr_approve">Hyväksy</string>
+  <string name="pr_request_changes">Pyydä muutoksia</string>
+  <string name="pr_write_unknown">Toiminnon tulos on tuntematon. Tarkista palveluntarjoajalta ennen seuraavaa toimintoa.</string>
+  <string name="pr_merge">Yhdistä</string>
+</resources>

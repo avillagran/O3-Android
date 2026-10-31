@@ -93,7 +93,10 @@ private fun PrSelect(label: String, options: List<Pair<String, String>>, tag: St
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, onTab: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit) {
+fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, onTab: (String) -> Unit, onRefresh: () -> Unit, onBack: () -> Unit, onWrite: ((JSONObject) -> Unit)? = null) {
+    var reply by rememberSaveable(number, repository) { mutableStateOf("") }
+    var confirming by rememberSaveable(number, repository) { mutableStateOf("") }
+    var mergeMethod by rememberSaveable(number, repository) { mutableStateOf("") }
     Scaffold(topBar = { TopAppBar(title = { Column { Text("#$number"); Text(repository, style = MaterialTheme.typography.bodySmall) } }, navigationIcon = {
         TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) }
     }, actions = { TextButton(onClick = onRefresh, enabled = !state.busy, modifier = Modifier.testTag("pr_detail_refresh")) { Text(stringResource(R.string.ot3_pr_refresh)) } }) }) { padding ->
@@ -110,6 +113,45 @@ fun PullRequestScreen(number: Int, repository: String, state: PullRequestState, 
                 }
             } }
             item { ReadStatus(state.busy, state.offline, state.failed, false, onRefresh) }
+            if (state.writeUnknown) item { Text(stringResource(R.string.pr_write_unknown), color = Ot3Theme.colors.failed) }
+            if (onWrite != null && !state.offline && !state.failed && !state.busy && !state.writeUnknown) {
+                val permissions = state.detail?.optJSONObject("viewerPermissions")
+                val actions = permissions?.optJSONArray("actions")
+                val detail = state.detail
+                val methods = listOf("squash", "merge", "rebase").filter { detail?.optJSONObject("mergeCapabilities")?.optBoolean(it) == true }
+                item { Row(Modifier.horizontalScroll(rememberScrollState())) {
+                    methods.forEach { method -> FilterChip((mergeMethod.ifEmpty { methods.first() }) == method, { mergeMethod = method }, label = { Text(method) }) }
+
+                    for (index in 0 until (actions?.length() ?: 0)) {
+                        val action = actions!!.optString(index)
+                        val allowed = when (action) {
+                            "merge" -> detail?.optString("state") == "open" && !detail.optBoolean("isDraft") && detail.optString("mergeability") != "conflicting" && methods.isNotEmpty()
+                            "close" -> detail?.optString("state") == "open"
+                            "reopen" -> detail?.optString("state") == "closed"
+                            "ready" -> detail?.optString("state") == "open" && detail.optBoolean("isDraft")
+                            "draft" -> detail?.optString("state") == "open" && !detail.optBoolean("isDraft")
+                            else -> false
+                        }
+                        if (allowed) TextButton(enabled = !state.writing, onClick = {
+                            if (action in listOf("close", "merge") && confirming != action) confirming = action
+                            else { onWrite(JSONObject().put("kind", "action").put("action", action).apply { if (action == "merge") put("mergeMethod", mergeMethod.takeIf { it in methods } ?: methods.first()) }); confirming = "" }
+                        }) { Text(stringResource(if (confirming == action) R.string.pr_confirm else when(action) {
+                            "merge" -> R.string.pr_merge; "close" -> R.string.pr_close; "reopen" -> R.string.pr_reopen; "ready" -> R.string.pr_ready; else -> R.string.pr_draft
+                        })) }
+                    }
+                } }
+                if (state.tab == "activity" && permissions != null) item {
+                    OutlinedTextField(reply, { reply = it }, enabled = !state.writing, label = { Text(stringResource(R.string.pr_reply)) }, modifier = Modifier.fillMaxWidth())
+                    Row {
+                        if (permissions.optBoolean("comment")) TextButton(enabled = !state.writing && reply.isNotBlank(), onClick = { onWrite(JSONObject().put("kind", "comment").put("body", reply)) }) { Text(stringResource(R.string.pr_comment)) }
+                        val verdicts = permissions.optJSONArray("verdicts")
+                        for (i in 0 until (verdicts?.length() ?: 0)) {
+                            val verdict = verdicts!!.optString(i)
+                            if (verdict in listOf("approve", "request-changes")) TextButton(enabled = !state.writing && (verdict == "approve" || reply.isNotBlank()), onClick = { onWrite(JSONObject().put("kind", "review").put("verdict", verdict).put("body", reply)) }) { Text(stringResource(if (verdict == "approve") R.string.pr_approve else R.string.pr_request_changes)) }
+                        }
+                    }
+                }
+            }
             state.content?.let { content -> when (state.tab) {
                 "detail" -> {
                     item { MarkdownBlocks(content.optJSONArray("blocks")) }

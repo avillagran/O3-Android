@@ -1,0 +1,13 @@
+<resources>
+  <string name="pr_confirm">Bekræft</string>
+  <string name="pr_close">Luk</string>
+  <string name="pr_reopen">Genåbn</string>
+  <string name="pr_ready">Klar til gennemgang</string>
+  <string name="pr_draft">Konvertér til kladde</string>
+  <string name="pr_reply">Skriv en kommentar</string>
+  <string name="pr_comment">Kommentér</string>
+  <string name="pr_approve">Godkend</string>
+  <string name="pr_request_changes">Anmod om ændringer</string>
+  <string name="pr_write_unknown">Resultatet er ukendt. Kontrollér hos udbyderen, før du udfører en ny handling.</string>
+  <string name="pr_merge">Flet</string>
+</resources>
