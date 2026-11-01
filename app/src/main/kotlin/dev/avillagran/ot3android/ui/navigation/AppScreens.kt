@@ -51,8 +51,12 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     /** Home's view model, shared by Home and its sheets: scoped to the Chats graph's entry. */
     @Composable
-    private fun homeViewModel(entry: NavBackStackEntry): HomeViewModel {
-        val owner = remember(entry) { navigator.navController.getBackStackEntry(ChatsGraph) }
+    private fun homeViewModel(entry: NavBackStackEntry): HomeViewModel? {
+        // An outgoing destination may compose after its graph was removed (e.g. pairing).
+        // Do not create a replacement owner or read a destroyed ViewModelStore.
+        val owner = runCatching { navigator.navController.getBackStackEntry(ChatsGraph) }.getOrNull()
+            ?.takeUnless { it.lifecycle.currentState == androidx.lifecycle.Lifecycle.State.DESTROYED }
+            ?: return null
         val graph = LocalContext.current.appGraph
         return viewModel(viewModelStoreOwner = owner) {
             HomeViewModel(graph.environmentRepository, graph.connectionManager, graph.homePreferences, sender = graph.messageSender)
@@ -61,7 +65,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun Home(entry: NavBackStackEntry, isTop: Boolean) {
-        val viewModel = homeViewModel(entry)
+        val viewModel = homeViewModel(entry) ?: return
         val state by viewModel.state.collectAsStateWithLifecycle()
         val actionError by viewModel.actionError.collectAsStateWithLifecycle()
         actionError?.let { code -> androidx.compose.material3.AlertDialog(
@@ -81,7 +85,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun NewChat(entry: NavBackStackEntry) {
-        val home = homeViewModel(entry)
+        val home = homeViewModel(entry) ?: return
         val state by home.state.collectAsStateWithLifecycle()
         val graph = LocalContext.current.appGraph
         val environments by graph.environmentRepository.environments.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -437,7 +441,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun ThreadActions(entry: NavBackStackEntry, route: ThreadActionsSheet) {
-        val viewModel = homeViewModel(entry)
+        val viewModel = homeViewModel(entry) ?: return
         val state by viewModel.state.collectAsStateWithLifecycle()
         val clipboard = LocalClipboard.current
         val scope = rememberCoroutineScope()
@@ -570,7 +574,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun ProjectActions(entry: NavBackStackEntry, route: ProjectActionsSheet) {
-        val viewModel = homeViewModel(entry)
+        val viewModel = homeViewModel(entry) ?: return
         val state by viewModel.state.collectAsStateWithLifecycle()
         val clipboard = LocalClipboard.current
         val scope = rememberCoroutineScope()
@@ -599,7 +603,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
 
     @Composable
     override fun ThreadListOptions(entry: NavBackStackEntry) {
-        val viewModel = homeViewModel(entry)
+        val viewModel = homeViewModel(entry) ?: return
         val state by viewModel.state.collectAsStateWithLifecycle()
         val current = state ?: return
         // As ot3's filter menu, each choice applies and closes.
@@ -618,7 +622,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     @Composable
     override fun SnoozeUntil(entry: NavBackStackEntry, route: SnoozeUntilSheet) {
         val presets = remember(entry) { ThreadActions.snoozePresets(System.currentTimeMillis()) }
-        val viewModel = homeViewModel(entry)
+        val viewModel = homeViewModel(entry) ?: return
         val state by viewModel.state.collectAsStateWithLifecycle()
         val row = state?.rows?.get("${route.environmentId}/${route.threadId}") ?: return
         val context = LocalContext.current

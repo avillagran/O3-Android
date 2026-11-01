@@ -22,6 +22,14 @@ class Ot3NavHostTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun pairingLinkAtStartupSurvivesChatsGraphRemoval() {
+        // This replaces the Chats stack while its Home destination is still composing.
+        composeRule.setContent { Ot3Theme { Ot3NavHost(pairingLinkWaiting = true) } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(dev.avillagran.ot3android.ui.pair.PairScreenTags.ROOT).assertIsDisplayed()
+    }
+
+    @Test
     fun startsOnHomeWithTheThreeTabs() {
         composeRule.setContent { Ot3Theme { Ot3NavHost() } }
 
