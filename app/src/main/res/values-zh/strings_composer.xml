@@ -23,6 +23,7 @@
     <string name="composer_refresh">刷新</string>
     <string name="composer_uncertain">发送结果未知。编辑或再次发送前请核对现有命令。</string>
     <string name="composer_uploading">正在上传 %1$s…</string>
+    <string name="composer_upload_waiting">等待连接以上传 %1$s…</string>
     <string name="composer_upload_failed">上传失败：%1$s</string>
     <string name="composer_attachment_count">附件：%1$d</string>
 </resources>

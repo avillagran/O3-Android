@@ -33,16 +33,17 @@ navigation/AppGraph/Gradle edits. Existing composer behavior remains intact.
   `ComposerTextChoices`; keep a scratch snapshot when entering/leaving recall.
   Quick reply language/detection/custom-list editing still needs shared projection
   and P03 preference wiring; the choices composable does not invent those policies.
-- `ComposerAttachmentImporter` spools an explicitly selected content URI into a
-  private temporary file, enforces 50 MiB while reading (not trusting metadata),
-  and deletes it on completion/failure/cancellation. Bind `ComposerBinaryUpload` to
+- `ComposerAttachmentImporter.spool` copies an explicitly selected content URI into a
+  private file while the grant lives, enforcing 50 MiB while reading (not trusting
+  metadata). It needs no connection; `ThreadViewModel` owns that file until the upload
+  succeeds or the chip is removed. Bind `ComposerBinaryUpload` to
   the SAME connected host's `T3Client.upload(fd,name,mime,size)` on IO; fd is borrowed
   only during the call. No native client is created by the UI. T3Transport currently
   hides that handle and lacks upload; P20 must add its transport method or an adapter.
   Staging crash cleanup and account-wide disk quota belong to P20 lifecycle/storage.
   Progress is indeterminate because the existing binary ABI exposes no byte progress.
-- Picker result holds origin snapshot; a thread change drops it. Restore/rotation
-  while the picker is open cancels the pending selection safely (choose again).
+- Picker result holds the origin scope, saved across Activity recreation; a thread
+  change drops it. Rotation while the picker or camera is open keeps the selection.
   For a multi-file selection, validate origin once and enqueue the batch on UI;
   sequential beginUpload calls must use the current snapshot after each insertion.
   Mint a fresh UUID per attempt, publish beginUpload, then call importer; finishUpload

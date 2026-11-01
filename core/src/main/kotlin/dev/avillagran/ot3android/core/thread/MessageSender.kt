@@ -22,8 +22,17 @@ sealed interface SendResult {
     /** The answer was lost (`rpc_outcome_unknown`); the command stays in the outbox for a retry. */
     data class OutcomeUnknown(val commandId: String) : SendResult
 
-    /** Not sent or refused, with the lib's [code]; nothing is left in the outbox. */
-    data class Failed(val code: String, val reason: String? = null, val requiredScope: String? = null) : SendResult
+    /**
+     * Not sent or refused, with the lib's [code]. [rejected] means a dispatch got a definite
+     * answer: a host refusal, a validator's, or a socket that never opened. The outbox row is
+     * gone, so resending the same bytes means nothing and its text belongs in the draft again.
+     */
+    data class Failed(
+        val code: String,
+        val reason: String? = null,
+        val requiredScope: String? = null,
+        val rejected: Boolean = false,
+    ) : SendResult
 }
 
 /**
@@ -33,8 +42,8 @@ sealed interface SendResult {
  * outbox **before** it is sent. The send runs in [scope] (the app's) under [NonCancellable],
  * so leaving the screen never cuts it in half. On success the entry is deleted; on
  * `rpc_outcome_unknown` it stays and [retry] resends the stored bytes, which the server
- * deduplicates by `commandId`; on any other failure it is deleted and the caller keeps the
- * draft. The arguments follow the lib's `message.dispatch` validator; Rust validates them
+ * deduplicates by `commandId`; on any other failure it is deleted, [SendResult.Failed.rejected]
+ * is set and the caller keeps or restores the draft. The arguments follow the lib's `message.dispatch` validator; Rust validates them
  * again before any socket. Temporary: v0.3.4's `domain` still has no message or
  * interrupt builder (docs/LIB_REQUESTS.md, "2026-10-25: v0.3.3", finding 2).
  */
@@ -219,7 +228,7 @@ class MessageSender(
             SendResult.OutcomeUnknown(commandId)
         } else {
             outbox.remove(commandId)
-            error.toFailed()
+            error.toFailed().copy(rejected = true)
         }
     } catch (error: IllegalStateException) {
         // The supervisor closed the handle (`client_closed`) while reconnecting. Keep the entry:

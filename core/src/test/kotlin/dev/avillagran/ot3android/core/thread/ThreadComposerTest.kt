@@ -189,6 +189,27 @@ class ThreadComposerTest {
     }
 
     @Test
+    fun aRefusedRetryReturnsTheRowsTextWithoutLosingNewTyping() = runTest {
+        var answers = 0
+        fake.onCall(MessageSender.DISPATCH) {
+            if (answers++ == 0) throw T3Exception("rpc_outcome_unknown") else throw T3Exception("rpc_rejected", "Thread is archived")
+        }
+        val composer = composer()
+        composer.onDraftChange("Hello")
+        composer.send(null)
+        runCurrent()
+        composer.onDraftChange("Something else")
+
+        composer.retry("ot3a-1")
+        runCurrent()
+
+        assertEquals("Something else\n\nHello", composer.state.value.draft)
+        assertEquals("Something else\n\nHello", persistedDraft())
+        assertTrue(composer.state.value.unconfirmed.isEmpty())
+        assertEquals(SendResult.Failed("rpc_rejected", "Thread is archived", rejected = true), results.last())
+    }
+
+    @Test
     fun aRejectionKeepsTheDraftAndPersistsItAgain() = runTest {
         fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_rejected", "Thread is archived") }
         val composer = composer()
@@ -199,7 +220,7 @@ class ThreadComposerTest {
         assertEquals(ComposerState(draft = "Hello", loaded = true), composer.state.value)
         assertEquals("Hello", persistedDraft())
         assertTrue(outboxDao.rows.value.isEmpty())
-        assertEquals(SendResult.Failed("rpc_rejected", "Thread is archived"), results.single())
+        assertEquals(SendResult.Failed("rpc_rejected", "Thread is archived", rejected = true), results.single())
     }
 
     @Test

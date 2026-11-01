@@ -23,6 +23,7 @@
     <string name="composer_refresh">Aktualizovat</string>
     <string name="composer_uncertain">Výsledek odeslání není znám. Před úpravou nebo dalším odesláním ověřte stávající příkaz.</string>
     <string name="composer_uploading">Nahrávání %1$s…</string>
+    <string name="composer_upload_waiting">Čekání na připojení pro nahrání %1$s…</string>
     <string name="composer_upload_failed">Nahrávání selhalo: %1$s</string>
     <string name="composer_attachment_count">Přílohy: %1$d</string>
 </resources>

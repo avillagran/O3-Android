@@ -23,6 +23,7 @@
     <string name="composer_refresh">Opdater</string>
     <string name="composer_uncertain">Ukendt senderesultat. Kontrollér eksisterende kommando før redigering eller nyt forsøg.</string>
     <string name="composer_uploading">Uploader %1$s…</string>
+    <string name="composer_upload_waiting">Venter på forbindelse for at uploade %1$s…</string>
     <string name="composer_upload_failed">Upload mislykkedes: %1$s</string>
     <string name="composer_attachment_count">Vedhæftninger: %1$d</string>
 </resources>

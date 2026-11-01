@@ -4,6 +4,7 @@ import dev.avillagran.ot3android.core.data.local.OutboxEntity
 import dev.avillagran.ot3android.core.transport.T3Transport
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,7 +45,7 @@ data class ComposerState(
  * - accepted: the draft is cleared; outcome unknown: the text moves out of the draft into
  *   the outbox row, and sending stays disabled while such a row exists; any other failure:
  *   the draft keeps the text (and is persisted again);
- * - [retry] resends a row byte-identical and never touches the draft.
+ * - [retry] resends a row byte-identical; a definite rejection returns its text to the draft.
  *
  * Draft I/O runs in [scope] (the screen's); sends run in [appScope] through [sender], so
  * leaving the screen neither cuts a send nor loses its bookkeeping. [onResult] receives every
@@ -132,9 +133,14 @@ class ThreadComposer(
         return true
     }
 
-    /** Resends an unconfirmed command, byte-identical; the draft is not touched. */
+    /** Resends an unconfirmed command, byte-identical. Only a refusal touches the draft. */
     fun retry(commandId: String) {
-        appScope.launch { onResult(sender.retry(transport(), commandId)) }
+        appScope.launch {
+            val text = _state.value.unconfirmed.firstOrNull { it.commandId == commandId }?.text
+            val result = sender.retry(transport(), commandId)
+            if (text != null && result is SendResult.Failed && result.rejected) restoreRejected(commandId, text)
+            onResult(result)
+        }
     }
 
     /** Forgets an unconfirmed command; it may still have reached the server. */
@@ -156,6 +162,17 @@ class ThreadComposer(
             _state.update { it.copy(draft = saved, draftToken = null) }
             true
         } finally { _state.update { it.copy(sending = false) } }
+    }
+
+    /**
+     * The refused row is already gone, so [text] has no other home. Waits out a concurrent
+     * edit or the first draft load, which only [editPending] can observe.
+     */
+    suspend fun restoreRejected(commandId: String, text: String) {
+        repeat(RESTORE_ATTEMPTS) {
+            if (editPending(commandId, text)) return
+            delay(RESTORE_RETRY_MS)
+        }
     }
 
     /** Writes a change still inside the debounce window, off the screen's scope. */
@@ -196,5 +213,7 @@ class ThreadComposer(
 
     companion object {
         const val DRAFT_DEBOUNCE_MS = 400L
+        private const val RESTORE_ATTEMPTS = 100
+        private const val RESTORE_RETRY_MS = 50L
     }
 }

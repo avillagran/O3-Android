@@ -23,6 +23,7 @@
     <string name="composer_refresh">Päivitä</string>
     <string name="composer_uncertain">Lähetyksen tulos on tuntematon. Tarkista nykyinen komento ennen muokkaamista tai uutta lähetystä.</string>
     <string name="composer_uploading">Ladataan %1$s…</string>
+    <string name="composer_upload_waiting">Odotetaan yhteyttä, jotta %1$s voidaan lähettää…</string>
     <string name="composer_upload_failed">Lataus epäonnistui: %1$s</string>
     <string name="composer_attachment_count">Liitteet: %1$d</string>
 </resources>

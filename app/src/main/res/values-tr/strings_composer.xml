@@ -23,6 +23,7 @@
     <string name="composer_refresh">Yenile</string>
     <string name="composer_uncertain">Gönderim sonucu bilinmiyor. Düzenlemeden veya yeniden göndermeden önce mevcut komutu doğrulayın.</string>
     <string name="composer_uploading">%1$s yükleniyor…</string>
+    <string name="composer_upload_waiting">%1$s yüklemek için bağlantı bekleniyor…</string>
     <string name="composer_upload_failed">Yükleme başarısız: %1$s</string>
     <string name="composer_attachment_count">Ekler: %1$d</string>
 </resources>

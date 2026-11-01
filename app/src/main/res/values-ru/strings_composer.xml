@@ -23,6 +23,7 @@
     <string name="composer_refresh">Обновить</string>
     <string name="composer_uncertain">Результат отправки неизвестен. Проверьте существующую команду перед изменением или повторной отправкой.</string>
     <string name="composer_uploading">Загрузка %1$s…</string>
+    <string name="composer_upload_waiting">Ожидание подключения для отправки %1$s…</string>
     <string name="composer_upload_failed">Ошибка загрузки: %1$s</string>
     <string name="composer_attachment_count">Вложения: %1$d</string>
 </resources>

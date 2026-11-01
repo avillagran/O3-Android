@@ -23,6 +23,7 @@
     <string name="composer_refresh">Actualizar</string>
     <string name="composer_uncertain">Resultado del envío desconocido. Comprueba el comando existente antes de editar o enviar de nuevo.</string>
     <string name="composer_uploading">Subiendo %1$s…</string>
+    <string name="composer_upload_waiting">Esperando conexión para subir %1$s…</string>
     <string name="composer_upload_failed">Error al subir: %1$s</string>
     <string name="composer_attachment_count">Adjuntos: %1$d</string>
 </resources>

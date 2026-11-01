@@ -23,6 +23,7 @@
     <string name="composer_refresh">Atualizar</string>
     <string name="composer_uncertain">Resultado desconhecido. Confira o comando existente antes de editar ou enviar novamente.</string>
     <string name="composer_uploading">Enviando %1$s…</string>
+    <string name="composer_upload_waiting">A aguardar ligação para enviar %1$s…</string>
     <string name="composer_upload_failed">Falha no envio: %1$s</string>
     <string name="composer_attachment_count">Anexos: %1$d</string>
 </resources>

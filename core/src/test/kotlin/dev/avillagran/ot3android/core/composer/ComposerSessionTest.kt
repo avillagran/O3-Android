@@ -20,10 +20,11 @@ class ComposerSessionTest {
         val session = session()
         assertFalse(session.replace(session.snapshot.copy(scope = scope.copy(queueMessage = "queued")), "queue", ComposerSelection(5, 5)))
     }
-    @Test fun imeCompositionBlocksTransformsAndSending() {
+    @Test fun imeCompositionBlocksTransformsButNotSending() {
         val session = session()
         session.edit("かな", ComposerSelection(2, 2), true)
-        assertFalse(session.snapshot.sendable)
+        assertTrue(session.snapshot.sendable)
+        assertFalse(session.snapshot.transformable)
         assertFalse(session.replace(session.snapshot, "reply", ComposerSelection(5, 5)))
         assertFalse(session.undo())
         session.edit("かな", ComposerSelection(2, 2), false)
@@ -68,6 +69,12 @@ class ComposerSessionTest {
         session.edit("new text", ComposerSelection(8, 8), false)
         assertTrue(session.finishUpload(scope, "u", "descriptor", null))
         assertEquals("new text", session.snapshot.text); assertTrue(session.snapshot.sendable)
+    }
+    @Test fun aQueuedFileWaitsWithoutBlockingTheEditorOrLeavingWithoutItsBytes() {
+        val queued = ComposerAttachment("u", "notes.md", UploadStatus.Queued, mimeType = "text/plain")
+        val snapshot = session().snapshot.copy(attachments = listOf(queued))
+        assertTrue(snapshot.transformable)
+        assertFalse(snapshot.sendable)
     }
     @Test fun uncertainSendLocksEditingAndCannotClearDraft() {
         val session = session(); val captured = session.snapshot

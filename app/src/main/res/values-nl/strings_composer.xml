@@ -23,6 +23,7 @@
     <string name="composer_refresh">Vernieuwen</string>
     <string name="composer_uncertain">Verzendresultaat onbekend. Controleer de bestaande opdracht vóór bewerken of opnieuw verzenden.</string>
     <string name="composer_uploading">%1$s uploaden…</string>
+    <string name="composer_upload_waiting">Wachten op verbinding om %1$s te uploaden…</string>
     <string name="composer_upload_failed">Upload mislukt: %1$s</string>
     <string name="composer_attachment_count">Bijlagen: %1$d</string>
 </resources>

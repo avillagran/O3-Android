@@ -60,7 +60,7 @@ class NewThreadLaunchTest {
         assertTrue(dao.rows.value.isEmpty())
         fake.connect(ConnectRoute.Bearer("http://fixture", "fixture"))
         fake.onCall("orchestration.launchThread") { throw T3Exception("write_not_authorized") }
-        assertEquals(SendResult.Failed("write_not_authorized"), sender.launchThread(fake, "env", "new-thread", arguments()))
+        assertEquals(SendResult.Failed("write_not_authorized", rejected = true), sender.launchThread(fake, "env", "new-thread", arguments()))
         assertTrue(dao.rows.value.isEmpty())
     }
 

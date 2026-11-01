@@ -99,6 +99,8 @@ object ThreadScreenTags {
     const val TIMELINE = "thread_timeline"
     const val LOADING = "thread_loading"
     const val EMPTY = "thread_empty"
+    const val REJECTED = "thread_rejected"
+    const val REJECTED_DISMISS = "thread_rejected_dismiss"
     const val WORKING = "thread_working"
     const val INTERRUPT = "thread_interrupt"
     const val STALE = "thread_stale"
@@ -249,7 +251,8 @@ fun ThreadContent(
     val noticeText = notice?.let { noticeText(it) }
     val resendLabel = stringResource(R.string.thread_resend)
     LaunchedEffect(notice) {
-        if (notice == null || noticeText == null) return@LaunchedEffect
+        // A refusal has its own row, which stays until it is dismissed or the message is resent.
+        if (notice == null || noticeText == null || (notice as? ThreadNotice.Failed)?.rejected == true) return@LaunchedEffect
         val unconfirmed = notice as? ThreadNotice.Unconfirmed
         val result = snackbar.showSnackbar(
             message = noticeText,
@@ -394,6 +397,8 @@ fun ThreadContent(
                 // out of the compact viewport when approvals or queued work appear.
                 Column(Modifier.fillMaxWidth().heightIn(max = (availableEditorHeight * if (hasQuestion) .75f else .35f).coerceAtLeast(48.dp))
                     .verticalScroll(rememberScrollState())) {
+                // Not in the queue's feedback: that lives in a sheet that is rarely open.
+                state.notice?.let { if (it is ThreadNotice.Failed && it.rejected) NoticeRow(it, onDismissNotice) }
                 ThreadQueue(
                     state.view.timeline?.optJSONObject("queue"),
                     state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(),
@@ -402,7 +407,7 @@ fun ThreadContent(
                     editingRunId = state.queueEdit?.let { org.json.JSONObject(it).optString("runId") },
                     dragOwner = state.view.threadId to state.queueConnection,
                     feedback = {
-                        state.notice?.let { Text(noticeText(it), Modifier.padding(horizontal = 16.dp), color = Ot3Theme.colors.failed) }
+                        state.notice?.let { NoticeRow(it, onDismissNotice, Modifier.padding(horizontal = 16.dp)) }
                         state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard, onEditPending) }
                     },
                 )
@@ -442,7 +447,7 @@ fun ThreadContent(
                             Text(stringResource(R.string.queue_editing), Modifier.weight(1f), color = Ot3Theme.colors.dim)
                             TextButton(onClick = onCancelQueueEdit, enabled = !state.queueBusy) { Text(stringResource(R.string.queue_cancel_edit)) }
                         }
-                        state.notice?.let { if (it is ThreadNotice.Failed) Text(noticeText(it), color = Ot3Theme.colors.failed, modifier = Modifier.padding(horizontal = 12.dp)) }
+                        state.notice?.let { if (it is ThreadNotice.Failed) NoticeRow(it, onDismissNotice, Modifier.padding(horizontal = 12.dp)) }
                         ApprovalCard(state.view.timeline?.optJSONArray("approvals"), state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty(), state.respondingRequest, state.answeredRequests, onApprovalDecision)
                     }
                     ComposerEditor(editor, true, state.canSend, state.sending, edit, ::submit, ::toggleEditor,
@@ -587,6 +592,22 @@ private fun UnconfirmedRow(
             ) { Text(stringResource(R.string.thread_resend)) }
             ConfirmOutboxDiscard(command.commandId, true, onDiscard)
             ConfirmOutboxEdit(command.commandId, onEditPending)
+        }
+    }
+}
+
+/** A refusal stays above the composer, as the official app does; anything else is one line. */
+@Composable
+internal fun NoticeRow(notice: ThreadNotice, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    if (notice !is ThreadNotice.Failed || !notice.rejected) {
+        Text(noticeText(notice), modifier, color = Ot3Theme.colors.failed)
+        return
+    }
+    val colors = MaterialTheme.colorScheme
+    Surface(color = colors.errorContainer, contentColor = colors.onErrorContainer, modifier = Modifier.fillMaxWidth().testTag(ThreadScreenTags.REJECTED)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 16.dp, end = 4.dp)) {
+            Text(noticeText(notice), Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodyMedium)
+            Ot3IconButton("x", stringResource(R.string.ot3_dialog_close), onDismiss, modifier = Modifier.testTag(ThreadScreenTags.REJECTED_DISMISS))
         }
     }
 }
@@ -750,6 +771,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
         },
         expandedActions = {
             state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, model::retry, model::discard, model::editPending) }
+            state.notice?.let { if (it is ThreadNotice.Failed && it.rejected) NoticeRow(it, model::dismissNotice) }
             if (pending != null && state.unconfirmed.none { it.commandId == pending }) {
                 Text(stringResource(R.string.composer_uncertain), Modifier.testTag("composer_uncertain"))
                 Row {
@@ -781,10 +803,15 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
                 session.edit(text, selection, composing); publish()
             }
         }, onRequest = { request ->
+            // A picker or camera result answers an earlier choice: no later state may lose it.
+            if (request is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.ImportUri) {
+                if (request.expected.scope == session.snapshot.scope) model.importAttachment(context, request.uri)
+                return@ComposerParity
+            }
             val sameContent = request.expected.scope == session.snapshot.scope && request.expected.text == session.snapshot.text &&
                 request.expected.attachments == attachments && !session.snapshot.composing
-            val scopeOnly = request is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.ImportUri ||
-                request is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RemoveAttachment
+            val scopeOnly = request is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RemoveAttachment ||
+                request is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RetryAttachment
             // Un cambio de foco puede publicar selección antes del clic; no cambia el contenido enviado.
             if (!unavailable && pending == null && state.unconfirmed.isEmpty() && request.expected.scope == session.snapshot.scope && (sameContent || scopeOnly)) {
                 when (request) {
@@ -845,8 +872,8 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
                             if (session.replace(expected, text, dev.avillagran.ot3android.core.composer.ComposerSelection(cursor, cursor))) publish()
                         }
                     }
-                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.ImportUri -> model.importAttachment(context, request.uri)
                     is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RemoveAttachment -> model.removeAttachment(request.id)
+                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RetryAttachment -> model.retryAttachment(request.id)
                     else -> Unit
                 }
             }

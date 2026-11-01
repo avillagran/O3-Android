@@ -364,7 +364,10 @@ subagents), each with a `rev`; about 35 ms per `timeline.view` and 50 ms per
   "resend the identical payload with the same `commandId`" (lib `docs/ANDROID.md`) **[lib]**. A row still
   `sending` at the next process start becomes `unknown`. While an `unknown` row exists for
   a thread, Send is disabled for it. `rpc_rejected`, `write_not_authorized` (with
-  `requiredScope`) and every other code delete it, and the composer keeps the draft.
+  `requiredScope`) and every other code delete it, set `SendResult.Failed.rejected`, and
+  the text returns to the composer with the server's reason. The lib only raises those
+  codes before a write or on the host's own answer: anything after the write is
+  `rpc_outcome_unknown`, so a deleted row was never delivered.
 
 ### Interrupting
 

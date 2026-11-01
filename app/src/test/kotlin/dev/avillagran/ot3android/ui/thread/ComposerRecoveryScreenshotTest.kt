@@ -20,6 +20,25 @@ class ComposerRecoveryScreenshotTest : ScreenshotTest() {
     fun portrait() = recovery(false)
     @Test @Config(qualifiers = "w2712dp-h1220dp-land-mdpi")
     fun landscape() = recovery(true)
+
+    /** What a refused send leaves behind: the reason, the editable text and the waiting file. */
+    @Test @Config(qualifiers = "w1220dp-h2712dp-port-mdpi")
+    fun refused() = snapshot("refused") {
+        val configuration = android.content.res.Configuration(androidx.compose.ui.platform.LocalConfiguration.current).apply {
+            screenWidthDp = 359; screenHeightDp = 798
+        }
+        CompositionLocalProvider(LocalDensity provides Density(3.4f), androidx.compose.ui.platform.LocalConfiguration provides configuration) {
+            ChatStyle {
+                Column(Modifier.fillMaxSize()) {
+                    Text("Reader keeps the available space", Modifier.weight(1f).fillMaxWidth())
+                    NoticeRow(ThreadNotice.Failed("rpc_rejected", "Model gpt-x is not available for this project.", rejected = true), {})
+                    ComposerParity(ComposerSnapshot(ComposerScope("env", "project", "thread"), text = "Please review the attached notes",
+                        attachments = listOf(ComposerAttachment("file", "notes.md", UploadStatus.Queued))),
+                        setOf(ComposerAction.Attach), onEdit = { _, _, _, _ -> }, onRequest = {})
+                }
+            }
+        }
+    }
     private fun recovery(landscape: Boolean) = snapshot(if (landscape) "landscape" else "portrait") {
         val configuration = android.content.res.Configuration(androidx.compose.ui.platform.LocalConfiguration.current).apply {
             screenWidthDp = if (landscape) 798 else 359
