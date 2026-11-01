@@ -54,15 +54,18 @@ ksp {
 // OT3A_REQUIRE_HOST_JNI=1 (CI) or -Pot3a.requireHostJni=true. The library and both switches
 // are test inputs, so adding, rebuilding or requiring it reruns the tests.
 val hostJniDir = rootProject.file("libs/host/linux-x86_64")
+val bridgeLock = rootProject.file("libs/omabridge-native.lock")
 val requireBridgeSdkProperty = providers.gradleProperty("ot3a.requireBridgeSdk").orElse("false")
 val requireHostJniProperty = providers.gradleProperty("ot3a.requireHostJni").orElse("false")
 tasks.withType<Test>().configureEach {
     systemProperty("java.library.path", hostJniDir.absolutePath)
     systemProperty("ot3a.requireHostJni", requireHostJniProperty.get())
     systemProperty("ot3a.requireBridgeSdk", requireBridgeSdkProperty.get())
-    inputs.files(fileTree(hostJniDir) { include("*.so") })
+    systemProperty("ot3a.bridgeLock", bridgeLock.absolutePath)
+    inputs.files(fileTree(hostJniDir) { include("*.so", "omabridge-native.properties") })
         .withPropertyName("hostJni")
         .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(bridgeLock).withPropertyName("bridgeLock").withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.property("requireHostJni", providers.environmentVariable("OT3A_REQUIRE_HOST_JNI").orElse(""))
 }
 

@@ -1280,3 +1280,12 @@ an empty list to an off-LAN phone. Refresh is an icon, Administration and Appear
 menu, the title ellipsizes, and the bridge status has its own line under the bar, because that
 text is long and is what an offline user needs to read.
 
+### 2026-11-01 — CI caches lib-t3-rust artifacts by name, never all of libs/
+
+`libs/` also holds tracked pins and the bridge host library, while the cache key only follows
+`libs/lib-t3-rust.lock`. Restoring the directory put back the `libs/omabridge-native.lock` of
+the day the cache was saved, so CI built the bridge from that old commit and every check still
+agreed with the restored lock. The cache now lists the lib-t3-rust files one by one, CI fails
+right after the restore if a tracked file under `libs/` differs from the commit, and
+`NativeBridgeLinkageTest` compares the commit and checksum in the host library's
+`omabridge-native.properties` with the lock and the library.
