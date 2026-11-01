@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
@@ -386,36 +387,40 @@ private fun SubagentsToggle(model: SubagentsModel, onClick: (() -> Unit)?) {
         if (model.expanded) R.string.ot3_row_hide_subagents else R.string.ot3_row_show_subagents,
         model.count.toString(),
     )
-    Box(Modifier.heightIn(min = Ot3Sizes.touchTarget).widthIn(min = Ot3Sizes.touchTarget)
-        .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClickLabel = name, onClick = onClick) else Modifier)
-        .semantics { contentDescription = name }, contentAlignment = Alignment.Center) {
-    Row(
-        Modifier
-            .heightIn(min = CAPTION_LINE)
-            
-            .background(colors.foreground.copy(alpha = SUBAGENTS_FILL), RoundedCornerShape(Ot3Radii.projectChip))
-
-            .padding(horizontal = Ot3Spacing.sm),
-        horizontalArrangement = Arrangement.spacedBy(Ot3Spacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val focused by interaction.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(4.dp)
+    val expansion = stringResource(if (model.expanded) R.string.about_expanded else R.string.about_collapsed)
+    Box(
+        Modifier.heightIn(min = Ot3Sizes.touchTarget).widthIn(min = Ot3Sizes.touchTarget)
+            .then(if (onClick != null) Modifier.clickable(interactionSource = interaction, indication = null,
+                role = Role.Button, onClickLabel = name, onClick = onClick) else Modifier)
+            .semantics { contentDescription = name; stateDescription = expansion },
+        contentAlignment = Alignment.Center,
     ) {
-        Ot3Icon("bot", null, tint = if (model.working > 0) colors.working else colors.dim, size = 12.dp)
-        Text(
-            if (model.working > 0) "${model.working}/${model.count}" else model.count.toString(),
-            style = Ot3Theme.typography.material.bodySmall,
-            color = colors.dim,
-        )
-        // chevron-right points to the end of the line in either direction.
-        val mirror = !model.expanded && LocalLayoutDirection.current == LayoutDirection.Rtl
-        Ot3Icon(
-            if (model.expanded) "chevron-down" else "chevron-right",
-            null,
-            Modifier.scale(scaleX = if (mirror) -1f else 1f, scaleY = 1f),
-            tint = colors.dim,
-            size = 12.dp,
-        )
+        Row(
+            Modifier.heightIn(min = CAPTION_LINE)
+                .background(colors.foreground.copy(alpha = if (pressed) .08f else SUBAGENTS_FILL), shape)
+                .then(if (focused) Modifier.border(1.dp, colors.accent, shape) else Modifier)
+                .padding(horizontal = Ot3Spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(Ot3Spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Ot3Icon("bot", null, tint = if (model.working > 0) colors.working else colors.dim, size = 12.dp)
+            Text(
+                if (model.working > 0) "${model.working}/${model.count}" else model.count.toString(),
+                style = Ot3Theme.typography.material.bodySmall,
+                color = colors.dim,
+            )
+            val mirror = !model.expanded && LocalLayoutDirection.current == LayoutDirection.Rtl
+            Ot3Icon(
+                if (model.expanded) "chevron-down" else "chevron-right", null,
+                Modifier.scale(scaleX = if (mirror) -1f else 1f, scaleY = 1f),
+                tint = colors.dim, size = 12.dp,
+            )
+        }
     }
-}
 }
 
 private val CAPTION_LINE = 20.dp

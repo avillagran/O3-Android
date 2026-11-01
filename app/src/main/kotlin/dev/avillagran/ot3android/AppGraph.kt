@@ -254,13 +254,15 @@ class AppGraph(
             connectionManager.supervisors.collectLatest { supervisors ->
                 coroutineScope {
                     supervisors.forEach { (id, supervisor) -> launch {
-                        supervisor.shell.filterNotNull().collect { shell ->
+                        kotlinx.coroutines.flow.combine(supervisor.shell, supervisor.connection) { shell, connection -> shell to connection }
+                            .collect { (shell, currentConnection) ->
+                            if (shell == null) return@collect
                             try {
                                 val sidebar = dev.avillagran.ot3android.core.shell.SidebarView.build(
                                     DomainEngine.shared, listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment(id, shell = shell)),
                                     System.currentTimeMillis())
                                 // Only network-owned shells refresh disk age; a cached display must not.
-                                if (supervisor.connection.value != null) {
+                                if (currentConnection != null) {
                                     environmentRepository.cacheAuthority(id)?.let { authority ->
                                         val body = org.json.JSONObject().put("snapshotSequence", shell.sequence)
                                             .put("projects", org.json.JSONArray(shell.projects.map { it.raw }))
