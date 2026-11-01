@@ -1262,6 +1262,41 @@ verified by a compact-viewport close test and a row-replacement lifetime test,
 with device acceptance still required. Short content wraps instead of reserving
 a mostly empty full-height panel. No subscription or protocol rules moved into UI.
 
+### 2026-11-01 — A manual row borrows the catalog route only with the user's approval
+
+A row added by hand stays independent: its URL, credential and provenance do not move when it
+runs over the bridge catalog's route, so `cacheAuthority` and saved cursors keep their meaning.
+The offer lives in memory, rebuilt from each projection, including one served from a stale
+cached catalog, because an unreachable bridge is the case that needs it. The SDK stops offering
+a route seven days after the catalog's expiry, because a name that lapses can change hands.
+
+The fallback was first automatic, and a security review refused it: it sent a manual bearer, up
+to write access, to a URL the bridge named, for a host that may never have consented to the
+bridge. Gateways terminate TLS on their own device, so a bridge running one reads that bearer in
+clear; the earlier claim that the bridge never sees it was false. So the fallback is off by
+default, and the approval binds one row to one exact origin (scheme, host and port): the row
+shows the offered host, a dialog states the consequence, and nothing, not even a descriptor
+read, reaches that host first. Any other origin asks again, and changing or removing the row
+drops the approval. The approval is stored locally, one origin per row; offers are not.
+
+Only reachability errors trigger the fallback: a home server that answers with a refusal keeps
+its own route. A refusal at the fallback is not the row's failure, so the row keeps retrying its
+own URL, but it is shown on the row, and that route is not offered the token again in the same
+run. A route withdrawn during a pause, or while its descriptor is read, is not sent the token. A
+catalog the SDK refuses closes the fallback until one validates. That memory does not survive a
+restart: the cache is still the last valid catalog, within its seven days.
+
+Later, the fallback should carry a bounded credential issued by the bridge, never the row's own
+bearer. This is one fallback, not the multi-route model of UI_SPEC 4.2.1 (validation P2), which
+would replace it.
+
+### 2026-11-01 — Environments keeps its bar to one line
+
+Three text actions wrapped the title until the bar filled a portrait screen, which looked like
+an empty list to an off-LAN phone. Refresh is an icon, Administration and Appearance are in a
+menu, the title ellipsizes, and the bridge status has its own line under the bar, because that
+text is long and is what an offline user needs to read.
+
 ### 2026-11-01 — CI caches lib-t3-rust artifacts by name, never all of libs/
 
 `libs/` also holds tracked pins and the bridge host library, while the cache key only follows

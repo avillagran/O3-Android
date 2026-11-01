@@ -30,4 +30,13 @@
     <string name="bridge_peer_managed">Beheer toegestaan</string>
     <string name="bridge_peer_unmanaged">Geen beheertoestemming</string>
     <string name="bridge_peer_selected">Geselecteerde conceptautoriteit</string>
+    <string name="environments_via_gateway">via gateway</string>
+    <string name="environments_gateway_offered">Eigen URL onbereikbaar. De bridge biedt %1$s aan</string>
+    <string name="environments_gateway_review">Bekijken</string>
+    <string name="environments_gateway_approve_title">Dit token naar %1$s sturen?</string>
+    <string name="environments_gateway_approve_body">Het token dat voor deze rij is opgeslagen, gaat naar deze gateway zolang de eigen URL van de rij onbereikbaar is. Wie de gateway beheert, en dat kan de bridge zelf zijn, kan het token lezen en er deze server mee gebruiken. Keur alleen goed als je diegene vertrouwt.</string>
+    <string name="environments_gateway_approve">Deze gateway gebruiken</string>
+    <string name="environments_gateway_stop">Gateway niet meer gebruiken</string>
+    <string name="environments_gateway_refused">%1$s heeft dit token geweigerd</string>
+    <string name="environments_gateway_unusable">%1$s kan niet voor deze rij worden gebruikt</string>
 </resources>

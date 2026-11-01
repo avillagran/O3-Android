@@ -30,4 +30,13 @@
     <string name="bridge_peer_managed">관리 권한 있음</string>
     <string name="bridge_peer_unmanaged">관리 권한 없음</string>
     <string name="bridge_peer_selected">선택한 초안 관리 주체</string>
+    <string name="environments_via_gateway">게이트웨이 경유</string>
+    <string name="environments_gateway_offered">자체 URL에 연결할 수 없습니다. 브리지가 %1$s을(를) 제안합니다</string>
+    <string name="environments_gateway_review">검토</string>
+    <string name="environments_gateway_approve_title">이 토큰을 %1$s(으)로 보낼까요?</string>
+    <string name="environments_gateway_approve_body">이 행에 저장된 토큰은 행 자체 URL에 연결할 수 없는 동안 이 게이트웨이로 전송됩니다. 게이트웨이를 운영하는 사람은(브리지 자체일 수 있음) 토큰을 읽고 이 서버를 사용할 수 있습니다. 신뢰하는 경우에만 승인하세요.</string>
+    <string name="environments_gateway_approve">이 게이트웨이 사용</string>
+    <string name="environments_gateway_stop">게이트웨이 사용 중지</string>
+    <string name="environments_gateway_refused">%1$s이(가) 이 토큰을 거부했습니다</string>
+    <string name="environments_gateway_unusable">%1$s은(는) 이 행에 사용할 수 없습니다</string>
 </resources>

@@ -3,8 +3,8 @@ package dev.avillagran.ot3android.core.domain
 /**
  * A T3 Code server the user can connect to.
  *
- * Routes beyond URL + token (pairing link, OmaBridge, Tailscale) are added in later
- * iterations; credentials never live in this type.
+ * A row has one URL. A bridge catalog can supply a fallback for it while that URL is out of
+ * reach, without changing the row (`ConnectionSupervisor`). Credentials never live in this type.
  *
  * @property id local, stable id of this entry; also the key of its token in the
  *   credential store.

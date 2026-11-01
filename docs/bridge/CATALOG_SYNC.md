@@ -67,6 +67,15 @@ This is not the desktop native publisher, Android JNI client or T3 enrollment ye
 Its real-loopback QUIC tests are tracked with the companion PR; no productive state
 is changed and no native desktop tokens are exported.
 
+## Moved bridges and manual rows
+
+`hostRefresh` keeps the bridge's address current under its paired identity, and
+`routeFallbacks` offers a manual row the catalog's route while its own URL is out of
+reach. The offer is opt-in per row and per exact origin: the user sees the host and
+approves it before any token leaves. A stale cached catalog still supplies an offer for
+up to seven days past its expiry; a withdrawal, or a catalog the SDK refuses, does not. See
+[OB7](../OMABRIDGE_REQUESTS.md#ob7--a-phone-must-learn-a-moved-bridge-and-a-manual-row-must-survive-leaving-home-2026-11-01).
+
 ## Remaining end-to-end work and acceptance
 
 1. OmaBridge authenticated catalog transport: bind the paired client's identity and

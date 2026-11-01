@@ -30,4 +30,13 @@
     <string name="bridge_peer_managed">Zarządzanie dozwolone</string>
     <string name="bridge_peer_unmanaged">Brak uprawnienia zarządzania</string>
     <string name="bridge_peer_selected">Wybrany organ szkiców</string>
+    <string name="environments_via_gateway">przez bramę</string>
+    <string name="environments_gateway_offered">Własny URL jest nieosiągalny. Mostek oferuje %1$s</string>
+    <string name="environments_gateway_review">Sprawdź</string>
+    <string name="environments_gateway_approve_title">Wysłać ten token do %1$s?</string>
+    <string name="environments_gateway_approve_body">Token zapisany dla tego wiersza trafi do tej bramy, dopóki własny URL wiersza jest nieosiągalny. Operator bramy, którym może być sam mostek, może odczytać token i używać z nim tego serwera. Zatwierdź tylko wtedy, gdy mu ufasz.</string>
+    <string name="environments_gateway_approve">Użyj tej bramy</string>
+    <string name="environments_gateway_stop">Przestań używać bramy</string>
+    <string name="environments_gateway_refused">%1$s odrzucił ten token</string>
+    <string name="environments_gateway_unusable">Nie można użyć %1$s dla tego wiersza</string>
 </resources>

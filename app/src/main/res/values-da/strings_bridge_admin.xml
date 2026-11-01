@@ -30,4 +30,13 @@
     <string name="bridge_peer_managed">Administration tilladt</string>
     <string name="bridge_peer_unmanaged">Ingen administrationstilladelse</string>
     <string name="bridge_peer_selected">Valgt kladdeautoritet</string>
+    <string name="environments_via_gateway">via gateway</string>
+    <string name="environments_gateway_offered">Egen URL er utilgængelig. Broen tilbyder %1$s</string>
+    <string name="environments_gateway_review">Gennemse</string>
+    <string name="environments_gateway_approve_title">Send dette token til %1$s?</string>
+    <string name="environments_gateway_approve_body">Tokenet, der er gemt for denne række, sendes til denne gateway, så længe rækkens egen URL er utilgængelig. Den, der driver gatewayen, og det kan være broen selv, kan læse tokenet og bruge denne server med det. Godkend kun, hvis du stoler på vedkommende.</string>
+    <string name="environments_gateway_approve">Brug denne gateway</string>
+    <string name="environments_gateway_stop">Stop med at bruge gateway</string>
+    <string name="environments_gateway_refused">%1$s afviste dette token</string>
+    <string name="environments_gateway_unusable">%1$s kan ikke bruges til denne række</string>
 </resources>

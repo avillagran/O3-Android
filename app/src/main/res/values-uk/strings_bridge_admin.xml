@@ -30,4 +30,13 @@
     <string name="bridge_peer_managed">Керування дозволено</string>
     <string name="bridge_peer_unmanaged">Немає дозволу на керування</string>
     <string name="bridge_peer_selected">Вибраний центр чернеток</string>
+    <string name="environments_via_gateway">через шлюз</string>
+    <string name="environments_gateway_offered">Власний URL недоступний. Міст пропонує %1$s</string>
+    <string name="environments_gateway_review">Переглянути</string>
+    <string name="environments_gateway_approve_title">Надіслати цей токен на %1$s?</string>
+    <string name="environments_gateway_approve_body">Токен, збережений для цього рядка, надсилатиметься на цей шлюз, доки власний URL рядка недоступний. Той, хто керує шлюзом (це може бути сам міст), зможе прочитати токен і використовувати з ним цей сервер. Підтверджуйте, лише якщо довіряєте йому.</string>
+    <string name="environments_gateway_approve">Використовувати цей шлюз</string>
+    <string name="environments_gateway_stop">Припинити використовувати шлюз</string>
+    <string name="environments_gateway_refused">%1$s відхилив цей токен</string>
+    <string name="environments_gateway_unusable">%1$s не можна використати для цього рядка</string>
 </resources>

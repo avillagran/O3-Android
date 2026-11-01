@@ -15,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -24,7 +26,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -36,8 +44,11 @@ sealed interface ConnectionState {
     data object Disconnected : ConnectionState
     data object Connecting : ConnectionState
 
-    /** Authenticated; the shell stream is open or being resumed. */
-    data class Connected(val descriptor: ServerDescriptor) : ConnectionState
+    /**
+     * Authenticated; the shell stream is open or being resumed. With [viaFallback] it runs
+     * over the catalog's route because the environment's own URL is out of reach.
+     */
+    data class Connected(val descriptor: ServerDescriptor, val viaFallback: Boolean = false) : ConnectionState
 
     /** The token was rejected (401 or 403). No automatic retry: the user edits the token. */
     data object Unauthorized : ConnectionState
@@ -49,6 +60,23 @@ sealed interface ConnectionState {
      */
     data class Unreachable(val error: String, val nextRetryAt: Long?) : ConnectionState
 }
+
+/** A route that did not take this row: [error] is the code it failed with. */
+data class FallbackRefusal(val url: String, val error: String)
+
+/**
+ * The fallback side of one row, for the UI. It outlives a single attempt, so a row does not
+ * flicker through each retry.
+ *
+ * @property ownRouteDown the row's own URL last failed with a route error
+ * @property inUse the fallback this run is connected to or connecting through
+ * @property refused why this run stopped offering the token to its fallback
+ */
+data class FallbackStatus(
+    val ownRouteDown: Boolean = false,
+    val inUse: String? = null,
+    val refused: FallbackRefusal? = null,
+)
 
 /**
  * The supervisor's live connection, for code that opens its own streams on it (the thread
@@ -83,6 +111,18 @@ data class Connection(val transport: T3Transport, val epoch: Int)
  * is not read back yet: without a cached shell, a run always starts from a shell GET and
  * resumes after its sequence (docs/DECISIONS.md).
  *
+ * An environment may have a fallback in [routeFallbacks]: the bridge catalog's route to the
+ * same server, for a row saved with a URL that only works at home. [routeFallbacks] holds only
+ * routes the user approved for this row and this exact origin; see [ConnectionManager]. When the
+ * row's own URL is out of reach ([ROUTE_ERRORS]) the next attempt, in the same backoff step, uses
+ * the fallback. Its descriptor is checked against the known environment id before the token is
+ * sent, and the fallback must still be in [routeFallbacks] at that moment: a withdrawn route is
+ * never sent the token. The row itself never changes. While the fallback holds, the own URL is
+ * probed with no credential on a jittered backoff, and on [wake]. When it answers, the run goes
+ * back, resuming from the held cursor: both URLs reach one server. A fallback whose server
+ * refuses it is not tried again in that run. That refusal is not the row's failure: the row
+ * keeps its own error and keeps retrying, and [fallback] reports the refusal.
+ *
  * Pure Kotlin (no Android types); runs in [scope]. The token is read through [token] at each
  * run and never logged.
  */
@@ -99,6 +139,8 @@ class ConnectionSupervisor(
     private val io: CoroutineDispatcher = Dispatchers.IO,
     /** Where a shell read over HTTP is parsed (it can hold hundreds of threads). */
     private val computation: CoroutineDispatcher = Dispatchers.Default,
+    /** Fallback route by local environment id; see the class doc. */
+    private val routeFallbacks: StateFlow<Map<String, String>> = MutableStateFlow(emptyMap()),
 ) {
     val environmentId: String = environment.id
     private val baseUrl = environment.baseUrl
@@ -119,6 +161,11 @@ class ConnectionSupervisor(
 
     /** Successful `connect` calls so far, across runs; see [Connection.epoch]. */
     private var epoch = 0
+
+    private val _fallback = MutableStateFlow(FallbackStatus())
+
+    /** What this row is doing with its fallback; see [FallbackStatus]. */
+    val fallback: StateFlow<FallbackStatus> = _fallback.asStateFlow()
 
     private val _shell = MutableStateFlow<ShellState?>(null)
 
@@ -158,6 +205,7 @@ class ConnectionSupervisor(
     @Volatile private var transport: T3Transport? = null
     @Volatile private var job: Job? = null
     private val retryNow = Channel<Unit>(Channel.CONFLATED)
+    private val probeNow = Channel<Unit>(Channel.CONFLATED)
 
     val isRunning: Boolean get() = job?.isActive == true
 
@@ -196,9 +244,9 @@ class ConnectionSupervisor(
     }
 
     /** Publishes [ConnectionState.Connected] and its [Connection] together, if [run] is current. */
-    private fun setConnected(run: Int, descriptor: ServerDescriptor, client: T3Transport, epoch: Int) = synchronized(lock) {
+    private fun setConnected(run: Int, descriptor: ServerDescriptor, client: T3Transport, epoch: Int, viaFallback: Boolean) = synchronized(lock) {
         if (run != generation) return@synchronized
-        _state.value = ConnectionState.Connected(descriptor)
+        _state.value = ConnectionState.Connected(descriptor, viaFallback)
         _connection.value = Connection(client, epoch)
     }
 
@@ -213,10 +261,12 @@ class ConnectionSupervisor(
 
     /**
      * Probes the open streams (on resume or a network change; a dead socket then ends with
-     * `stream_timeout` within about 3 s) and skips a pending backoff.
+     * `stream_timeout` within about 3 s), skips a pending backoff and, on a fallback route,
+     * checks the environment's own URL again.
      */
     suspend fun wake() {
         runCatching { transport?.wakeSubscriptions() }
+        probeNow.trySend(Unit)
         if (_state.value is ConnectionState.Unreachable && isRunning) retryNow.trySend(Unit)
     }
 
@@ -249,8 +299,13 @@ class ConnectionSupervisor(
                 val persister = launch {
                     pendingCursor.debounce(PERSIST_DEBOUNCE_MS).collect { persistCursor() }
                 }
+                // A fallback that turns up during a long backoff should not wait it out.
+                val fallbackWatch = launch {
+                    routeFallbacks.map { it[environmentId] }.distinctUntilChanged().drop(1).collect { retryNow.trySend(Unit) }
+                }
                 reconnect(run, client, backoff)
                 persister.cancel()
+                fallbackWatch.cancel()
             }
         } catch (error: Exception) {
             // Never end silently: the state says so, retry() starts over, and the scope's
@@ -265,6 +320,9 @@ class ConnectionSupervisor(
                 if (run == generation && live) _state.value = ConnectionState.Disconnected
                 if (run == generation) _connection.value = null
             }
+            synchronized(lock) {
+                if (run == generation || job == null) _fallback.value = _fallback.value.copy(inUse = null)
+            }
             withContext(NonCancellable + io) {
                 client.close()
                 persistCursor()
@@ -272,15 +330,68 @@ class ConnectionSupervisor(
         }
     }
 
+    /** The route of one run. */
+    private class RouteChoice {
+        /** The fallback in use; null for the environment's own URL. */
+        var fallback: String? = null
+
+        /** A fallback whose server refused it: not tried again in this run. */
+        var refused: FallbackRefusal? = null
+
+        /** What the own URL last failed with, the error to show while a fallback fails too. */
+        var ownError: String? = null
+
+        /** The current route reached [ConnectionState.Connected] in the latest attempt. */
+        var connected = false
+
+        fun fallbackFor(error: String, candidate: String?): String? =
+            candidate.takeIf { error in ROUTE_ERRORS && it != refused?.url }
+    }
+
     /** Connects and follows the stream until `unauthorized` or a fatal error. */
     private suspend fun reconnect(run: Int, client: T3Transport, backoff: Backoff) {
+        val routes = RouteChoice()
+        val probes = Backoff(random, PROBE_FIRST_MS, PROBE_MAX_MS)
         while (true) {
-            val error = attempt(run, client, backoff)
+            routes.connected = false
+            // A route withdrawn during a pause or a retry is never tried again with the token,
+            // and one approved again after a refusal gets a new try.
+            val current = routeFallbacks.value[environmentId]
+            if (routes.fallback != current) routes.fallback = null
+            if (routes.refused?.url != current) routes.refused = null
+            _fallback.update { it.copy(inUse = routes.fallback, refused = routes.refused) }
+            val fallback = routes.fallback
+            val error = attempt(run, client, backoff, routes, probes)
             currentCoroutineContext().ensureActive()
             if (error == CANCELLED) {
                 // Still running, so not our stop(): reopen from the held cursor. The
                 // fixed pause keeps a handle that cancels at once from spinning.
                 delay(CANCEL_REOPEN_MS)
+                continue
+            }
+            if (error == ROUTE_CHANGED) {
+                routes.fallback = null
+                continue
+            }
+            if (fallback == null) {
+                routes.ownError = error
+                _fallback.update { it.copy(ownRouteDown = error in ROUTE_ERRORS) }
+                val next = routes.fallbackFor(error, routeFallbacks.value[environmentId])
+                if (next != null && serverEnvironmentId != null) {
+                    // Same backoff step: it is paid only if this route fails as well.
+                    routes.fallback = next
+                    continue
+                }
+            } else if (error != MISSING_TOKEN && (error == UNAUTHORIZED || error in FATAL)) {
+                routes.refused = FallbackRefusal(fallback, error)
+                routes.fallback = null
+                _fallback.update { it.copy(inUse = null, refused = routes.refused) }
+                pause(run, backoff, routes.ownError ?: error)
+                continue
+            } else if (!routes.connected) {
+                routes.fallback = null
+                _fallback.update { it.copy(inUse = null) }
+                pause(run, backoff, routes.ownError ?: error)
                 continue
             }
             when {
@@ -294,46 +405,95 @@ class ConnectionSupervisor(
                 }
                 error !in TRANSIENT -> reset()
             }
-            val delayMs = backoff.nextDelayMs()
-            setState(run, ConnectionState.Unreachable(error, clock() + delayMs))
-            while (retryNow.tryReceive().isSuccess) Unit
-            withTimeoutOrNull(delayMs) { retryNow.receive() }
+            pause(run, backoff, error)
+        }
+    }
+
+    /** Publishes [error] and waits out one jittered backoff step, or a [retry]. */
+    private suspend fun pause(run: Int, backoff: Backoff, error: String) {
+        val delayMs = backoff.nextDelayMs()
+        setState(run, ConnectionState.Unreachable(error, clock() + delayMs))
+        while (retryNow.tryReceive().isSuccess) Unit
+        withTimeoutOrNull(delayMs) { retryNow.receive() }
+    }
+
+    /** Runs [stream] until it ends, the own URL answers again or [fallback] is no longer offered. */
+    private suspend fun untilRouteChanges(fallback: String, probes: Backoff, stream: suspend () -> String): String = coroutineScope {
+        val following = async { stream() }
+        val withdrawn = async {
+            routeFallbacks.first { it[environmentId] != fallback }
+            ROUTE_CHANGED
+        }
+        val returned = async {
+            while (true) {
+                withTimeoutOrNull(probes.nextDelayMs()) { probeNow.receive() }
+                if (ownRouteAnswers()) break
+            }
+            ROUTE_CHANGED
+        }
+        select {
+            following.onAwait { it }
+            withdrawn.onAwait { it }
+            returned.onAwait { it }
+        }.also { coroutineContext.cancelChildren() }
+    }
+
+    /** A credential-free look at the environment's own URL, on a transport of its own. */
+    private suspend fun ownRouteAnswers(): Boolean {
+        val probe = withContext(io) { transportFactory.create() }
+        return try {
+            probe.fetchDescriptor(baseUrl, serverEnvironmentId)
+            true
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
+            false
+        } finally {
+            withContext(NonCancellable + io) { probe.close() }
         }
     }
 
     /** One connect and stream; returns the error code that ended it. */
-    private suspend fun attempt(run: Int, client: T3Transport, backoff: Backoff): String {
+    private suspend fun attempt(run: Int, client: T3Transport, backoff: Backoff, routes: RouteChoice, probes: Backoff): String {
+        val fallback = routes.fallback
+        val url = fallback ?: baseUrl
         var connectedAt: Long? = null
         try {
             if (_state.value !is ConnectionState.Connected) setState(run, ConnectionState.Connecting)
-            val descriptor = ServerDescriptor.from(client.fetchDescriptor(baseUrl, serverEnvironmentId))
+            val descriptor = ServerDescriptor.from(client.fetchDescriptor(url, serverEnvironmentId))
             val secret = token() ?: return MISSING_TOKEN
-            client.connect(ConnectRoute.Bearer(baseUrl, secret))
+            // The checks above can take seconds, and the route can be withdrawn meanwhile.
+            if (fallback != null && routeFallbacks.value[environmentId] != fallback) return ROUTE_CHANGED
+            client.connect(ConnectRoute.Bearer(url, secret))
             val connected = synchronized(lock) { ++epoch }
             if (shellLock.withLock { held } == null) {
                 val fresh = withContext(computation) { ShellReducer.parse(client.shell()) }
                 shellLock.withLock { replaceHeld(fresh) }
             }
             if (serverEnvironmentId == null) serverEnvironmentId = descriptor.environmentId
-            setConnected(run, descriptor, client, connected)
+            setConnected(run, descriptor, client, connected, viaFallback = fallback != null)
+            routes.connected = true
+            if (fallback == null) _fallback.update { it.copy(ownRouteDown = false) }
             try {
                 onConnected(descriptor)
             } catch (error: Exception) {
                 if (error is CancellationException) throw error
             }
 
-            var closedWith: String? = null
             val after = shellLock.withLock { cursor }
-            client.shellStream(afterSequence = after).collect { update ->
-                if (connectedAt == null) connectedAt = clock()
-                shellLock.withLock {
-                    held = ShellReducer.reduce(held, update)
-                    cursor = update.shellCursor(cursor)
-                    if (update.repaint || update.closed) showHeld()
+            val follow: suspend () -> String = {
+                var closedWith: String? = null
+                client.shellStream(afterSequence = after).collect { update ->
+                    if (connectedAt == null) connectedAt = clock()
+                    shellLock.withLock {
+                        held = ShellReducer.reduce(held, update)
+                        cursor = update.shellCursor(cursor)
+                        if (update.repaint || update.closed) showHeld()
+                    }
+                    if (update.closed) closedWith = update.error ?: CANCELLED
                 }
-                if (update.closed) closedWith = update.error ?: CANCELLED
+                closedWith ?: STREAM_CLOSED
             }
-            return closedWith ?: STREAM_CLOSED
+            return if (fallback == null) follow() else untilRouteChanges(fallback, probes, follow)
         } catch (error: T3Exception) {
             return error.code
         } catch (error: CancellationException) {
@@ -342,7 +502,10 @@ class ConnectionSupervisor(
             return INTERNAL_ERROR
         } finally {
             clearConnection(run)
-            connectedAt?.let { backoff.connectionLasted(clock() - it) }
+            connectedAt?.let {
+                backoff.connectionLasted(clock() - it)
+                if (fallback == null) probes.connectionLasted(clock() - it)
+            }
         }
     }
 
@@ -402,11 +565,21 @@ class ConnectionSupervisor(
         /** Not a lib code: a stream closed with no error (a cancel); never shown. */
         private const val CANCELLED = "cancelled"
 
+        /** Not a lib code: the route changed under a healthy stream; never shown. */
+        private const val ROUTE_CHANGED = "route_changed"
+
+        /** How soon the own URL is first probed from a fallback, and how far that backs off. */
+        const val PROBE_FIRST_MS = 15_000L
+        const val PROBE_MAX_MS = 120_000L
+
         /** Not a lib code: something other than a [T3Exception] failed. */
         const val INTERNAL_ERROR = "internal_error"
 
         /** Errors after which the stream resumes from the held shell's sequence. */
         val TRANSIENT = setOf("stream_timeout", "disconnected", "rpc_connection_failed", "unreachable", "subscription_limit")
+
+        /** Errors that say the route is out of reach, not that the server refused. */
+        val ROUTE_ERRORS = setOf("stream_timeout", "disconnected", "rpc_connection_failed", "unreachable")
 
         /** Errors that retrying cannot fix. */
         val FATAL = setOf("invalid_endpoint", "t3_environment_mismatch", "invalid_connection_options", MISSING_TOKEN)

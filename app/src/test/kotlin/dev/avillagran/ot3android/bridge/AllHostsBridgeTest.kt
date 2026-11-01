@@ -42,7 +42,7 @@ class AllHostsBridgeTest {
     private lateinit var connections: ConnectionManager
     private lateinit var controller: BridgeCatalogController
     private val secrets = mutableMapOf<String, String>()
-    private val ops = mutableListOf<String>()
+    private val ops = java.util.concurrent.CopyOnWriteArrayList<String>()
     private val stops = mutableListOf<String>()
     private var plan = plan()
     private var hostPair: () -> JSONObject = { receipt("write-session") }
@@ -50,6 +50,9 @@ class AllHostsBridgeTest {
     private var failDelete = false
     private var duringStop: suspend () -> Unit = {}
     private var sentLocal = JSONArray()
+    private var status = "available"
+    private var refresh: () -> JSONObject = { JSONObject().put("status", status) }
+    private var hostRefresh: () -> JSONObject = { JSONObject().put("reachable", true).put("changed", false) }
 
     private val tokens = object : TokenStore {
         override suspend fun token(environmentId: String) = secrets[environmentId]
@@ -97,10 +100,12 @@ class AllHostsBridgeTest {
             ops += op
             when (op) {
                 "open" -> JSONObject().put("handle", 1).put("clientId", "client").put("bridgeId", JSONObject.NULL)
-                "refresh" -> JSONObject().put("status", "available")
+                "refresh" -> refresh()
+                "cached" -> JSONObject().put("status", status)
                 "projection" -> { sentLocal = request.getJSONArray("local"); plan }
                 "enroll" -> receipt("read-session", now + 120_000).put("status", "authorized")
                 "hostPair" -> hostPair()
+                "hostRefresh" -> hostRefresh()
                 else -> JSONObject()
             }
         }, clock = { now }, mutations = repository.mutations, stopConnection = {
@@ -281,5 +286,119 @@ class AllHostsBridgeTest {
         controller.refresh()
         assertEquals("https://moved.example/", repository.find("row")!!.baseUrl)
         assertTrue("row" in connections.supervisors.value)
+    }
+
+    /** Polls until [op] has run, as the foreground loop does. */
+    private suspend fun awaitOp(op: String) {
+        repeat(500) {
+            if (op in ops) return
+            kotlinx.coroutines.delay(10)
+        }
+        fail("$op did not run: $ops")
+    }
+
+    private suspend fun selectBridge() {
+        controller.selectBridge("a".repeat(64))
+    }
+
+    @Test fun theForegroundLoopRefreshesTheBridgeAddressAfterTheCatalog() = runBlocking {
+        selectBridge()
+        controller.setForeground(true)
+        awaitOp("hostRefresh")
+        controller.setForeground(false)
+        assertTrue(ops.indexOf("projection") < ops.indexOf("hostRefresh"))
+    }
+
+    @Test fun aFailedAddressRefreshSaysNothingAboutTheCatalog() = runBlocking {
+        hostRefresh = { error("isolated-native-failure") }
+        selectBridge()
+        controller.setForeground(true)
+        awaitOp("hostRefresh")
+        controller.setForeground(false)
+        assertEquals("available", controller.status.value)
+    }
+
+    @Test fun aWithdrawnBridgeIsNotAskedForItsAddress() = runBlocking {
+        plan = plan()
+        selectBridge()
+        status = "revoked"
+        controller.setForeground(true)
+        awaitOp("projection")
+        kotlinx.coroutines.delay(100)
+        controller.setForeground(false)
+        assertFalse("hostRefresh" in ops)
+    }
+
+    private val offer get() = plan().put("routeFallbacks", JSONArray().put(JSONObject().put("id", "lan").put("baseUrl", "https://node.example/")))
+
+    private fun usableRoutes(): Map<String, String> = connections.approvedRouteFallbacks.value
+
+    @Test fun aNetworkChangeBurstAsksForTheAddressOnceAndTheIconAsksAgain() = runBlocking {
+        selectBridge()
+        controller.setForeground(true)
+        awaitOp("hostRefresh")
+        repeat(5) {
+            ops.clear()
+            controller.reconnect()
+            awaitOp("projection")
+        }
+        kotlinx.coroutines.delay(100)
+        assertFalse("hostRefresh" in ops)
+
+        ops.clear()
+        controller.refreshNow()
+        awaitOp("hostRefresh")
+        controller.setForeground(false)
+    }
+
+    @Test fun aRejectedCatalogClosesTheRoutesUntilOneValidates() = runBlocking {
+        repository.save("lan", "NODE", "http://192.168.1.177:3773", "node", "secret")
+        connections.approveRoute("lan", "https://node.example:443")
+        plan = offer
+        controller.refresh()
+        assertEquals(mapOf("lan" to "https://node.example/"), usableRoutes())
+
+        refresh = { error("bridge_catalog_revision_reused") }
+        assertTrue(runCatching { controller.refresh() }.isFailure)
+        assertEquals("nothing old stays live", emptyMap<String, String>(), usableRoutes())
+
+        // The cache a bridge left behind does not bring them back when it goes silent.
+        refresh = { JSONObject().put("status", "offline") }
+        controller.refresh()
+        assertEquals(emptyMap<String, String>(), usableRoutes())
+
+        refresh = { JSONObject().put("status", "available") }
+        controller.refresh()
+        assertEquals(mapOf("lan" to "https://node.example/"), usableRoutes())
+    }
+
+    @Test fun anExpiredCatalogTakesItsOfferAway() = runBlocking {
+        repository.save("lan", "NODE", "http://192.168.1.177:3773", "node", "secret")
+        connections.approveRoute("lan", "https://node.example:443")
+        plan = offer
+        controller.refresh()
+        assertEquals(1, usableRoutes().size)
+
+        // Past the SDK's limit the plan stops offering it.
+        status = "expired"
+        plan = plan()
+        controller.refresh()
+        assertEquals(emptyMap<String, String>(), usableRoutes())
+    }
+
+    @Test fun anOfferAloneOpensNothing() = runBlocking {
+        repository.save("lan", "NODE", "http://192.168.1.177:3773", "node", "secret")
+        plan = offer
+        controller.refresh()
+        assertEquals(emptyMap<String, String>(), usableRoutes())
+    }
+
+    @Test fun aRowOfThePlanGetsItsFallbackAndKeepsItsUrl() = runBlocking {
+        repository.save("lan", "NODE", "http://192.168.1.177:3773", "node", "secret")
+        plan = offer
+        controller.refresh()
+        assertEquals("http://192.168.1.177:3773", repository.find("lan")!!.baseUrl)
+        assertNull("independent: nothing the bridge owns", database.bridgeManagedDao().find("lan"))
+        assertEquals("secret", repository.token("lan"))
     }
 }

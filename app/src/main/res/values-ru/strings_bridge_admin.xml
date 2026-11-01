@@ -30,4 +30,13 @@
     <string name="bridge_peer_managed">Управление разрешено</string>
     <string name="bridge_peer_unmanaged">Нет разрешения на управление</string>
     <string name="bridge_peer_selected">Выбранный центр черновиков</string>
+    <string name="environments_via_gateway">через шлюз</string>
+    <string name="environments_gateway_offered">Собственный URL недоступен. Мост предлагает %1$s</string>
+    <string name="environments_gateway_review">Проверить</string>
+    <string name="environments_gateway_approve_title">Отправить этот токен на %1$s?</string>
+    <string name="environments_gateway_approve_body">Токен, сохранённый для этой строки, будет отправляться на этот шлюз, пока собственный URL строки недоступен. Тот, кто управляет шлюзом (это может быть сам мост), сможет прочитать токен и использовать с ним этот сервер. Подтверждайте, только если доверяете ему.</string>
+    <string name="environments_gateway_approve">Использовать этот шлюз</string>
+    <string name="environments_gateway_stop">Перестать использовать шлюз</string>
+    <string name="environments_gateway_refused">%1$s отклонил этот токен</string>
+    <string name="environments_gateway_unusable">%1$s нельзя использовать для этой строки</string>
 </resources>

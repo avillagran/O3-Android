@@ -30,4 +30,13 @@
     <string name="bridge_peer_managed">Administration tillåten</string>
     <string name="bridge_peer_unmanaged">Ingen administrationsbehörighet</string>
     <string name="bridge_peer_selected">Vald utkastauktoritet</string>
+    <string name="environments_via_gateway">via gateway</string>
+    <string name="environments_gateway_offered">Egen URL går inte att nå. Bryggan erbjuder %1$s</string>
+    <string name="environments_gateway_review">Granska</string>
+    <string name="environments_gateway_approve_title">Skicka denna token till %1$s?</string>
+    <string name="environments_gateway_approve_body">Token som sparats för den här raden skickas till denna gateway så länge radens egen URL inte går att nå. Den som driver gatewayen, vilket kan vara bryggan själv, kan läsa token och använda den här servern med den. Godkänn bara om du litar på hen.</string>
+    <string name="environments_gateway_approve">Använd denna gateway</string>
+    <string name="environments_gateway_stop">Sluta använda gateway</string>
+    <string name="environments_gateway_refused">%1$s nekade denna token</string>
+    <string name="environments_gateway_unusable">%1$s kan inte användas för den här raden</string>
 </resources>

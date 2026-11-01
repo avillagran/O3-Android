@@ -386,7 +386,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             onEdit = { id -> navigator.addEnvironment(id) },
             onAppearance = { navigator.push(Appearance) },
             bridgeStatus = bridgeStatus,
-            onRefreshBridge = { scope.launch { graph.bridgeCatalog.reconnect() } },
+            onRefreshBridge = { scope.launch { graph.bridgeCatalog.refreshNow() } },
             onAdministerBridge = { administration = true },
             onPairBridge = { navigator.push(PairEnvironment) },
         )
