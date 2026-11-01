@@ -76,6 +76,10 @@ fun ThreadCardRow(
     onUnpin: (() -> Unit)? = null,
     onProjectLongClick: (() -> Unit)? = null,
 ) {
+    if (row.subagents != null) {
+        ParentThreadRow(row, onClick, modifier, onLongClick, selected, onPullRequestClick, onSubagentsClick)
+        return
+    }
     val colors = Ot3Theme.colors
     val type = Ot3Theme.typography.material
     RowFrame(
@@ -157,6 +161,10 @@ fun ThreadSlimRow(
     onSubagentsClick: (() -> Unit)? = null,
     onUnpin: (() -> Unit)? = null,
 ) {
+    if (row.subagents != null) {
+        ParentThreadRow(row, onClick, modifier, onLongClick, selected, onPullRequestClick, onSubagentsClick)
+        return
+    }
     RowFrame(
         row = row,
         slim = true,
@@ -185,6 +193,32 @@ fun ThreadSlimRow(
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
+        }
+    }
+}
+
+/** Desktop focus row: title, PR, bot chip and time; project and host below. */
+@Composable
+private fun ParentThreadRow(row: ThreadRowModel, onClick: () -> Unit, modifier: Modifier,
+    onLongClick: (() -> Unit)?, selected: Boolean, onPullRequestClick: (() -> Unit)?, onSubagentsClick: (() -> Unit)?) {
+    val colors = Ot3Theme.colors
+    val type = Ot3Theme.typography.material
+    RowFrame(row, false, selected, onClick, onLongClick, modifier) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(row.title, Modifier.weight(1f).sidebarMarquee(selected), color = colors.foreground,
+                    style = type.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                row.pullRequest?.let { PrBadge(it, onClick = onPullRequestClick) }
+                row.subagents?.let { SubagentsToggle(it, onSubagentsClick) }
+                row.time?.label?.let { Text(it, color = colors.dim, style = type.bodySmall, maxLines = 1) }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(Modifier.size(6.dp).background(row.status?.let { colors.statusColor(it.role) } ?: colors.dim, CircleShape))
+                Text(row.projectName, Modifier.weight(1f), color = colors.dim, style = type.bodySmall,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                row.environmentName?.let { Text(it, Modifier.border(1.dp, colors.dim.copy(alpha = .2f), RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp),
+                    color = colors.dim, style = type.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace), maxLines = 1) }
+            }
         }
     }
 }
@@ -253,7 +287,7 @@ private fun RowFrame(
             if (!LocalSidebarRows.current.sober) ThreadAura(row, slim, Modifier.matchParentSize())
             val hostColor = LocalSidebarRows.current.host.color.takeIf { it.matches(Regex("#[0-9a-fA-F]{6}")) }
                 ?.let { Color(it.toColorInt()) }
-            if (hostColor != null && !LocalSidebarRows.current.sober) Box(Modifier.width(if (LocalSidebarRows.current.sober) 2.dp else 4.dp).fillMaxHeight().background(hostColor))
+            if (row.subagents != null || hostColor != null && !LocalSidebarRows.current.sober) Box(Modifier.width(if (LocalSidebarRows.current.sober) 2.dp else 4.dp).fillMaxHeight().background(row.project?.color ?: hostColor ?: colors.accent))
             content()
         }
     }
@@ -350,13 +384,15 @@ private fun SubagentsToggle(model: SubagentsModel, onClick: (() -> Unit)?) {
         if (model.expanded) R.string.ot3_row_hide_subagents else R.string.ot3_row_show_subagents,
         model.count.toString(),
     )
+    Box(Modifier.heightIn(min = Ot3Sizes.touchTarget).widthIn(min = Ot3Sizes.touchTarget)
+        .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClickLabel = name, onClick = onClick) else Modifier)
+        .semantics { contentDescription = name }, contentAlignment = Alignment.Center) {
     Row(
         Modifier
-            .heightIn(min = if (onClick != null) Ot3Sizes.touchTarget else CAPTION_LINE)
-            .then(if (onClick != null) Modifier.widthIn(min = Ot3Sizes.touchTarget) else Modifier)
+            .heightIn(min = CAPTION_LINE)
+            
             .background(colors.foreground.copy(alpha = SUBAGENTS_FILL), RoundedCornerShape(Ot3Radii.projectChip))
-            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClickLabel = name, onClick = onClick) else Modifier)
-            .semantics { contentDescription = name }
+
             .padding(horizontal = Ot3Spacing.sm),
         horizontalArrangement = Arrangement.spacedBy(Ot3Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
@@ -377,6 +413,7 @@ private fun SubagentsToggle(model: SubagentsModel, onClick: (() -> Unit)?) {
             size = 12.dp,
         )
     }
+}
 }
 
 private val CAPTION_LINE = 20.dp

@@ -12,7 +12,7 @@ import java.util.UUID
 /** Opaque Rust projection + its cursor/history. No messages are merged in this storage layer. */
 class ThreadCache(
     private val directory: File,
-    private val maxBytes: Long = 32L * 1024 * 1024,
+    private var maxBytes: Long = 200L * 1024 * 1024,
     private val maxEntries: Int = 128,
     private val maxEntryBytes: Long = 8L * 1024 * 1024,
     private val maxAgeMs: Long = 7L * 24 * 60 * 60 * 1000,
@@ -20,6 +20,34 @@ class ThreadCache(
 ) {
     data class Lease internal constructor(val environment: String, val thread: String, val authority: String, internal val token: String)
     private val mutex = Mutex()
+    private var pinned = emptySet<String>()
+    private var environments: Set<String>? = null
+    data class Usage(val bytes: Long, val limit: Long, val entries: Int)
+    suspend fun usage(): Usage = locked {
+        val files = directory.listFiles()?.filter { it.extension == "json" }.orEmpty()
+        Usage(files.sumOf { it.length() }, maxBytes, files.size)
+    }
+    suspend fun configure(bytes: Long) = locked {
+        maxBytes = bytes.coerceIn(10L * 1024 * 1024, 1024L * 1024 * 1024)
+        prune()
+    }
+    /** Only disposable projections live here; Room drafts/outbox are never opened. */
+    suspend fun clear() = locked {
+        owners.clear()
+        directory.listFiles()?.filter { it.extension in setOf("json", "tmp") }?.forEach { it.delete() }
+    }
+    suspend fun retainEnvironments(ids: Set<String>) = locked {
+        environments = ids
+        owners.clear() // Invalidate in-flight writes when the environment set changes.
+        directory.listFiles()?.filter { it.extension == "json" }?.forEach { file ->
+            val record = readRecord(file)
+            if (record == null || record.optString("environment") !in ids) file.delete()
+        }
+    }
+    suspend fun pin(environment: String, threads: Set<String>) = locked {
+        val prefix = "$environment/"
+        pinned = pinned.filterNot { it.startsWith(prefix) }.toSet() + threads.map { prefix + it }
+    }
     private val owners = mutableMapOf<String, String>()
     private val allowed = mutableMapOf<String, Set<String>>()
 
@@ -30,6 +58,7 @@ class ThreadCache(
 
     suspend fun open(environment: String, thread: String, authority: String): Lease? = locked {
         prune()
+        if (environments?.contains(environment) == false) return@locked null
         if (allowed[environment]?.contains(thread) == false) return@locked null
         Lease(environment, thread, authority, UUID.randomUUID().toString()).also { owners[key(environment, thread)] = it.token }
     }
@@ -51,6 +80,12 @@ class ThreadCache(
     suspend fun write(lease: Lease, snapshot: JSONObject) = locked {
         val key = key(lease.environment, lease.thread)
         if (owners[key] != lease.token || allowed[lease.environment]?.contains(lease.thread) == false) return@locked
+        // Preserve opaque reducer state and its sequence atomically. A projection over the
+        // page window is not resumable safely after slicing; retain only bounded snapshots.
+        if ((snapshot.optJSONObject("projection")?.optJSONArray("messages")?.length() ?: 0) > 500) {
+            file(lease.environment, lease.thread).delete()
+            return@locked
+        }
         val bytes = JSONObject().put("version", 1).put("environment", lease.environment).put("thread", lease.thread)
             .put("authority", lease.authority).put("savedAt", clock()).put("snapshot", snapshot).toString().toByteArray(Charsets.UTF_8)
         val target = file(lease.environment, lease.thread)
@@ -97,7 +132,10 @@ class ThreadCache(
     private fun prune() {
         var total = 0L
         var count = 0
-        directory.listFiles()?.filter { it.extension == "json" }?.sortedByDescending { it.lastModified() }?.forEach { file ->
+        directory.listFiles()?.filter { it.extension == "json" }?.sortedWith(compareByDescending<File> {
+            val record = readRecord(it)
+            record != null && "${record.optString("environment")}/${record.optString("thread")}" in pinned
+        }.thenByDescending { it.lastModified() })?.forEach { file ->
             val size = file.length()
             if (clock() - file.lastModified() > maxAgeMs || size > maxEntryBytes || total + size > maxBytes || count >= maxEntries) file.delete()
             else { total += size; count++ }

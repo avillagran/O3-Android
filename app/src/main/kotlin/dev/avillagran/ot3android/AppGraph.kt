@@ -2,6 +2,8 @@ package dev.avillagran.ot3android
 
 import kotlinx.coroutines.flow.asStateFlow
 
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -133,7 +135,7 @@ class AppGraph(
 
     val selectionPreferences: SelectionPreferences by lazy { SelectionPreferences(appContext) }
 
-    val threadCache by lazy { dev.avillagran.ot3android.core.thread.ThreadCache(appContext.noBackupFilesDir.resolve("thread-cache-v1")) }
+    val threadCache by lazy { dev.avillagran.ot3android.core.thread.ThreadCache(appContext.noBackupFilesDir.resolve("thread-cache-v1"), maxBytes = appContext.getSharedPreferences("thread-cache", Context.MODE_PRIVATE).getLong("limit", 200L * 1024 * 1024)) }
 
     val composerPreferences by lazy { dev.avillagran.ot3android.core.data.prefs.ComposerPreferences(appContext) }
 
@@ -236,7 +238,17 @@ class AppGraph(
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
         appScope.launch { themeCatalog() }
-        appScope.launch { threadCache.trim() }
+        appScope.launch {
+            while (kotlinx.coroutines.currentCoroutineContext().isActive) {
+                threadCache.trim()
+                kotlinx.coroutines.delay(6L * 60 * 60 * 1000)
+            }
+        }
+        appScope.launch {
+            environmentRepository.environments.map { rows -> rows.map { it.id }.toSet() }.distinctUntilChanged().collect { ids ->
+                threadCache.retainEnvironments(ids)
+            }
+        }
         appScope.launch {
             // Observe already-owned shell state; never open background thread subscriptions.
             connectionManager.supervisors.collectLatest { supervisors ->
@@ -247,7 +259,8 @@ class AppGraph(
                                 val sidebar = dev.avillagran.ot3android.core.shell.SidebarView.build(
                                     DomainEngine.shared, listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment(id, shell = shell)),
                                     System.currentTimeMillis())
-                                threadCache.reconcile(id, sidebar.threads.filterNot { it.settled }.map { it.threadId }.toSet())
+                                threadCache.pin(id, sidebar.threads.filter { it.pinned }.map { it.threadId }.toSet())
+                                threadCache.reconcile(id, sidebar.threads.map { it.threadId }.toSet())
                             } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
                             catch (_: Exception) { /* An unavailable view must not erase cached content. */ }
                         }
