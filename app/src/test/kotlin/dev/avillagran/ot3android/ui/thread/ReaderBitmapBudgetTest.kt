@@ -1,10 +1,17 @@
 package dev.avillagran.ot3android.ui.thread
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ReaderBitmapBudgetTest {
@@ -50,6 +57,25 @@ class ReaderBitmapBudgetTest {
         next.close()
         small.await().close()
         assertEquals(0, budget.used)
+    }
+
+    @Test fun workerFreesLeaseAndPermitWhenItsCallerNeverResumes() = kotlinx.coroutines.runBlocking {
+        val budget = ReaderBitmapBudget(10)
+        // Nothing runs this scheduler after the attempt starts, like a destroyed host's dispatcher.
+        val host = StandardTestDispatcher()
+        val scope = CoroutineScope(host)
+        repeat(3) { // More rounds than the two reader permits.
+            val working = CountDownLatch(1)
+            val finish = CountDownLatch(1)
+            val lease = budget.acquire(4)
+            val attempt = scope.launch { readerImageWorker({ lease.close() }) { working.countDown(); finish.await() } }
+            host.scheduler.runCurrent()
+            assertTrue(working.await(5, TimeUnit.SECONDS))
+            attempt.cancel()
+            finish.countDown()
+            withTimeout(5_000) { while (budget.used != 0) delay(5) }
+        }
+        assertEquals(1, withTimeout(5_000) { readerImageWorker({}) { 1 } })
     }
 
     @Test fun viewportExcludesOffscreenHoldersAndWaiters() {

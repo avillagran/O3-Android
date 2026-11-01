@@ -93,6 +93,6 @@ class VisualRenderingComposeTest {
         rule.onNodeWithText("Preview permission expired").assertExists()
         rule.onNodeWithContentDescription("Fixture diagram").assertDoesNotExist()
         try { rule.waitUntil(5000) { ReaderBitmapBudget.shared.used == 0 } }
-        catch (failure: Exception) { throw AssertionError("Remaining pixel reservations: shared=${ReaderBitmapBudget.shared.used}, thumbnails=${ReaderBitmapBudget.thumbnails.used}", failure) }
+        catch (failure: ComposeTimeoutException) { throw AssertionError("Remaining pixel reservations: shared=${ReaderBitmapBudget.shared.used}, thumbnails=${ReaderBitmapBudget.thumbnails.used}", failure) }
     }
 }
