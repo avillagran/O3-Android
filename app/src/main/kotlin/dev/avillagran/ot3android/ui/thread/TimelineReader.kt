@@ -329,6 +329,12 @@ internal fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Trans
                 if (role == "assistant" && !row.optBoolean("streaming") && !commentary) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CopyText(row.optString("text"), "message_$id")
+                        row.readerText("forkRunId").takeIf { it.isNotBlank() }?.let { run ->
+                            actions.fork?.let { fork ->
+                                dev.avillagran.ot3android.ui.kit.Ot3IconButton("git-fork", stringResource(R.string.chat_fork), { fork(run) },
+                                    modifier = Modifier.testTag("chat_fork_$id"))
+                            }
+                        }
                         MessageDate(row.optLong("createdAt"))
                     }
                 }

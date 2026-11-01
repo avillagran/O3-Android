@@ -16,6 +16,60 @@ import org.junit.Test
 
 class MessageSenderTest {
 
+    @Test fun acceptedChatStepsAreCheckpointedAndUnknownSuffixWaitsForExplicitRetry() = runTest {
+        val outbox = OutboxRepository(dao)
+        val sender = MessageSender(outbox, this, ids)
+        val mode = dev.avillagran.ot3android.core.composer.ChatCommands.interaction("mode-id", "t1", "default")
+        val message = MessageSender.messageCommand("message-id", "m1", "t1", "Implement", model)
+        val envelope = dev.avillagran.ot3android.core.composer.ChatCommands.envelope("receipt", "Original draft",
+            org.json.JSONArray().put(dev.avillagran.ot3android.core.composer.ChatCommands.step(mode))
+                .put(dev.avillagran.ot3android.core.composer.ChatCommands.step(message)), "target")
+        outbox.add("env-1", "t1", "receipt", envelope.toString())
+        var fail = true
+        fake.onCall(MessageSender.DISPATCH) { args ->
+            val persisted = JSONObject(outbox.find("receipt")!!.commandJson)
+            if (args.getString("commandId") == "message-id") {
+                assertEquals(1, persisted.getInt("nextStep"))
+                if (fail) throw T3Exception("rpc_outcome_unknown")
+            }
+            JSONObject().put("sequence", 42)
+        }
+        assertEquals(SendResult.OutcomeUnknown("receipt"), sender.retry(connected(), "receipt"))
+        assertEquals(2, fake.calls.size)
+        val saved = outbox.find("receipt")!!
+        assertEquals(OutboxEntity.STATE_UNKNOWN, saved.state)
+        assertEquals("Original draft", saved.text)
+        assertEquals("target", JSONObject(saved.commandJson).getString("navigateThread"))
+        // A replacement owner does no work until the user explicitly requests the stored receipt.
+        val restored = MessageSender(outbox, this, ids)
+        assertEquals(2, fake.calls.size)
+        fail = false
+        assertEquals(SendResult.Accepted("receipt", 42), restored.retry(fake, "receipt"))
+        assertEquals(listOf("mode-id", "message-id", "message-id"), fake.calls.map { it.args.getString("commandId") })
+        assertEquals(fake.calls[1].args.toString(), fake.calls[2].args.toString())
+        assertNull(outbox.find("receipt"))
+    }
+
+    @Test fun unknownLaunchDoesNotDispatchThePlanOrNavigateAndRetainsStableTarget() = runTest {
+        val outbox = OutboxRepository(dao)
+        val launch = JSONObject().put("fn", "orchestration.launchThread").put("args",
+            JSONObject().put("commandId", "launch-id").put("threadId", "new-thread"))
+        val envelope = dev.avillagran.ot3android.core.composer.ChatCommands.envelope("receipt", "draft",
+            org.json.JSONArray().put(launch).put(dev.avillagran.ot3android.core.composer.ChatCommands.step(
+                MessageSender.messageCommand("message-id", "m1", "new-thread", "Implement", model))), "new-thread")
+        outbox.add("env-1", "t1", "receipt", envelope.toString())
+        fake.onCall("orchestration.launchThread") { throw T3Exception("rpc_outcome_unknown") }
+        val sender = MessageSender(outbox, this, ids)
+        assertEquals(SendResult.OutcomeUnknown("receipt"), sender.retry(connected(), "receipt"))
+        assertEquals(1, fake.calls.size)
+        assertEquals(0, JSONObject(outbox.find("receipt")!!.commandJson).getInt("nextStep"))
+        fake.onCall("orchestration.launchThread") { JSONObject().put("threadId", "new-thread") }
+        fake.onCall(MessageSender.DISPATCH) { JSONObject().put("sequence", 1) }
+        assertTrue(sender.retry(fake, "receipt") is SendResult.Accepted)
+        assertEquals(fake.calls[0].args.toString(), fake.calls[1].args.toString())
+        assertEquals("new-thread", fake.calls.last().args.getString("threadId"))
+    }
+
     @Test
     fun runtimeModeUsesNativeValidationAndExactDurableRetry() = runTest {
         assumeHostJni()

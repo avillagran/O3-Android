@@ -186,6 +186,24 @@ class MessageSender(
 
     private suspend fun dispatchAdmitted(transport: T3Transport, commandId: String, commandJson: String): SendResult = try {
         val stored = JSONObject(commandJson)
+        val steps = stored.optJSONArray(CHAT_STEPS)
+        if (steps != null) {
+            var sequence: Long? = null
+            for (index in stored.optInt("nextStep", 0) until steps.length()) {
+                val step = steps.getJSONObject(index)
+                val fn = step.getString("fn")
+                check(fn == DISPATCH || fn == "orchestration.launchThread") { "invalid_chat_step" }
+                val args = step.getJSONObject("args")
+                val response = transport.call(fn, args)
+                if (fn == "orchestration.launchThread") check((response as? JSONObject)?.optString("threadId") == args.getString("threadId")) { "launch_identity_mismatch" }
+                sequence = sequenceOf(response)
+                // Advance only after acceptance. Unknown never advances and never resumes itself.
+                stored.put("nextStep", index + 1)
+                outbox.checkpoint(commandId, stored.toString())
+            }
+            outbox.remove(commandId)
+            SendResult.Accepted(commandId, sequence)
+        } else {
         val launch = stored.optJSONObject(LAUNCH_ENVELOPE)
         val response = if (launch == null) transport.call(DISPATCH, stored)
             else transport.call("orchestration.launchThread", launch)
@@ -194,6 +212,7 @@ class MessageSender(
         }
         outbox.remove(commandId)
         SendResult.Accepted(commandId, sequenceOf(response))
+        }
     } catch (error: T3Exception) {
         if (error.code == OUTCOME_UNKNOWN) {
             outbox.setState(commandId, OutboxEntity.STATE_UNKNOWN)
@@ -219,6 +238,7 @@ class MessageSender(
     private suspend fun <T> detached(block: suspend () -> T): T = scope.async(NonCancellable) { block() }.await()
 
     companion object {
+        const val CHAT_STEPS = "_ot3aChatSteps"
         const val LAUNCH_ENVELOPE = "_ot3aLaunchThread"
         const val DISPATCH = "orchestration.dispatchCommand"
         const val ID_PREFIX = "ot3a-"

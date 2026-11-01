@@ -115,8 +115,19 @@ object ThreadScreenTags {
 }
 
 @Composable
-fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null, onOpenReferenceThread: ((String, String) -> Unit)? = null, onTerminal: (() -> Unit)? = null, onRunCode: ((String) -> Unit)? = null) {
+fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modifier = Modifier, quotaStrip: @Composable () -> Unit = {}, onGit: (() -> Unit)? = null, onChanges: (() -> Unit)? = null, onOpenThread: ((String) -> Unit)? = null, onOpenReferenceThread: ((String, String) -> Unit)? = null, onTerminal: (() -> Unit)? = null, onRunCode: ((String) -> Unit)? = null, onThreadActions: (() -> Unit)? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val planControls by viewModel.planControls.collectAsStateWithLifecycle()
+    val planAttachments by viewModel.attachmentDraft.collectAsStateWithLifecycle()
+    val chosenInteraction by viewModel.chosenInteraction.collectAsStateWithLifecycle()
+    val navigation by viewModel.chatNavigation.collectAsStateWithLifecycle()
+    val modelOptionsRequest by viewModel.modelOptionsRequest.collectAsStateWithLifecycle()
+    LaunchedEffect(navigation) {
+        navigation?.let { target -> onOpenThread?.invoke(target); viewModel.chatNavigation.value = null }
+    }
+    LaunchedEffect(state.connected, state.view.loaded, state.modelSelection, chosenInteraction) {
+        if (state.connected && viewModel.durableComposerAvailable) runCatching { viewModel.refreshPlanControls() }
+    }
     val checkpoint by viewModel.checkpoint.collectAsStateWithLifecycle()
     val checkpointMessages by viewModel.checkpointMessages.collectAsStateWithLifecycle()
     if (checkpoint.open) androidx.compose.ui.window.Dialog(onDismissRequest = viewModel::closeCheckpoint,
@@ -173,6 +184,13 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             onChanges = onChanges,
             onOpenThread = onOpenThread,
             transcriptSecrets = viewModel.transcriptSecrets(imageConnection),
+            modelOptionsRequest = modelOptionsRequest,
+            onThreadMenu = onThreadActions,
+            onFork = if (planControls.optBoolean("canOperate") && state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty()) viewModel::forkFromResponse else null,
+            onMergeBack = if (state.view.timeline?.optJSONObject("threadState")?.optString("mergeBackTargetThreadId")?.let { it.isNotBlank() && it != "null" } == true) viewModel::mergeBack else null,
+            onPlanFollowUp = if (planAttachments.isEmpty() && !state.view.working && planControls.optBoolean("enabled") && planControls.optBoolean("canOperate") &&
+                planControls.optString("interactionMode") == "plan" && state.queueEdit == null && !state.sending && state.unconfirmed.isEmpty())
+                ({ plan, _, newThread -> viewModel.followUpPlan(plan, newThread) }) else null,
         )
     }
     }
@@ -210,6 +228,11 @@ fun ThreadContent(
     onChanges: (() -> Unit)? = null,
     onOpenThread: ((String) -> Unit)? = null,
     transcriptSecrets: dev.avillagran.ot3android.ui.thread.reader.TranscriptSecrets? = null,
+    onPlanFollowUp: ((org.json.JSONObject, String, Boolean) -> Unit)? = null,
+    onFork: ((String) -> Unit)? = null,
+    onMergeBack: (() -> Unit)? = null,
+    onThreadMenu: (() -> Unit)? = null,
+    modelOptionsRequest: Int = 0,
     editorIdentity: String = state.view.threadId,
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
     onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
@@ -267,7 +290,7 @@ fun ThreadContent(
     val toolbar: @Composable () -> Unit = {
         ComposerModels(state.modelCatalog, state.modelSelection, state.modelsLoading,
             state.connected && !state.sending && state.queueEdit == null,
-            onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel) {
+            onRefreshModels, onSelectModel, onSelectModelOption, onFavoriteModel, optionsRequest = modelOptionsRequest) {
             ComposerPermissions(state.modelCatalog, state.modelSelection, state.view.runtimeMode,
                 state.connected && !state.view.stale && !state.sending && state.queueEdit == null && state.unconfirmed.isEmpty(), onRefreshModels, onRuntimeMode)
         }
@@ -335,6 +358,13 @@ fun ThreadContent(
                             if (onChanges != null) androidx.compose.material3.DropdownMenuItem(
                                 text = { Text(stringResource(R.string.ot3_git_review)) },
                                 onClick = { quotaMenu = false; onChanges() })
+                            onThreadMenu?.let { menu -> androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.chat_thread_actions)) }, onClick = { quotaMenu = false; menu() }) }
+                            onMergeBack?.let { merge -> androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.chat_merge_back)) },
+                                enabled = state.connected && !state.view.stale && !state.view.working && !state.sending && state.unconfirmed.isEmpty() &&
+                                    state.view.timeline?.optJSONObject("threadState")?.optString("mergeBackRunId")?.let { it.isNotBlank() && it != "null" } == true,
+                                onClick = { quotaMenu = false; merge() }) }
                             dev.avillagran.ot3android.ui.usage.QuotaToggleMenuItem { quotaMenu = false }
                         }
                     }
@@ -427,6 +457,9 @@ fun ThreadContent(
                                 refreshing = state.view.stale,
                                 actions = dev.avillagran.ot3android.ui.thread.reader.TranscriptActions(
                                     secrets = transcriptSecrets,
+                                    followUpPlan = onPlanFollowUp,
+                                    planDraft = state.draft,
+                                    fork = onFork,
                                     openThread = onOpenThread,
                                     quote = if (state.queueEdit == null && !state.sending) ({ text ->
                                         val quoted = text.lineSequence().joinToString("\n") { "> $it" }
@@ -613,13 +646,14 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
     val unavailable = state.sending || !state.composer.loaded
     val attachments by model.attachmentDraft.collectAsStateWithLifecycle()
     val pending by model.attachmentPending.collectAsStateWithLifecycle()
+    val planControls by model.planControls.collectAsStateWithLifecycle()
     val storageError by model.attachmentStorageError.collectAsStateWithLifecycle()
     if (storageError) {
         Text(stringResource(R.string.thread_notice_unknown), color = MaterialTheme.colorScheme.error)
         TextButton(onClick = model::repairAttachmentStorage) { Text(stringResource(R.string.composer_restore)) }
     }
     var draftOptions by remember(scope) { mutableStateOf<org.json.JSONObject?>(null) }
-    val displayed = snapshot.copy(attachments = attachments, loading = unavailable, sending = state.sending, uncertainCommand = pending ?: state.unconfirmed.firstOrNull()?.commandId, sendBlocked = !state.connected || state.view.stale || storageError || pending != null || state.unconfirmed.isNotEmpty())
+    val displayed = snapshot.copy(interaction = if (planControls.optString("interactionMode") == "plan") dev.avillagran.ot3android.core.composer.ComposerInteraction.Plan else dev.avillagran.ot3android.core.composer.ComposerInteraction.Build, attachments = attachments, loading = unavailable, sending = state.sending, uncertainCommand = pending ?: state.unconfirmed.firstOrNull()?.commandId, sendBlocked = !state.connected || state.view.stale || storageError || pending != null || state.unconfirmed.isNotEmpty())
     SideEffect { synchronizer?.pause(snapshot.composing || state.unconfirmed.isNotEmpty() || !state.composer.loaded || state.sending || pending != null || attachments.size > 16 || attachments.any { it.status != dev.avillagran.ot3android.core.composer.UploadStatus.Ready }) }
     val sharedFailed by (synchronizer?.failed ?: kotlinx.coroutines.flow.flowOf(false)).collectAsStateWithLifecycle(initialValue = false)
     val sharedConflicts by (synchronizer?.conflicts ?: kotlinx.coroutines.flow.flowOf(0)).collectAsStateWithLifecycle(initialValue = 0)
@@ -627,7 +661,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
     var sharedAdoptionFailed by remember(synchronizer) { mutableStateOf(false) }
     if (sharedFailed || sharedAdoptionFailed || (shared != null && attachments.size > 16)) Text(stringResource(R.string.shared_draft_failed), color = MaterialTheme.colorScheme.error)
     if (sharedConflicts > 0) Text(stringResource(R.string.shared_draft_conflict), color = MaterialTheme.colorScheme.error)
-    LaunchedEffect(synchronizer, snapshot.text, snapshot.selection, snapshot.composing, attachments, state.modelSelection, state.composer.loaded, state.sending, pending) {
+    LaunchedEffect(synchronizer, snapshot.text, snapshot.selection, snapshot.composing, attachments, state.modelSelection, state.composer.loaded, state.sending, pending, planControls) {
         if (snapshot.text == state.draft && state.unconfirmed.isEmpty() && state.composer.loaded && synchronizer != null && !snapshot.composing && pending == null && !state.sending && attachments.size <= 16 && attachments.all { it.status == dev.avillagran.ot3android.core.composer.UploadStatus.Ready && it.descriptor != null }) {
             val draftPayload = org.json.JSONObject().put("schema", 1).put("text", snapshot.text)
                 .put("attachments", org.json.JSONArray(attachments.map { file ->
@@ -650,7 +684,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
                     }
                     put("modelSelection", safe)
                 } }
-                .put("preferences", org.json.JSONObject(draftOptions?.toString() ?: "{}").put("interactionMode", draftOptions?.optString("interactionMode")?.takeIf(String::isNotBlank) ?: if (snapshot.interaction == dev.avillagran.ot3android.core.composer.ComposerInteraction.Plan) "plan" else "default")
+                .put("preferences", org.json.JSONObject(draftOptions?.toString() ?: "{}").put("interactionMode", planControls.optString("interactionMode", "default"))
                     .put("deliveryMode", draftOptions?.optString("deliveryMode")?.takeIf { it in setOf("queue", "steer", "auto") } ?: client.optString("followUpBehavior", "queue")))
             if (sharedBound) synchronizer.edit(draftPayload) else { sharedBound = true; synchronizer.bind(draftPayload) }
         }
@@ -724,6 +758,11 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
         capabilities = buildSet {
             add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.Attach)
             if (state.view.working) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.OppositeOnce)
+            if (scope.queueMessage == null) {
+                add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.SendAndNew)
+                if (model.planControls.value.optBoolean("enabled") && model.planControls.value.optBoolean("canOperate"))
+                    add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.PlanBuild)
+            }
             if (shared != null && scope.queueMessage == null) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.ProjectDrafts)
             add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.History)
             add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.ContinueList)
@@ -743,6 +782,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
             if (!unavailable && pending == null && state.unconfirmed.isEmpty() && request.expected.scope == session.snapshot.scope && (sameContent || scopeOnly)) {
                 when (request) {
                     is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.Action -> when(request.action) {
+                        dev.avillagran.ot3android.ui.thread.composer.ComposerAction.PlanBuild -> model.chooseInteraction()
                         dev.avillagran.ot3android.ui.thread.composer.ComposerAction.ProjectDrafts -> sharedOpen = true
                         dev.avillagran.ot3android.ui.thread.composer.ComposerAction.History -> {
                             val captured = session.snapshot
@@ -776,11 +816,18 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
                                 .put("expectedRange", trigger.getString("expectedRange")).put("insert", row.getString("insert")).put("composing", captured.composing))
                             if (result.optBoolean("changed")) {
                                 val cursor = result.getInt("cursor")
-                                if (session.replace(captured, result.getString("text"), dev.avillagran.ot3android.core.composer.ComposerSelection(cursor, cursor))) publish()
+                                if (session.replace(captured, result.getString("text"), dev.avillagran.ot3android.core.composer.ComposerSelection(cursor, cursor))) {
+                                    publish()
+                                    if (row.optString("kind") == "model") model.modelOptionsRequest.value++
+                                }
                             }
                         }
                     }
-                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.Send -> model.dispatchAttachments(request.delivery == dev.avillagran.ot3android.core.composer.ComposerDelivery.OppositeOnce)
+                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.Send -> {
+                        if (scope.queueMessage != null) model.send()
+                        else model.dispatchAttachments(request.delivery == dev.avillagran.ot3android.core.composer.ComposerDelivery.OppositeOnce,
+                            newThread = request.delivery == dev.avillagran.ot3android.core.composer.ComposerDelivery.SendAndNew)
+                    }
                     is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.CaptureText -> {
                         val expected = request.expected
                         if (expected.version == session.snapshot.version && request.text.length in 1..16_384) {

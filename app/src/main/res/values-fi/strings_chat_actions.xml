@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="chat_share_plan">Jaa suunnitelma</string>
+    <string name="chat_fork">Haaroita tästä vastauksesta</string>
+    <string name="chat_merge_back">Yhdistä alkuperäiseen ketjuun</string>
+    <string name="chat_thread_actions">Ketjun toiminnot</string>
 </resources>

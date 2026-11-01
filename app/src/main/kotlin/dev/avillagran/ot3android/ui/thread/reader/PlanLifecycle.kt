@@ -25,17 +25,15 @@ internal fun PlanLifecycle(plan: JSONObject, ready: JSONObject?, actions: Transc
     val eligible = id.isNotBlank() && plan.readerText("threadId").isNotBlank() && ready != null && ready.readerText("id") == id &&
         ready.readerText("threadId") == plan.readerText("threadId")
     val operation = actions.planOperation?.takeIf { it.planId == id }
-    var feedback by remember(id) { mutableStateOf("") }
+    val feedback = actions.planDraft
     Column {
         if (eligible && operation?.busy != true && operation?.uncertain != true) {
             actions.followUpPlan?.let { followUp ->
-                OutlinedTextField(feedback, { feedback = it }, label = { Text(stringResource(R.string.transcript_plan_feedback)) },
-                    modifier = Modifier.fillMaxWidth().testTag("transcript_plan_feedback_$id"))
                 Row {
-                    TextButton(onClick = { followUp(JSONObject(ready.toString()), feedback, false); feedback = "" }) {
+                    TextButton(onClick = { followUp(JSONObject(ready.toString()), feedback, false) }) {
                         Text(stringResource(if (feedback.isBlank()) R.string.transcript_implement else R.string.transcript_plan_follow_up))
                     }
-                    TextButton(onClick = { followUp(JSONObject(ready.toString()), feedback, true); feedback = "" }) {
+                    TextButton(onClick = { followUp(JSONObject(ready.toString()), feedback, true) }) {
                         Text(stringResource(R.string.transcript_plan_new_thread))
                     }
                 }

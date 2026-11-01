@@ -36,6 +36,8 @@ class OutboxRepository(private val dao: OutboxDao, private val clock: () -> Long
 
     suspend fun setState(commandId: String, state: String) = dao.setState(commandId, state)
 
+    suspend fun checkpoint(commandId: String, commandJson: String) = dao.checkpoint(commandId, commandJson)
+
     suspend fun remove(commandId: String) = dao.deleteById(commandId)
 
     /**

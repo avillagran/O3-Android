@@ -25,6 +25,9 @@ interface OutboxDao {
     @Query("UPDATE outbox SET state = :state WHERE id = :id")
     suspend fun setState(id: String, state: String)
 
+    @Query("UPDATE outbox SET commandJson = :commandJson WHERE id = :id")
+    suspend fun checkpoint(id: String, commandJson: String)
+
     @Query("DELETE FROM outbox WHERE id = :id")
     suspend fun deleteById(id: String)
 

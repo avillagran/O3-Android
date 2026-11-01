@@ -31,6 +31,9 @@ class MemoryOutboxDao : OutboxDao {
     override suspend fun setState(id: String, state: String) =
         rows.update { all -> all[id]?.let { all + (id to it.copy(state = state)) } ?: all }
 
+    override suspend fun checkpoint(id: String, commandJson: String) =
+        rows.update { all -> all[id]?.let { all + (id to it.copy(commandJson = commandJson)) } ?: all }
+
     override suspend fun deleteById(id: String) = rows.update { it - id }
 
     override suspend fun markInterrupted(before: Long): Int {

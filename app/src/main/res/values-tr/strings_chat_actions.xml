@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="chat_share_plan">Planı paylaş</string>
+    <string name="chat_fork">Bu yanıttan dallandır</string>
+    <string name="chat_merge_back">Kaynak konuya geri birleştir</string>
+    <string name="chat_thread_actions">Konu işlemleri</string>
 </resources>
