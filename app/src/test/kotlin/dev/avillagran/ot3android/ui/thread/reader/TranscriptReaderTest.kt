@@ -40,6 +40,14 @@ class TranscriptReaderTest {
         rule.onNodeWithTag(ThreadScreenTags.message("m2")).assertIsDisplayed()
         rule.onNodeWithTag("thread_jump_latest").assertIsDisplayed()
     }
+    @Test fun loadOlderBoundaryIsAButtonThatRequestsOlderHistory() {
+        var requests = 0
+        val data = JSONObject().put("hasMoreHistory", true).put("timeline", JSONArray().put(
+            JSONObject().put("id", "m").put("role", "assistant").put("rev", "1").put("text", "latest")))
+        rule.setContent { Ot3Theme { Box(Modifier.height(600.dp)) { TimelineReader(data, emptyList(), onLoadOlder = { requests++ }) } } }
+        rule.onNodeWithTag("thread_load_older").assertHasClickAction().performClick()
+        rule.runOnIdle { assertEquals(1, requests) }
+    }
     @Test fun quoteAndNavigationRequireCallbacksAndNativeReadyPlan() {
         var quote = ""
         var target = ""

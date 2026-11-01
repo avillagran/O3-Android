@@ -188,6 +188,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             transcriptSecrets = viewModel.transcriptSecrets(imageConnection),
             modelOptionsRequest = modelOptionsRequest,
             onThreadMenu = onThreadActions,
+            onLoadOlder = viewModel::loadOlderHistory,
             onFork = if (planControls.optBoolean("canOperate") && state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty()) viewModel::forkFromResponse else null,
             onMergeBack = if (planControls.optBoolean("canOperate") && state.view.timeline?.optJSONObject("threadState")?.optString("mergeBackTargetThreadId")?.let { it.isNotBlank() && it != "null" } == true) viewModel::mergeBack else null,
             onPlanFollowUp = if (planPending == null && !planStorageError && planAttachments.isEmpty() && !state.view.working && planControls.optBoolean("enabled") && planControls.optBoolean("canOperate") &&
@@ -234,6 +235,7 @@ fun ThreadContent(
     onFork: ((String) -> Unit)? = null,
     onMergeBack: (() -> Unit)? = null,
     onThreadMenu: (() -> Unit)? = null,
+    onLoadOlder: () -> Unit = {},
     modelOptionsRequest: Int = 0,
     editorIdentity: String = state.view.threadId,
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
@@ -457,6 +459,7 @@ fun ThreadContent(
                         else -> if (state.readingPositionLoaded) timelineState.SaveableStateProvider(editorIdentity) {
                             TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition, followLatestRequest,
                                 refreshing = state.view.stale,
+                                onLoadOlder = onLoadOlder,
                                 actions = dev.avillagran.ot3android.ui.thread.reader.TranscriptActions(
                                     secrets = transcriptSecrets,
                                     followUpPlan = onPlanFollowUp,

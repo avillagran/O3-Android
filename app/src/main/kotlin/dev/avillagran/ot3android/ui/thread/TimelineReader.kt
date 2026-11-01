@@ -55,6 +55,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     actions: TranscriptActions = TranscriptActions(),
     findRequest: Int? = null,
     refreshing: Boolean = false,
+    onLoadOlder: () -> Unit = {},
 ) {
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
@@ -208,7 +209,9 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
                             }
                         }
                         if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
-                            Text(stringResource(R.string.ot3_pr_more), style = MaterialTheme.typography.labelSmall)
+                            TextButton(onClick = onLoadOlder, modifier = Modifier.testTag("thread_load_older")) {
+                                Text(stringResource(R.string.ot3_pr_more))
+                            }
                         }
                     }
                     if (away) TextButton(onClick = { scope.launch { followingLatest = true; list.animateScrollToItem(0) } },
