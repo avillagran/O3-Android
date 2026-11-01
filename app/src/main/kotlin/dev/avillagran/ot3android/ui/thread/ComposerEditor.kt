@@ -40,6 +40,7 @@ internal class ComposerEditorState(text: String = "", private var restored: Text
         private set
     val awaitingRestore: Boolean get() = restored != null
     private var pendingToken: String? = null
+    private var shown: TextFieldValue? = null
     private var restoreFocus = focusWanted
     var requestFocus = false
     var generation = 0
@@ -61,6 +62,16 @@ internal class ComposerEditorState(text: String = "", private var restored: Text
         if (!changed && restored != null && value.text.isEmpty()) return null
         restored = null; value = next
         return if (changed) java.util.UUID.randomUUID().toString().also { pendingToken = it } else null
+    }
+    fun presented(composed: TextFieldValue) { shown = composed }
+    /**
+     * The field applies IME commands to the value it last composed. One that lands
+     * before a newer range reaches composition carries the old selection back; only
+     * its composition is news. Any real change of text or selection stays authoritative.
+     */
+    fun rebased(next: TextFieldValue): TextFieldValue {
+        val base = shown ?: return next
+        return if (next.text == base.text && next.selection == base.selection && next.text == value.text) next.copy(selection = value.selection) else next
     }
     fun finishComposition(surface: Int = generation) { if (surface == generation) value = value.copy(composition = null) }
     fun submitted() { pendingToken = null }
@@ -139,7 +150,8 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
     val surface = remember(editor) { editor.generation }
     LaunchedEffect(editor) { if (focused) editor.focusWanted = true; if (editor.takeFocusRequest()) requester.requestFocus() }
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
-    fun update(next: TextFieldValue) {
+    fun update(incoming: TextFieldValue) {
+        val next = editor.rebased(incoming)
         // Disposal/rotation blur can collapse a range after onSaveInstanceState.
         if (next.text == editor.value.text && !lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
             if (next.composition == null) editor.finishComposition(surface)
@@ -188,7 +200,9 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
                 // A short landscape window has no second row, so the model, access and mode
                 // controls share this one. Desktop keeps them beside the editor at all sizes.
                 if (!expanded && compact) Box(Modifier.widthIn(max = 168.dp).testTag("composer_compact_toolbar")) { toolbar() }
-                BasicTextField(value = editor.value, onValueChange = ::update, enabled = enabled, interactionSource = interaction,
+                val shown = editor.value
+                SideEffect { editor.presented(shown) }
+                BasicTextField(value = shown, onValueChange = ::update, enabled = enabled, interactionSource = interaction,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foreground), cursorBrush = SolidColor(colors.accent),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default), keyboardActions = KeyboardActions { newline() },
                     maxLines = if (expanded) Int.MAX_VALUE else if (compact) 2 else 6,

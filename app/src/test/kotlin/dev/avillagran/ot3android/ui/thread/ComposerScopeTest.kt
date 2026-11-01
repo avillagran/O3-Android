@@ -33,6 +33,28 @@ class ComposerScopeTest {
         rule.onNodeWithTag("model_control").assertIsDisplayed()
         rule.onNodeWithTag("composer_control_row").assertDoesNotExist()
     }
+    @Test fun lateImeCommandCannotRevertASelectionTheFieldHasNotComposed() {
+        val editor = ComposerEditorState("Expanded composer draft")
+        var view: android.view.View? = null
+        rule.setContent { view = androidx.compose.ui.platform.LocalView.current; Ot3Theme {
+            ComposerEditor(editor, expanded = false, canSend = false, sending = false,
+                onDraftChange = { _, _ -> }, onSend = {}, onToggle = {})
+        } }
+        field().performClick(); rule.waitForIdle()
+        val cursor = editor.value.selection
+        val setSelection = field().fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsActions.SetSelection].action!!
+        // Same main-thread turn: the field's input buffer has not seen the new range.
+        rule.runOnUiThread {
+            val connection = checkNotNull(view).onCreateInputConnection(android.view.inputmethod.EditorInfo())!!
+            assertTrue(setSelection(4, 12, false))
+            connection.setComposingRegion(3, 6)
+        }
+        assertSelection(4, 12)
+        rule.runOnIdle { assertEquals(TextRange(3, 6), editor.value.composition); assertNotEquals(cursor, editor.value.selection) }
+        // Once composed, the same connection's own movement is honored.
+        rule.runOnUiThread { checkNotNull(view).onCreateInputConnection(android.view.inputmethod.EditorInfo())!!.setSelection(7, 7) }
+        assertSelection(7, 7)
+    }
     @Test fun selectionSurvivesModeAndRestoreButNotAnotherEnvironmentWithSameThreadId() {
         var identity by mutableStateOf("[node,same-thread]")
         var draft by mutableStateOf("Original normal draft")
