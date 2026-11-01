@@ -62,6 +62,19 @@ class HeaderStatusTest {
     }
 
     @Test
+    fun coldStartDoesNotHoldTheListBehindTheHeaderDelay() = runTest {
+        val source = MutableStateFlow<HeaderStatus>(HeaderStatus.ReconnectingMany(2, true))
+        val seen = mutableListOf<HeaderStatus>()
+        val job = launch { HeaderStatusDisplay.delayed(source).collect { seen += it } }
+        runCurrent()
+        assertEquals(listOf<HeaderStatus>(HeaderStatus.Hidden), seen)
+        assertEquals(0L, testScheduler.currentTime)
+        advanceTimeBy(801)
+        assertEquals(HeaderStatus.ReconnectingMany(2, true), seen.last())
+        job.cancel()
+    }
+
+    @Test
     fun appearsAfter800msThenFollowsChangesAtOnce() = runTest {
         val source = MutableStateFlow<HeaderStatus>(HeaderStatus.Hidden)
         val seen = mutableListOf<HeaderStatus>()

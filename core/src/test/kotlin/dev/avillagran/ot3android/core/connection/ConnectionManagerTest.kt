@@ -108,6 +108,68 @@ class ConnectionManagerTest {
         assertEquals("one new transport, shared by both consumers", 2, factory.created.size)
     }
 
+    @Test
+    fun coldStartRestoresBothHostsBeforeBlockedDescriptorsAndReconcilesLiveShell() = kotlinx.coroutines.runBlocking {
+        dev.avillagran.ot3android.core.transport.assumeHostJni()
+        val directory = java.nio.file.Files.createTempDirectory("cold-sidebar").toFile()
+        val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val started = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val cache = dev.avillagran.ot3android.core.thread.ThreadCache(directory)
+        repository.save(null, "One", "http://one:3773", null, "t1")
+        repository.save(null, "Two", "http://two:3773", null, "t2")
+        try {
+            val first = ConnectionManager(repository, cursors, factory, scope, cache = cache)
+            for (id in listOf("id-1", "id-2")) first.startIfCurrent(first.supervisor(id))
+            // No Home/AppGraph/sidebar observer is running: the manager owns persistence.
+            kotlinx.coroutines.withTimeout(5_000) {
+                while (cache.usage().entries != 2) kotlinx.coroutines.delay(10)
+            }
+            first.forget("id-1"); first.forget("id-2")
+            val blocked = FakeT3TransportFactory {
+                FakeT3Transport().apply {
+                    for (url in listOf("http://one:3773", "http://two:3773")) onFetchDescriptor(url) {
+                        started.complete(Unit)
+                        gate.await()
+                        JSONObject().put("environmentId", url.substringAfter("//").substringBefore(':'))
+                    }
+                    onShell { body(10, emptyList(), listOf(thread("fresh"))) }
+                }
+            }
+            val restarted = ConnectionManager(repository, cursors, blocked, scope,
+                cache = dev.avillagran.ot3android.core.thread.ThreadCache(directory))
+            val owners = listOf("id-1", "id-2").map { restarted.supervisor(it)!! }
+            owners.forEach(restarted::startIfCurrent)
+            kotlinx.coroutines.withTimeout(5_000) { started.await() }
+            assertTrue(owners.all { it.connection.value == null })
+            assertTrue(owners.all { it.shell.value!!.threads.single().id == "t1" })
+            val input = dev.avillagran.ot3android.core.home.HomeInput(environments = owners.map {
+                dev.avillagran.ot3android.core.home.HomeEnvironment(it.environmentId, it.environmentId,
+                    ConnectionState.Connecting, it.shell.value)
+            }, now = 0)
+            val stale = dev.avillagran.ot3android.core.home.HomeStateBuilder.build(
+                dev.avillagran.ot3android.core.transport.DomainEngine.shared, input)
+            assertEquals(dev.avillagran.ot3android.core.home.HomeContent.List, stale.content)
+            assertEquals(2, stale.rows.size)
+            assertTrue(stale.stale)
+            assertTrue(stale.offline)
+            assertTrue(stale.rows.values.all { !it.swipe.enabled })
+            gate.complete(Unit)
+            for (owner in owners) kotlinx.coroutines.withTimeout(5_000) { owner.state.first { it is ConnectionState.Connected } }
+            assertTrue(owners.all { it.shell.value!!.threads.single().id == "fresh" })
+            val live = dev.avillagran.ot3android.core.home.HomeStateBuilder.build(
+                dev.avillagran.ot3android.core.transport.DomainEngine.shared,
+                input.copy(environments = owners.map {
+                    dev.avillagran.ot3android.core.home.HomeEnvironment(it.environmentId, it.environmentId, it.state.value, it.shell.value)
+                }))
+            assertFalse(live.stale)
+            assertEquals(setOf("fresh"), live.rows.values.map { it.threadId }.toSet())
+        } finally {
+            scope.coroutineContext[kotlinx.coroutines.Job]!!.let { it.cancel(); it.join() }
+            directory.deleteRecursively()
+        }
+    }
+
     private val cursors = MemoryCursorStore()
     private val dao = InMemoryEnvironmentDao()
     private var ids = 0
