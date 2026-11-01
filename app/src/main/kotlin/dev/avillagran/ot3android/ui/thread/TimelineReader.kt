@@ -400,11 +400,24 @@ private fun ChangesBlock(changes: JSONObject, id: String, onOpenDiff: (JSONObjec
     }
 }
 
+/** Desktop collapses paragraph margins (10.4px). Prose has 150% leading;
+ * paragraphs containing images use 100%, including their captions. Preserve the
+ * existing Android text metrics and account for that extra 7px between blocks. */
+internal fun markdownBlockGap(previous: JSONObject, next: JSONObject): Float {
+    if (next.optString("type") == "heading") return 20f
+    if (previous.optString("type") == "heading") return 10.4f
+    val prose = previous.optString("type") == "paragraph" &&
+        previous.optJSONArray("spans").objects().none { it.optString("type") == "image" }
+    return 10.4f + if (prose) 7f else 0f
+}
+
 /** Renderer-neutral blocks and inline spans supplied by lib-t3-rust 0.3.4. */
 @Composable
 internal fun MarkdownBlocks(blocks: JSONArray?) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        blocks.objects().forEachIndexed { index, block ->
+    Column {
+        val items = blocks.objects()
+        items.forEachIndexed { index, block ->
+            if (index > 0) Spacer(Modifier.height(markdownBlockGap(items[index - 1], block).dp))
             when (block.optString("type")) {
                 "code" -> dev.avillagran.ot3android.ui.thread.rendering.VisualCodeBlock(block, index, streaming = LocalReaderStreaming.current)
                 "list" -> block.optJSONArray("items").objects().forEachIndexed { i, item ->
@@ -436,11 +449,12 @@ internal val LocalReaderTimeFormat = staticCompositionLocalOf { "locale" }
 internal val LocalReaderMath = staticCompositionLocalOf { true }
 internal val LocalReaderStreaming = staticCompositionLocalOf { false }
 
-internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true, onReference: ((String) -> Unit)? = null): AnnotatedString = buildAnnotatedString {
+internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true, onReference: ((String) -> Unit)? = null, codeBackground: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified): AnnotatedString = buildAnnotatedString {
     spans.objects().forEach { span ->
         val style = SpanStyle(fontWeight = if (span.optBoolean("strong")) FontWeight.Bold else null,
             fontStyle = if (span.optBoolean("emphasis")) FontStyle.Italic else null,
             fontFamily = if (span.optString("type") == "code") FiraCode else null,
+            background = if (span.optString("type") == "code") codeBackground else androidx.compose.ui.graphics.Color.Unspecified,
             textDecoration = if (span.optBoolean("strikethrough")) TextDecoration.LineThrough else null)
         val link = span.optJSONObject("link")
         // Rust owns destination classification. Android requires a normalized scheme
@@ -485,7 +499,7 @@ internal fun MarkdownInlineContent(spans: JSONArray?, style: TextStyle = Materia
     Column(Modifier.fillMaxWidth()) {
         spans.objects().forEach { span ->
             if (span.optString("type") == "image") {
-                if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current), style = style, modifier = Modifier.fillMaxWidth())
+                if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current, Ot3Theme.colors.surface), style = style, modifier = Modifier.fillMaxWidth())
                 run = JSONArray()
                 MarkdownImage(span)
                 imageEndedLine = true
@@ -496,6 +510,6 @@ internal fun MarkdownInlineContent(spans: JSONArray?, style: TextStyle = Materia
                 imageEndedLine = false
             }
         }
-        if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current), style = style, modifier = Modifier.fillMaxWidth())
+        if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current, Ot3Theme.colors.surface), style = style, modifier = Modifier.fillMaxWidth())
     }
 }

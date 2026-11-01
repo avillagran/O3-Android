@@ -36,9 +36,25 @@ class ReaderBitmapBudgetTest {
         assertEquals(0, budget.used)
     }
 
-    @Test fun viewportIncludesNearbyImagesAndExcludesDistantAndHorizontalImages() {
+    @Test fun visibleWaitersCannotBeStarvedBySmallerNewRequests() = runTest {
+        val budget = ReaderBitmapBudget(10)
+        val holder = budget.acquire(7)
+        val large = async { budget.acquire(8) }
+        runCurrent()
+        val small = async { budget.acquire(2) }
+        runCurrent()
+        assertFalse(small.isCompleted)
+        holder.close()
+        val next = large.await()
+        assertEquals(10, budget.used)
+        next.close()
+        small.await().close()
+        assertEquals(0, budget.used)
+    }
+
+    @Test fun viewportExcludesOffscreenHoldersAndWaiters() {
         assertTrue(readerImageNearViewport(10f, 100f, 0f, 100f, 400, 800))
-        assertTrue(readerImageNearViewport(900f, 1100f, 0f, 100f, 400, 800))
+        assertFalse(readerImageNearViewport(900f, 1100f, 0f, 100f, 400, 800))
         assertFalse(readerImageNearViewport(1700f, 1900f, 0f, 100f, 400, 800))
         assertFalse(readerImageNearViewport(-1000f, -900f, 0f, 100f, 400, 800))
         assertFalse(readerImageNearViewport(10f, 100f, 900f, 1000f, 400, 800))
