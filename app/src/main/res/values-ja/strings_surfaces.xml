@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop ホスト</string>
+    <string name="surfaces_select">このホストを使用</string>
+    <string name="surfaces_missing">このピアには desktop-snapshots 権限がありません。</string>
+    <string name="surfaces_sdk">service-request-v1 を使うには OmaBridge SDK を更新してください。</string>
+    <string name="surfaces_credential">%1$s の T3 認証情報はペア設定したホストのみに送信します。選択前にホストの識別情報を確認してください。</string>
+    <string name="surfaces_enable">ホストで設定 → 接続の「このデバイスのリモート文書」を有効にし、remote-surfaces-serve を起動して desktop-snapshots を設定し、この電話に権限を付与してください。変更には「このデバイスのリモート保守を許可」も有効にしてください。</string>
+    <string name="surfaces_refused">アクセス不可または拒否。許可の無効化・取り消し、レポートや確認の期限切れが考えられます。ホストで新しいレポートを取得してください。</string>
+    <string name="surfaces_unknown">結果不明。操作が完了した可能性があります。自動再試行はしません。次の操作前にホストを確認してください。</string>
+    <string name="surfaces_documents">文書スナップショット</string>
+    <string name="surfaces_gallery">静的 HTML ギャラリー</string>
+    <string name="surfaces_compaction">圧縮ポリシー</string>
+    <string name="surfaces_idle">アイドル解放ポリシー</string>
+    <string name="surfaces_minutes">分（1–1440）</string>
+    <string name="surfaces_tokens">最小トークン数（1000–1000000）</string>
+    <string name="surfaces_prepare">変更を準備</string>
+    <string name="surfaces_confirmation">正確なリクエストとレポート全体を確認してください。確認は60秒で期限切れとなり、1回のみ使用できます。</string>
+</resources>

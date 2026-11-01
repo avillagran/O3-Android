@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Hostitel Desktop</string>
+    <string name="surfaces_select">Použít tohoto hostitele</string>
+    <string name="surfaces_missing">Tento protějšek nemá oprávnění desktop-snapshots.</string>
+    <string name="surfaces_sdk">Aktualizujte SDK OmaBridge pro service-request-v1.</string>
+    <string name="surfaces_credential">Přihlašovací údaje T3 pro %1$s odešlete jen spárovanému hostiteli. Před výběrem ověřte jeho totožnost.</string>
+    <string name="surfaces_enable">Na hostiteli: zapněte Vzdálené dokumenty na tomto zařízení v Předvolby → Připojení, spusťte remote-surfaces-serve, nastavte desktop-snapshots a povolte tento telefon. Pro změny zapněte i Povolit vzdálenou údržbu na tomto zařízení.</string>
+    <string name="surfaces_refused">Přístup není dostupný nebo byl zamítnut. Souhlas je vypnutý, oprávnění odvoláno nebo zpráva či potvrzení vypršely. Načtěte novou zprávu z hostitele.</string>
+    <string name="surfaces_unknown">Výsledek není znám. Operace mohla být dokončena. Bez automatického opakování; před novou akcí zkontrolujte hostitele.</string>
+    <string name="surfaces_documents">Snímky dokumentů</string>
+    <string name="surfaces_gallery">Statická galerie HTML</string>
+    <string name="surfaces_compaction">Zásady kompakce</string>
+    <string name="surfaces_idle">Uvolnění při nečinnosti</string>
+    <string name="surfaces_minutes">Minuty (1–1440)</string>
+    <string name="surfaces_tokens">Minimum tokenů (1000–1000000)</string>
+    <string name="surfaces_prepare">Připravit změnu</string>
+    <string name="surfaces_confirmation">Zkontrolujte přesný požadavek a úplnou zprávu. Potvrzení vyprší za 60 sekund a je jednorázové.</string>
+</resources>

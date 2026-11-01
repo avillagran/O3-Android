@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Host Desktop</string>
+    <string name="surfaces_select">Usar este host</string>
+    <string name="surfaces_missing">Este par não tem a permissão desktop-snapshots.</string>
+    <string name="surfaces_sdk">Atualize o SDK OmaBridge para ativar service-request-v1.</string>
+    <string name="surfaces_credential">Envie a credencial T3 de %1$s somente ao host emparelhado. Verifique a identidade antes de selecionar.</string>
+    <string name="surfaces_enable">No host: ative Documentos remotos neste dispositivo em Preferências → Conexões, inicie remote-surfaces-serve, configure desktop-snapshots e autorize este telefone. Para alterações, ative também Permitir manutenção remota neste dispositivo.</string>
+    <string name="surfaces_refused">Acesso indisponível ou recusado. Consentimento desativado, acesso revogado ou relatório ou confirmação expirados. Leia um novo relatório no host.</string>
+    <string name="surfaces_unknown">Resultado desconhecido. A operação pode ter terminado. Sem repetição automática; verifique o host antes de outra ação.</string>
+    <string name="surfaces_documents">Snapshots de documentos</string>
+    <string name="surfaces_gallery">Galeria HTML estática</string>
+    <string name="surfaces_compaction">Política de compactação</string>
+    <string name="surfaces_idle">Liberação por inatividade</string>
+    <string name="surfaces_minutes">Minutos (1–1440)</string>
+    <string name="surfaces_tokens">Tokens mínimos (1000–1000000)</string>
+    <string name="surfaces_prepare">Preparar alteração</string>
+    <string name="surfaces_confirmation">Revise a solicitação exata e o relatório completo. A confirmação expira em 60 segundos e é usada uma vez.</string>
+</resources>

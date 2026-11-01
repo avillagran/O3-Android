@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop-vært</string>
+    <string name="surfaces_select">Brug denne vært</string>
+    <string name="surfaces_missing">Denne peer har ingen desktop-snapshots-tilladelse.</string>
+    <string name="surfaces_sdk">Opdater OmaBridge SDK for service-request-v1.</string>
+    <string name="surfaces_credential">Send kun T3-legitimationsoplysningerne for %1$s til den parrede vært. Kontrollér identiteten før valg.</string>
+    <string name="surfaces_enable">På værten: slå Fjerndokumenter på denne enhed til i Indstillinger → Forbindelser, start remote-surfaces-serve, opsæt desktop-snapshots og giv telefonen adgang. For ændringer skal Tillad fjernvedligeholdelse på denne enhed også aktiveres.</string>
+    <string name="surfaces_refused">Adgang mangler eller blev afvist. Samtykke slået fra, tilladelse tilbagekaldt eller rapport eller bekræftelse udløbet. Læs en ny rapport på værten.</string>
+    <string name="surfaces_unknown">Ukendt resultat. Handlingen kan være fuldført. Intet automatisk genforsøg; kontrollér værten før en ny handling.</string>
+    <string name="surfaces_documents">Dokumentsnapshots</string>
+    <string name="surfaces_gallery">Statisk HTML-galleri</string>
+    <string name="surfaces_compaction">Komprimeringspolitik</string>
+    <string name="surfaces_idle">Frigivelse ved inaktivitet</string>
+    <string name="surfaces_minutes">Minutter (1–1440)</string>
+    <string name="surfaces_tokens">Mindste antal tokens (1000–1000000)</string>
+    <string name="surfaces_prepare">Forbered ændring</string>
+    <string name="surfaces_confirmation">Gennemgå den præcise anmodning og hele rapporten. Bekræftelsen udløber efter 60 sekunder og bruges én gang.</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop host</string>
+    <string name="surfaces_select">Use this host</string>
+    <string name="surfaces_missing">This peer has no desktop-snapshots grant.</string>
+    <string name="surfaces_sdk">Update the OmaBridge SDK to enable service-request-v1.</string>
+    <string name="surfaces_credential">Send the T3 credential for %1$s only to its paired host. Verify the host identity before selecting.</string>
+    <string name="surfaces_enable">On the host: enable Remote documents on this device in Preferences → Connections, launch remote-surfaces-serve, configure the desktop-snapshots service and grant it to this phone. For mutations also enable Allow remote maintenance on this device.</string>
+    <string name="surfaces_refused">Access unavailable or refused. Consent may be disabled, authorization revoked, or the report or confirmation expired. Read a fresh report on the host.</string>
+    <string name="surfaces_unknown">Outcome unknown. The operation may have completed. No automatic retry; check the host before any new action.</string>
+    <string name="surfaces_documents">Document snapshots</string>
+    <string name="surfaces_gallery">Static HTML gallery</string>
+    <string name="surfaces_compaction">Compaction policy</string>
+    <string name="surfaces_idle">Idle release policy</string>
+    <string name="surfaces_minutes">Minutes (1–1440)</string>
+    <string name="surfaces_tokens">Minimum tokens (1000–1000000)</string>
+    <string name="surfaces_prepare">Prepare change</string>
+    <string name="surfaces_confirmation">Review the exact request and full report below. Confirmation expires in 60 seconds and is used once.</string>
+</resources>

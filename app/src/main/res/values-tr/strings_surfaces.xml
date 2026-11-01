@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop sunucusu</string>
+    <string name="surfaces_select">Bu sunucuyu kullan</string>
+    <string name="surfaces_missing">Bu eşte desktop-snapshots izni yok.</string>
+    <string name="surfaces_sdk">service-request-v1 için OmaBridge SDK sürümünü güncelleyin.</string>
+    <string name="surfaces_credential">%1$s T3 kimlik bilgilerini yalnızca eşleştirilmiş sunucuya gönderin. Seçmeden önce kimliğini doğrulayın.</string>
+    <string name="surfaces_enable">Sunucuda: Tercihler → Bağlantılar altında Bu cihazda uzak belgeler seçeneğini açın, remote-surfaces-serve başlatın, desktop-snapshots hizmetini yapılandırıp bu telefona izin verin. Değişiklik için Bu cihazda uzak bakıma izin ver seçeneğini de açın.</string>
+    <string name="surfaces_refused">Erişim yok veya reddedildi. Onay kapalı, izin iptal edilmiş ya da rapor veya onayın süresi dolmuş olabilir. Sunucuda yeni rapor okuyun.</string>
+    <string name="surfaces_unknown">Sonuç bilinmiyor. İşlem tamamlanmış olabilir. Otomatik tekrar yok; yeni işlemden önce sunucuyu kontrol edin.</string>
+    <string name="surfaces_documents">Belge anlık görüntüleri</string>
+    <string name="surfaces_gallery">Statik HTML galerisi</string>
+    <string name="surfaces_compaction">Sıkıştırma ilkesi</string>
+    <string name="surfaces_idle">Boşta bırakma ilkesi</string>
+    <string name="surfaces_minutes">Dakika (1–1440)</string>
+    <string name="surfaces_tokens">En az token (1000–1000000)</string>
+    <string name="surfaces_prepare">Değişikliği hazırla</string>
+    <string name="surfaces_confirmation">Tam isteği ve raporun tamamını inceleyin. Onay 60 saniyede sona erer ve bir kez kullanılır.</string>
+</resources>

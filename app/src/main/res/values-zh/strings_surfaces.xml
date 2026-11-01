@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop 主机</string>
+    <string name="surfaces_select">使用此主机</string>
+    <string name="surfaces_missing">此对等方没有 desktop-snapshots 授权。</string>
+    <string name="surfaces_sdk">请更新 OmaBridge SDK 以启用 service-request-v1。</string>
+    <string name="surfaces_credential">仅将 %1$s 的 T3 凭据发送到其配对主机。选择前请核对主机身份。</string>
+    <string name="surfaces_enable">在主机上：在偏好设置 → 连接中启用此设备上的远程文档，启动 remote-surfaces-serve，配置 desktop-snapshots 服务并授权此手机。修改操作还需启用允许此设备上的远程维护。</string>
+    <string name="surfaces_refused">访问不可用或被拒绝。可能未启用同意、授权已撤销，或报告或确认已过期。请在主机读取新报告。</string>
+    <string name="surfaces_unknown">结果未知。操作可能已完成。不会自动重试；执行新操作前请检查主机。</string>
+    <string name="surfaces_documents">文档快照</string>
+    <string name="surfaces_gallery">静态 HTML 图库</string>
+    <string name="surfaces_compaction">压缩策略</string>
+    <string name="surfaces_idle">空闲释放策略</string>
+    <string name="surfaces_minutes">分钟（1–1440）</string>
+    <string name="surfaces_tokens">最少令牌数（1000–1000000）</string>
+    <string name="surfaces_prepare">准备更改</string>
+    <string name="surfaces_confirmation">请核对准确的请求和完整报告。确认在60秒后过期且仅可使用一次。</string>
+</resources>

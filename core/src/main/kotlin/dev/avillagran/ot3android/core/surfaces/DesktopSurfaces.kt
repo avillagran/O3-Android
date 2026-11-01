@@ -6,6 +6,7 @@ import org.json.JSONObject
 class DesktopSurfaces(
     private val exchange: suspend (String, String, String?) -> JSONObject,
     private val clock: () -> Long = android.os.SystemClock::elapsedRealtime,
+    private val decode: (String) -> ByteArray = { android.util.Base64.decode(it, android.util.Base64.DEFAULT) },
 ) {
     private var pending: JSONObject? = null
     private var deadline = 0L
@@ -17,15 +18,22 @@ class DesktopSurfaces(
         pending = null
         val body = JSONObject().put("surface", surface).put("action", action).put("reportId", reportId)
         if (settings != null) body.put("settings", settings)
+        val started = clock()
         val response = request("POST", "/v1/maintenance/prepare", body.toString())
         require(response.getInt("expiresIn") == 60 && !response.getBoolean("retry"))
         require(response.getJSONObject("report").getString("reportId") == reportId)
-        require(response.getJSONObject("request").toString().isNotEmpty())
+        require(equalJson(response.getJSONObject("request"), body))
+        require(response.getJSONObject("report").getString("surface") == surface)
         java.util.UUID.fromString(response.getString("confirmationToken"))
         pending = response
-        deadline = clock() + 60000
+        deadline = started + 60000
         return JSONObject().put("report", response.getJSONObject("report")).put("request", response.getJSONObject("request"))
     }
+    private fun equalJson(a: JSONObject, b: JSONObject): Boolean = a.keys().asSequence().toSet() == b.keys().asSequence().toSet() && a.keys().asSequence().toSet().all { key ->
+        val x = a.get(key); val y = b.get(key)
+        if (x is JSONObject && y is JSONObject) equalJson(x, y) else x == y
+    }
+    val canConfirm: Boolean get() = pending != null && clock() < deadline && !unknown
     fun discard() { pending = null }
     suspend fun confirm(): JSONObject {
         val confirmation = checkNotNull(pending)
@@ -44,7 +52,7 @@ class DesktopSurfaces(
             "unknown" -> error("unknown_outcome")
             "http" -> {
                 val status = result.getInt("httpStatus")
-                val raw = android.util.Base64.decode(result.getString("bodyBase64"), android.util.Base64.DEFAULT)
+                val raw = decode(result.getString("bodyBase64"))
                 val json = JSONObject(String(raw, Charsets.UTF_8))
                 if (mutating) unknown = status >= 500 || json.optString("outcome") == "unknown" || json.optString("error") == "unknown"
                 if (status !in 200..299) { pending = null; error("host_refused_$status") }

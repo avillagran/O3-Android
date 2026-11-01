@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop-host</string>
+    <string name="surfaces_select">Deze host gebruiken</string>
+    <string name="surfaces_missing">Deze peer heeft geen desktop-snapshots-machtiging.</string>
+    <string name="surfaces_sdk">Werk de OmaBridge-SDK bij voor service-request-v1.</string>
+    <string name="surfaces_credential">Stuur de T3-inloggegevens van %1$s alleen naar de gekoppelde host. Controleer de identiteit vóór selectie.</string>
+    <string name="surfaces_enable">Op de host: schakel Externe documenten op dit apparaat in via Voorkeuren → Verbindingen, start remote-surfaces-serve, configureer desktop-snapshots en machtig deze telefoon. Schakel voor wijzigingen ook Extern onderhoud op dit apparaat toestaan in.</string>
+    <string name="surfaces_refused">Toegang niet beschikbaar of geweigerd. Toestemming uitgeschakeld, machtiging ingetrokken of rapport of bevestiging verlopen. Lees een nieuw rapport op de host.</string>
+    <string name="surfaces_unknown">Uitkomst onbekend. De bewerking kan voltooid zijn. Geen automatische herhaling; controleer de host vóór een nieuwe actie.</string>
+    <string name="surfaces_documents">Documentsnapshots</string>
+    <string name="surfaces_gallery">Statische HTML-galerij</string>
+    <string name="surfaces_compaction">Compactiebeleid</string>
+    <string name="surfaces_idle">Vrijgave bij inactiviteit</string>
+    <string name="surfaces_minutes">Minuten (1–1440)</string>
+    <string name="surfaces_tokens">Minimumtokens (1000–1000000)</string>
+    <string name="surfaces_prepare">Wijziging voorbereiden</string>
+    <string name="surfaces_confirmation">Controleer het exacte verzoek en het volledige rapport. De bevestiging verloopt na 60 seconden en is eenmalig.</string>
+</resources>
