@@ -26,6 +26,7 @@ class TerminalSession(
     val state = mutable.asStateFlow()
     private var transport: T3Transport? = null
     private var output = JSONObject()
+    private var viewport: Pair<Int, Int>? = null
     private var remoteSize: Pair<Int, Int>? = null
     private var attempted = resumeInitially
     private var generation = 0
@@ -79,6 +80,7 @@ class TerminalSession(
                                 finished = reduced.optBoolean("finished"), exit = exit,
                                 error = !reduced.isNull("error"))
                             publish(); retry = 0
+                            if (operate) viewport?.let { (cols, rows) -> resize(cols, rows) }
                             val replies = emulator.drainReplies()
                             if (operate && !reduced.optBoolean("replace")) for (reply in replies) write(reply)
                         }
@@ -101,6 +103,7 @@ class TerminalSession(
     suspend fun resize(cols: Int, rows: Int) {
         // An observer keeps the actual host dimensions and never sends a mutation.
         if (!mutable.value.operate && attempted) return
+        viewport = cols to rows
         if (cols != emulator.cols || rows != emulator.rows) { emulator.resize(cols, rows); publish() }
         val host = transport ?: return
         if (!mutable.value.connected || mutable.value.finished) return

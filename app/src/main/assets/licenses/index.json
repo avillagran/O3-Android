@@ -875,7 +875,7 @@
     "source": "https://github.com/mermaid-js/mermaid/tree/mermaid%4011.17.2"
   },
   {
-    "name": "FiraCode Nerd Font (preview glyph subset)",
+    "name": "FiraCode Nerd Font (preview and terminal glyph subsets)",
     "version": "installed distribution",
     "license": "OFL-1.1",
     "file": "firacode-nerd-OFL.txt",
@@ -887,5 +887,12 @@
     "license": "OFL-1.1 (font)",
     "file": "font-awesome.txt",
     "source": "https://fontawesome.com/license/free"
+  },
+  {
+    "name": "Nerd Fonts terminal symbols",
+    "version": "3.4.0",
+    "license": "OFL-1.1 / MIT",
+    "file": "nerd-fonts.txt",
+    "source": "https://github.com/ryanoasis/nerd-fonts/tree/v3.4.0"
   }
 ]

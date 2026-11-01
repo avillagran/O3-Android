@@ -102,6 +102,17 @@ class TerminalSessionTest {
         advanceTimeBy(10000); runCurrent(); assertEquals(1, writes.size)
         job.cancelAndJoin()
     }
+    @Test fun viewportDuringAttachAndKeyboardChangesReachHost() = runTest {
+        val session = TerminalSession("thread-a")
+        session.resize(41, 32)
+        val job = launch { session.collect(host) }; runCurrent()
+        assertEquals(41, subscriptions.single().second.getInt("cols"))
+        session.resize(41, 14)
+        session.resize(41, 32)
+        assertEquals(listOf(14, 32), resizes.map { it.getInt("rows") })
+        assertEquals(41, session.state.value.frame.cols)
+        job.cancelAndJoin()
+    }
     @Test fun lifecycleReentryResumesAndStaleQueuedInputIsDropped() = runTest {
         val session = TerminalSession("thread-a")
         val first = launch { session.collect(host) }; runCurrent()

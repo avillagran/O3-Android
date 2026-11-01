@@ -9,6 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -35,7 +38,10 @@ internal class TerminalViewModel(private val saved: androidx.lifecycle.SavedStat
 
 @Composable
 internal fun TerminalPage(environmentId: String, threadId: String, onClose: () -> Unit, command: String? = null) {
-    val connections = LocalContext.current.appGraph.connectionManager
+    val graph = LocalContext.current.appGraph
+    val environments by graph.environmentRepository.environments.collectAsStateWithLifecycle(initialValue = emptyList())
+    val hostName = environments.firstOrNull { it.id == environmentId }?.label ?: stringResource(R.string.terminal_title)
+    val connections = graph.connectionManager
     val connection by remember(environmentId) { connections.connectionFlow(environmentId) }.collectAsStateWithLifecycle(initialValue = null)
     val owner: TerminalViewModel = viewModel(key = "terminal:$environmentId:$threadId")
     val session = owner.session(threadId)
@@ -57,7 +63,7 @@ internal fun TerminalPage(environmentId: String, threadId: String, onClose: () -
     DisposableEffect(sizes) { onDispose { sizes.close() } }
     LaunchedEffect(session, sizes) { for ((c, r) in sizes) session.resize(c, r) }
     androidx.activity.compose.BackHandler(onBack = onClose)
-    TerminalSurface(environmentId, threadId, state, command,
+    TerminalSurface(hostName, threadId, state, command,
         onSend = send, onPaste = { send(session.paste(it)) },
         onArrow = { send(session.arrow(it)) }, onSize = { c, r -> sizes.trySend(c to r) },
         dropped = dropped, onClose = onClose)
@@ -85,26 +91,27 @@ internal fun TerminalSurface(
         onSend(data)
     }
     Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding().testTag("terminal_screen")) {
-        Text(stringResource(R.string.terminal_title), style = MaterialTheme.typography.titleLarge)
-        Text("$environmentId · $threadId", style = MaterialTheme.typography.labelSmall)
-        SelectionContainer { Text(state.cwd, style = MaterialTheme.typography.labelSmall, maxLines = 2) }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("$environmentId · ${state.cwd}", style = MaterialTheme.typography.labelSmall,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).testTag("terminal_destination"))
+            Ot3IconButton("copy", stringResource(R.string.terminal_copy),
+                { clipboard.setText(AnnotatedString(state.frame.text())) }, Modifier.testTag("terminal_copy"))
+            Ot3IconButton("clipboard-paste", stringResource(R.string.terminal_paste), {
+                clipboard.getText()?.text?.let { text ->
+                    inputTooLarge = text.length > 65524 || text.toByteArray(Charsets.UTF_8).size > 65524
+                    if (!inputTooLarge) paste = text
+                }
+            }, Modifier.testTag("terminal_paste"), enabled = writable)
+            Ot3IconButton("terminal", stringResource(R.string.terminal_run), { pending = "" },
+                Modifier.testTag("terminal_run"), enabled = writable)
+            Ot3IconButton("x", stringResource(R.string.terminal_close), onClose, Modifier.testTag("terminal_close"))
+        }
         if (!state.operate) Text(stringResource(R.string.terminal_read_only))
         if (!state.connected && !state.finished && !state.error) Text(stringResource(R.string.terminal_disconnected))
         if (state.finished) Text(stringResource(R.string.terminal_exited, state.exit))
         if (state.error) Text(stringResource(R.string.terminal_error))
         if (inputTooLarge) Text(stringResource(R.string.terminal_input_too_large))
         if (state.uncertainWrite || dropped) Text(stringResource(R.string.terminal_uncertain))
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
-            TextButton(onClick = { clipboard.setText(AnnotatedString(state.frame.text())) }, modifier = Modifier.testTag("terminal_copy")) { Text(stringResource(R.string.terminal_copy)) }
-            TextButton(onClick = {
-                clipboard.getText()?.text?.let { text ->
-                    inputTooLarge = text.length > 65524 || text.toByteArray(Charsets.UTF_8).size > 65524
-                    if (!inputTooLarge) paste = text
-                }
-            }, enabled = writable, modifier = Modifier.testTag("terminal_paste")) { Text(stringResource(R.string.terminal_paste)) }
-            TextButton(onClick = { pending = "" }, enabled = writable, modifier = Modifier.testTag("terminal_run")) { Text(stringResource(R.string.terminal_run)) }
-            TextButton(onClick = onClose, modifier = Modifier.testTag("terminal_close")) { Text(stringResource(R.string.terminal_close)) }
-        }
         AndroidView(factory = { TerminalView(it) }, update = { view ->
             view.send = send; view.dimensions = onSize; view.writable = writable; view.frame = state.frame
             view.applicationCursor = state.applicationCursor
@@ -123,7 +130,7 @@ internal fun TerminalSurface(
         AlertDialog(onDismissRequest = { pending = null }, title = { Text(stringResource(R.string.terminal_run)) },
             text = { Column {
                 Text(stringResource(R.string.terminal_confirm))
-                Text("$environmentId · $threadId\n${state.cwd}")
+                Text("$environmentId · ${state.cwd}")
                 OutlinedTextField(value, onValueChange = { pending = it }, modifier = Modifier.testTag("terminal_command"))
             } },
             confirmButton = { TextButton(enabled = writable && value.isNotBlank(), onClick = {

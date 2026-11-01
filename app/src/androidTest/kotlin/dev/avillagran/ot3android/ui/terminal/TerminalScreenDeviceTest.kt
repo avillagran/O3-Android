@@ -15,7 +15,7 @@ class TerminalScreenDeviceTest {
         var closed = 0
         rule.setContent { Ot3Theme { TerminalSurface("remote-host", "remote-thread", TerminalSession.View(TerminalEmulator().frame()),
             onSend = { error("read-only write") }, onPaste = { error("read-only paste") }, onArrow = {}, onSize = { _, _ -> }, onClose = { closed++ }) } }
-        rule.onNodeWithText("remote-host · remote-thread").assertIsDisplayed()
+        rule.onNodeWithTag("terminal_destination").assertIsDisplayed()
         rule.onAllNodes(hasSetTextAction()).assertCountEquals(0)
         rule.onNodeWithTag("terminal_run").assertIsNotEnabled()
         rule.onNodeWithTag("terminal_close").performClick()
