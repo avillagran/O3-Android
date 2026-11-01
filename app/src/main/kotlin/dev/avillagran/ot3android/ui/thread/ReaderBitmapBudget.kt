@@ -7,20 +7,31 @@ import kotlinx.coroutines.flow.first
  * are cached. Reserving the worst-case decode size prevents transient over-allocation. */
 internal class ReaderBitmapBudget(val limit: Int = 32 * 1024 * 1024) {
     private val changed = MutableStateFlow(0L)
+    private val waiting = ArrayDeque<Any>()
     var used: Int = 0
         private set
 
     suspend fun acquire(bytes: Int): Lease {
         require(bytes in 1..limit)
-        while (true) {
-            val version = changed.value
-            synchronized(this) {
-                if (used + bytes <= limit) {
-                    used += bytes
-                    return Lease(bytes)
+        val request = Any()
+        synchronized(this) { waiting.addLast(request); changed.value++ }
+        try {
+            while (true) {
+                val version = changed.value
+                synchronized(this) {
+                    // Only visible readers enqueue. FIFO prevents a succession of
+                    // small visible requests starving an older larger request.
+                    if (waiting.firstOrNull() === request && used + bytes <= limit) {
+                        waiting.removeFirst()
+                        used += bytes
+                        changed.value++
+                        return Lease(bytes)
+                    }
                 }
+                changed.first { it != version }
             }
-            changed.first { it != version }
+        } finally {
+            synchronized(this) { if (waiting.remove(request)) changed.value++ }
         }
     }
 
@@ -35,5 +46,8 @@ internal class ReaderBitmapBudget(val limit: Int = 32 * 1024 * 1024) {
         val shared = ReaderBitmapBudget()
         // Leave 16 MiB for a fullscreen decode even when many thumbnails are near.
         val thumbnails = ReaderBitmapBudget(16 * 1024 * 1024)
+        // Legacy BitmapFactory scaling can temporarily hold one sampled source.
+        // Total pixel reservations: 32 MiB displayed/decoding + 16 MiB legacy scratch.
+        val scratch = ReaderBitmapBudget(16 * 1024 * 1024)
     }
 }

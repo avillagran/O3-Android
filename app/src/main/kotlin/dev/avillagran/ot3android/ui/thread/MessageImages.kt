@@ -15,8 +15,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.layout.findRootCoordinates
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.*
@@ -72,13 +71,27 @@ internal fun MessageAttachments(row: JSONObject) {
 internal fun decodeReaderImage(bytes: ByteArray, maxEdge: Int, inline: Boolean = false, onNaturalWidth: (Int) -> Unit = {}): Bitmap {
     val bounds = readerImageBounds(bytes, 40_000_000)
     onNaturalWidth(bounds.outWidth)
+    if (inline && android.os.Build.VERSION.SDK_INT >= 28) {
+        val size = readerInlineImageSize(bounds.outWidth, bounds.outHeight, maxEdge)
+        return android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(java.nio.ByteBuffer.wrap(bytes))) { decoder, _, _ ->
+            decoder.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+            decoder.setTargetColorSpace(android.graphics.ColorSpace.get(android.graphics.ColorSpace.Named.SRGB))
+            decoder.setTargetSize(size.first, size.second)
+        }
+    }
     val sample = if (inline) readerInlineImageSample(bounds.outWidth, bounds.outHeight, maxEdge) else readerImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
     val options = BitmapFactory.Options().apply {
         inSampleSize = sample
         inPreferredConfig = Bitmap.Config.ARGB_8888
         if (android.os.Build.VERSION.SDK_INT >= 26) inPreferredColorSpace = android.graphics.ColorSpace.get(android.graphics.ColorSpace.Named.SRGB)
     }
-    return requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)) { "image_decode_failed" }
+    val decoded = requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)) { "image_decode_failed" }
+    if (!inline) return decoded
+    val size = readerInlineImageSize(bounds.outWidth, bounds.outHeight, maxEdge)
+    return try {
+        Bitmap.createScaledBitmap(decoded, size.first, size.second, true)
+            .also { if (it !== decoded) decoded.recycle() }
+    } catch (error: Throwable) { decoded.recycle(); throw error }
 }
 
 private fun readerImageBounds(bytes: ByteArray, pixelLimit: Long): BitmapFactory.Options {
@@ -104,6 +117,14 @@ internal fun readerInlineImageSample(width: Int, height: Int, displayWidthPx: In
     while (width.toLong() / (sample.toLong() * 2) >= displayWidthPx) sample *= 2
     while (readerImageAllocation(width, height, sample) > 16L * 1024 * 1024) sample *= 2
     return sample
+}
+
+/** Decode at physical display pixels, never upscale, bounded to 4 MP for extreme aspect ratios. */
+internal fun readerInlineImageSize(width: Int, height: Int, displayWidthPx: Int): Pair<Int, Int> {
+    require(width > 0 && height > 0 && displayWidthPx > 0)
+    val scale = minOf(1.0, displayWidthPx.toDouble() / width,
+        kotlin.math.sqrt((16.0 * 1024 * 1024 / 4) / (width.toDouble() * height)))
+    return maxOf(1, (width * scale).toInt()) to maxOf(1, (height * scale).toInt())
 }
 
 internal fun readerImageAllocation(width: Int, height: Int, sample: Int): Long =
@@ -175,31 +196,30 @@ internal fun ReaderImageDialog(attachment: JSONObject, close: () -> Unit) {
 }
 
 /** Keep lightweight layout placeholders for eagerly composed Markdown blocks, but
- * load/retain pixels only within one screen of the viewport (including nested cells). */
+ * load/retain pixels only in the clipped viewport (including nested cells). */
 internal fun readerImageNearViewport(top: Float, bottom: Float, left: Float, right: Float, width: Int, height: Int): Boolean =
-    width > 0 && height > 0 && bottom > -height && top < height * 2f && right > -width && left < width * 2f
+    width > 0 && height > 0 && bottom > 0 && top < height && right > 0 && left < width
 
 @Composable
 private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, fitThumbnail: Boolean = false, square: Boolean = false) {
     var displayWidth by remember(identity, source.generation) { mutableIntStateOf(0) }
     var near by remember(identity, source.generation) { mutableStateOf(false) }
-    val density = LocalDensity.current
-    var height by remember(identity, source.generation) { mutableIntStateOf(0) }
+    var aspect by remember(identity, source.generation) { mutableFloatStateOf(1f) }
     Box(modifier.testTag("thread_image_${attachment.optString("id")}_$maxEdge").onSizeChanged { displayWidth = it.width }.onGloballyPositioned { coordinates ->
-        val root = coordinates.findRootCoordinates().size
-        val position = coordinates.positionInRoot()
-        near = readerImageNearViewport(position.y, position.y + coordinates.size.height,
-            position.x, position.x + coordinates.size.width, root.width, root.height)
+        // boundsInWindow clips against ancestor scroll containers. Offscreen composed
+        // Markdown blocks must not retain leases or occupy the budget wait queue.
+        val visible = coordinates.boundsInWindow()
+        near = visible.width > 0f && visible.height > 0f
     }) {
         if (near && displayWidth > 0) key(identity, source.generation) {
             ActiveImageRead(attachment, identity, source, square, if (zoom == null) displayWidth else maxEdge,
-                Modifier.fillMaxWidth().then(if (fitThumbnail) Modifier.fillMaxHeight() else Modifier).onSizeChanged { height = it.height }, zoom, onNaturalWidth, height.takeIf { it > 0 } ?: displayWidth, fitThumbnail)
-        } else Spacer(if (height > 0) Modifier.fillMaxWidth().height(with(density) { height.toDp() }) else Modifier.fillMaxWidth().aspectRatio(1f))
+                Modifier.fillMaxWidth().then(if (fitThumbnail) Modifier.fillMaxHeight() else Modifier), zoom, onNaturalWidth, (displayWidth / aspect).toInt(), fitThumbnail, onDimensions = { w, h -> aspect = w.toFloat() / h })
+        } else Spacer(Modifier.fillMaxWidth().aspectRatio(aspect))
     }
 }
 
 @Composable
-private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, square: Boolean, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, loadingHeightPx: Int = 160, fitThumbnail: Boolean = false) {
+private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, square: Boolean, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, loadingHeightPx: Int = 160, fitThumbnail: Boolean = false, onDimensions: (Int, Int) -> Unit = { _, _ -> }) {
     val cachedBytes = remember(identity, source.generation) { arrayOfNulls<ByteArray>(1) }
     var retry by remember(identity, source.generation) { mutableIntStateOf(0) }
     var complete by remember(identity, source.generation, retry) { mutableStateOf(false) }
@@ -218,15 +238,25 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
                 val bytes = cachedBytes[0] ?: imageReads.withPermit { source.read(attachment) }?.also { cachedBytes[0] = it }
                 if (bytes == null) null else {
                     val bounds = withContext(Dispatchers.Default) { readerImageBounds(bytes, 40_000_000) }
+                    onDimensions(bounds.outWidth, bounds.outHeight)
+                    onNaturalWidth(bounds.outWidth)
                     val sample = if (zoom == null) readerInlineImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
                         else readerImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
-                    val reservation = readerImageAllocation(bounds.outWidth, bounds.outHeight, sample).toInt()
+                    val size = readerInlineImageSize(bounds.outWidth, bounds.outHeight, maxEdge)
+                    val reservation = if (zoom == null) size.first * size.second * 4
+                        else readerImageAllocation(bounds.outWidth, bounds.outHeight, sample).toInt()
                     lease.close(); lease = null
                     thumbnailLease?.close(); thumbnailLease = null
                     if (zoom == null) thumbnailLease = ReaderBitmapBudget.thumbnails.acquire(reservation)
                     lease = ReaderBitmapBudget.shared.acquire(reservation)
                     imageReads.withPermit {
-                        withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge, inline = zoom == null) { naturalWidth = it } }
+                        // API 24–27 needs a sampled intermediate before exact scaling.
+                        // Its independent scratch budget cannot block behind displayed leases.
+                        val scratch = if (zoom == null && android.os.Build.VERSION.SDK_INT < 28)
+                            ReaderBitmapBudget.scratch.acquire(readerImageAllocation(bounds.outWidth, bounds.outHeight, sample).toInt()) else null
+                        try {
+                            withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge, inline = zoom == null) { naturalWidth = it } }
+                        } finally { scratch?.close() }
                     }
                 }
             }
@@ -237,7 +267,8 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
         catch (_: Exception) { complete = true }
         finally { lease?.close(); thumbnailLease?.close(); value = null }
     }
-    val stableModifier = if (bitmap == null) modifier.heightIn(min = with(LocalDensity.current) { loadingHeightPx.toDp() }) else modifier
+    val loadingHeight = with(LocalDensity.current) { loadingHeightPx.toDp() }
+    val stableModifier = if (bitmap != null) modifier else if (square) modifier.height(loadingHeight) else modifier.heightIn(min = loadingHeight)
     Surface(shape = if (square) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(8.dp), modifier = stableModifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val decoded = bitmap
         if (decoded != null) {

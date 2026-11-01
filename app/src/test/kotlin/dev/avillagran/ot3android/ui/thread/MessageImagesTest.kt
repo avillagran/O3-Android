@@ -87,6 +87,85 @@ class MessageImagesTest {
         assertTrue(ReaderBitmapBudget.shared.used <= ReaderBitmapBudget.shared.limit)
     }
 
+    @Config(qualifiers = "w500dp-h900dp-xxhdpi")
+    @Test fun visibleLargeImagesLoadTogetherAfterScrollingUnderThumbnailBudget() {
+        val image = Bitmap.createBitmap(2000, 1280, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { image.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        image.recycle()
+        lateinit var scroll: androidx.compose.foundation.ScrollState
+        rule.setContent { Ot3Theme {
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(3.4f),
+                LocalReaderImages provides ReaderImages("large-viewport") { bytes }) {
+                scroll = rememberScrollState()
+                Column(Modifier.width(360.dp).height(500.dp).verticalScroll(scroll)) {
+                    repeat(7) { index ->
+                        AttachmentImage(JSONObject().put("id", "large-$index").put("name", "Large $index")
+                            .put("source", "/large-$index.png"), markdown = true)
+                    }
+                }
+            }
+        } }
+        fun awaitFirstPair() {
+            rule.waitUntil(5000) {
+                (0..1).all { rule.onAllNodesWithContentDescription("Large $it").fetchSemanticsNodes().isNotEmpty() }
+            }
+            (0..1).forEach { rule.onNodeWithContentDescription("Large $it").assertIsDisplayed() }
+            assertTrue(ReaderBitmapBudget.thumbnails.used <= 16 * 1024 * 1024)
+            assertTrue(ReaderBitmapBudget.shared.used <= ReaderBitmapBudget.shared.limit)
+        }
+        awaitFirstPair()
+        rule.runOnIdle { kotlinx.coroutines.runBlocking { scroll.scrollTo(scroll.maxValue) } }
+        rule.waitUntil(5000) { rule.onAllNodesWithContentDescription("Large 6").fetchSemanticsNodes().isNotEmpty() }
+        rule.runOnIdle { kotlinx.coroutines.runBlocking { scroll.scrollTo(0) } }
+        awaitFirstPair()
+        val bounds = rule.onNodeWithContentDescription("Large 0").fetchSemanticsNode().boundsInRoot
+        assertEquals(2000f / 1280, bounds.width / bounds.height, .01f)
+    }
+
+    @Test @Config(qualifiers = "w500dp-h900dp-xxhdpi")
+    fun waitingImageReservesItsAspectBeforePixelsBecomeAvailable() {
+        val image = Bitmap.createBitmap(2000, 1280, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { image.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        image.recycle()
+        val holder = kotlinx.coroutines.runBlocking { ReaderBitmapBudget.thumbnails.acquire(14 * 1024 * 1024) }
+        var show by mutableStateOf(true)
+        try {
+            rule.setContent { Ot3Theme {
+                CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(3.4f),
+                    LocalReaderImages provides ReaderImages("waiting-aspect") { bytes }) {
+                    if (show) Box(Modifier.width(360.dp)) {
+                        AttachmentImage(JSONObject().put("id", "waiting").put("name", "Waiting")
+                            .put("source", "/waiting.png"), markdown = true)
+                    }
+                }
+            } }
+            rule.waitUntil(5000) {
+                rule.onNodeWithTag("thread_image_waiting_640").fetchSemanticsNode().size.height == 783
+            }
+            rule.onNodeWithContentDescription("Waiting").assertDoesNotExist()
+        } finally { holder.close() }
+        rule.waitUntil(5000) { rule.onAllNodesWithContentDescription("Waiting").fetchSemanticsNodes().isNotEmpty() }
+        rule.runOnIdle { show = false }
+        rule.waitForIdle()
+        rule.onNodeWithContentDescription("Waiting").assertDoesNotExist()
+        rule.waitUntil(5000) { ReaderBitmapBudget.shared.used == 0 && ReaderBitmapBudget.thumbnails.used == 0 }
+    }
+
+    @Test fun inlineDecodeMatchesPhysicalPixelsWithoutThe640Blur() {
+        val image = Bitmap.createBitmap(2000, 1280, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { image.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        image.recycle()
+        val decoded = decodeReaderImage(bytes, 1196, inline = true)
+        assertEquals(1196, decoded.width)
+        assertEquals(765, decoded.height)
+        assertTrue(decoded.allocationByteCount < 4 * 1024 * 1024)
+        decoded.recycle()
+    }
+
+    @Test @Config(sdk = [26]) fun legacyDecoderAlsoMatchesPhysicalPixels() {
+        inlineDecodeMatchesPhysicalPixelsWithoutThe640Blur()
+    }
+
     @Test fun playbackRetryOwnsANewFileAndIgnoresOldCallbacks() {
         var reads = 0
         val media = JSONObject().put("id", "clip-retry").put("name", "Retry.mp4").put("type", "file").put("mimeType", "video/mp4")
@@ -184,14 +263,14 @@ class MessageImagesTest {
         } }
         rule.waitUntil(5000) {
             rule.onAllNodesWithContentDescription("Resize").fetchSemanticsNodes().isNotEmpty() &&
-                ReaderBitmapBudget.shared.used == 481 * 311 * 4
+                ReaderBitmapBudget.shared.used == 476 * 307 * 4
         }
         rule.onNodeWithContentDescription("Resize").assertIsDisplayed()
         rule.runOnIdle { wide = true }
         rule.waitForIdle()
         rule.waitUntil(5000) {
             rule.onAllNodesWithContentDescription("Resize").fetchSemanticsNodes().isNotEmpty() &&
-                ReaderBitmapBudget.shared.used == 962 * 622 * 4
+                ReaderBitmapBudget.shared.used == 952 * 615 * 4
         }
         rule.onNodeWithContentDescription("Resize").assertIsDisplayed()
         rule.runOnIdle { assertEquals(1, reads) }
