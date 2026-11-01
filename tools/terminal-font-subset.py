@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild the renamed, single-cell terminal fallback with fonttools 4.63.0.
+"""Rebuild the renamed, single-cell terminal fallback with fonttools 4.68.0.
 Input: Nerd Fonts v3.4.0 patched-fonts/FiraCode/Regular/FiraCodeNerdFontMono-Regular.ttf.
 No Latin glyphs; the terminal keeps its system monospace metrics.
 """
