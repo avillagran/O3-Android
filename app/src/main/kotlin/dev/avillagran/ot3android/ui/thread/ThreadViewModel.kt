@@ -386,8 +386,15 @@ class ThreadViewModel(
         connection.map { (status, owner) -> owner.takeIf { status is ConnectionState.Connected } }.distinctUntilChanged().collectLatest { live ->
             if (live == null) return@collectLatest
             attachmentDraft.value.filter { it.requeueable }.forEach { retryAttachment(it.id) }
-            attachmentDraft.collect { files ->
-                files.firstOrNull { it.status == dev.avillagran.ot3android.core.composer.UploadStatus.Queued }?.let { uploadAttachment(live, it) }
+            attachmentDraft.collect {
+                // A retry can restore the same Queued value while uploadAttachment is finishing.
+                // StateFlow may conflate that transition, so drain the current queue before waiting.
+                while (supervisor.value?.connection?.value === live) {
+                    val file = attachmentDraft.value.firstOrNull {
+                        it.status == dev.avillagran.ot3android.core.composer.UploadStatus.Queued
+                    } ?: break
+                    uploadAttachment(live, file)
+                }
             }
         }
     }

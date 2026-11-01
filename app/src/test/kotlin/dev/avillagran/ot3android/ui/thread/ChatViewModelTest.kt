@@ -419,6 +419,27 @@ class ChatViewModelTest {
         }
     }
 
+    @Test fun retryWhileTheFailedUploadIsFinishingIsNotLost() = runBlocking {
+        fixture("default") { f ->
+            f.failUploads = true
+            var retried = false
+            val retry = launch(main, start = CoroutineStart.UNDISPATCHED) {
+                f.vm.attachmentDraft.collect { files ->
+                    val failed = files.singleOrNull()?.takeIf { it.status == UploadStatus.Failed }
+                    if (failed != null && !retried) {
+                        retried = true
+                        f.vm.retryAttachment(failed.id)
+                    }
+                }
+            }
+            try {
+                f.vm.importAttachment(f.context, f.content("notes.md", "bytes"))
+                f.await { f.attempts == 2 && f.vm.attachmentDraft.value.single().status == UploadStatus.Failed }
+                assertTrue(f.spool(f.vm.attachmentDraft.value.single().id).exists())
+            } finally { retry.cancelAndJoin() }
+        }
+    }
+
     @Test fun aFileThatArrivesDuringASendJoinsTheDraftNotTheCommand() = runBlocking {
         fixture("default") { f ->
             val sent = f.readyAttachment("sent.md")
