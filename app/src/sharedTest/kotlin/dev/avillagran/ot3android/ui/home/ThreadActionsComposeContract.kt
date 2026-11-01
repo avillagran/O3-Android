@@ -13,7 +13,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import dev.avillagran.ot3android.core.home.*
 import dev.avillagran.ot3android.core.shell.RowTime
-import dev.avillagran.ot3android.ui.kit.ThreadCardRow
+import dev.avillagran.ot3android.ui.kit.DesktopThreadRow
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import org.junit.Assert.*
 import org.junit.Rule
@@ -91,7 +91,7 @@ abstract class ThreadActionsComposeContract {
         var menus = 0
         rule.setContent { Ot3Theme {
             ThreadSwipeActions(row, { actions += it }, Modifier.fillMaxWidth().testTag("swipe")) { modifier ->
-                ThreadCardRow(row.toThreadRowModel(), onClick = {}, onLongClick = { menus++ }, modifier = modifier)
+                DesktopThreadRow(row.toThreadRowModel(), onClick = {}, onLongClick = { menus++ }, modifier = modifier)
             }
         } }
         rule.onNodeWithTag("swipe").performTouchInput { longClick() }

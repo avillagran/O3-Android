@@ -50,8 +50,7 @@ import dev.avillagran.ot3android.ui.kit.ShelfContent
 import dev.avillagran.ot3android.ui.kit.ShelfHeader
 import dev.avillagran.ot3android.ui.kit.ShelfTone
 import dev.avillagran.ot3android.ui.kit.StatusIcon
-import dev.avillagran.ot3android.ui.kit.ThreadCardRow
-import dev.avillagran.ot3android.ui.kit.ThreadSlimRow
+import dev.avillagran.ot3android.ui.kit.DesktopThreadRow
 import dev.avillagran.ot3android.ui.theme.Ot3Spacing
 import dev.avillagran.ot3android.ui.theme.Ot3Theme
 
@@ -158,7 +157,7 @@ internal fun CatalogCardRows() {
     Column {
         CatalogHeading(stringResource(R.string.catalog_card_rows))
         Column(Modifier.padding(horizontal = Ot3Spacing.lg)) {
-            catalogCardRows().forEach { ThreadCardRow(it, onClick = {}, onLongClick = {}) }
+            catalogCardRows().forEach { DesktopThreadRow(it, onClick = {}, onLongClick = {}) }
         }
     }
 }
@@ -170,8 +169,8 @@ internal fun CatalogCardVariants() {
         CatalogHeading(stringResource(R.string.catalog_card_variants))
         Column(Modifier.padding(horizontal = Ot3Spacing.lg)) {
             val variants = catalogCardVariants()
-            variants.forEach { (_, row) -> ThreadCardRow(row, onClick = {}, onUnpin = {}, onSubagentsClick = {}, onPullRequestClick = {}) }
-            ThreadCardRow(variants.first().second.copy(draft = false, title = "selected"), onClick = {}, selected = true)
+            variants.forEach { (_, row) -> DesktopThreadRow(row, onClick = {}, onUnpin = {}, onSubagentsClick = {}, onPullRequestClick = {}) }
+            DesktopThreadRow(variants.first().second.copy(draft = false, title = "selected"), onClick = {}, selected = true)
         }
     }
 }
@@ -182,7 +181,7 @@ internal fun CatalogSlimRows() {
     Column {
         CatalogHeading(stringResource(R.string.catalog_slim_rows))
         Column(Modifier.padding(horizontal = Ot3Spacing.lg)) {
-            catalogSlimRows().forEach { ThreadSlimRow(it, onClick = {}, onPullRequestClick = {}) }
+            catalogSlimRows().forEach { DesktopThreadRow(it, onClick = {}, onPullRequestClick = {}) }
         }
     }
 }
@@ -199,15 +198,15 @@ internal fun CatalogShelves() {
         CatalogHeading(stringResource(R.string.catalog_shelves))
         Column(Modifier.padding(horizontal = Ot3Spacing.lg)) {
             ShelfHeader(stringResource(R.string.ot3_shelf_working, "1"), working, { working = !working }, tone = ShelfTone.WORKING)
-            ShelfContent(working) { ThreadCardRow(card[5], onClick = {}) }
+            ShelfContent(working) { DesktopThreadRow(card[5], onClick = {}) }
             ShelfHeader(stringResource(R.string.ot3_shelf_snoozed, "1"), snoozed, { snoozed = !snoozed })
-            ShelfContent(snoozed) { ThreadSlimRow(slim[1], onClick = {}) }
+            ShelfContent(snoozed) { DesktopThreadRow(slim[1], onClick = {}) }
             ShelfHeader(stringResource(R.string.ot3_shelf_settled, "5"), settled, { settled = !settled })
-            ShelfContent(settled) { slim.take(5).forEach { ThreadSlimRow(it, onClick = {}) } }
+            ShelfContent(settled) { slim.take(5).forEach { DesktopThreadRow(it, onClick = {}) } }
             ShelfHeader(stringResource(R.string.ot3_shelf_working, "0"), expanded = false, onToggle = {}, tone = ShelfTone.WORKING)
             ShelfHeader(stringResource(R.string.ot3_shelf_snoozed, "0"), expanded = false, onToggle = {})
             ShelfHeader(stringResource(R.string.ot3_shelf_settled, "5"), expanded = true, onToggle = {})
-            slim.take(1).forEach { ThreadSlimRow(it, onClick = {}) }
+            slim.take(1).forEach { DesktopThreadRow(it, onClick = {}) }
         }
     }
 }

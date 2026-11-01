@@ -92,8 +92,7 @@ import dev.avillagran.ot3android.core.home.MessageMatch
 import dev.avillagran.ot3android.core.home.Shelf
 import dev.avillagran.ot3android.ui.icons.Ot3Icons
 import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
-import dev.avillagran.ot3android.ui.kit.ThreadCardRow
-import dev.avillagran.ot3android.ui.kit.ThreadSlimRow
+import dev.avillagran.ot3android.ui.kit.DesktopThreadRow
 
 /** Everything Home's UI can ask for; the route turns each into a view-model call or a navigation. */
 sealed interface HomeIntent {
@@ -512,11 +511,7 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
     val modifier = animatedModifier.graphicsLayer { translationX = drift.value * density * direction }.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
     CompositionLocalProvider(LocalSidebarRows provides LocalSidebarRows.current.copy(shelved = row.slim, host = LocalSidebarRows.current.hostStyles[row.environmentId] ?: HostStyle())) {
     ThreadSwipeActions(row, { onIntent(HomeIntent.Swipe(row, it)) }, modifier) { contentModifier ->
-    if (row.slim || LocalSidebarRows.current.compact) {
-        ThreadSlimRow(model, onSubagentsClick = onSubagents, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
-    } else {
-        ThreadCardRow(model, onSubagentsClick = onSubagents, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
-    }
+    DesktopThreadRow(model, onSubagentsClick = onSubagents, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
     }
     }
 }
