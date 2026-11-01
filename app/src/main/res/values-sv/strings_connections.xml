@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Den här inbjudan kan ge åtkomst till alla värdar. Kontrollera omfattningen med utfärdaren innan du fortsätter.</string>
     <string name="connections_peer_confirm">Jag har kontrollerat exakt detta ID och godkänner åtkomstens omfattning.</string>
     <string name="connections_pair_pending">Godkännande sker på den behöriga värden. Importera inbjudan igen efter godkännandet.</string>
-    <string name="connections_host_authority">Denna mobila SDK saknar administration. Hantera rutter, delning, klienter, moln, nätverk, publicering, samtycke, gateways, relä och installation på den behöriga värden.</string>
+    <string name="connections_host_authority">Hantera anslutningar i OmaBridge-administration, även under Miljöer. Fjärråtgärder kräver motsvarande behörighet.</string>
     <string name="connections_local_id">Denna enhets ID</string>
     <string name="connections_bridge_id">Vald bryggas ID</string>
 </resources>

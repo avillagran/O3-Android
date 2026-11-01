@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Deze uitnodiging kan toegang tot alle hosts geven. Controleer het bereik met de uitgever voordat je doorgaat.</string>
     <string name="connections_peer_confirm">Ik heb deze exacte peer-ID gecontroleerd en accepteer het toegangsbereik.</string>
     <string name="connections_pair_pending">Goedkeuring blijft op de bevoegde host. Importeer de uitnodiging opnieuw na goedkeuring.</string>
-    <string name="connections_host_authority">Deze mobiele SDK biedt geen beheer. Beheer routes, delen, clients, cloud, netwerk, publicatie, toestemming, gateways, relay en installatie op de bevoegde host.</string>
+    <string name="connections_host_authority">Beheer verbindingen in OmaBridge-beheer, ook beschikbaar onder Omgevingen. Externe acties vereisen de bijbehorende toestemming.</string>
     <string name="connections_local_id">ID van dit apparaat</string>
     <string name="connections_bridge_id">ID van de geselecteerde bridge</string>
 </resources>

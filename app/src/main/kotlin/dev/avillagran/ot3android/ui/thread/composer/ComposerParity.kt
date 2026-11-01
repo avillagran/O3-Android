@@ -33,6 +33,7 @@ sealed interface ComposerRequest {
     data class Action(override val expected: ComposerSnapshot, val action: ComposerAction) : ComposerRequest
     data class Send(override val expected: ComposerSnapshot, val delivery: ComposerDelivery) : ComposerRequest
     data class ImportUri(override val expected: ComposerSnapshot, val uri: String) : ComposerRequest
+    data class CaptureText(override val expected: ComposerSnapshot, val text: String) : ComposerRequest
     data class PasteText(override val expected: ComposerSnapshot, val text: String) : ComposerRequest
     data class RemoveAttachment(override val expected: ComposerSnapshot, val id: String) : ComposerRequest
     data class Reference(override val expected: ComposerSnapshot, val reference: ComposerReference) : ComposerRequest
@@ -92,6 +93,7 @@ fun ComposerParity(
     }
     val compact = LocalConfiguration.current.screenHeightDp < 420
     var overflow by remember { mutableStateOf(false) }
+    var captureOpen by remember { mutableStateOf(false) }
     fun request(action: ComposerAction) {
         when (action) {
             ComposerAction.Attach -> { picking = snapshot; picker.launch(arrayOf("*/*")) }
@@ -122,6 +124,9 @@ fun ComposerParity(
             Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { overflow = true },
                 modifier = Modifier.testTag("composer_actions"))
             DropdownMenu(expanded = overflow, onDismissRequest = { overflow = false }) {
+                if (compact && ComposerAction.Attach in capabilities) DropdownMenuItem(
+                    text = { Text(stringResource(R.string.capture_title)) }, enabled = snapshot.transformable,
+                    onClick = { overflow = false; captureOpen = true }, modifier = Modifier.testTag("capture_menu"))
                 capabilities.forEach { action ->
                     val sendAction = action in setOf(ComposerAction.OppositeOnce, ComposerAction.Background, ComposerAction.SendAndNew)
                     DropdownMenuItem(text = { Text(actionLabel(action, snapshot.interaction)) },
@@ -132,15 +137,18 @@ fun ComposerParity(
         }
     }
     val renderEditor: @Composable (Boolean, Modifier) -> Unit = { full, layout ->
-        ComposerEditor(editor, full, snapshot.sendable, snapshot.sending,
-            onDraftChange = { _, _ -> },
-            onSend = { if (snapshot.sendable) onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
-            onToggle = { editor.newSurface(); editor.requestFocus = true; expanded = true },
-            modifier = layout,
-            onEditorValue = { value ->
-                onEdit(snapshot, value.text, ComposerSelection(value.selection.start, value.selection.end), value.composition != null)
-            },
-            compact = compact, enabled = snapshot.editable, actions = editorActions)
+        Column(layout) {
+            if (ComposerAction.Attach in capabilities) PhoneCapture(snapshot, onRequest, compact, captureOpen) { captureOpen = false }
+            ComposerEditor(editor, full, snapshot.sendable, snapshot.sending,
+                onDraftChange = { _, _ -> },
+                onSend = { if (snapshot.sendable) onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
+                onToggle = { editor.newSurface(); editor.requestFocus = true; expanded = true },
+                modifier = if (full) Modifier.weight(1f) else Modifier,
+                onEditorValue = { value ->
+                    onEdit(snapshot, value.text, ComposerSelection(value.selection.start, value.selection.end), value.composition != null)
+                },
+                compact = compact, enabled = snapshot.editable, actions = editorActions)
+        }
     }
     Column(modifier) {
         if (snapshot.sending) Text(stringResource(R.string.approval_sending), Modifier.testTag("composer_busy"))

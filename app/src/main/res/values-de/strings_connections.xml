@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Diese Einladung kann Zugriff auf alle Hosts erlauben. Kläre den Umfang vor dem Fortfahren mit dem Aussteller.</string>
     <string name="connections_peer_confirm">Ich habe diese genaue Peer-ID geprüft und akzeptiere den Zugriffsumfang.</string>
     <string name="connections_pair_pending">Die Genehmigung erfolgt auf dem autorisierten Host. Importiere die Einladung danach erneut.</string>
-    <string name="connections_host_authority">Dieses mobile SDK bietet keine Verwaltung. Verwalte Routen, Freigaben, Clients, Cloud, Netzwerk, Veröffentlichung, Zustimmung, Gateways, Relay und Installation auf dem autorisierten Host.</string>
+    <string name="connections_host_authority">Verbindungen in der OmaBridge-Verwaltung verwalten, auch unter Umgebungen verfügbar. Remoteaktionen erfordern die entsprechende Berechtigung.</string>
     <string name="connections_local_id">ID dieses Geräts</string>
     <string name="connections_bridge_id">ID der ausgewählten Bridge</string>
 </resources>

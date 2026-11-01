@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Inaktivera gateway</string>
     <string name="bridge_admin_revoke">Återkalla åtkomst</string>
     <string name="bridge_admin_share">Dela inbjudan</string>
+    <string name="bridge_peer_drafts">Utkastauktoritet (drafts-behörighet)</string>
+    <string name="bridge_peer_no_drafts">Ingen drafts-behörighet</string>
+    <string name="bridge_peer_managed">Administration tillåten</string>
+    <string name="bridge_peer_unmanaged">Ingen administrationsbehörighet</string>
+    <string name="bridge_peer_selected">Vald utkastauktoritet</string>
 </resources>

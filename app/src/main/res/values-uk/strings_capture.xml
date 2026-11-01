@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Диктувати</string>
+    <string name="capture_image">Вибрати знімок екрана</string>
+    <string name="capture_photo">Зробити фото</string>
+    <string name="capture_failed">Помилка захоплення або чернетку змінено. Спробуйте ще раз.</string>
+    <string name="capture_speech_consent">Мовна служба Android обробляє звук мікрофона. Бажане розпізнавання на пристрої; інші служби можуть використовувати мережу. Перевірте текст перед вставленням.</string>
+    <string name="capture_listening">Прослуховування…</string>
+    <string name="capture_review">Перевірити текст</string>
+    <string name="capture_start">Почати диктування</string>
+    <string name="capture_insert">Вставити в чернетку</string>
+    <string name="capture_diagram_zoom">Збільшити діаграму</string>
+    <string name="capture_diagram_failed">Не вдалося відобразити діаграму в межах обмежень. Показано вихідний код.</string>
+    <string name="capture_title">Захоплення на телефоні</string>
+</resources>

@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">ゲートウェイを無効化</string>
     <string name="bridge_admin_revoke">アクセスを取り消す</string>
     <string name="bridge_admin_share">招待を共有</string>
+    <string name="bridge_peer_drafts">下書きの管理元（drafts権限）</string>
+    <string name="bridge_peer_no_drafts">drafts権限なし</string>
+    <string name="bridge_peer_managed">管理権限あり</string>
+    <string name="bridge_peer_unmanaged">管理権限なし</string>
+    <string name="bridge_peer_selected">選択中の下書き管理元</string>
 </resources>

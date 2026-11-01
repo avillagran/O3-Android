@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Ağ geçidini devre dışı bırak</string>
     <string name="bridge_admin_revoke">Erişimi iptal et</string>
     <string name="bridge_admin_share">Daveti paylaş</string>
+    <string name="bridge_peer_drafts">Taslak yetkilisi (drafts izni)</string>
+    <string name="bridge_peer_no_drafts">drafts izni yok</string>
+    <string name="bridge_peer_managed">Yönetim izni var</string>
+    <string name="bridge_peer_unmanaged">Yönetim izni yok</string>
+    <string name="bridge_peer_selected">Seçili taslak yetkilisi</string>
 </resources>

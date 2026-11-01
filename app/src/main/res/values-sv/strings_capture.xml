@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Diktera</string>
+    <string name="capture_image">Välj skärmbild</string>
+    <string name="capture_photo">Ta foto</string>
+    <string name="capture_failed">Inspelningen misslyckades eller utkastet ändrades. Försök igen.</string>
+    <string name="capture_speech_consent">Androids taltjänst behandlar mikrofonljud. Igenkänning på enheten föredras; andra tjänster kan använda nätverket. Granska texten innan den infogas.</string>
+    <string name="capture_listening">Lyssnar…</string>
+    <string name="capture_review">Granska text</string>
+    <string name="capture_start">Starta diktering</string>
+    <string name="capture_insert">Infoga i utkast</string>
+    <string name="capture_diagram_zoom">Förstora diagram</string>
+    <string name="capture_diagram_failed">Diagrammet kunde inte renderas inom gränserna. Källkoden visas.</string>
+    <string name="capture_title">Inspelning på telefonen</string>
+</resources>

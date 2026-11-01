@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Deaktivér gateway</string>
     <string name="bridge_admin_revoke">Tilbagekald adgang</string>
     <string name="bridge_admin_share">Del invitation</string>
+    <string name="bridge_peer_drafts">Kladdeautoritet (drafts-tilladelse)</string>
+    <string name="bridge_peer_no_drafts">Ingen drafts-tilladelse</string>
+    <string name="bridge_peer_managed">Administration tilladt</string>
+    <string name="bridge_peer_unmanaged">Ingen administrationstilladelse</string>
+    <string name="bridge_peer_selected">Valgt kladdeautoritet</string>
 </resources>

@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Tämä kutsu voi sallia pääsyn kaikkiin isäntiin. Tarkista laajuus myöntäjältä ennen jatkamista.</string>
     <string name="connections_peer_confirm">Tarkistin tämän tarkan tunnisteen ja hyväksyn pääsyn laajuuden.</string>
     <string name="connections_pair_pending">Hyväksyntä tehdään valtuutetulla isännällä. Tuo kutsu uudelleen hyväksynnän jälkeen.</string>
-    <string name="connections_host_authority">Tämä mobiili-SDK ei tarjoa hallintaa. Hallitse reittejä, jakamista, asiakkaita, pilveä, verkkoa, julkaisua, suostumusta, yhdyskäytäviä, välitystä ja asennusta valtuutetulla isännällä.</string>
+    <string name="connections_host_authority">Hallitse yhteyksiä OmaBridge-hallinnassa, myös Ympäristöt-kohdassa. Etätoiminnot vaativat vastaavan oikeuden.</string>
     <string name="connections_local_id">Tämän laitteen tunniste</string>
     <string name="connections_bridge_id">Valitun sillan tunniste</string>
 </resources>

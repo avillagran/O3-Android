@@ -253,8 +253,11 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     override fun ConnectionsPreferences() {
         val graph = LocalContext.current.appGraph
         val identity by graph.bridgeCatalog.identity.collectAsStateWithLifecycle()
+        var administration by remember { mutableStateOf(false) }
+        if (administration) dev.avillagran.ot3android.ui.environments.BridgeAdministration(graph.bridgeCatalog) { administration = false }
         dev.avillagran.ot3android.ui.settings.connections.ConnectionsRouteContribution.Content(
             identity = identity,
+            onAdminister = { administration = true },
             onBack = { navigator.back() }, onEnvironments = { navigator.push(Environments) },
             onPair = { navigator.push(PairEnvironment) })
     }

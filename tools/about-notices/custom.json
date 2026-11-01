@@ -54,5 +54,19 @@
     "license": "MIT",
     "file": "omabridge-MIT.txt",
     "source": "https://github.com/avillagran/omabridge"
+  },
+  {
+    "name": "Mermaid",
+    "version": "11.17.2",
+    "license": "MIT",
+    "file": "mermaid-MIT.txt",
+    "source": "https://github.com/mermaid-js/mermaid/tree/mermaid%4011.17.2"
+  },
+  {
+    "name": "Mermaid bundled dependency notices",
+    "version": "11.17.2 distribution",
+    "license": "MIT / Apache-2.0 (DOMPurify dual-license option)",
+    "file": "mermaid-bundled-notices.txt",
+    "source": "https://github.com/mermaid-js/mermaid/tree/mermaid%4011.17.2"
   }
 ]

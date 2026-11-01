@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">To zaproszenie może zezwalać na dostęp do wszystkich hostów. Przed kontynuacją sprawdź zakres u wystawcy.</string>
     <string name="connections_peer_confirm">Sprawdzono ten dokładny identyfikator i akceptuję zakres dostępu.</string>
     <string name="connections_pair_pending">Zatwierdzenie odbywa się na uprawnionym hoście. Następnie ponownie zaimportuj zaproszenie.</string>
-    <string name="connections_host_authority">Ten mobilny SDK nie udostępnia administracji. Zarządzaj trasami, udostępnianiem, klientami, chmurą, siecią, publikacją, zgodą, bramami, przekaźnikiem i instalacją na uprawnionym hoście.</string>
+    <string name="connections_host_authority">Zarządzaj połączeniami w administracji OmaBridge, dostępnej także w środowiskach. Zdalne działania wymagają odpowiedniego uprawnienia.</string>
     <string name="connections_local_id">ID tego urządzenia</string>
     <string name="connections_bridge_id">ID wybranego mostu</string>
 </resources>

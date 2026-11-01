@@ -1,2 +1,5 @@
 # Preserve terminal blank lines in verbatim upstream legal notices.
 app/src/main/assets/licenses/*.txt whitespace=-blank-at-eof
+# Keep the pinned Mermaid distribution and its bundled notices byte-for-byte.
+app/src/main/assets/mermaid/mermaid.min.js whitespace=-trailing-space,-blank-at-eof
+app/src/main/assets/licenses/mermaid-bundled-notices.txt whitespace=-trailing-space,-blank-at-eof

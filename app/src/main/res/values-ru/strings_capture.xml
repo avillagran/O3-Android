@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Диктовать</string>
+    <string name="capture_image">Выбрать снимок экрана</string>
+    <string name="capture_photo">Сделать фото</string>
+    <string name="capture_failed">Сбой захвата или черновик изменён. Повторите попытку.</string>
+    <string name="capture_speech_consent">Речевая служба Android обрабатывает звук микрофона. Предпочтительно распознавание на устройстве; другие службы могут использовать сеть. Проверьте текст перед вставкой.</string>
+    <string name="capture_listening">Прослушивание…</string>
+    <string name="capture_review">Проверить текст</string>
+    <string name="capture_start">Начать диктовку</string>
+    <string name="capture_insert">Вставить в черновик</string>
+    <string name="capture_diagram_zoom">Увеличить диаграмму</string>
+    <string name="capture_diagram_failed">Не удалось отрисовать диаграмму в пределах ограничений. Показан исходный код.</string>
+    <string name="capture_title">Захват на телефоне</string>
+</resources>

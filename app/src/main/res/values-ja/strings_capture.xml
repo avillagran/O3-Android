@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">音声入力</string>
+    <string name="capture_image">スクリーンショットを選択</string>
+    <string name="capture_photo">写真を撮影</string>
+    <string name="capture_failed">取得に失敗したか、下書きが変更されました。もう一度お試しください。</string>
+    <string name="capture_speech_consent">Androidの音声サービスがマイク音声を処理します。端末内の認識を優先しますが、他のサービスはネットワークを使用する場合があります。挿入前にテキストを確認してください。</string>
+    <string name="capture_listening">聞き取り中…</string>
+    <string name="capture_review">テキストを確認</string>
+    <string name="capture_start">音声入力を開始</string>
+    <string name="capture_insert">下書きに挿入</string>
+    <string name="capture_diagram_zoom">図を拡大</string>
+    <string name="capture_diagram_failed">制限内で図を描画できませんでした。ソースを表示します。</string>
+    <string name="capture_title">端末で取り込み</string>
+</resources>

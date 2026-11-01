@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Poista yhdyskäytävä käytöstä</string>
     <string name="bridge_admin_revoke">Peru käyttöoikeus</string>
     <string name="bridge_admin_share">Jaa kutsu</string>
+    <string name="bridge_peer_drafts">Luonnosten auktoriteetti (drafts-oikeus)</string>
+    <string name="bridge_peer_no_drafts">Ei drafts-oikeutta</string>
+    <string name="bridge_peer_managed">Hallinta sallittu</string>
+    <string name="bridge_peer_unmanaged">Ei hallintaoikeutta</string>
+    <string name="bridge_peer_selected">Valittu luonnosten auktoriteetti</string>
 </resources>

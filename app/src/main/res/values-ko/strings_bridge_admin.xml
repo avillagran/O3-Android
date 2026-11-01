@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">게이트웨이 비활성화</string>
     <string name="bridge_admin_revoke">접근 권한 취소</string>
     <string name="bridge_admin_share">초대 공유</string>
+    <string name="bridge_peer_drafts">초안 관리 주체 (drafts 권한)</string>
+    <string name="bridge_peer_no_drafts">drafts 권한 없음</string>
+    <string name="bridge_peer_managed">관리 권한 있음</string>
+    <string name="bridge_peer_unmanaged">관리 권한 없음</string>
+    <string name="bridge_peer_selected">선택한 초안 관리 주체</string>
 </resources>

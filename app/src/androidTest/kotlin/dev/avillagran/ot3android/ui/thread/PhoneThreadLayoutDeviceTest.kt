@@ -51,6 +51,20 @@ class PhoneThreadLayoutDeviceTest {
             rule.onNodeWithTag(HomeTags.row("node/chat")).performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("composer_actions").fetchSemanticsNodes().isNotEmpty() &&
                 rule.onAllNodesWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNodes().isNotEmpty() }
+            // Geometry describes the reading surface, before editing. Do not inherit an
+            // asynchronously restored IME from a preceding editor/rotation fixture.
+            scenario.onActivity {
+                androidx.core.view.WindowCompat.getInsetsController(it.window, it.window.decorView)
+                    .hide(androidx.core.view.WindowInsetsCompat.Type.ime())
+            }
+            rule.waitUntil(15_000) {
+                var hidden = false
+                scenario.onActivity {
+                    hidden = androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)
+                        ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == false
+                }
+                hidden
+            }
             var windowHeight = 0
             scenario.onActivity {
                 assertEquals(3.4f, it.resources.displayMetrics.density, .001f)
@@ -58,6 +72,9 @@ class PhoneThreadLayoutDeviceTest {
                 assertEquals(if (landscape) 2712 else 1220, bounds.width())
                 assertEquals(if (landscape) 1220 else 2712, bounds.height())
                 windowHeight = bounds.height()
+            }
+            if (landscape) rule.waitUntil(15_000) {
+                rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInWindow.height >= windowHeight * .60f
             }
             run {
                 val reader = rule.onNodeWithTag(ThreadScreenTags.TIMELINE).fetchSemanticsNode().boundsInWindow

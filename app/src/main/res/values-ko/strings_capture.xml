@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">받아쓰기</string>
+    <string name="capture_image">스크린샷 선택</string>
+    <string name="capture_photo">사진 촬영</string>
+    <string name="capture_failed">캡처에 실패했거나 초안이 변경되었습니다. 다시 시도하세요.</string>
+    <string name="capture_speech_consent">Android 음성 서비스가 마이크 오디오를 처리합니다. 기기 내 인식을 우선하지만 다른 서비스는 네트워크를 사용할 수 있습니다. 삽입 전에 텍스트를 검토하세요.</string>
+    <string name="capture_listening">듣는 중…</string>
+    <string name="capture_review">텍스트 검토</string>
+    <string name="capture_start">받아쓰기 시작</string>
+    <string name="capture_insert">초안에 삽입</string>
+    <string name="capture_diagram_zoom">다이어그램 확대</string>
+    <string name="capture_diagram_failed">제한 내에서 다이어그램을 렌더링할 수 없습니다. 소스를 표시합니다.</string>
+    <string name="capture_title">휴대전화 캡처</string>
+</resources>

@@ -1,5 +1,20 @@
 # P13 Connections contribution and SDK requirements
 
+## Current integration (2026-10-31)
+
+The current pinned SDK exposes `mobile-admin-v1`, `peers` and `manage`.
+Connections settings now opens the same OmaBridge administration dialog as
+Environments. The 20 localized explanations describe this available entry.
+Peer rows show full IDs, peer-advertised `remote_services` drafts grants and
+`managed` status. Only a valid full ID advertising `drafts` offers draft selection;
+only a peer advertising management offers administration. Names never establish
+identity or permissions. Advertisements guide the UI; the authority still checks
+every operation. No raw command fallback or grant escalation is added.
+
+The following is the original P13 audit against older bindings, retained as
+historical evidence; its blanket SDK limitation no longer describes the current UI.
+
+
 Checked 2026-10-31 against Android `origin/main`, lib-t3-rust v0.3.5
 `d4bf6054b4480efdcd8a436cb66cb7f2e23664b1` and OmaBridge mobile SDK
 `f7eef5c73ede57c0e54929b1dadaf99525d69e54` (`omabridge-mobile-1`).

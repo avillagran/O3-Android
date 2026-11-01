@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Wyłącz bramę</string>
     <string name="bridge_admin_revoke">Cofnij dostęp</string>
     <string name="bridge_admin_share">Udostępnij zaproszenie</string>
+    <string name="bridge_peer_drafts">Organ szkiców (uprawnienie drafts)</string>
+    <string name="bridge_peer_no_drafts">Brak uprawnienia drafts</string>
+    <string name="bridge_peer_managed">Zarządzanie dozwolone</string>
+    <string name="bridge_peer_unmanaged">Brak uprawnienia zarządzania</string>
+    <string name="bridge_peer_selected">Wybrany organ szkiców</string>
 </resources>

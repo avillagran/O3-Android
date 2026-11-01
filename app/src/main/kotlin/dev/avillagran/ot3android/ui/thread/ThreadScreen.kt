@@ -744,6 +744,16 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
                         }
                     }
                     is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.Send -> model.dispatchAttachments(request.delivery == dev.avillagran.ot3android.core.composer.ComposerDelivery.OppositeOnce)
+                    is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.CaptureText -> {
+                        val expected = request.expected
+                        if (expected.version == session.snapshot.version && request.text.length in 1..16_384) {
+                            val start = minOf(expected.selection.start, expected.selection.end)
+                            val end = maxOf(expected.selection.start, expected.selection.end)
+                            val text = expected.text.replaceRange(start, end, request.text)
+                            val cursor = start + request.text.length
+                            if (session.replace(expected, text, dev.avillagran.ot3android.core.composer.ComposerSelection(cursor, cursor))) publish()
+                        }
+                    }
                     is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.ImportUri -> model.importAttachment(context, request.uri)
                     is dev.avillagran.ot3android.ui.thread.composer.ComposerRequest.RemoveAttachment -> model.removeAttachment(request.id)
                     else -> Unit

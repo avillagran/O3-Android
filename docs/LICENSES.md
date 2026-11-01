@@ -129,3 +129,12 @@ selectable, unmodified legal text and a source link. UI labels are available in 
 lib-t3-rust and OmaBridge project licenses, and notices for resolved release Maven
 libraries. Collection details, checksums and native transitive inventory limitations
 are documented in `tools/about-notices/README.md` and `provenance.json`.
+
+## Offline Mermaid diagrams
+
+`app/src/main/assets/mermaid/mermaid.min.js` is the pinned Mermaid 11.17.2
+browser distribution, copied unchanged from O3 Desktop. Its MIT notice (Knut
+Sveidqvist) and the distribution's embedded dependency notices are packaged in
+About → Licenses. The asset README records the SHA-256 and npm integrity pin.
+It runs only in the bounded offline diagram WebView; no CDN or npm dependency
+resolution occurs at build or runtime.

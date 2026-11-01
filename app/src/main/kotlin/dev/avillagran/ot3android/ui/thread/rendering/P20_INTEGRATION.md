@@ -24,7 +24,8 @@ Reference: Desktop `feat/o3-brand` read 2026-10-31, `src/lib.rs:markdown_render`
   logs/UI; the adapter never accepts a remote script, HTML, SVG or frame URL.
 - Connect host document attachment descriptors to `VisualRequest(Html, ...)` using
   the original attachment in the integration callback (not a new network protocol).
-  Route generated Mermaid and finished QML similarly. `VisualGallery` is the phone
+  Finished QML still requires this host route; completed Mermaid code blocks now use
+  `OfflineMermaid` directly and do not require a host renderer. `VisualGallery` is the phone
   picker adaptation of Desktop's side panel. Host sessions and frame resources must
   be closed/cancelled by the integration when inactive or disposed.
 - `render` performs no network I/O and returns at most 10 MiB PNG/JPEG. Shared image reader enforces 40 MP source,
@@ -46,14 +47,16 @@ No new dependency required for math or code highlighting. The bounded generic le
 handles common language comments, strings, numbers and keywords; it is not a complete
 language grammar. Desktop's inspected Qt Markdown path does not syntax-highlight.
 
-**Mermaid engine remains unimplemented.** Desktop bundles Mermaid JS and executes it
-inside its isolated document renderer. No compatible engine/dependency is installed
-in Android. No network rendering or remote scripts are introduced here. P20 must
-adopt a vetted offline engine (with its assets/license and allocation/time limits),
-and supply already-delivered frames to this adapter. A future versioned SDK host
-document/frame API can supply QML/HTML frames outside the render path; it must not
-be used as an online Mermaid rendering service. A partial flowchart-only parser would
-misrepresent Mermaid support; none is substituted. No Gradle edits were made.
+**Mermaid code blocks now have a local engine.** `OfflineMermaid` bundles the pinned
+Desktop Mermaid 11.17.2 distribution and packaged notices. It uses a bridge-free,
+network/file/content/navigation-disabled WebView with nonce CSP, strict Mermaid
+configuration, bounded input/SVG/geometry and a 5-second renderer-termination
+watchdog (API 29+). Older Android versions and failed renders preserve source;
+copy and enlarged pinch zoom are available. No generic remote script or arbitrary
+HTML is accepted by that path. See `docs/verification/p16-phone-capture.md` for the
+complete boundary and measured verification. The raster adapter below remains
+available for future versioned host document APIs; Mermaid never needs an online
+rendering service. No Gradle dependency was added.
 
 QML/HTML previews likewise require the host runtime/document API and JNI exposure.
 This package defines a native raster boundary, not that API. No arbitrary HTML/QML

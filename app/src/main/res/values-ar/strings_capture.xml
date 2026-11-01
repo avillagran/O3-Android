@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">إملاء</string>
+    <string name="capture_image">اختيار لقطة شاشة</string>
+    <string name="capture_photo">التقاط صورة</string>
+    <string name="capture_failed">فشل الالتقاط أو تغيرت المسودة. حاول مجددًا.</string>
+    <string name="capture_speech_consent">تعالج خدمة الكلام في Android صوت الميكروفون. يُفضّل التعرف على الجهاز؛ قد تستخدم الخدمات الأخرى الشبكة. راجع النص قبل إدراجه.</string>
+    <string name="capture_listening">جارٍ الاستماع…</string>
+    <string name="capture_review">مراجعة النص</string>
+    <string name="capture_start">بدء الإملاء</string>
+    <string name="capture_insert">إدراج في المسودة</string>
+    <string name="capture_diagram_zoom">تكبير المخطط</string>
+    <string name="capture_diagram_failed">تعذر عرض المخطط ضمن الحدود. يُعرض المصدر.</string>
+    <string name="capture_title">التقاط على الهاتف</string>
+</resources>

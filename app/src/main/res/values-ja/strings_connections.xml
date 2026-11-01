@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">この招待により、すべてのホストへのアクセスが許可される場合があります。続行前に発行者と範囲を確認してください。</string>
     <string name="connections_peer_confirm">この正確なピアIDを確認し、アクセス範囲に同意します。</string>
     <string name="connections_pair_pending">承認は権限のあるホストで行います。承認後に招待を再度読み込んでください。</string>
-    <string name="connections_host_authority">このモバイルSDKは管理操作に対応していません。ルート、共有、クライアント、クラウド、ネットワーク、公開、同意、ゲートウェイ、リレー、インストールは権限のあるホストで管理してください。</string>
+    <string name="connections_host_authority">接続はOmaBridge管理で管理できます。「環境」からも開けます。リモート操作には対応する権限が必要です。</string>
     <string name="connections_local_id">このデバイスのID</string>
     <string name="connections_bridge_id">選択したブリッジのID</string>
 </resources>
