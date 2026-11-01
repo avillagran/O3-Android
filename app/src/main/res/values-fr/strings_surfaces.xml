@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Hôte Desktop</string>
+    <string name="surfaces_select">Utiliser cet hôte</string>
+    <string name="surfaces_missing">Ce pair ne dispose pas du droit desktop-snapshots.</string>
+    <string name="surfaces_sdk">Mettez à jour le SDK OmaBridge pour activer service-request-v1.</string>
+    <string name="surfaces_credential">Envoyez les identifiants T3 de %1$s uniquement à son hôte associé. Vérifiez son identité avant de le sélectionner.</string>
+    <string name="surfaces_enable">Sur cet hôte : activez Documents distants sur cet appareil dans Préférences → Connexions, lancez remote-surfaces-serve, configurez desktop-snapshots et autorisez ce téléphone. Pour modifier, activez aussi Autoriser la maintenance distante sur cet appareil.</string>
+    <string name="surfaces_refused">Accès indisponible ou refusé. Consentement désactivé, autorisation révoquée, rapport ou confirmation expirés. Consultez un nouveau rapport sur cet hôte.</string>
+    <string name="surfaces_unknown">Résultat inconnu. La tâche peut être terminée. Aucune relance automatique ; vérifiez cet hôte avant toute autre action.</string>
+    <string name="surfaces_documents">Instantanés de documents</string>
+    <string name="surfaces_gallery">Galerie HTML statique</string>
+    <string name="surfaces_compaction">Politique de compactage</string>
+    <string name="surfaces_idle">Libération après inactivité</string>
+    <string name="surfaces_minutes">Minutes (1–1440)</string>
+    <string name="surfaces_tokens">Tokens minimum (1000–1000000)</string>
+    <string name="surfaces_prepare">Préparer la modification</string>
+    <string name="surfaces_confirmation">Vérifiez la demande exacte et le rapport complet. La confirmation expire dans 60 secondes et ne sert qu’une fois.</string>
+    <string name="surfaces_disabled">Cet hôte n’a pas activé cette fonction. Activez son consentement comme indiqué ci-dessus.</string>
+    <string name="surfaces_not_sent">Demande non envoyée. Aucun nouvel essai automatique. Vérifiez les droits du service et la connexion du bridge.</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Хост Desktop</string>
+    <string name="surfaces_select">Использовать этот хост</string>
+    <string name="surfaces_missing">У этого узла нет разрешения desktop-snapshots.</string>
+    <string name="surfaces_sdk">Обновите SDK OmaBridge для service-request-v1.</string>
+    <string name="surfaces_credential">Отправляйте данные T3 для %1$s только связанному хосту. Проверьте его личность перед выбором.</string>
+    <string name="surfaces_enable">На хосте: включите Удалённые документы на этом устройстве в Настройки → Подключения, запустите remote-surfaces-serve, настройте desktop-snapshots и разрешите доступ телефону. Для изменений также включите Удалённое обслуживание на этом устройстве.</string>
+    <string name="surfaces_refused">Доступ недоступен или отклонён. Согласие отключено, разрешение отозвано либо отчёт или подтверждение истекли. Прочитайте новый отчёт на хосте.</string>
+    <string name="surfaces_unknown">Результат неизвестен. Операция могла завершиться. Автоповтора нет; проверьте хост перед новым действием.</string>
+    <string name="surfaces_documents">Снимки документов</string>
+    <string name="surfaces_gallery">Статическая HTML-галерея</string>
+    <string name="surfaces_compaction">Политика сжатия</string>
+    <string name="surfaces_idle">Освобождение при простое</string>
+    <string name="surfaces_minutes">Минуты (1–1440)</string>
+    <string name="surfaces_tokens">Минимум токенов (1000–1000000)</string>
+    <string name="surfaces_prepare">Подготовить изменение</string>
+    <string name="surfaces_confirmation">Проверьте точный запрос и полный отчёт. Подтверждение действует 60 секунд и используется один раз.</string>
+    <string name="surfaces_disabled">Хост не включил эту функцию. Включите согласие на хосте, как описано выше.</string>
+    <string name="surfaces_not_sent">Запрос не отправлен. Автоповтора нет. Проверьте разрешение службы и соединение bridge.</string>
+</resources>

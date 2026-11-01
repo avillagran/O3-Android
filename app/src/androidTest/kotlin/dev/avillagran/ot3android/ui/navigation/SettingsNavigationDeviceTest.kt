@@ -29,6 +29,20 @@ class SettingsNavigationDeviceTest {
         }
     }
 
+    @Test fun desktopMaintenanceEntriesReachHostSelection() {
+        ActivityScenario.launch(dev.avillagran.ot3android.MainActivity::class.java).use {
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag(NavTags.tab(TopTab.Settings)).fetchSemanticsNodes().isNotEmpty() }
+            rule.onNodeWithTag(NavTags.tab(TopTab.Settings)).performClick()
+            listOf("memory", "vault", "host_sync", "storage").forEach { page ->
+                rule.onNodeWithTag("settings_page_$page").performScrollTo().performClick()
+                rule.onNodeWithTag(NavTags.BAR).assertDoesNotExist()
+                rule.onAllNodesWithText("All environments").onFirst().assertIsDisplayed()
+                rule.onNodeWithText("Back").performClick()
+                rule.onNodeWithTag(SettingsTags.ROOT).assertIsDisplayed()
+            }
+        }
+    }
+
     @Test fun settingsAndNestedPagesHaveBackWithoutFooter() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->

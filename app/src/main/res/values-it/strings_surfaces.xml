@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Host Desktop</string>
+    <string name="surfaces_select">Usa questo host</string>
+    <string name="surfaces_missing">Questo peer non ha il permesso desktop-snapshots.</string>
+    <string name="surfaces_sdk">Aggiorna SDK OmaBridge per abilitare service-request-v1.</string>
+    <string name="surfaces_credential">Invia le credenziali T3 di %1$s solo al suo host associato. Verifica la sua identità prima di selezionarlo.</string>
+    <string name="surfaces_enable">Sul host: abilita Documenti remoti su questo dispositivo in Preferenze → Connessioni, avvia remote-surfaces-serve, configura desktop-snapshots e autorizza questo telefono. Per modificare, abilita anche Consenti manutenzione remota su questo dispositivo.</string>
+    <string name="surfaces_refused">Accesso non disponibile o rifiutato. Consenso disattivato, accesso revocato, rapporto o conferma scaduti. Leggi un nuovo rapporto sul host.</string>
+    <string name="surfaces_unknown">Esito sconosciuto. La modifica potrebbe essere completata. Nessun tentativo automatico; verifica il host prima di altre azioni.</string>
+    <string name="surfaces_documents">Snapshot dei documenti</string>
+    <string name="surfaces_gallery">Galleria HTML statica</string>
+    <string name="surfaces_compaction">Criteri di compattazione</string>
+    <string name="surfaces_idle">Rilascio per inattività</string>
+    <string name="surfaces_minutes">Minuti (1–1440)</string>
+    <string name="surfaces_tokens">Token minimi (1000–1000000)</string>
+    <string name="surfaces_prepare">Prepara modifica</string>
+    <string name="surfaces_confirmation">Controlla la richiesta esatta e il rapporto completo. La conferma scade dopo 60 secondi e si usa una volta.</string>
+    <string name="surfaces_disabled">Il host non ha abilitato questa funzione. Attiva il consenso sul host come descritto sopra.</string>
+    <string name="surfaces_not_sent">Richiesta non inviata. Nessun tentativo automatico. Controlla il permesso del servizio e la connessione bridge.</string>
+</resources>
