@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Cache locale delle conversazioni</string>
+    <string name="cache_usage">%1$d MB usati · limite %2$d MB</string>
+    <string name="cache_clear">Svuota cache</string>
+</resources>

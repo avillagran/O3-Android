@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">로컬 스레드 캐시</string>
+    <string name="cache_usage">%1$d MB 사용 · 한도 %2$d MB</string>
+    <string name="cache_clear">캐시 지우기</string>
+</resources>

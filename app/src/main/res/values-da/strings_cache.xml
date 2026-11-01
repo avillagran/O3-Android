@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Lokal trådcache</string>
+    <string name="cache_usage">%1$d MB brugt · grænse %2$d MB</string>
+    <string name="cache_clear">Ryd cache</string>
+</resources>

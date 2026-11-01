@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Local thread cache</string>
+    <string name="cache_usage">%1$d MB used · %2$d MB limit</string>
+    <string name="cache_clear">Clear cache</string>
+</resources>

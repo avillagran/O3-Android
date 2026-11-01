@@ -39,7 +39,7 @@ class SidebarCollapseTest {
         val state = HomeUiState(content = HomeContent.List, rows = rows.associateBy { it.key }, items = rows.map { HomeItem.Row(it) })
         rule.setContent { Ot3Theme { HomeScreen(state, true, {}, appearance = AppearanceSettings(local = mapOf(LocalAppearancePreference.INTERFACE_LAYOUT to "projects"))) } }
         rule.onNodeWithTag("home_row_${child.key}").assertExists()
-        rule.onNodeWithTag("sidebar_toggle_thread:${parent.key}").performClick()
+        rule.onNodeWithContentDescription("Hide 1 subagents").assert(hasAnyAncestor(hasTestTag("home_row_${parent.key}"))).performClick()
         rule.waitUntil { rule.onAllNodesWithTag("home_row_${child.key}").fetchSemanticsNodes().isEmpty() }
         rule.onNodeWithTag("home_row_${parent.key}").assertExists()
         rule.onNodeWithTag("sidebar_toggle_project:node/app").performClick()

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Paikallinen ketjuvälimuisti</string>
+    <string name="cache_usage">Käytössä %1$d MB · raja %2$d MB</string>
+    <string name="cache_clear">Tyhjennä välimuisti</string>
+</resources>

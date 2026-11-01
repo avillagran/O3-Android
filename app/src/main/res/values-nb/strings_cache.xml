@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Lokal trådbuffer</string>
+    <string name="cache_usage">%1$d MB brukt · grense %2$d MB</string>
+    <string name="cache_clear">Tøm buffer</string>
+</resources>

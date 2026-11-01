@@ -364,6 +364,11 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
         if (settings.interfaceLayout != "classic" && !state.filter.active && state.query.isBlank()) {
             nestedSidebarRows(state.rows.values.toList()).map { HomeItem.Row(it) } +
                 state.items.filter { it is HomeItem.ShowMoreSettled || it is HomeItem.Message || it is HomeItem.MessagesHeader }
+        } else if (!state.filter.active && state.query.isBlank()) buildList {
+            val group = mutableListOf<HomeRow>()
+            fun flush() { addAll(nestedSidebarRows(group).map { HomeItem.Row(it) }); group.clear() }
+            state.items.forEach { item -> if (item is HomeItem.Row) group.add(item.row) else { flush(); add(item) } }
+            flush()
         } else state.items
     }
     val sections = remember(layoutItems) { homeListSections(layoutItems) }
@@ -436,10 +441,25 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                         if (header.expanded && members.isNotEmpty()) {
                             LazyColumn(Modifier.fillMaxWidth().heightIn(max = bodyLimit)
                                 .testTag("home_shelf_list_${header.shelf.name}")) {
-                                items((sidebarSections(members.filterIsInstance<HomeItem.Row>().map { it.row }, "classic", false, metadata,
+                                val shelfRows = sidebarSections(nestedSidebarRows(members.filterIsInstance<HomeItem.Row>().map { it.row }), "classic", false, metadata,
                                     settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.THREAD_ORDER) == "reply")
-                                    .flatMap { it.rows }.filter { matchesChip(it, chip, metadata) }.map { HomeItem.Row(it) } + members.filterNot { it is HomeItem.Row }), key = { it.key }, contentType = { it::class }) { HomeListItem(it, onIntent, Modifier.animateItem(
-                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                                    .flatMap { it.rows }.filter { matchesChip(it, chip, metadata) }
+                                var hiddenAt: Int? = null
+                                shelfRows.forEachIndexed { index, row ->
+                                    if (hiddenAt != null && row.depth <= hiddenAt!!) hiddenAt = null
+                                    val children = shelfRows.drop(index + 1).takeWhile { it.depth > row.depth }
+                                    val treeKey = "thread:${row.key}"
+                                    val hidden = hiddenAt != null
+                                    if (treeKey in collapsed && children.isNotEmpty()) hiddenAt = row.depth
+                                    if (!hidden) item(row.key) {
+                                        HomeListItem(HomeItem.Row(row), onIntent, Modifier.animateItem(
+                                            fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()),
+                                            subagents = children.takeIf { it.isNotEmpty() }?.let {
+                                                dev.avillagran.ot3android.ui.kit.SubagentsModel(it.size, it.count { child -> child.working }, treeKey !in collapsed)
+                                            }, onSubagents = { scope.launch { viewPreferences.toggleSidebarSection(treeKey) } })
+                                    }
+                                }
+                                items(members.filterNot { it is HomeItem.Row }, key = { it.key }) { HomeListItem(it, onIntent) }
                             }
                         }
                     }

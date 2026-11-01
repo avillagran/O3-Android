@@ -162,7 +162,7 @@ class AppGraph(
     }
 
     val connectionManager: ConnectionManager by lazy {
-        ConnectionManager(environmentRepository, shellCursors, transportFactory, appScope)
+        ConnectionManager(environmentRepository, shellCursors, transportFactory, appScope, cache = threadCache)
     }
 
     /**
@@ -259,8 +259,17 @@ class AppGraph(
                                 val sidebar = dev.avillagran.ot3android.core.shell.SidebarView.build(
                                     DomainEngine.shared, listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment(id, shell = shell)),
                                     System.currentTimeMillis())
-                                threadCache.pin(id, sidebar.threads.filter { it.pinned }.map { it.threadId }.toSet())
-                                threadCache.reconcile(id, sidebar.threads.map { it.threadId }.toSet())
+                                // Only network-owned shells refresh disk age; a cached display must not.
+                                if (supervisor.connection.value != null) {
+                                    environmentRepository.cacheAuthority(id)?.let { authority ->
+                                        val body = org.json.JSONObject().put("snapshotSequence", shell.sequence)
+                                            .put("projects", org.json.JSONArray(shell.projects.map { it.raw }))
+                                            .put("threads", org.json.JSONArray(shell.threads.take(2000).map { it.raw }))
+                                        threadCache.writeSidebar(id, authority, body)
+                                    }
+                                    threadCache.pin(id, sidebar.threads.filter { it.pinned }.map { it.threadId }.toSet())
+                                    threadCache.reconcile(id, sidebar.threads.map { it.threadId }.toSet())
+                                }
                             } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
                             catch (_: Exception) { /* An unavailable view must not erase cached content. */ }
                         }

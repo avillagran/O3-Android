@@ -128,6 +128,11 @@ class ConnectionSupervisor(
      */
     val shell: StateFlow<ShellState?> = _shell.asStateFlow()
 
+    /** Display-only disk shell. A fresh GET still establishes the live stream cursor. */
+    internal fun showCachedShell(cached: ShellState) {
+        if (_shell.value == null) _shell.value = cached
+    }
+
     /** The shell as applied so far; [shell] catches up with it on repaint. */
     private var held: ShellState? = null
 

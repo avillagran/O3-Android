@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Локальный кэш диалогов</string>
+    <string name="cache_usage">Использовано %1$d МБ · лимит %2$d МБ</string>
+    <string name="cache_clear">Очистить кэш</string>
+</resources>

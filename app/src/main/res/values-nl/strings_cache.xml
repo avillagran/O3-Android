@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Lokale gesprekscache</string>
+    <string name="cache_usage">%1$d MB gebruikt · limiet %2$d MB</string>
+    <string name="cache_clear">Cache wissen</string>
+</resources>
