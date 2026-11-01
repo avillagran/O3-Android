@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop-värd</string>
+    <string name="surfaces_select">Använd denna värd</string>
+    <string name="surfaces_missing">Denna part saknar desktop-snapshots-behörighet.</string>
+    <string name="surfaces_sdk">Uppdatera OmaBridge SDK för service-request-v1.</string>
+    <string name="surfaces_credential">Skicka T3-uppgifterna för %1$s endast till dess parkopplade värd. Kontrollera identiteten före val.</string>
+    <string name="surfaces_enable">På värden: aktivera Fjärrdokument på den här enheten i Inställningar → Anslutningar, starta remote-surfaces-serve, konfigurera desktop-snapshots och ge telefonen behörighet. För ändringar, aktivera även Tillåt fjärrunderhåll på den här enheten.</string>
+    <string name="surfaces_refused">Åtkomst saknas eller nekades. Samtycke avstängt, behörighet återkallad eller rapport eller bekräftelse utgången. Läs en ny rapport på värden.</string>
+    <string name="surfaces_unknown">Okänt resultat. Åtgärden kan vara klar. Inget automatiskt återförsök; kontrollera värden före ny åtgärd.</string>
+    <string name="surfaces_documents">Dokumentögonblicksbilder</string>
+    <string name="surfaces_gallery">Statiskt HTML-galleri</string>
+    <string name="surfaces_compaction">Komprimeringspolicy</string>
+    <string name="surfaces_idle">Frigöring vid inaktivitet</string>
+    <string name="surfaces_minutes">Minuter (1–1440)</string>
+    <string name="surfaces_tokens">Minsta antal token (1000–1000000)</string>
+    <string name="surfaces_prepare">Förbered ändring</string>
+    <string name="surfaces_confirmation">Granska exakt begäran och hela rapporten. Bekräftelsen löper ut efter 60 sekunder och används en gång.</string>
+    <string name="surfaces_disabled">Värden har inte aktiverat funktionen. Aktivera värdens samtycke enligt ovan.</string>
+    <string name="surfaces_not_sent">Begäran skickades inte. Inget automatiskt återförsök. Kontrollera tjänstens behörighet och bryggans anslutning.</string>
+</resources>

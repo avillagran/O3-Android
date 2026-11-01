@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Host Desktop</string>
+    <string name="surfaces_select">Usar este host</string>
+    <string name="surfaces_missing">Este par no tiene el permiso desktop-snapshots.</string>
+    <string name="surfaces_sdk">Actualiza el SDK OmaBridge para habilitar service-request-v1.</string>
+    <string name="surfaces_credential">Envía la credencial T3 de %1$s solo a su host pareado. Verifica la identidad antes de seleccionar.</string>
+    <string name="surfaces_enable">En el host: activa Documentos remotos en este dispositivo en Preferencias → Conexiones, inicia remote-surfaces-serve, configura el servicio desktop-snapshots y autoriza este teléfono. Para modificar, activa también Permitir mantenimiento remoto en este dispositivo.</string>
+    <string name="surfaces_refused">Acceso no disponible o rechazado. Puede faltar consentimiento, haberse revocado el acceso o vencido el reporte o confirmación. Lee un reporte nuevo en el host.</string>
+    <string name="surfaces_unknown">Resultado desconocido. La operación puede haber terminado. No hay reintento automático; revisa el host antes de otra acción.</string>
+    <string name="surfaces_documents">Snapshots de documentos</string>
+    <string name="surfaces_gallery">Galería HTML estática</string>
+    <string name="surfaces_compaction">Política de compactación</string>
+    <string name="surfaces_idle">Liberación por inactividad</string>
+    <string name="surfaces_minutes">Minutos (1–1440)</string>
+    <string name="surfaces_tokens">Tokens mínimos (1000–1000000)</string>
+    <string name="surfaces_prepare">Preparar cambio</string>
+    <string name="surfaces_confirmation">Revisa la solicitud exacta y el reporte completo. La confirmación vence en 60 segundos y se usa una vez.</string>
+    <string name="surfaces_disabled">El host no ha habilitado esta superficie. Activa el consentimiento del host indicado arriba.</string>
+    <string name="surfaces_not_sent">Solicitud no enviada. No hay reintento automático. Revisa el permiso del servicio y la conexión del bridge.</string>
+</resources>

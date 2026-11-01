@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">مضيف Desktop</string>
+    <string name="surfaces_select">استخدام هذا المضيف</string>
+    <string name="surfaces_missing">لا يملك هذا النظير إذن desktop-snapshots.</string>
+    <string name="surfaces_sdk">حدّث SDK OmaBridge لتفعيل service-request-v1.</string>
+    <string name="surfaces_credential">أرسل بيانات اعتماد T3 الخاصة بـ %1$s إلى مضيفه المقترن فقط. تحقق من الهوية قبل الاختيار.</string>
+    <string name="surfaces_enable">على المضيف: فعّل المستندات البعيدة على هذا الجهاز في التفضيلات ← الاتصالات، وشغّل remote-surfaces-serve واضبط خدمة desktop-snapshots وامنح هذا الهاتف الإذن. للتعديل فعّل أيضًا السماح بالصيانة البعيدة على هذا الجهاز.</string>
+    <string name="surfaces_refused">الوصول غير متاح أو مرفوض. قد تكون الموافقة معطلة أو الإذن مسحوبًا أو التقرير أو التأكيد منتهيًا. اقرأ تقريرًا جديدًا على المضيف.</string>
+    <string name="surfaces_unknown">النتيجة غير معروفة. ربما اكتملت العملية. لا إعادة محاولة تلقائية؛ تحقق من المضيف قبل إجراء جديد.</string>
+    <string name="surfaces_documents">لقطات المستندات</string>
+    <string name="surfaces_gallery">معرض HTML ثابت</string>
+    <string name="surfaces_compaction">سياسة الضغط</string>
+    <string name="surfaces_idle">سياسة التحرير عند الخمول</string>
+    <string name="surfaces_minutes">الدقائق (1–1440)</string>
+    <string name="surfaces_tokens">الحد الأدنى للرموز (1000–1000000)</string>
+    <string name="surfaces_prepare">تحضير التغيير</string>
+    <string name="surfaces_confirmation">راجع الطلب الدقيق والتقرير الكامل. ينتهي التأكيد بعد 60 ثانية ويستخدم مرة واحدة.</string>
+    <string name="surfaces_disabled">لم يفعّل المضيف هذه الميزة. فعّل موافقة المضيف كما هو موضح أعلاه.</string>
+    <string name="surfaces_not_sent">لم يُرسل الطلب. لا إعادة محاولة تلقائية. تحقق من إذن الخدمة واتصال الجسر.</string>
+</resources>

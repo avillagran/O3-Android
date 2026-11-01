@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop-vert</string>
+    <string name="surfaces_select">Bruk denne verten</string>
+    <string name="surfaces_missing">Denne motparten har ingen desktop-snapshots-tillatelse.</string>
+    <string name="surfaces_sdk">Oppdater OmaBridge SDK for service-request-v1.</string>
+    <string name="surfaces_credential">Send T3-legitimasjonen for %1$s bare til den parede verten. Kontroller identiteten før valg.</string>
+    <string name="surfaces_enable">På verten: aktiver Eksterne dokumenter på denne enheten i Innstillinger → Tilkoblinger, start remote-surfaces-serve, konfigurer desktop-snapshots og gi telefonen tilgang. For endringer aktiver også Tillat eksternt vedlikehold på denne enheten.</string>
+    <string name="surfaces_refused">Tilgang mangler eller ble avvist. Samtykke avslått, tillatelse trukket tilbake eller rapport eller bekreftelse utløpt. Les en ny rapport på verten.</string>
+    <string name="surfaces_unknown">Ukjent resultat. Handlingen kan være fullført. Ingen automatisk gjentakelse; kontroller verten før en ny handling.</string>
+    <string name="surfaces_documents">Dokumentøyeblikksbilder</string>
+    <string name="surfaces_gallery">Statisk HTML-galleri</string>
+    <string name="surfaces_compaction">Komprimeringspolicy</string>
+    <string name="surfaces_idle">Frigjøring ved inaktivitet</string>
+    <string name="surfaces_minutes">Minutter (1–1440)</string>
+    <string name="surfaces_tokens">Minste antall tokens (1000–1000000)</string>
+    <string name="surfaces_prepare">Forbered endring</string>
+    <string name="surfaces_confirmation">Se gjennom nøyaktig forespørsel og hele rapporten. Bekreftelsen utløper etter 60 sekunder og brukes én gang.</string>
+    <string name="surfaces_disabled">Verten har ikke aktivert funksjonen. Aktiver vertens samtykke som beskrevet ovenfor.</string>
+    <string name="surfaces_not_sent">Forespørselen ble ikke sendt. Ingen automatisk gjentakelse. Kontroller tjenestetillatelsen og broforbindelsen.</string>
+</resources>

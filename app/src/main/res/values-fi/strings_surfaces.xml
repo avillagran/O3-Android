@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop-isäntä</string>
+    <string name="surfaces_select">Käytä tätä isäntää</string>
+    <string name="surfaces_missing">Tällä vertaisella ei ole desktop-snapshots-oikeutta.</string>
+    <string name="surfaces_sdk">Päivitä OmaBridge SDK käyttöön service-request-v1.</string>
+    <string name="surfaces_credential">Lähetä kohteen %1$s T3-tunnistetiedot vain sen paritetulle isännälle. Tarkista henkilöllisyys ennen valintaa.</string>
+    <string name="surfaces_enable">Isännällä: ota Etäasiakirjat tällä laitteella käyttöön kohdassa Asetukset → Yhteydet, käynnistä remote-surfaces-serve, määritä desktop-snapshots ja anna puhelimelle oikeus. Muutoksia varten salli myös Etäylläpito tällä laitteella.</string>
+    <string name="surfaces_refused">Pääsy ei ole käytettävissä tai estettiin. Suostumus pois, oikeus peruttu tai raportti tai vahvistus vanhentunut. Lue uusi raportti isännältä.</string>
+    <string name="surfaces_unknown">Tulos tuntematon. Toiminto on voinut valmistua. Ei automaattista uudelleenyritystä; tarkista isäntä ennen uutta toimintoa.</string>
+    <string name="surfaces_documents">Asiakirjojen tilannekuvat</string>
+    <string name="surfaces_gallery">Staattinen HTML-galleria</string>
+    <string name="surfaces_compaction">Tiivistyskäytäntö</string>
+    <string name="surfaces_idle">Vapautus joutilaana</string>
+    <string name="surfaces_minutes">Minuutit (1–1440)</string>
+    <string name="surfaces_tokens">Vähimmäistokenit (1000–1000000)</string>
+    <string name="surfaces_prepare">Valmistele muutos</string>
+    <string name="surfaces_confirmation">Tarkista tarkka pyyntö ja koko raportti. Vahvistus vanhenee 60 sekunnissa ja on kertakäyttöinen.</string>
+    <string name="surfaces_disabled">Isäntä ei ole ottanut tätä toimintoa käyttöön. Ota isännän suostumus käyttöön yllä kuvatulla tavalla.</string>
+    <string name="surfaces_not_sent">Pyyntöä ei lähetetty. Ei automaattista uudelleenyritystä. Tarkista palvelun oikeus ja siltayhteys.</string>
+</resources>

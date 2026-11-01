@@ -30,6 +30,7 @@ internal fun HostMaintenancePage(navigator: Ot3Navigator, route: HostMaintenance
     val environments by repository.environments.collectAsStateWithLifecycle(initialValue = emptyList())
     var environment by rememberSaveable { mutableStateOf(route.environmentId) }
     var project by rememberSaveable { mutableStateOf(route.projectId) }
+    var desktop by remember { mutableStateOf(false) }
     var policy by rememberSaveable { mutableStateOf(false) }
     val selected = environments.find { it.id == environment }
     val supervisor by key(environment) {
@@ -58,8 +59,11 @@ internal fun HostMaintenancePage(navigator: Ot3Navigator, route: HostMaintenance
             } else key(selected.id, selected.baseUrl, identity, current, page, project, policy) {
                 val host = MaintenanceHost(selected.id, selected.baseUrl, identity)
                 Text(selected.label)
-                if (page == MaintenancePage.STORAGE) {
+                if (page in setOf(MaintenancePage.MEMORY, MaintenancePage.VAULT, MaintenancePage.HOST_SYNC) || desktop) {
+                    DesktopSurfacesPanel(LocalContext.current.appGraph.bridgeCatalog, selected.label) { repository.token(selected.id) }
+                } else if (page == MaintenancePage.STORAGE) {
                     Row {
+                        TextButton(onClick = { desktop = true }) { Text(stringResource(R.string.surfaces_title)) }
                         TextButton(onClick = { policy = false }) { Text(stringResource(R.string.ot3_inspector_details)) }
                         TextButton(onClick = { policy = true }) { Text(stringResource(R.string.preferences_storage)) }
                     }

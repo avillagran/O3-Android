@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Хост Desktop</string>
+    <string name="surfaces_select">Використати цей хост</string>
+    <string name="surfaces_missing">Цей вузол не має дозволу desktop-snapshots.</string>
+    <string name="surfaces_sdk">Оновіть SDK OmaBridge для service-request-v1.</string>
+    <string name="surfaces_credential">Надсилайте дані T3 для %1$s лише спареному хосту. Перевірте його ідентичність перед вибором.</string>
+    <string name="surfaces_enable">На хості: увімкніть Віддалені документи на цьому пристрої в Налаштування → З’єднання, запустіть remote-surfaces-serve, налаштуйте desktop-snapshots і дозвольте доступ телефону. Для змін також увімкніть Дозволити віддалене обслуговування на цьому пристрої.</string>
+    <string name="surfaces_refused">Доступ недоступний або відхилений. Згоду вимкнено, дозвіл відкликано або звіт чи підтвердження прострочено. Прочитайте новий звіт на хості.</string>
+    <string name="surfaces_unknown">Результат невідомий. Операція могла завершитися. Без автоматичного повтору; перевірте хост перед новою дією.</string>
+    <string name="surfaces_documents">Знімки документів</string>
+    <string name="surfaces_gallery">Статична HTML-галерея</string>
+    <string name="surfaces_compaction">Політика ущільнення</string>
+    <string name="surfaces_idle">Звільнення під час простою</string>
+    <string name="surfaces_minutes">Хвилини (1–1440)</string>
+    <string name="surfaces_tokens">Мінімум токенів (1000–1000000)</string>
+    <string name="surfaces_prepare">Підготувати зміну</string>
+    <string name="surfaces_confirmation">Перевірте точний запит і повний звіт. Підтвердження діє 60 секунд та використовується один раз.</string>
+    <string name="surfaces_disabled">Хост не ввімкнув цю функцію. Увімкніть згоду хоста, як описано вище.</string>
+    <string name="surfaces_not_sent">Запит не надіслано. Без автоматичного повтору. Перевірте дозвіл служби та з’єднання bridge.</string>
+</resources>

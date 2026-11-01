@@ -7,6 +7,8 @@ import dev.avillagran.ot3android.core.data.local.EnvironmentEntity
 import dev.avillagran.ot3android.core.data.local.NATIVE_AUTHORIZED
 import dev.avillagran.ot3android.core.data.local.NATIVE_EXPIRED
 import dev.avillagran.ot3android.core.data.local.Ot3Database
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -73,6 +75,32 @@ class BridgeCatalogController(
 
     suspend fun drafts(authority: String, command: JSONObject): JSONObject = mutex.withLock {
         invoke("drafts", JSONObject().put("peer", authority).put("command", command))
+    }
+
+    /** Transient authenticated HTTP; cancellation bypasses the serialized request gate. */
+    suspend fun serviceRequest(peer: String, bearer: String, method: String, path: String, body: String? = null): JSONObject {
+        val requestId = java.util.UUID.randomUUID().toString()
+        val activeHandle = checkNotNull(handle)
+        try {
+            return mutex.withLock {
+                val request = JSONObject().put("op", "serviceRequest").put("handle", activeHandle)
+                    .put("requestId", requestId).put("peer", peer).put("service", "desktop-snapshots")
+                    .put("bearer", bearer).put("method", method).put("path", path).put("timeoutMs", 15000)
+                    .put("headers", JSONObject().put("accept", "application/json").apply {
+                        if (body != null) put("content-type", "application/json")
+                    })
+                if (body != null) request.put("bodyBase64", android.util.Base64.encodeToString(body.toByteArray(Charsets.UTF_8), android.util.Base64.NO_WRAP))
+                kotlinx.coroutines.coroutineScope {
+                    val cancellation = launch(Dispatchers.IO, start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+                        try { kotlinx.coroutines.awaitCancellation() }
+                        finally { withContext(kotlinx.coroutines.NonCancellable + Dispatchers.IO) {
+                            native(JSONObject().put("op", "cancelServiceRequest").put("handle", activeHandle).put("requestId", requestId))
+                        } }
+                    }
+                    try { native(request) } finally { cancellation.cancel() }
+                }
+            }
+        } finally { /* Requests and responses are never logged or persisted. */ }
     }
 
     suspend fun pair(invitation: JSONObject): Boolean = mutex.withLock {

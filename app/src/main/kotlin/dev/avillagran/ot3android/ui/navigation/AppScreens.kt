@@ -217,6 +217,9 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "connections" }) { navigator.push(ConnectionsPreferences) },
             dev.avillagran.ot3android.ui.settings.PreferencesRouteContribution(dev.avillagran.ot3android.ui.settings.desktopPreferencesPages.first { it.id == "source-control" }) { navigator.push(SourceControlPreferences) },
         ) + listOf(
+            "memory" to dev.avillagran.ot3android.R.string.preferences_memory_obsidian,
+            "vault" to dev.avillagran.ot3android.R.string.maintenance_vault,
+            "host_sync" to dev.avillagran.ot3android.R.string.maintenance_sync,
             "storage" to dev.avillagran.ot3android.R.string.maintenance_storage,
             "archived" to dev.avillagran.ot3android.R.string.maintenance_archive,
             "schedules" to dev.avillagran.ot3android.R.string.maintenance_schedules,

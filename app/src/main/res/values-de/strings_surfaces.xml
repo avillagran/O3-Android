@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-kept Desktop broker copy. -->
+<resources>
+    <string name="surfaces_title">Desktop-Host</string>
+    <string name="surfaces_select">Diesen Host verwenden</string>
+    <string name="surfaces_missing">Dieser Peer hat keine desktop-snapshots-Freigabe.</string>
+    <string name="surfaces_sdk">Aktualisiere das OmaBridge-SDK für service-request-v1.</string>
+    <string name="surfaces_credential">Sende die T3-Zugangsdaten für %1$s nur an den gekoppelten Host. Prüfe vor der Auswahl dessen Identität.</string>
+    <string name="surfaces_enable">Auf dem Host: Remote-Dokumente auf diesem Gerät unter Einstellungen → Verbindungen aktivieren, remote-surfaces-serve starten, desktop-snapshots einrichten und dieses Telefon freigeben. Für Änderungen auch Remote-Wartung auf diesem Gerät erlauben.</string>
+    <string name="surfaces_refused">Zugriff nicht verfügbar oder verweigert. Zustimmung deaktiviert, Berechtigung widerrufen oder Bericht bzw. Bestätigung abgelaufen. Neuen Bericht auf dem Host lesen.</string>
+    <string name="surfaces_unknown">Ergebnis unbekannt. Der Vorgang könnte abgeschlossen sein. Keine automatische Wiederholung; vor einer neuen Aktion den Host prüfen.</string>
+    <string name="surfaces_documents">Dokument-Snapshots</string>
+    <string name="surfaces_gallery">Statische HTML-Galerie</string>
+    <string name="surfaces_compaction">Komprimierungsrichtlinie</string>
+    <string name="surfaces_idle">Freigabe bei Inaktivität</string>
+    <string name="surfaces_minutes">Minuten (1–1440)</string>
+    <string name="surfaces_tokens">Mindestanzahl Tokens (1000–1000000)</string>
+    <string name="surfaces_prepare">Änderung vorbereiten</string>
+    <string name="surfaces_confirmation">Prüfe die genaue Anfrage und den vollständigen Bericht. Die Bestätigung läuft nach 60 Sekunden ab und gilt einmal.</string>
+    <string name="surfaces_disabled">Der Host hat diese Funktion nicht aktiviert. Aktiviere die oben beschriebene Zustimmung auf dem Host.</string>
+    <string name="surfaces_not_sent">Anfrage nicht gesendet. Keine automatische Wiederholung. Prüfe Dienstfreigabe und Bridge-Verbindung.</string>
+</resources>
