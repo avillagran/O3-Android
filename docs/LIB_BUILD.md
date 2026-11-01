@@ -1,7 +1,7 @@
-# Adopted release: v0.3.7
+# Adopted release: v0.3.8
 
-Current consumer pin: `7cbad5d8198d37e9ded767d33ac03f2cf15875f4`, ABI 3.
-Release AAR SHA-256: `15d60510f170c269631eedb182ad2cfed991e4d33ce19aa3c7ea364296594843`.
+Current consumer pin: `1498ad6656fed511d1c7ea61795dfd46c0e01ce5`, ABI 3.
+Release AAR SHA-256: `6cf56cf366d16dd59ef313864fb7cfb4e04fb067487e1d1e0671b30fe81ae213`.
 Use `scripts/fetch-or-build-lib.sh --release --host-jni` with a checkout at this
 source commit. Regenerate `strings_ot3.xml` with `tools/import-ot3-strings`.
 The older version examples below describe the build pipeline's history; the lock

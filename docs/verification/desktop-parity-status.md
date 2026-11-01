@@ -1,9 +1,9 @@
 # Desktop parity status — dependencies, terminal, capture and host surfaces
 
-Consumer pins updated 2026-11-01: lib-t3-rust v0.3.7 / 7cbad5d8198d37e9ded767d33ac03f2cf15875f4,
+Consumer pins updated 2026-11-01: lib-t3-rust v0.3.8 / 1498ad6656fed511d1c7ea61795dfd46c0e01ce5,
 OmaBridge 1097f0e7cd4e91e58dce94744f13606a26756601 (mobile ABI 1).
 The adoption table retains the v0.3.6 consumer scope; P15 below records the
-v0.3.7 terminal delivery. The detailed P20 table otherwise retains the earlier v0.3.5 audit. The adoption table here
+v0.3.7 terminal delivery; v0.3.8 adds HTTP compression only (`adopt-lib-038.md`). The detailed P20 table otherwise retains the earlier v0.3.5 audit. The adoption table here
 supersedes its claims that these native APIs are missing; incomplete consumer
 wiring is now an **O3-Android** task, not a lib/bridge blocker.
 
