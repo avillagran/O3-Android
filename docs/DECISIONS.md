@@ -1261,3 +1261,13 @@ API34 CI; its exact touch/layout cause remains unproven. The replacement is
 verified by a compact-viewport close test and a row-replacement lifetime test,
 with device acceptance still required. Short content wraps instead of reserving
 a mostly empty full-height panel. No subscription or protocol rules moved into UI.
+
+### 2026-11-01 — CI caches lib-t3-rust artifacts by name, never all of libs/
+
+`libs/` also holds tracked pins and the bridge host library, while the cache key only follows
+`libs/lib-t3-rust.lock`. Restoring the directory put back the `libs/omabridge-native.lock` of
+the day the cache was saved, so CI built the bridge from that old commit and every check still
+agreed with the restored lock. The cache now lists the lib-t3-rust files one by one, CI fails
+right after the restore if a tracked file under `libs/` differs from the commit, and
+`NativeBridgeLinkageTest` compares the commit and checksum in the host library's
+`omabridge-native.properties` with the lock and the library.

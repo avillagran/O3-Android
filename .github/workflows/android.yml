@@ -45,13 +45,23 @@ jobs:
           path: lib-t3-rust
           persist-credentials: false
 
+      # Only what fetch-or-build-lib.sh produces for this key. libs/ also holds tracked pins
+      # and the bridge host library, which do not follow libs/lib-t3-rust.lock: restoring them
+      # builds the bridge from an old commit that still agrees with its restored lock.
       - uses: actions/cache@v4
         with:
           path: |
-            libs/
+            libs/lib-t3-rust-android.aar
+            libs/lib-t3-rust-android.aar.sha256
+            libs/lib-t3-rust-android.properties
+            libs/host/linux-x86_64/libt3_jni.so
+            libs/host/linux-x86_64/lib-t3-rust.properties
             ~/.cargo/registry
             ~/.cargo/git
-          key: lib-t3-rust-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('libs/lib-t3-rust.lock') }}
+          key: lib-t3-rust-artifacts-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('libs/lib-t3-rust.lock') }}
+
+      - name: The restored cache left the tracked pins alone
+        run: git diff --exit-code HEAD -- libs/
 
       - name: lib-t3-rust AAR (release) and host JNI library
         env:
