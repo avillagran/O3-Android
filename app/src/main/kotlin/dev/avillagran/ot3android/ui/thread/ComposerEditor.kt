@@ -183,6 +183,9 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
             .border(1.dp, border, RoundedCornerShape(17.dp))
             .background(colors.surface, RoundedCornerShape(17.dp))) {
             Row(Modifier.then(if (expanded) Modifier.weight(1f) else Modifier).padding(4.dp), verticalAlignment = Alignment.Bottom) {
+                // A short landscape window has no second row, so the model, access and mode
+                // controls share this one. Desktop keeps them beside the editor at all sizes.
+                if (!expanded && compact) Box(Modifier.widthIn(max = 168.dp).testTag("composer_compact_toolbar")) { toolbar() }
                 BasicTextField(value = editor.value, onValueChange = ::update, enabled = enabled, interactionSource = interaction,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foreground), cursorBrush = SolidColor(colors.accent),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default), keyboardActions = KeyboardActions { newline() },
@@ -216,7 +219,6 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
                     } },
                 )
                 // A short landscape window cannot afford a second 48dp row above the IME.
-                // Model and permission controls remain in the header overflow.
                 if (!expanded && compact) editorControls()
             }
             if (!expanded && !compact) {

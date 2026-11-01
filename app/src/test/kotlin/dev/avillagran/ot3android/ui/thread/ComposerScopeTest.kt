@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.ui.thread
 import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -23,6 +24,15 @@ import org.robolectric.annotation.Config
 @Config(application = Application::class)
 class ComposerScopeTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+    @Test fun shortWindowKeepsToolbarControlsInTheSingleRow() {
+        rule.setContent { Ot3Theme {
+            ComposerEditor(ComposerEditorState(), expanded = false, canSend = false, sending = false,
+                onDraftChange = { _, _ -> }, onSend = {}, onToggle = {}, compact = true,
+                toolbar = { androidx.compose.material3.Text("model", androidx.compose.ui.Modifier.testTag("model_control")) })
+        } }
+        rule.onNodeWithTag("model_control").assertIsDisplayed()
+        rule.onNodeWithTag("composer_control_row").assertDoesNotExist()
+    }
     @Test fun selectionSurvivesModeAndRestoreButNotAnotherEnvironmentWithSameThreadId() {
         var identity by mutableStateOf("[node,same-thread]")
         var draft by mutableStateOf("Original normal draft")
