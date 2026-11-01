@@ -30,6 +30,18 @@ class ComposerEditorStateTest {
         assertEquals(ComposerKeyAction.Platform, enter(composing = true))
         assertEquals(ComposerKeyAction.Platform, enter(expanded = true, ctrl = true, composing = true))
     }
+    @Test fun fieldCallbackFromAStaleBaseKeepsTheNewerRangeButNotARealChange() {
+        val state = ComposerEditorState("abcdefgh")
+        state.presented(state.value)
+        state.edit(TextFieldValue("abcdefgh", TextRange(2, 5)))
+        // Only the composition is new relative to what the field last composed.
+        assertEquals(TextFieldValue("abcdefgh", TextRange(2, 5), TextRange(0, 3)),
+            state.rebased(TextFieldValue("abcdefgh", TextRange(8), TextRange(0, 3))))
+        assertEquals(TextFieldValue("abcdefgh", TextRange(6)), state.rebased(TextFieldValue("abcdefgh", TextRange(6))))
+        assertEquals(TextFieldValue("abcdefghi", TextRange(9)), state.rebased(TextFieldValue("abcdefghi", TextRange(9))))
+        state.presented(state.value)
+        assertEquals(TextFieldValue("abcdefgh", TextRange(8)), state.rebased(TextFieldValue("abcdefgh", TextRange(8))))
+    }
     @Test fun externalDraftIsAuthoritativeAndSelectionClampsWithoutLosingImeOnEcho() {
         val state = ComposerEditorState("abcdef")
         state.edit(TextFieldValue("abcdef", TextRange(2, 5), TextRange(1, 5)))
