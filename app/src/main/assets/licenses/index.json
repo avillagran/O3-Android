@@ -880,5 +880,12 @@
     "license": "OFL-1.1",
     "file": "firacode-nerd-OFL.txt",
     "source": "https://github.com/ryanoasis/nerd-fonts"
+  },
+  {
+    "name": "Font Awesome (Nerd Font preview symbol)",
+    "version": "",
+    "license": "OFL-1.1 (font)",
+    "file": "font-awesome.txt",
+    "source": "https://fontawesome.com/license/free"
   }
 ]

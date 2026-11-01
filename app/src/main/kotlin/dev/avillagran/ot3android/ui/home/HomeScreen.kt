@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.CompositionLocalProvider
@@ -390,8 +391,9 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                         fun hidden(section: String): Boolean = collapsed.any { section == it || section.startsWith("$it/") }
                         when (entry) {
                             is SidebarEntry.Header -> if (!collapsed.any { entry.key.startsWith("$it/") }) item(entry.key) {
+                                val expansion = stringResource(if (entry.key in collapsed) R.string.about_collapsed else R.string.about_expanded)
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                    TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f).testTag("sidebar_toggle_${entry.key}")) {
+                                    TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f).testTag("sidebar_toggle_${entry.key}").semantics { stateDescription = expansion }) {
                                         dev.avillagran.ot3android.ui.kit.Ot3Icon(if (entry.key in collapsed) "chevron-right" else "chevron-down", null)
                                         Text("${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
                                             modifier = Modifier.fillMaxWidth(), color = Ot3Theme.colors.dim,
@@ -411,17 +413,20 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                                     it is SidebarEntry.Item && (it.value as? HomeItem.Row)?.row?.depth?.let { depth -> depth > row.depth } == true
                                 }
                                 if (!hideChild && treeKey in collapsed && children.isNotEmpty()) hiddenDepth = row!!.depth
-                                val position = shown.getOrDefault(entry.section, 0)
-                                shown[entry.section] = position + 1
+                                val position = shown.getOrDefault(entry.section, 0).let { roots -> if (row != null && row.depth > 0) (roots - 1).coerceAtLeast(0) else roots }
+                                if (row == null || row.depth == 0) shown[entry.section] = position + 1
                                 val selected = (entry.value as? HomeItem.Row)?.row?.key == selectedKey
                                 if (!hideChild && !hidden(entry.section) && (entry.section !in limited || entry.section in unlimited || position < 5 || selected))
                                     item(entry.value.key) {
+                                        val expansion = stringResource(if (treeKey in collapsed) R.string.about_collapsed else R.string.about_expanded)
+                                        val workingChildren = children.count { ((it as? SidebarEntry.Item)?.value as? HomeItem.Row)?.row?.working == true }
+                                        val childCount = if (workingChildren > 0) "$workingChildren/${children.size}" else children.size.toString()
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             if (children.isNotEmpty()) dev.avillagran.ot3android.ui.kit.Ot3IconButton(
                                                 if (treeKey in collapsed) "chevron-right" else "chevron-down",
                                                 "${row!!.title} (${children.size})", { scope.launch { viewPreferences.toggleSidebarSection(treeKey!!) } },
-                                                modifier = Modifier.testTag("sidebar_toggle_$treeKey"))
-                                            if (children.isNotEmpty()) Text(children.size.toString(), color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall)
+                                                modifier = Modifier.testTag("sidebar_toggle_$treeKey").semantics { stateDescription = expansion })
+                                            if (children.isNotEmpty()) Text(childCount, color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall)
                                             HomeListItem(entry.value, onIntent, Modifier.weight(1f).animateItem(
                                                 fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()))
                                         }

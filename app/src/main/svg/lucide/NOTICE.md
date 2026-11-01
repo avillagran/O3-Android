@@ -98,3 +98,4 @@ The existing converter centers and tints the monochrome marks for Android.
 `terminal.svg`: exact ot3 inline `ui/js/IconAssets.js:16` at7b5b1de, Lucide ISC, stroke1.75.
 
 `camera.svg` and `mic.svg`: Desktop `ui/js/IconAssets.js` (current checkout), Lucide ISC, stroke 1.75.
+`image.svg`: Desktop `ui/js/IconAssets.js` icon table, Lucide ISC.
