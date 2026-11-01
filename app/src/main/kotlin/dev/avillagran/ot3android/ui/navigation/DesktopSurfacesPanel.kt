@@ -118,7 +118,10 @@ internal fun DesktopSurfacesPanel(bridge: BridgeCatalogController, credentialLab
                 if (unknown) Text(stringResource(R.string.surfaces_unknown))
                 val data = content
                 if (data != null) {
-                    SelectionContainer { Text(data.toString(2)) }
+                    if (data.has("contents")) {
+                        Text(data.optString("title"), style = MaterialTheme.typography.titleMedium)
+                        SelectionContainer { Text(data.getString("contents")) }
+                    } else SelectionContainer { Text(data.toString(2)) }
                     val items = data.optJSONArray("items")
                     for (i in 0 until (items?.length() ?: 0)) {
                         val item = items!!.getJSONObject(i)
