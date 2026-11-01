@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import dev.avillagran.ot3android.core.composer.SharedDraftRepository
+import dev.avillagran.ot3android.core.composer.SharedDraftSynchronizer
 import dev.avillagran.ot3android.core.connection.*
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.local.Ot3Database
@@ -149,15 +151,138 @@ class ChatViewModelTest {
         }
     }
 
-    private suspend fun fixture(block: suspend (Fixture) -> Unit) {
+    @Test fun plainSendDoesNotDependOnAnUnreachableSharedDraftAuthority() = runBlocking {
+        fixture("default") { f ->
+            val text = "Hello from the phone"
+            f.sharedDrafts { error("route unavailable") }.edit(draftPayload(text))
+            assertPlainMessage(f.plainSend(text), text)
+        }
+    }
+
+    @Test fun plainSendDoesNotDependOnAMatchingSharedDraftDocument() = runBlocking {
+        fixture("default") { f ->
+            // The authority never saw this text, so no clear command can be captured.
+            f.sharedDrafts()
+            assertPlainMessage(f.plainSend("Typed but not synchronized"), "Typed but not synchronized")
+        }
+    }
+
+    @Test fun plainSendBeyondTheSharedDraftLimitStillDispatches() = runBlocking {
+        fixture("default") { f ->
+            val text = "x".repeat(9 * 1024)
+            f.sharedDrafts().edit(draftPayload(text))
+            assertPlainMessage(f.plainSend(text), text)
+        }
+    }
+
+    @Test fun plainSendDoesNotWaitForABlockedSharedDraftCall() = runBlocking {
+        fixture("default") { f ->
+            val release = java.util.concurrent.CountDownLatch(1)
+            try {
+                f.sharedDrafts { withContext(Dispatchers.IO) { release.await() }; error("route unavailable") }.edit(draftPayload("Hello"))
+                // Main is a virtual-time test dispatcher: move past the capture window.
+                assertPlainMessage(f.plainSend("Hello") { main.scheduler.advanceTimeBy(3_001) }, "Hello")
+            } finally { release.countDown() }
+        }
+    }
+
+    @Test fun plainSendWithUnreadableCredentialStillDispatches() = runBlocking {
+        fixture("default") { f ->
+            f.credential = null
+            assertPlainMessage(f.plainSend("Hello"), "Hello")
+        }
+    }
+
+    @Test fun plainSendInPlanThreadDegradesWhenPolicyCannotBeRead() = runBlocking {
+        fixture { f ->
+            f.fake.onCall("server.getConfig") { throw T3Exception("rpc_failed") }
+            assertPlainMessage(f.plainSend("Keep going"), "Keep going")
+        }
+    }
+
+    @Test fun plainSendDegradesWhenPolicyAnswerIsMalformed() = runBlocking {
+        fixture { f ->
+            f.fake.onCall("server.getConfig") { JSONArray() }
+            assertPlainMessage(f.plainSend("Keep going"), "Keep going")
+        }
+    }
+
+    @Test fun plainSendWithChosenModeDegradesWhenSessionHidesTheOperateScope() = runBlocking {
+        fixture("default") { f ->
+            f.vm.chosenInteraction.value = "plan"
+            f.session = JSONObject().put("authenticated", true)
+            assertPlainMessage(f.plainSend("Hello"), "Hello")
+        }
+    }
+
+    @Test fun plainSendWithUnmatchedProviderLeavesThreadModeAlone() = runBlocking {
+        fixture { f ->
+            f.vm.selectModel(JSONObject().put("available", true).put("instanceId", "other").put("model", "model"))
+            f.await { f.vm.state.value.modelSelection?.contains("other") == true }
+            assertPlainMessage(f.plainSend("Hello"), "Hello")
+            assertFalse(f.fake.calls.any { it.fn == MessageSender.DISPATCH && it.args.optString("type") == "thread.interaction-mode.set" })
+        }
+    }
+
+    @Test fun plainSendWithEmptyHostConfigStaysPlain() = runBlocking {
+        fixture { f ->
+            f.vm.chosenInteraction.value = "default"
+            f.fake.onCall("server.getConfig") { JSONObject() }
+            assertPlainMessage(f.plainSend("Hello"), "Hello")
+        }
+    }
+
+    @Test fun chosenPlanStillSetsTheModeBeforeAPlainMessage() = runBlocking {
+        fixture("default") { f ->
+            f.vm.chosenInteraction.value = "plan"
+            f.fake.onCall(MessageSender.DISPATCH) { JSONObject().put("sequence", 2) }
+            f.vm.onDraftChange("Plan this")
+            f.await { f.vm.state.value.draft == "Plan this" }
+            f.vm.dispatchAttachments()
+            f.await { f.fake.calls.count { it.fn == MessageSender.DISPATCH } == 2 && f.vm.state.value.draft.isEmpty() }
+            val calls = f.fake.calls.filter { it.fn == MessageSender.DISPATCH }
+            assertEquals("thread.interaction-mode.set", calls[0].args.getString("type"))
+            assertEquals("plan", calls[0].args.getString("interactionMode"))
+            assertEquals("message.dispatch", calls[1].args.getString("type"))
+        }
+    }
+
+    @Test fun planImplementationStillRequiresReadablePolicy() = runBlocking {
+        fixture { f ->
+            val ready = f.nativePlan()
+            f.fake.onCall("server.getConfig") { JSONArray() }
+            f.vm.followUpPlan(ready, false)
+            f.await { f.vm.state.value.notice != null }
+            assertFalse(f.fake.calls.any { it.fn == MessageSender.DISPATCH })
+        }
+    }
+
+    @Test fun chatActionKeepsTheSpecificErrorCode() = runBlocking {
+        fixture { f ->
+            f.vm.forkFromResponse("missing-run")
+            f.await { f.vm.state.value.notice != null }
+            assertEquals(ThreadNotice.Failed("run_unavailable"), f.vm.state.value.notice)
+        }
+    }
+
+    private fun draftPayload(text: String) = JSONObject().put("schema", 1).put("text", text).put("attachments", JSONArray())
+
+    private fun assertPlainMessage(command: JSONObject, text: String) {
+        assertEquals("message.dispatch", command.getString("type"))
+        assertEquals(text, command.getString("text"))
+    }
+
+    private val main = UnconfinedTestDispatcher()
+
+    private suspend fun fixture(interactionMode: String = "plan", block: suspend (Fixture) -> Unit) {
         assumeHostJni()
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-        val f = Fixture()
+        Dispatchers.setMain(main)
+        val f = Fixture(interactionMode)
         try { f.start(); block(f) }
         finally { f.close(); Dispatchers.resetMain() }
     }
 
-    private class Fixture {
+    private class Fixture(interactionMode: String) {
         private val context = ApplicationProvider.getApplicationContext<Application>()
         private val db = Room.inMemoryDatabaseBuilder(context, Ot3Database::class.java).allowMainThreadQueries()
             .setQueryExecutor { it.run() }.setTransactionExecutor { it.run() }.build()
@@ -166,7 +291,7 @@ class ChatViewModelTest {
         private val store = ViewModelStore()
         private val selection = JSONObject("""{"instanceId":"provider","model":"model","options":[]}""")
         val projection = JSONObject("""{"thread":{"id":"chat","projectId":"project","title":"Chat","interactionMode":"plan","runtimeMode":"approval-required","lineage":{"relationshipToParent":"fork","parentThreadId":"origin-thread"}},"runs":[{"id":"run","status":"completed","createdAt":"2026-11-01T00:00:00Z"}],"messages":[{"id":"answer","role":"assistant","runId":"run","text":"Plan ready","createdAt":"2026-11-01T00:00:01Z"}],"runtimeRequests":[],"turnItems":[],"plans":[{"id":"plan","threadId":"chat","runId":"run","kind":"proposed_plan","status":"active","markdown":"# Chat implementation\n\nBuild the actions."}]}""").apply {
-            getJSONObject("thread").put("modelSelection", selection)
+            getJSONObject("thread").put("modelSelection", selection).put("interactionMode", interactionMode)
         }
         val fake = FakeT3Transport().apply {
             onFetchDescriptor("http://fixture.invalid") { JSONObject().put("environmentId", "node") }
@@ -175,9 +300,10 @@ class ChatViewModelTest {
             onBoundedThread("chat") { JSONObject().put("snapshotSequence", 1).put("projection", JSONObject(projection.toString())) }
             onCall("server.getConfig") { JSONObject("""{"providers":[{"instanceId":"provider","enabled":true,"showInteractionModeToggle":true,"models":[{"slug":"model","name":"Model"}]}]}""") }
         }
+        var session: JSONObject = JSONObject().put("authenticated", true).put("scopes", JSONArray().put("orchestration:operate"))
         private val live = object : T3Transport by fake {
             override suspend fun domain(fn: String, args: JSONObject) = DomainEngine.shared.domain(fn, args)
-            override suspend fun authSession() = JSONObject().put("authenticated", true).put("scopes", JSONArray().put("orchestration:operate"))
+            override suspend fun authSession() = session
         }
         private val cursors = object : ShellCursorStore {
             override suspend fun cursor(environmentId: String): Long? = null
@@ -194,20 +320,41 @@ class ChatViewModelTest {
         }, scope, io = Dispatchers.Unconfined, computation = Dispatchers.Unconfined)
         private val outbox = OutboxRepository(db.outboxDao())
         private val prefs = GeneralClientPreferences(context)
+        var credential: String? = "node"
         lateinit var vm: ThreadViewModel
         suspend fun start() {
             prefs.update("planModeEnabled", true)
             repository.save("node", "Fixture", "http://fixture.invalid", "node", null)
             vm = ThreadViewModel("node", "chat", connections, DraftRepository(db.draftDao()), outbox,
                 MessageSender(outbox, scope), scope, attachmentDirectory = directory,
-                cacheAuthority = { "node" }, clientPreferences = prefs)
+                cacheAuthority = { credential }, clientPreferences = prefs)
             store.put("chat", vm)
             scope.launch { vm.state.collect() }
             await { vm.state.value.connected && vm.state.value.view.loaded && vm.state.value.composer.loaded }
             assertTrue(vm.refreshPlanControls().getBoolean("enabled"))
         }
+        /** Selects an authority backed by [remote]; the default answers like one holding no documents. */
+        fun sharedDrafts(remote: suspend (JSONObject) -> JSONObject = { JSONObject().put("cursor", "a:1").put("items", JSONArray()).put("nextOffset", JSONObject.NULL) }): SharedDraftSynchronizer {
+            var disk: String? = null
+            val repository = SharedDraftRepository("authority", { disk }, { disk = it }, remote)
+            vm.sharedDraftRepository = repository
+            return SharedDraftSynchronizer(repository, vm.state.value.composerScope!!, scope, syncRemotely = false)
+                .also { vm.sharedDraftSynchronizer = it }
+        }
+        /** Sends through the screen's path and returns the single dispatched command. */
+        suspend fun plainSend(text: String, afterTap: () -> Unit = {}): JSONObject {
+            fake.onCall(MessageSender.DISPATCH) { JSONObject().put("sequence", 2) }
+            vm.onDraftChange(text)
+            await { vm.state.value.draft == text }
+            vm.dispatchAttachments()
+            afterTap()
+            await(8_000) { fake.calls.any { it.fn == MessageSender.DISPATCH } || vm.state.value.notice != null }
+            assertNull(vm.state.value.notice)
+            await { vm.state.value.draft.isEmpty() && vm.attachmentPending.value == null && !vm.state.value.sending }
+            return fake.calls.single { it.fn == MessageSender.DISPATCH }.args
+        }
         suspend fun nativePlan() = dev.avillagran.ot3android.core.composer.NativeComposer(live).planView(projection).getJSONObject("ready")
-        suspend fun await(condition: () -> Boolean) { withTimeout(5_000) { while (!condition()) delay(10) } }
+        suspend fun await(timeoutMs: Long = 5_000, condition: () -> Boolean) { withTimeout(timeoutMs) { while (!condition()) delay(10) } }
         suspend fun close() {
             store.clear()
             if (::vm.isInitialized) vm.viewModelScope.coroutineContext[Job]?.cancelAndJoin()

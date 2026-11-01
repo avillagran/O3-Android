@@ -4,4 +4,14 @@
     <string name="chat_fork">Создать ветку из этого ответа</string>
     <string name="chat_merge_back">Объединить с исходной беседой</string>
     <string name="chat_thread_actions">Действия беседы</string>
+    <string name="chat_error_action_failed">Не удалось выполнить действие (%1$s).</string>
+    <string name="chat_error_connection_changed">Подключение изменилось. Повторите попытку.</string>
+    <string name="chat_error_thread_unavailable">Эта беседа ещё не готова. Повторите попытку.</string>
+    <string name="chat_error_run_unavailable">Этот ответ больше недоступен.</string>
+    <string name="chat_error_plan_unavailable">Этот план больше не готов.</string>
+    <string name="chat_error_new_thread_unavailable">Не удалось запустить новую беседу.</string>
+    <string name="chat_error_composer_changed">Сообщение изменилось во время отправки. Проверьте его и отправьте снова.</string>
+    <string name="chat_error_thread_working">Дождитесь завершения беседы и повторите попытку.</string>
+    <string name="chat_error_attachment_access">Эти вложения нельзя отправить через это подключение. Удалите их и повторите попытку.</string>
+    <string name="chat_error_storage">Не удалось сохранить сообщение на этом устройстве.</string>
 </resources>

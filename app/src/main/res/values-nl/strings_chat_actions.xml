@@ -4,4 +4,14 @@
     <string name="chat_fork">Aftakken vanaf dit antwoord</string>
     <string name="chat_merge_back">Samenvoegen met bronthread</string>
     <string name="chat_thread_actions">Threadacties</string>
+    <string name="chat_error_action_failed">Deze actie kon niet worden voltooid (%1$s).</string>
+    <string name="chat_error_connection_changed">De verbinding is gewijzigd. Probeer het opnieuw.</string>
+    <string name="chat_error_thread_unavailable">Deze thread is nog niet klaar. Probeer het opnieuw.</string>
+    <string name="chat_error_run_unavailable">Dat antwoord is niet meer beschikbaar.</string>
+    <string name="chat_error_plan_unavailable">Dit plan is niet meer klaar.</string>
+    <string name="chat_error_new_thread_unavailable">Kan de nieuwe thread niet starten.</string>
+    <string name="chat_error_composer_changed">Het bericht is tijdens het verzenden gewijzigd. Controleer het en verzend het opnieuw.</string>
+    <string name="chat_error_thread_working">Wacht tot de thread klaar is en probeer het dan opnieuw.</string>
+    <string name="chat_error_attachment_access">Deze bijlagen kunnen niet via deze verbinding worden verzonden. Verwijder ze en probeer het opnieuw.</string>
+    <string name="chat_error_storage">Kan het bericht niet op dit apparaat opslaan.</string>
 </resources>

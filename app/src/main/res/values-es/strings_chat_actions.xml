@@ -4,4 +4,14 @@
     <string name="chat_fork">Bifurcar desde esta respuesta</string>
     <string name="chat_merge_back">Fusionar con el hilo de origen</string>
     <string name="chat_thread_actions">Acciones del hilo</string>
+    <string name="chat_error_action_failed">No se pudo completar la acción (%1$s).</string>
+    <string name="chat_error_connection_changed">La conexión cambió. Inténtalo de nuevo.</string>
+    <string name="chat_error_thread_unavailable">Este hilo aún no está listo. Inténtalo de nuevo.</string>
+    <string name="chat_error_run_unavailable">Esa respuesta ya no está disponible.</string>
+    <string name="chat_error_plan_unavailable">Este plan ya no está listo.</string>
+    <string name="chat_error_new_thread_unavailable">No se pudo iniciar el hilo nuevo.</string>
+    <string name="chat_error_composer_changed">El mensaje cambió durante el envío. Revísalo y envíalo de nuevo.</string>
+    <string name="chat_error_thread_working">Espera a que el hilo termine e inténtalo de nuevo.</string>
+    <string name="chat_error_attachment_access">Estos adjuntos no se pueden enviar por esta conexión. Quítalos e inténtalo de nuevo.</string>
+    <string name="chat_error_storage">No se pudo guardar el mensaje en este dispositivo.</string>
 </resources>
