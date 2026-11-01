@@ -672,7 +672,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
         }
     }
     if (pending != null) {
-        Text(stringResource(R.string.thread_notice_unknown))
+        Text(stringResource(R.string.composer_uncertain), Modifier.testTag("composer_uncertain"))
         Row {
             TextButton(onClick = { model.retry(pending!!) }, enabled = state.connected && !state.sending) { Text(stringResource(R.string.thread_resend)) }
             ConfirmOutboxDiscard(pending!!, !state.sending, model::discard)
@@ -698,7 +698,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
         expandedActions = {
             state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, model::retry, model::discard, model::editPending) }
             if (pending != null && state.unconfirmed.none { it.commandId == pending }) {
-                Text(stringResource(R.string.thread_notice_unknown))
+                Text(stringResource(R.string.composer_uncertain), Modifier.testTag("composer_uncertain"))
                 Row {
                     TextButton(onClick = { model.retry(pending!!) }, enabled = state.connected && !state.sending) { Text(stringResource(R.string.thread_resend)) }
                     ConfirmOutboxEdit(pending!!, model::editPending)

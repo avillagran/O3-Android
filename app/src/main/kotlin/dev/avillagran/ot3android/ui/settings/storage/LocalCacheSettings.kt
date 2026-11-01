@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -21,8 +22,12 @@ fun LocalCacheSettings() {
     var usage by remember { mutableStateOf<dev.avillagran.ot3android.core.thread.ThreadCache.Usage?>(null) }
     var busy by remember { mutableStateOf(false) }
     LaunchedEffect(cache) { usage = cache.usage() }
-    Column(Modifier.fillMaxWidth().padding(16.dp)) {
-        Text(stringResource(R.string.cache_title), style = MaterialTheme.typography.titleMedium)
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        TextButton(onClick = { expanded = !expanded }) {
+            Text(stringResource(R.string.cache_title))
+        }
+        if (expanded) {
         usage?.let { current ->
             Text(stringResource(R.string.cache_usage, current.bytes / (1024 * 1024), current.limit / (1024 * 1024)))
             Row {
@@ -41,5 +46,6 @@ fun LocalCacheSettings() {
         TextButton(enabled = !busy, onClick = { busy = true; scope.launch {
             try { cache.clear(); usage = cache.usage() } finally { busy = false }
         } }) { Text(stringResource(R.string.cache_clear)) }
+        }
     }
 }
