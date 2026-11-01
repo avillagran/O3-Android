@@ -51,4 +51,22 @@ class SidebarCollapseTest {
         rule.waitUntil { rule.onAllNodesWithTag("home_row_${parent.key}").fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("home_row_${child.key}").assertDoesNotExist()
     }
+
+    private fun chipInLayout(layout: String) {
+        val parent = fixtureRow("node", "parent-$layout")
+        val child = fixtureRow("node", "child-$layout").copy(parentKey = parent.key, subagent = true)
+        val rows = listOf(parent, child)
+        val state = HomeUiState(content = HomeContent.List, rows = rows.associateBy { it.key }, items = rows.map { HomeItem.Row(it) })
+        rule.setContent { Ot3Theme { HomeScreen(state, true, {}, appearance = AppearanceSettings(local = mapOf(LocalAppearancePreference.INTERFACE_LAYOUT to layout))) } }
+        rule.onNodeWithContentDescription("Hide 1 subagents")
+            .assertHeightIsAtLeast(androidx.compose.ui.unit.Dp(48f))
+            .assertWidthIsAtLeast(androidx.compose.ui.unit.Dp(48f))
+            .assert(hasAnyAncestor(hasTestTag("home_row_${parent.key}"))).performClick()
+        rule.waitUntil { rule.onAllNodesWithTag("home_row_${child.key}").fetchSemanticsNodes().isEmpty() }
+        rule.onNodeWithContentDescription("Show 1 subagents").performClick()
+        rule.waitUntil { rule.onAllNodesWithTag("home_row_${child.key}").fetchSemanticsNodes().isNotEmpty() }
+    }
+    @Test fun classicChip() = chipInLayout("classic")
+    @Test fun focusChip() = chipInLayout("focus")
+    @Test fun projectsChip() = chipInLayout("projects")
 }

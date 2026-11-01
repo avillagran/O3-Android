@@ -415,6 +415,7 @@ fun ThreadContent(
                         (state.view.timeline?.optJSONArray("timeline")?.length() ?: 0) == 0 && state.view.messages.isEmpty() -> Text(stringResource(R.string.thread_empty), modifier = Modifier.align(Alignment.Center).testTag(ThreadScreenTags.EMPTY))
                         else -> if (state.readingPositionLoaded) timelineState.SaveableStateProvider(editorIdentity) {
                             TimelineReader(state.view.timeline, state.view.messages, onInspect, onReadDiff, state.readingPosition, onReadingPosition, followLatestRequest,
+                                refreshing = state.view.stale,
                                 actions = dev.avillagran.ot3android.ui.thread.reader.TranscriptActions(
                                     secrets = transcriptSecrets,
                                     openThread = onOpenThread,

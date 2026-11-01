@@ -20,7 +20,7 @@ class ThreadCache(
 ) {
     data class Lease internal constructor(val environment: String, val thread: String, val authority: String, internal val token: String)
     private val mutex = Mutex()
-    private var pinned = emptySet<String>()
+    private val pinned = mutableMapOf<String, Set<String>>()
     private var environments: Set<String>? = null
     data class Usage(val bytes: Long, val limit: Long, val entries: Int)
     suspend fun usage(): Usage = locked {
@@ -46,8 +46,7 @@ class ThreadCache(
         }
     }
     suspend fun pin(environment: String, threads: Set<String>) = locked {
-        val prefix = "$environment/"
-        pinned = pinned.filterNot { it.startsWith(prefix) }.toSet() + threads.map { prefix + it }
+        pinned[environment] = threads.map { key(environment, it) }.toSet()
     }
     private val owners = mutableMapOf<String, String>()
     private val allowed = mutableMapOf<String, Set<String>>()
@@ -155,9 +154,9 @@ class ThreadCache(
     private fun prune() {
         var total = 0L
         var count = 0
+        val pinnedKeys = pinned.values.flatten().toSet()
         directory.listFiles()?.filter { it.extension == "json" }?.sortedWith(compareByDescending<File> {
-            val record = readRecord(it)
-            record != null && "${record.optString("environment")}/${record.optString("thread")}" in pinned
+            it.nameWithoutExtension in pinnedKeys
         }.thenByDescending { it.lastModified() })?.forEach { file ->
             val size = file.length()
             if (clock() - file.lastModified() > maxAgeMs || size > maxEntryBytes || total + size > maxBytes || count >= maxEntries) file.delete()

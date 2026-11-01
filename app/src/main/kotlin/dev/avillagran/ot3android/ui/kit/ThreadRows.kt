@@ -287,7 +287,9 @@ private fun RowFrame(
             if (!LocalSidebarRows.current.sober) ThreadAura(row, slim, Modifier.matchParentSize())
             val hostColor = LocalSidebarRows.current.host.color.takeIf { it.matches(Regex("#[0-9a-fA-F]{6}")) }
                 ?.let { Color(it.toColorInt()) }
-            if (row.subagents != null || hostColor != null && !LocalSidebarRows.current.sober) Box(Modifier.width(if (LocalSidebarRows.current.sober) 2.dp else 4.dp).fillMaxHeight().background(row.project?.color ?: hostColor ?: colors.accent))
+            if (row.subagents != null || hostColor != null && !LocalSidebarRows.current.sober) Box(Modifier.matchParentSize()) {
+                Box(Modifier.width(if (row.subagents != null) 3.dp else 4.dp).fillMaxHeight().background(row.project?.color ?: hostColor ?: colors.accent))
+            }
             content()
         }
     }

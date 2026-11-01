@@ -53,6 +53,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     followLatestRequest: Int = 0,
     actions: TranscriptActions = TranscriptActions(),
     findRequest: Int? = null,
+    refreshing: Boolean = false,
 ) {
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
@@ -87,6 +88,17 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         LazyListState(if (byKey >= 0) byKey else initialPosition?.index?.coerceIn(0, (rows.size - 1).coerceAtLeast(0)) ?: 0,
             initialPosition?.offset ?: 0)
     }
+    var pendingRestore by remember(threadKey) {
+        mutableStateOf(initialPosition.takeIf { refreshing && it != null && rows.none { row -> row.optString("id") == it.rowId } })
+    }
+    LaunchedEffect(contentRevision, refreshing) {
+        val anchor = pendingRestore ?: return@LaunchedEffect
+        val index = rows.indexOfFirst { it.optString("id") == anchor.rowId }
+        if (index >= 0) {
+            list.scrollToItem(index, anchor.offset)
+            pendingRestore = null
+        } else if (!refreshing) pendingRestore = null
+    }
     // LazyColumn preserves visible keys on insertion, including when a new latest
     // row arrives. Keep following as user intent, not a value derived after that
     // insertion has already moved the old anchor away from index zero.
@@ -97,7 +109,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     LaunchedEffect(list, threadKey) {
         var wasScrolling = false
         snapshotFlow { list.isScrollInProgress }.collect { scrolling ->
-            if (scrolling) wasScrolling = true
+            if (scrolling) { wasScrolling = true; pendingRestore = null }
             else if (wasScrolling) {
                 followingLatest = list.firstVisibleItemIndex == 0 && list.firstVisibleItemScrollOffset <= 80
                 wasScrolling = false
@@ -106,6 +118,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     }
     LaunchedEffect(followLatestRequest) {
         if (followLatestRequest != handledFollowRequest) {
+            pendingRestore = null
             handledFollowRequest = followLatestRequest
             followingLatest = true
             list.requestScrollToItem(0)
@@ -120,10 +133,10 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         dev.avillagran.ot3android.core.data.prefs.ReadingPosition(it.key as? String ?: "", list.firstVisibleItemIndex, list.firstVisibleItemScrollOffset)
     }
     androidx.compose.runtime.LaunchedEffect(list, threadKey) {
-        androidx.compose.runtime.snapshotFlow { position() }.debounce(250).distinctUntilChanged().collect { it?.let(savePosition) }
+        androidx.compose.runtime.snapshotFlow { if (pendingRestore == null) position() else null }.debounce(250).distinctUntilChanged().collect { it?.let(savePosition) }
     }
     androidx.compose.runtime.DisposableEffect(list, threadKey) {
-        onDispose { position()?.let(savePosition) }
+        onDispose { if (pendingRestore == null) position()?.let(savePosition) }
     }
     val scope = rememberCoroutineScope()
     val away by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 80 } }
