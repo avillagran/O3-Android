@@ -473,6 +473,10 @@ class ThreadViewModel(
                 .put("source", org.json.JSONObject(source.toString()).put("modelSelection", state.value.modelSelection?.let(::orgJson)))
                 .put("workspaceStrategy", workspace).put("threadId", target).put("commandId", id + "-launch")
                 .put("title", title).put("interactionMode", mode)
+            // Native launch delivers an ordinary first message atomically. Plans need the
+            // separate native message command because launch's InitialMessage has no sourcePlanRef.
+            if (plan == null) input.put("initialMessage", org.json.JSONObject().put("messageId", command.getString("messageId"))
+                .put("text", command.getString("text")).put("attachments", command.getJSONArray("attachments")))
             val launch = dev.avillagran.ot3android.core.composer.ChatCommands(live).launch(input)
             steps.put(launch)
             command.put("threadId", target).put("deliveryIntent", "auto")
@@ -480,7 +484,7 @@ class ThreadViewModel(
             steps.put(dev.avillagran.ot3android.core.composer.ChatCommands.step(
                 dev.avillagran.ot3android.core.composer.ChatCommands.interaction(id + "-mode", threadId, mode)))
         }
-        steps.put(dev.avillagran.ot3android.core.composer.ChatCommands.step(command))
+        if (!newThread || plan != null) steps.put(dev.avillagran.ot3android.core.composer.ChatCommands.step(command))
         check(transport() === live && state.value.draft == originalText) { "composer_changed" }
         if (steps.length() == 1 && plan == null && !newThread) return command
         // Root text is the submitted draft, which can differ from the native implementation prompt.

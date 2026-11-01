@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android.ui.thread
 
 import android.app.Application
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -95,6 +96,58 @@ class ChatViewModelTest {
         }
     }
 
+    @Test fun ordinarySendAndNewUsesTheNativeAtomicInitialMessage() = runBlocking {
+        fixture { f ->
+            f.vm.onDraftChange("Start another task")
+            f.await { f.vm.state.value.draft == "Start another task" }
+            f.fake.onCall("orchestration.launchThread") { args ->
+                assertEquals("Start another task", args.getJSONObject("initialMessage").getString("text"))
+                assertEquals(0, args.getJSONObject("initialMessage").getJSONArray("attachments").length())
+                assertNull(f.vm.chatNavigation.value)
+                JSONObject().put("threadId", args.getString("threadId"))
+            }
+            f.vm.dispatchAttachments(newThread = true)
+            f.await { f.vm.chatNavigation.value != null }
+            assertFalse(f.fake.calls.any { it.fn == MessageSender.DISPATCH })
+            assertEquals("", f.vm.state.value.draft)
+        }
+    }
+
+    @Test fun forkUsesTheNativeResponseRunAndRetainsTargetAcrossUnknownRecovery() = runBlocking {
+        fixture { f ->
+            var unknown = true
+            f.fake.onCall(MessageSender.DISPATCH) {
+                if (unknown) throw T3Exception("rpc_outcome_unknown")
+                JSONObject().put("sequence", 4)
+            }
+            f.vm.forkFromResponse("run")
+            f.await { f.vm.state.value.unconfirmed.isNotEmpty() && !f.vm.state.value.sending }
+            val command = f.fake.calls.single { it.fn == MessageSender.DISPATCH }.args
+            assertEquals("thread.fork", command.getString("type"))
+            assertEquals("chat", command.getString("sourceThreadId"))
+            assertEquals("run", command.getJSONObject("sourcePoint").getString("runId"))
+            assertNull(f.vm.chatNavigation.value)
+            unknown = false
+            f.vm.retry(f.vm.state.value.unconfirmed.single().commandId)
+            f.await { f.vm.chatNavigation.value != null }
+            assertEquals(command.getString("targetThreadId"), f.vm.chatNavigation.value)
+            assertEquals(command.toString(), f.fake.calls.last { it.fn == MessageSender.DISPATCH }.args.toString())
+        }
+    }
+
+    @Test fun mergeBackUsesOnlyTheNativeWorkflowTargetAndCompletedRun() = runBlocking {
+        fixture { f ->
+            f.fake.onCall(MessageSender.DISPATCH) { JSONObject().put("sequence", 5) }
+            f.vm.mergeBack()
+            f.await { f.vm.chatNavigation.value != null }
+            val command = f.fake.calls.single { it.fn == MessageSender.DISPATCH }.args
+            assertEquals("thread.merge_back", command.getString("type"))
+            assertEquals("origin-thread", command.getString("targetThreadId"))
+            assertEquals("run", command.getJSONObject("sourcePoint").getString("runId"))
+            assertEquals("origin-thread", f.vm.chatNavigation.value)
+        }
+    }
+
     private suspend fun fixture(block: suspend (Fixture) -> Unit) {
         assumeHostJni()
         Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -111,7 +164,7 @@ class ChatViewModelTest {
         private val directory = Files.createTempDirectory("chat-actions-test").toFile()
         private val store = ViewModelStore()
         private val selection = JSONObject("""{"instanceId":"provider","model":"model","options":[]}""")
-        val projection = JSONObject("""{"thread":{"id":"chat","projectId":"project","title":"Chat","interactionMode":"plan","runtimeMode":"approval-required"},"runs":[{"id":"run","status":"completed","createdAt":"2026-11-01T00:00:00Z"}],"messages":[],"runtimeRequests":[],"turnItems":[],"plans":[{"id":"plan","threadId":"chat","runId":"run","kind":"proposed_plan","status":"active","markdown":"# Chat implementation\n\nBuild the actions."}]}""").apply {
+        val projection = JSONObject("""{"thread":{"id":"chat","projectId":"project","title":"Chat","interactionMode":"plan","runtimeMode":"approval-required","lineage":{"relationshipToParent":"fork","parentThreadId":"origin-thread"}},"runs":[{"id":"run","status":"completed","createdAt":"2026-11-01T00:00:00Z"}],"messages":[{"id":"answer","role":"assistant","runId":"run","text":"Plan ready","createdAt":"2026-11-01T00:00:01Z"}],"runtimeRequests":[],"turnItems":[],"plans":[{"id":"plan","threadId":"chat","runId":"run","kind":"proposed_plan","status":"active","markdown":"# Chat implementation\n\nBuild the actions."}]}""").apply {
             getJSONObject("thread").put("modelSelection", selection)
         }
         val fake = FakeT3Transport().apply {
@@ -154,6 +207,11 @@ class ChatViewModelTest {
         }
         suspend fun nativePlan() = dev.avillagran.ot3android.core.composer.NativeComposer(live).planView(projection).getJSONObject("ready")
         suspend fun await(condition: () -> Boolean) { withTimeout(5_000) { while (!condition()) delay(10) } }
-        fun close() { store.clear(); scope.cancel(); db.close(); directory.deleteRecursively() }
+        suspend fun close() {
+            store.clear()
+            if (::vm.isInitialized) vm.viewModelScope.coroutineContext[Job]?.cancelAndJoin()
+            scope.coroutineContext[Job]?.cancelAndJoin()
+            db.close(); directory.deleteRecursively()
+        }
     }
 }

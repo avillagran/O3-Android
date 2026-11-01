@@ -762,7 +762,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
             if (state.view.working) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.OppositeOnce)
             if (scope.queueMessage == null && planControls.optBoolean("canOperate")) {
                 if (!state.modelSelection.isNullOrBlank()) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.SendAndNew)
-                if (model.planControls.value.optBoolean("enabled") && model.planControls.value.optBoolean("canOperate"))
+                if (planControls.optBoolean("enabled") && planControls.optBoolean("canOperate"))
                     add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.PlanBuild)
             }
             if (shared != null && scope.queueMessage == null) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.ProjectDrafts)
