@@ -22,6 +22,7 @@ import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.composer.*
 import dev.avillagran.ot3android.ui.thread.ComposerEditor
 import dev.avillagran.ot3android.ui.thread.ComposerEditors
+import dev.avillagran.ot3android.ui.thread.LocalComposerEditors
 
 /** Advertise only actions for which the owner supplies a real implementation. */
 enum class ComposerAction { Attach, Paste, Undo, Redo, History, ContinueList, Stash, ProjectDrafts, QuickReplies, PlanBuild,
@@ -63,9 +64,12 @@ fun ComposerParity(
     extraMenu: @Composable (() -> Unit) -> Unit = {},
 ) {
     var expanded by rememberSaveable(snapshot.scope) { mutableStateOf(false) }
-    val editors = rememberSaveable(snapshot.scope.copy(queueMessage = null), saver = ComposerEditors.StateSaver) { ComposerEditors() }
+    // The thread owns selection across its connected and temporary queue surfaces.
+    // Standalone composers still retain their own saveable editors.
+    val threadEditors = LocalComposerEditors.current
+    val editors = threadEditors ?: rememberSaveable(snapshot.scope.copy(queueMessage = null), saver = ComposerEditors.StateSaver) { ComposerEditors() }
     val editor = editors.editor(snapshot.scope.queueMessage, snapshot.text)
-    var restoreSelection by remember(editor) { mutableStateOf(editor.awaitingRestore) }
+    var restoreSelection by remember(editor) { mutableStateOf(threadEditors != null || editor.awaitingRestore) }
     // Hydrate a restored editor before its input connection is mounted. Mounting an
     // empty value first lets the IME collapse a saved selection during focus restore.
     editor.synchronize(snapshot.text)

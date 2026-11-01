@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">Compartir plan</string>
+    <string name="chat_fork">Bifurcar desde esta respuesta</string>
+    <string name="chat_merge_back">Fusionar con el hilo de origen</string>
+    <string name="chat_thread_actions">Acciones del hilo</string>
+</resources>

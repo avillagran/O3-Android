@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">プランを共有</string>
+    <string name="chat_fork">この応答から分岐</string>
+    <string name="chat_merge_back">元のスレッドに統合</string>
+    <string name="chat_thread_actions">スレッドの操作</string>
+</resources>

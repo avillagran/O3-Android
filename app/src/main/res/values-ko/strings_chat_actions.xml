@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">계획 공유</string>
+    <string name="chat_fork">이 응답에서 분기</string>
+    <string name="chat_merge_back">원본 스레드로 병합</string>
+    <string name="chat_thread_actions">스레드 작업</string>
+</resources>

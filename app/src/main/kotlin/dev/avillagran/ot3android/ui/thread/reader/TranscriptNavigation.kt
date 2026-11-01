@@ -40,4 +40,6 @@ internal class TranscriptActions(
     val openThread: ((String) -> Unit)? = null,
     val followUpPlan: ((JSONObject, String, Boolean) -> Unit)? = null,
     val planOperation: PlanOperation? = null,
+    val planDraft: String = "",
+    val fork: ((String) -> Unit)? = null,
 )

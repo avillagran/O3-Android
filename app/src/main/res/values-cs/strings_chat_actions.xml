@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">Sdílet plán</string>
+    <string name="chat_fork">Odbočit z této odpovědi</string>
+    <string name="chat_merge_back">Sloučit do původního vlákna</string>
+    <string name="chat_thread_actions">Akce vlákna</string>
+</resources>

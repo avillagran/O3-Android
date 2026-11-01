@@ -73,6 +73,27 @@ tasks.withType<Test>().configureEach {
     inputs.property("requireHostJni", providers.environmentVariable("OT3A_REQUIRE_HOST_JNI").orElse(""))
 }
 
+// The real ViewModel tests load JNI inside Robolectric. Plain JVM native contract tests
+// own that same library in their parent classloader; JVMs cannot load it twice. Keep
+// these six tests in a separate worker and make them part of the normal app unit suite.
+val nativeChatTests = tasks.register<Test>("testNativeChatDebugUnitTest") {
+    val original = tasks.named<Test>("testDebugUnitTest").get()
+    dependsOn("compileDebugUnitTestKotlin", "processDebugUnitTestJavaRes", "generateDebugUnitTestConfig")
+    testClassesDirs = original.testClassesDirs
+    classpath = original.classpath
+    javaLauncher.set(original.javaLauncher)
+    systemProperties(original.systemProperties)
+    jvmArgs(original.jvmArgs.orEmpty())
+    workingDir = original.workingDir
+    include("**/ChatViewModelTest.class")
+}
+tasks.withType<Test>().configureEach {
+    if (name == "testDebugUnitTest") {
+        exclude("**/ChatViewModelTest.class")
+        dependsOn(nativeChatTests)
+    }
+}
+
 // Screenshot goldens (docs/UI_SPEC.md section 5): recordRoborazziDebug writes them,
 // verifyRoborazziDebug fails on any difference.
 roborazzi {

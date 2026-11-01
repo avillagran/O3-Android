@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">分享计划</string>
+    <string name="chat_fork">从此回复分叉</string>
+    <string name="chat_merge_back">合并回源会话</string>
+    <string name="chat_thread_actions">会话操作</string>
+</resources>

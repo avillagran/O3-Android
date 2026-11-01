@@ -31,6 +31,7 @@ internal fun ComposerModels(
     catalogJson: String?, selectionJson: String?, loading: Boolean, enabled: Boolean,
     onRefresh: () -> Unit, onSelect: (JSONObject) -> Unit,
     onOption: (String, Any) -> Unit, onFavorite: (JSONObject, Boolean) -> Unit,
+    optionsRequest: Int = 0,
     permissions: @Composable () -> Unit = {},
 ) {
     val catalog = remember(catalogJson) { catalogJson?.let(::JSONObject) ?: JSONObject() }
@@ -53,6 +54,7 @@ internal fun ComposerModels(
     fun favorite(row: JSONObject) = favorites.any {
         it.optString("provider") == row.optString("instanceId") && it.optString("model") == row.optString("model")
     }
+    LaunchedEffect(optionsRequest) { if (optionsRequest > 0 && enabled) { options = true; onRefresh() } }
     val colors = Ot3Theme.colors
     Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
         val modelLabel = stringResource(R.string.composer_model) + ": " + selection.optString("model")

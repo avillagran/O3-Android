@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">Partager le plan</string>
+    <string name="chat_fork">Créer une branche depuis cette réponse</string>
+    <string name="chat_merge_back">Fusionner dans le fil source</string>
+    <string name="chat_thread_actions">Actions du fil</string>
+</resources>

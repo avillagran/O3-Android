@@ -1,5 +1,7 @@
 # P06 exports for P20
 
+Current consumer update (v0.3.7, 2026-11-01): `ThreadScreen.ConnectedComposer` now uses native completion/recall and plan gates/builders, durable Chat command sequences and acceptance-gated navigation. The historical handoff below is superseded for these paths by [chat-actions.md](../../../../../../../../../../docs/verification/chat-actions.md). Separate background delivery has no matching audited Desktop/native binding and is omitted.
+
 Baseline: origin/main 9e078ca; audit Desktop 55c0ce3e. This is a partial package,
 not reachable from ThreadScreen until P20 wiring. No ThreadScreen/ViewModel,
 navigation/AppGraph/Gradle edits. Existing composer behavior remains intact.
@@ -26,8 +28,7 @@ navigation/AppGraph/Gradle edits. Existing composer behavior remains intact.
   removal are independent. Do not present this as complete Desktop attachment undo.
 - `NativeComposer` delegates existing path/catalog/link and plan projections to Rust.
   Fetch host search entries/provider catalog for the selected host/cwd first.
-  U33 trigger/replacement/list/recall policy is not in pinned SDK; omit unsupported
-  History/ContinueList and completion insertion until that contract is supplied.
+  U33 trigger/replacement/list/recall policy is provided by pinned v0.3.7 and consumed by ConnectedComposer; Android does not parse those transforms.
   Native-returned history text and configured quick replies can use
   `ComposerTextChoices`; keep a scratch snapshot when entering/leaving recall.
   Quick reply language/detection/custom-list editing still needs shared projection
@@ -58,12 +59,11 @@ navigation/AppGraph/Gradle edits. Existing composer behavior remains intact.
   No local replacement is provided. Host errors remain visible; no fabricated success.
 - PlanBuild/ImplementPlan/PlanFeedback must use authoritative plan/provider gates,
   NativeComposer planView/followUp/attachSourceRef and durable command receipts;
-  omit controls until supported. Do not flip authoritative mode optimistically.
+  the production owner revalidates provider/permission and ready-plan state, then uses these helpers. A Plan/Build draft preference is local until the durable mode/message command sequence is accepted.
 - Send capabilities are opt-in. Default sends and all alternate delivery modes must
   use a durable attachment-aware outbox command. Current MessageSender.send is
   text-only: NEVER route an attachment snapshot through it. OppositeOnce applies
-  once without changing persisted default. Background does not navigate; SendAndNew
-  navigates only after acceptance and successful creation. Existing outbox retry is
+  once without changing persisted default. A separate Background action remains unbound and hidden. SendAndNew uses the native atomic launch initialMessage; navigation waits for acceptance. Plan implementation in a new thread checkpoints launch then message, because the pinned InitialMessage has no sourcePlanRef field. Existing outbox retry is
   byte-identical. Publish commandState during sending/unknown; preserve original
   text/attachments until receipt reconciliation. Do not clear based on UI click.
 

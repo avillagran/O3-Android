@@ -55,6 +55,7 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
     actions: TranscriptActions = TranscriptActions(),
     findRequest: Int? = null,
     refreshing: Boolean = false,
+    onLoadOlder: () -> Unit = {},
 ) {
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
@@ -208,7 +209,9 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
                             }
                         }
                         if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
-                            Text(stringResource(R.string.ot3_pr_more), style = MaterialTheme.typography.labelSmall)
+                            TextButton(onClick = onLoadOlder, modifier = Modifier.testTag("thread_load_older")) {
+                                Text(stringResource(R.string.ot3_pr_more))
+                            }
                         }
                     }
                     if (away) TextButton(onClick = { scope.launch { followingLatest = true; list.animateScrollToItem(0) } },
@@ -287,6 +290,7 @@ internal fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Trans
                                 Text(stringResource(R.string.transcript_plan), color = colors.accent, style = MaterialTheme.typography.labelSmall)
                                 Text(plan.readerText("title"), Modifier.weight(1f).padding(horizontal = 6.dp), style = MaterialTheme.typography.bodyMedium)
                                 CopyText(plan.readerText("markdown"), "plan_$id")
+                                SharePlan(plan)
                             }
                             Surface(color = colors.surface, shape = RoundedCornerShape(8.dp)) {
                                 Column(Modifier.fillMaxWidth().heightIn(max = 400.dp).verticalScroll(rememberScrollState()).padding(9.dp)) {
@@ -328,6 +332,12 @@ internal fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Trans
                 if (role == "assistant" && !row.optBoolean("streaming") && !commentary) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CopyText(row.optString("text"), "message_$id")
+                        row.readerText("forkRunId").takeIf { it.isNotBlank() }?.let { run ->
+                            actions.fork?.let { fork ->
+                                dev.avillagran.ot3android.ui.kit.Ot3IconButton("git-fork", stringResource(R.string.chat_fork), { fork(run) },
+                                    modifier = Modifier.testTag("chat_fork_$id"))
+                            }
+                        }
                         MessageDate(row.optLong("createdAt"))
                     }
                 }

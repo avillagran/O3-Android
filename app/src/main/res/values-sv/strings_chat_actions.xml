@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">Dela plan</string>
+    <string name="chat_fork">Förgrena från detta svar</string>
+    <string name="chat_merge_back">Slå ihop med ursprungstråden</string>
+    <string name="chat_thread_actions">Trådåtgärder</string>
+</resources>

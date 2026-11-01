@@ -187,6 +187,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 )
             },
             onBack = { navigator.back() },
+            onThreadActions = { navigator.openSheet(ThreadActionsSheet(route.environmentId, route.threadId)) },
             onTerminal = { navigator.push(ThreadTerminal(route.environmentId, route.threadId)) },
             onRunCode = { navigator.push(ThreadTerminal(route.environmentId, route.threadId, it)) },
             onGit = { navigator.push(ThreadGit(route.environmentId, route.threadId)) },

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">Compartilhar plano</string>
+    <string name="chat_fork">Ramificar a partir desta resposta</string>
+    <string name="chat_merge_back">Mesclar com a conversa de origem</string>
+    <string name="chat_thread_actions">Ações da conversa</string>
+</resources>

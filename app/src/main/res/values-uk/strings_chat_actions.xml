@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_share_plan">Поділитися планом</string>
+    <string name="chat_fork">Створити гілку з цієї відповіді</string>
+    <string name="chat_merge_back">Об’єднати з початковою розмовою</string>
+    <string name="chat_thread_actions">Дії розмови</string>
+</resources>

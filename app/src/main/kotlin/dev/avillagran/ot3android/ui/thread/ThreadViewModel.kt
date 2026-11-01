@@ -136,10 +136,15 @@ class ThreadViewModel(
     private var sharedClear: org.json.JSONObject? = null
     private var attachmentCommand: String? = null
     private var attachmentAuthority: String? = null
+    val modelOptionsRequest = MutableStateFlow(0)
+    val chosenInteraction = MutableStateFlow<String?>(null)
+    val planControls = MutableStateFlow(org.json.JSONObject())
+    val chatNavigation = MutableStateFlow<String?>(null)
     init {
         attachmentFile?.let { file ->
             try { if (file.baseFile.exists()) {
                 val saved = org.json.JSONObject(file.openRead().use { it.readBytes().toString(Charsets.UTF_8) })
+                chosenInteraction.value = saved.optString("interactionMode").takeIf { it == "plan" || it == "default" }
                 sharedClear = saved.optJSONObject("sharedClear")
                 attachmentAuthority = saved.optString("authority").takeIf { it.isNotEmpty() }
                 attachmentCommand = saved.optString("command").takeIf { it.isNotEmpty() }
@@ -155,7 +160,7 @@ class ThreadViewModel(
         }
     }
     private fun persistAttachments(): Boolean = try {
-        val saved = org.json.JSONObject().put("sharedClear", sharedClear).put("authority", attachmentAuthority ?: "").put("command", attachmentCommand ?: "").put("attachments", org.json.JSONArray(attachmentDraft.value.map {
+        val saved = org.json.JSONObject().put("interactionMode", chosenInteraction.value).put("sharedClear", sharedClear).put("authority", attachmentAuthority ?: "").put("command", attachmentCommand ?: "").put("attachments", org.json.JSONArray(attachmentDraft.value.map {
             org.json.JSONObject().put("id", it.id).put("name", it.name).apply { it.descriptor?.let { value -> put("descriptor", value) } }
         }))
         attachmentFile?.let { file ->
@@ -316,15 +321,21 @@ class ThreadViewModel(
             }
         }
     }
-    fun dispatchAttachments(oppositeOnce: Boolean = false) {
+    fun dispatchAttachments(oppositeOnce: Boolean = false,
+        newThread: Boolean = false, plan: org.json.JSONObject? = null) {
         if (attachmentStorageError.value || local.value.queueBusy || state.value.composer.sending || local.value.respondingRequest != null || !state.value.connected || state.value.view.stale || state.value.queueEdit != null) return
         val pending = attachmentCommand
-        if (pending == null && (!state.value.unconfirmed.isEmpty() || (attachmentDraft.value.isEmpty() && state.value.draft.isBlank()) || attachmentDraft.value.any { it.status != dev.avillagran.ot3android.core.composer.UploadStatus.Ready || it.descriptor.isNullOrBlank() })) return
+        if (pending == null && !newThread && plan == null && attachmentDraft.value.isEmpty() &&
+            planControls.value.optBoolean("enabled") && state.value.draft.trim() in setOf("/plan", "/default")) {
+            chooseInteraction(state.value.draft.trim().drop(1), clearDraft = state.value.draft)
+            return
+        }
+        if (pending == null && (!state.value.unconfirmed.isEmpty() || (plan == null && attachmentDraft.value.isEmpty() && state.value.draft.isBlank()) || attachmentDraft.value.any { it.status != dev.avillagran.ot3android.core.composer.UploadStatus.Ready || it.descriptor.isNullOrBlank() })) return
         local.update { it.copy(queueBusy = true) }
         appScope.launch(kotlinx.coroutines.Dispatchers.Main.immediate) {
             try {
                 verifyAttachmentAuthority()
-                val args = pending?.let { org.json.JSONObject(it) } ?: MessageSender.messageCommand("ot3a-" + java.util.UUID.randomUUID(),
+                var args = pending?.let { org.json.JSONObject(it) } ?: MessageSender.messageCommand("ot3a-" + java.util.UUID.randomUUID(),
                     "ot3a-" + java.util.UUID.randomUUID(), threadId, state.value.draft, state.value.modelSelection)
                     .put("attachments", org.json.JSONArray(attachmentDraft.value.map { org.json.JSONObject(it.descriptor!!) }))
                 if (pending == null) {
@@ -340,6 +351,7 @@ class ThreadViewModel(
                     var delivery = if (state.value.view.activeRunId == null) "auto" else if ((state.value.view.timeline?.optJSONArray("approvals")?.length() ?: 0) > 0) "steer" else sharedDeliveryMode ?: preferences?.optString("followUpBehavior", "queue") ?: "queue"
                     if (oppositeOnce && delivery != "auto") delivery = if (delivery == "queue") "steer" else "queue"
                     args.put("deliveryIntent", delivery)
+                    args = prepareChatCommand(args, newThread, plan)
                 }
                 val id = args.getString("commandId")
                 attachmentCommand = args.toString()
@@ -356,15 +368,172 @@ class ThreadViewModel(
                             sharedClear = null
                         }
                     }
+                    args.optString("acceptedInteractionMode").takeIf { it in setOf("plan", "default") }?.let { chosenInteraction.value = it }
                     attachmentDraft.value = emptyList(); attachmentCommand = null; attachmentPending.value = null
                     persistAttachments()
                     if (state.value.draft == args.optString("text")) composer.onDraftChange("")
+                    args.optString("navigateThread").takeIf { it.isNotBlank() }?.let { chatNavigation.value = it }
                 }
                 onResult(result)
             } catch (error: Exception) {
-                local.update { it.copy(notice = ThreadNotice.Failed("attachment_send_unconfirmed")) }
+                onChatError(error)
                 if (error is kotlinx.coroutines.CancellationException) throw error
             } finally { local.update { it.copy(queueBusy = false) } }
+        }
+    }
+
+    /** Read fresh provider policy; a cached UI gate never authorizes a command. */
+    suspend fun refreshPlanControls(): org.json.JSONObject {
+        val live = transport() ?: return org.json.JSONObject().also { planControls.value = it }
+        val config = live.call("server.getConfig") as org.json.JSONObject
+        val catalog = live.domain("models.catalog", org.json.JSONObject().put("config", config)) as org.json.JSONObject
+        val selection = state.value.modelSelection?.let(::orgJson)
+        val providers = catalog.optJSONArray("providers") ?: org.json.JSONArray()
+        val provider = (0 until providers.length()).map { providers.getJSONObject(it) }
+            .firstOrNull { it.optString("instanceId") == selection?.optString("instanceId") }
+        val projection = session.projectionSnapshot()
+        val thread = projection?.optJSONObject("thread")
+        val mode = dev.avillagran.ot3android.core.composer.ChatCommands(live).mode(
+            clientPreferences?.settings?.first()?.optBoolean("planModeEnabled") == true,
+            provider, chosenInteraction.value ?: thread?.optString("interactionMode", "default") ?: "default")
+        val access = dev.avillagran.ot3android.core.home.ThreadManagement.access(catalog, live.authSession())
+        mode.put("canOperate", access.canWrite && thread?.optBoolean("providerSubagent") != true &&
+            thread?.optString("relationshipToParent") != "subagent" &&
+            state.value.view.timeline?.optJSONObject("threadState")?.optBoolean("providerSubagent") != true)
+        check(transport() === live) { "connection_changed" }
+        planControls.value = mode
+        return mode
+    }
+
+    fun chooseInteraction(requested: String? = null, clearDraft: String? = null) {
+        if (!chatWritable()) return
+        viewModelScope.launch {
+            try {
+                val gate = refreshPlanControls()
+                if (!chatWritable() || !gate.optBoolean("enabled") || !gate.optBoolean("canOperate")) return@launch
+                val previous = chosenInteraction.value
+                chosenInteraction.value = requested ?: if (gate.optString("interactionMode") == "plan") "default" else "plan"
+                if (!persistAttachments()) { chosenInteraction.value = previous; return@launch }
+                if (clearDraft != null && state.value.draft == clearDraft) composer.onDraftChange("")
+                refreshPlanControls()
+            } catch (e: Exception) { if (e is CancellationException) throw e; onChatError(e) }
+        }
+    }
+
+    private fun chatWritable(): Boolean = state.value.let {
+        it.connected && !it.view.stale && !it.sending && it.queueEdit == null && it.unconfirmed.isEmpty() &&
+            attachmentPending.value == null && !attachmentStorageError.value
+    }
+
+    private fun onChatError(error: Exception) {
+        local.update { it.copy(notice = ThreadNotice.Failed((error as? dev.avillagran.t3.T3Exception)?.code ?: "chat_action_unavailable")) }
+    }
+
+    fun followUpPlan(plan: org.json.JSONObject, newThread: Boolean) {
+        if (!chatWritable() || attachmentDraft.value.isNotEmpty()) return
+        dispatchAttachments(newThread = newThread, plan = org.json.JSONObject(plan.toString()))
+    }
+
+    private suspend fun prepareChatCommand(message: org.json.JSONObject, newThread: Boolean, plan: org.json.JSONObject?): org.json.JSONObject {
+        val live = transport() ?: error("not_connected")
+        if (plan == null && !newThread && chosenInteraction.value == null &&
+            session.projectionSnapshot()?.optJSONObject("thread")?.optString("interactionMode") != "plan") return message
+        val gate = refreshPlanControls()
+        check(gate.optBoolean("canOperate")) { "permission_denied" }
+        val projection = if (plan != null) live.boundedThread(threadId).getJSONObject("projection") else session.projectionSnapshot() ?: error("thread_unavailable")
+        val source = projection.getJSONObject("thread")
+        val native = dev.avillagran.ot3android.core.composer.NativeComposer(live)
+        val originalText = message.getString("text")
+        var command = org.json.JSONObject(message.toString())
+        var mode = gate.getString("interactionMode")
+        if (plan != null) {
+            check(gate.optBoolean("enabled") && mode == "plan" && attachmentDraft.value.isEmpty() && !state.value.view.working) { "plan_unavailable" }
+            val ready = native.planView(projection).optJSONObject("ready") ?: error("plan_unavailable")
+            check(ready.getString("id") == plan.getString("id") && ready.getString("threadId") == threadId && ready.getString("markdown") == plan.getString("markdown")) { "plan_scope_changed" }
+            val follow = native.followUp(ready, threadId, if (newThread) "" else message.getString("text"))
+            command = native.attachSourceRef(command, follow).put("text", follow.getString("text"))
+            mode = follow.getString("interactionMode")
+        }
+        val steps = org.json.JSONArray()
+        val id = message.getString("commandId")
+        var destination: String? = null
+        if (newThread) {
+            val shell = supervisor.value?.shell?.value ?: error("project_unavailable")
+            val projectId = source.getString("projectId")
+            val project = shell.project(projectId) ?: error("project_unavailable")
+            val target = "ot3a-" + java.util.UUID.randomUUID()
+            destination = target
+            val workspace = org.json.JSONObject().put("type", if (source.isNull("worktreePath")) "root" else "existing_worktree")
+            if (!source.isNull("worktreePath")) workspace.put("worktreePath", source.getString("worktreePath"))
+            if (!source.isNull("branch")) workspace.put("branch", source.getString("branch"))
+            val title = if (plan != null) live.domain("planWorkflow.implementationTitle", org.json.JSONObject().put("markdown", plan.getString("markdown"))) as String
+                else state.value.title?.take(255)?.takeIf { it.isNotBlank() } ?: threadId
+            val launchSource = org.json.JSONObject(source.toString()).put("modelSelection", state.value.modelSelection?.let(::orgJson))
+            // Desktop's explicit new-thread implementation starts in full-access Build mode.
+            if (plan != null) launchSource.put("runtimeMode", "full-access")
+            val input = org.json.JSONObject().put("environmentId", environmentId).put("projectId", projectId)
+                .put("projects", org.json.JSONArray().put(org.json.JSONObject(project.raw.toString()).put("environmentId", environmentId)))
+                .put("source", launchSource)
+                .put("workspaceStrategy", workspace).put("threadId", target).put("commandId", id + "-launch")
+                .put("title", title).put("interactionMode", mode)
+            // Native launch delivers an ordinary first message atomically. Plans need the
+            // separate native message command because launch's InitialMessage has no sourcePlanRef.
+            if (plan == null) input.put("initialMessage", org.json.JSONObject().put("messageId", command.getString("messageId"))
+                .put("text", command.getString("text")).put("attachments", command.getJSONArray("attachments")))
+            val launch = dev.avillagran.ot3android.core.composer.ChatCommands(live).launch(input)
+            steps.put(launch)
+            command.put("threadId", target).put("deliveryIntent", "auto")
+        } else if (source.optString("interactionMode", "default") != mode) {
+            steps.put(dev.avillagran.ot3android.core.composer.ChatCommands.step(
+                dev.avillagran.ot3android.core.composer.ChatCommands.interaction(id + "-mode", threadId, mode)))
+        }
+        if (!newThread || plan != null) steps.put(dev.avillagran.ot3android.core.composer.ChatCommands.step(command))
+        check(transport() === live && state.value.draft == originalText) { "composer_changed" }
+        if (steps.length() == 1 && plan == null && !newThread) return command
+        // Root text is the submitted draft, which can differ from the native implementation prompt.
+        return dev.avillagran.ot3android.core.composer.ChatCommands.envelope(id, originalText, steps, destination).put("acceptedInteractionMode", mode)
+    }
+
+    fun forkFromResponse(run: String) = conversationMutation(run, false)
+    fun mergeBack() = conversationMutation(null, true)
+
+    private fun conversationMutation(requestedRun: String?, merge: Boolean) {
+        if (!chatWritable()) return
+        local.update { it.copy(queueBusy = true, notice = null) }
+        appScope.launch {
+            try {
+                val gate = refreshPlanControls()
+                check(gate.optBoolean("canOperate")) { "permission_denied" }
+                val live = transport() ?: error("not_connected")
+                val view = state.value.view.timeline ?: error("thread_unavailable")
+                val threadState = view.getJSONObject("threadState")
+                val run: String
+                val target: String
+                if (merge) {
+                    check(!state.value.view.working) { "thread_is_working" }
+                    target = threadState.getString("mergeBackTargetThreadId")
+                    run = threadState.getString("mergeBackRunId")
+                } else {
+                    run = requestedRun ?: error("run_unavailable")
+                    val rows = view.optJSONArray("timeline") ?: org.json.JSONArray()
+                    check((0 until rows.length()).any { rows.getJSONObject(it).optString("forkRunId") == run }) { "run_unavailable" }
+                    target = "ot3a-" + java.util.UUID.randomUUID()
+                }
+                check(target.isNotBlank() && target != "null" && run.isNotBlank() && run != "null") { "run_unavailable" }
+                val id = "ot3a-" + java.util.UUID.randomUUID()
+                val command = org.json.JSONObject().put("type", if (merge) "thread.merge_back" else "thread.fork")
+                    .put("commandId", id + "-write").put("sourceThreadId", threadId).put("targetThreadId", target)
+                    .put("sourcePoint", org.json.JSONObject().put("type", "run").put("runId", run))
+                    .put("createdBy", "user").put("creationSource", "web")
+                if (!merge) state.value.title?.take(255)?.let { command.put("title", it) }
+                val saved = dev.avillagran.ot3android.core.composer.ChatCommands.envelope(id, "",
+                    org.json.JSONArray().put(dev.avillagran.ot3android.core.composer.ChatCommands.step(command)), target)
+                outbox.add(environmentId, threadId, id, saved.toString())
+                val result = sender.retry(live, id)
+                if (result is SendResult.Accepted) chatNavigation.value = target
+                onResult(result)
+            } catch (error: Exception) { if (error is CancellationException) throw error; onChatError(error) }
+            finally { local.update { it.copy(queueBusy = false) } }
         }
     }
 
@@ -576,7 +745,7 @@ class ThreadViewModel(
         if (supervisor.value?.connection?.value !== captured) return null
         // Model options already have a dedicated real control; do not expose an inert /model row.
         val usable = org.json.JSONArray()
-        for (index in 0 until rows.length()) if (rows.getJSONObject(index).optString("insert").isNotEmpty()) usable.put(rows.getJSONObject(index))
+        for (index in 0 until rows.length()) if (rows.getJSONObject(index).optString("insert").isNotEmpty() || rows.getJSONObject(index).optString("kind") == "model") usable.put(rows.getJSONObject(index))
         return trigger to usable
     }
     suspend fun recallableDrafts(): List<String> {
@@ -587,6 +756,9 @@ class ThreadViewModel(
 
     private var sharedDeliveryMode: String? = null
     fun adoptSharedModel(payload: org.json.JSONObject) {
+        payload.optJSONObject("preferences")?.optString("interactionMode")?.takeIf { it in setOf("plan", "default") }?.let {
+            chosenInteraction.value = it; persistAttachments()
+        }
         sharedDeliveryMode = payload.optJSONObject("preferences")?.optString("deliveryMode")?.takeIf { it in setOf("auto", "queue", "steer") }
         payload.optJSONObject("modelSelection")?.let { model ->
             val provider = model.optString("providerId").takeIf(String::isNotBlank)
@@ -754,7 +926,18 @@ class ThreadViewModel(
     fun retry(commandId: String) {
         if (commandId == attachmentPending.value) { dispatchAttachments(); return }
         local.update { it.copy(notice = null) }
-        composer.retry(commandId)
+        appScope.launch {
+            val saved = outbox.find(commandId)?.commandJson?.let(::orgJson)
+            if (saved?.has(MessageSender.CHAT_STEPS) == true) {
+                if (!state.value.connected || state.value.sending) return@launch
+                local.update { it.copy(queueBusy = true) }
+                try {
+                    val result = sender.retry(transport(), commandId)
+                    if (result is SendResult.Accepted) saved.optString("navigateThread").takeIf { it.isNotBlank() }?.let { chatNavigation.value = it }
+                    onResult(result)
+                } finally { local.update { it.copy(queueBusy = false) } }
+            } else composer.retry(commandId)
+        }
     }
 
     /** Explicit recovery: persist all text before removing an uncertain retry identity. Never sends. */
