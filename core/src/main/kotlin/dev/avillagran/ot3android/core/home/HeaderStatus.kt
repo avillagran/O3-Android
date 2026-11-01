@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformLatest
 
 /**
@@ -95,7 +96,7 @@ object HeaderStatusDisplay {
             if (has) delay(delayMs)
             emit(has)
         }
-        return combine(statuses, visible) { status, shown -> if (shown) status else HeaderStatus.Hidden }.distinctUntilChanged()
+        return combine(statuses, visible.onStart { emit(false) }) { status, shown -> if (shown) status else HeaderStatus.Hidden }.distinctUntilChanged()
     }
 
     /** Connecting, or backing off before an automatic retry. */

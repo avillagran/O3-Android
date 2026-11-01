@@ -73,6 +73,7 @@ class HomeViewModel(
         viewModelScope.launch {
             if (row.environmentId in actionBusy.value) return@launch
             val supervisor = supervisors.value.orEmpty().firstOrNull { it.first.id == row.environmentId }?.second ?: return@launch
+            if (supervisor.state.value !is dev.avillagran.ot3android.core.connection.ConnectionState.Connected) return@launch
             val live = supervisor.connection.value ?: return@launch
             val currentRow = state.value?.rows?.get(row.key) ?: return@launch
             actionError.value = null

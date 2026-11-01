@@ -15,6 +15,56 @@ class ThreadCachedSessionTest {
     @get:Rule val root = TemporaryFolder()
     @Before fun native() = assumeHostJni()
 
+    @Test fun connectionArrivingDuringCachePresentationRetriesTheCancelledRestore() = runBlocking {
+        val cache = ThreadCache(root.newFolder())
+        val lease = cache.open("env", "t1", "scope")!!
+        cache.write(lease, ThreadFixtures.bounded(10, ThreadFixtures.projection(messages = listOf(
+            ThreadFixtures.message("saved", "Cached", "2026-10-25T01:00:00Z")))))
+        cache.close(lease)
+        val entered = CompletableDeferred<Unit>()
+        var calls = 0
+        val domain = DomainCalls { fn, args ->
+            if (++calls == 1) { entered.complete(Unit); awaitCancellation() }
+            TestDomain.domain(fn, args)
+        }
+        val connection = MutableStateFlow<Connection?>(null)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val fake = FakeT3Transport()
+        val session = ThreadSession("t1", connection, scope, domain = domain,
+            cache = cache, cacheEnvironment = "env", cacheAuthority = { "scope" }, refetchIntervalMs = 0)
+        try {
+            session.start()
+            withTimeout(5_000) { entered.await() }
+            fake.connect(ConnectRoute.Bearer("http://fixture.test", "fixture-token"))
+            connection.value = Connection(fake, 1)
+            val restored = withTimeout(5_000) { session.view.first { it.loaded } }
+            assertEquals("Cached", restored.messages.single().text)
+            assertTrue(restored.stale)
+            assertTrue(calls >= 2)
+        } finally { session.close(); scope.coroutineContext[Job]!!.cancelAndJoin() }
+    }
+
+    @Test fun cachedReaderPaintsBeforeConnectionAndAuthorityWatchersEmit() = runBlocking {
+        val cache = ThreadCache(root.newFolder())
+        val lease = cache.open("env", "t1", "scope")!!
+        cache.write(lease, ThreadFixtures.bounded(10, ThreadFixtures.projection(messages = listOf(
+            ThreadFixtures.message("saved", "Available immediately", "2026-10-25T01:00:00Z")))))
+        cache.close(lease)
+        val gate = CompletableDeferred<Unit>()
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val session = ThreadSession("t1", flow { gate.await(); emit(null) }, scope, domain = TestDomain,
+            cache = cache, cacheEnvironment = "env", cacheAuthority = { "scope" },
+            cacheAuthorityUpdates = flow { gate.await(); emit("scope") })
+        try {
+            session.start()
+            val restored = withTimeout(5_000) { session.view.first { it.loaded } }
+            assertFalse(gate.isCompleted)
+            assertEquals("Available immediately", restored.messages.single().text)
+            assertTrue(restored.stale)
+            assertEquals(ThreadConnection.Waiting, restored.connectionState)
+        } finally { session.close(); scope.coroutineContext[Job]!!.cancelAndJoin() }
+    }
+
     @Test fun offlineRestartThenIncrementalStreamingAndSnapshotFallback() = runBlocking {
         val directory = root.newFolder()
         val cache = ThreadCache(directory)

@@ -263,12 +263,6 @@ class AppGraph(
                                     System.currentTimeMillis())
                                 // Only network-owned shells refresh disk age; a cached display must not.
                                 if (currentConnection != null) {
-                                    environmentRepository.cacheAuthority(id)?.let { authority ->
-                                        val body = org.json.JSONObject().put("snapshotSequence", shell.sequence)
-                                            .put("projects", org.json.JSONArray(shell.projects.map { it.raw }))
-                                            .put("threads", org.json.JSONArray(shell.threads.take(2000).map { it.raw }))
-                                        threadCache.writeSidebar(id, authority, body)
-                                    }
                                     threadCache.pin(id, sidebar.threads.filter { it.pinned }.map { it.threadId }.toSet())
                                     threadCache.reconcile(id, sidebar.threads.map { it.threadId }.toSet())
                                 }

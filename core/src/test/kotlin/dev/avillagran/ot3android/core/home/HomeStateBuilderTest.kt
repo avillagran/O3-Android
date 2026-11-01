@@ -31,6 +31,17 @@ class HomeStateBuilderTest {
     @Before
     fun setUp() = assumeHostJni()
 
+    @Test fun cachedListsRenderWhileBothHostsAreConnecting() = runBlocking {
+        val state = HomeStateBuilder.build(DomainEngine.shared, HomeInput(
+            listOf(laptop.copy(connection = ConnectionState.Connecting), server.copy(connection = ConnectionState.Connecting)),
+            now = now, actions = { ActionContext(canWrite = true, buildersAvailable = true) }))
+        assertEquals(HomeContent.List, state.content)
+        assertTrue(state.rows.isNotEmpty())
+        assertTrue(state.stale)
+        assertTrue(state.offline)
+        assertTrue(state.rows.values.all { !it.swipe.enabled })
+    }
+
     private val now = ShellReducer.parseTimestamp("2026-10-25T12:00:00.000Z")!!
     private val connected = ConnectionState.Connected(ServerDescriptor(null, null, null, null, null))
 
