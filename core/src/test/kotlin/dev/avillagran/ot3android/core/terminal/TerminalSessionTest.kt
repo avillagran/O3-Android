@@ -18,6 +18,7 @@ class TerminalSessionTest {
     private var reconnect = false
     private var denied = false
     private var exit = false
+    private var beforeSnapshot: suspend () -> Unit = {}
     private val subscriptions = mutableListOf<Pair<Boolean, JSONObject>>()
     private val writes = mutableListOf<JSONObject>()
     private val resizes = mutableListOf<JSONObject>()
@@ -45,6 +46,7 @@ class TerminalSessionTest {
                 val attempt = subscriptions.size
                 flow {
                     if (denied) throw dev.avillagran.t3.T3Exception("unknown_method")
+                    beforeSnapshot()
                     emit(T3Batch(JSONArray().put(snapshot(if (attempt == 1) "old\u001b[31" else "fresh café 東京")), false, null))
                     if (reconnect && attempt == 1) throw IOException("disconnected")
                     if (exit) emit(T3Batch(JSONArray().put(JSONObject().put("type", "exited")), true, null))
@@ -105,11 +107,12 @@ class TerminalSessionTest {
     @Test fun viewportDuringAttachAndKeyboardChangesReachHost() = runTest {
         val session = TerminalSession("thread-a")
         session.resize(41, 32)
+        beforeSnapshot = { session.resize(47, 22) }
         val job = launch { session.collect(host) }; runCurrent()
         assertEquals(41, subscriptions.single().second.getInt("cols"))
         session.resize(41, 14)
         session.resize(41, 32)
-        assertEquals(listOf(14, 32), resizes.map { it.getInt("rows") })
+        assertEquals(listOf(22, 14, 32), resizes.map { it.getInt("rows") })
         assertEquals(41, session.state.value.frame.cols)
         job.cancelAndJoin()
     }

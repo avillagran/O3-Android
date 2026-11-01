@@ -122,15 +122,34 @@ class TerminalScreenTest {
         ime.sendKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_ENTER))
         assertEquals("printf a\rprintf b\recho o3-terminal-ok\r", sent.joinToString(""))
     }
+    @Test fun hardwareEnterFinishesPendingCompositionBeforeNewline() {
+        val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
+        view.writable = true; view.send = sent::add
+        val ime = view.onCreateInputConnection(EditorInfo())!!
+        ime.setComposingText("echo ok", 1)
+        view.onKeyDown(android.view.KeyEvent.KEYCODE_ENTER,
+            android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_ENTER))
+        ime.finishComposingText()
+        assertEquals("echo ok\r", sent.joinToString(""))
+    }
+    @Test fun fallbackContainsPowerlineAndCommonPromptGlyphs() {
+        val font = androidx.core.content.res.ResourcesCompat.getFont(
+            ApplicationProvider.getApplicationContext(), dev.avillagran.ot3android.R.font.nerd_terminal)!!
+        val paint = android.graphics.Paint().apply { typeface = font }
+        listOf("\ue0b0", "\ue0a0", "\uf07c", "\uf120", "\uf303", "\uf418").forEach {
+            assertTrue("Missing prompt glyph $it", paint.hasGlyph(it))
+        }
+    }
     @Test fun layoutReportsImeAndRotationDimensions() {
         val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
         val sizes = mutableListOf<Pair<Int, Int>>()
         view.dimensions = { c, r -> sizes += c to r }
-        view.layout(0, 0, 800, 1200); view.layout(0, 0, 800, 500); view.layout(0, 0, 1200, 400)
-        assertEquals(3, sizes.size)
+        view.layout(0, 0, 800, 1200); view.layout(0, 0, 800, 500); view.layout(0, 0, 800, 1200); view.layout(0, 0, 1200, 400)
+        assertEquals(4, sizes.size)
         assertEquals(sizes[0].first, sizes[1].first)
         assertTrue(sizes[1].second < sizes[0].second)
-        assertTrue(sizes[2].first > sizes[1].first)
+        assertEquals(sizes[0], sizes[2])
+        assertTrue(sizes[3].first > sizes[1].first)
     }
     @Test fun pasteConfirmationShowsAndSendsTheWholeBoundedTextOnce() {
         surface()

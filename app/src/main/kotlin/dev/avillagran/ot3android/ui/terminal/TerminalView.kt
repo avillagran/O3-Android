@@ -38,6 +38,7 @@ internal class TerminalView(context: Context) : View(context) {
     private var downY = 0f
     private var downX = 0f
     private var pan = 0f
+    private var finishInput: () -> Unit = {}
     var applicationCursor = false
     private var moved = false
     init { isFocusable = true; isFocusableInTouchMode = true; setBackgroundColor(Color.BLACK) }
@@ -107,16 +108,41 @@ internal class TerminalView(context: Context) : View(context) {
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         if (!writable) return null
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        outAttrs.initialSelStart = 0; outAttrs.initialSelEnd = 0
         outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
         // A real editable is essential: OEM IMEs read composing spans/selection and may
         // replace them through setComposingRegion before committing. Never echo drafts.
         return object : BaseInputConnection(this, true) {
+            init { finishInput = { finishComposingText() } }
+            private fun updateSelection() {
+                val buffer = requireNotNull(editable)
+                (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).updateSelection(
+                    this@TerminalView, Selection.getSelectionStart(buffer), Selection.getSelectionEnd(buffer),
+                    getComposingSpanStart(buffer), getComposingSpanEnd(buffer))
+            }
+            override fun getCursorCapsMode(reqModes: Int) = 0
+            override fun setComposingText(text: CharSequence?, newCursorPosition: Int): Boolean {
+                super.setComposingText(text, newCursorPosition)
+                updateSelection()
+                return true
+            }
+            override fun setComposingRegion(start: Int, end: Int): Boolean {
+                super.setComposingRegion(start, end)
+                updateSelection()
+                return true
+            }
+            override fun setSelection(start: Int, end: Int): Boolean {
+                val result = super.setSelection(start, end)
+                updateSelection()
+                return result
+            }
             private fun flush() {
                 val buffer = requireNotNull(editable)
                 val text = buffer.toString()
                 removeComposingSpans(buffer)
                 buffer.clear()
                 Selection.setSelection(buffer, 0)
+                updateSelection()
                 emit(text.replace("\r\n", "\n").replace("\n", "\r"))
             }
             override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean {
@@ -138,6 +164,7 @@ internal class TerminalView(context: Context) : View(context) {
                 val localAfter = after.coerceAtMost(buffer.length - cursor)
                 buffer.delete(cursor, cursor + localAfter)
                 buffer.delete(cursor - localBefore, cursor)
+                updateSelection()
                 emit("\u007f".repeat((before - localBefore).coerceAtMost(1000)) +
                     "\u001b[3~".repeat((after - localAfter).coerceAtMost(1000)))
                 return true
@@ -153,6 +180,7 @@ internal class TerminalView(context: Context) : View(context) {
                 val start = Character.offsetByCodePoints(buffer, cursor, -localBefore)
                 buffer.delete(cursor, end)
                 buffer.delete(start, cursor)
+                updateSelection()
                 emit("\u007f".repeat((before - localBefore).coerceAtMost(1000)) +
                     "\u001b[3~".repeat((after - localAfter).coerceAtMost(1000)))
                 return true
@@ -186,5 +214,16 @@ internal class TerminalView(context: Context) : View(context) {
             }
         }; emit(text); return true
     }
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean = if (writable) key(event) else super.onKeyDown(keyCode, event)
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean = if (writable) {
+        finishInput()
+        key(event)
+    } else super.onKeyDown(keyCode, event)
+    override fun onKeyMultiple(keyCode: Int, repeatCount: Int, event: KeyEvent): Boolean {
+        if (writable && keyCode == KeyEvent.KEYCODE_UNKNOWN && event.characters != null) {
+            finishInput()
+            emit(event.characters.replace("\r\n", "\n").replace("\n", "\r"))
+            return true
+        }
+        return super.onKeyMultiple(keyCode, repeatCount, event)
+    }
 }
