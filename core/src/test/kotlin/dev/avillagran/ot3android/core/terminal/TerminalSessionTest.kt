@@ -97,7 +97,7 @@ class TerminalSessionTest {
     @Test fun resizeUsesViewportAndUncertainInputIsNeverRetried() = runTest {
         val session = TerminalSession("thread-a")
         val job = launch { session.collect(host) }; runCurrent()
-        session.resize(100, 12); session.write("id\r")
+        session.resize(100, 12); session.write("id\r"); runCurrent()
         assertEquals(100, resizes.single().getInt("cols")); assertEquals(12, resizes.single().getInt("rows"))
         assertEquals("thread-a", writes.single().getString("threadId"))
         assertTrue(session.state.value.uncertainWrite)
@@ -126,6 +126,78 @@ class TerminalSessionTest {
         session.write("stale", epoch); assertTrue(writes.isEmpty())
         second.cancelAndJoin()
     }
+    @Test fun burstAt150msRttCoalesces200KeysAndEnterWithOrderedOutput() = runTest {
+        val output = kotlinx.coroutines.channels.Channel<String>(kotlinx.coroutines.channels.Channel.UNLIMITED)
+        val batches = mutableListOf<String>()
+        val echoedAt = mutableListOf<Long>()
+        var authReads = 0
+        var active = 0
+        var maxActive = 0
+        val delayed = object : T3Transport by host {
+            override suspend fun authSession(): JSONObject {
+                authReads++
+                delay(150)
+                return host.authSession()
+            }
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? {
+                if (fn != "terminal.write") return host.call(fn, args, timeoutMs)
+                active++; maxActive = maxOf(maxActive, active)
+                batches += args.getString("data")
+                delay(150)
+                output.send(args.getString("data"))
+                active--
+                return null
+            }
+            override fun terminalStream(observe: Boolean, args: JSONObject) = flow {
+                emit(T3Batch(JSONArray().put(snapshot("")), false, null))
+                for (text in output) {
+                    echoedAt += currentTime
+                    emit(T3Batch(JSONArray().put(snapshot(batches.take(echoedAt.size).joinToString(""))), false, null))
+                }
+            }
+        }
+        val session = TerminalSession("thread-a")
+        val job = launch { session.collect(delayed) }
+        advanceTimeBy(150); runCurrent()
+        val started = currentTime
+        val keys = (0 until 200).map { ('a'.code + it % 26).toChar() }.joinToString("")
+        session.write(keys.take(1)); runCurrent() // First RPC is now in flight.
+        keys.drop(1).forEach { session.write(it.toString()) }
+        session.write("\r")
+        advanceTimeBy(300); runCurrent()
+        assertEquals(listOf(keys.take(1), keys.drop(1) + "\r"), batches)
+        assertEquals(keys + "\r", batches.joinToString(""))
+        assertEquals(listOf(150L, 300L), echoedAt.map { it - started })
+        assertEquals(1, maxActive)
+        assertEquals(1, authReads) // Attach only; no auth GET for each key.
+        assertEquals(keys, session.state.value.frame.text().replace("\n", "").trim())
+        println("TERMINAL_RTT150: 200 keys + Enter, 2 writes, first output 150ms, final output 300ms, max concurrent 1, auth GETs 1")
+        job.cancelAndJoin()
+    }
+
+    @Test fun uncertainWriteStopsAllQueuedAndFutureInputEvenAfterReconnect() = runTest {
+        val delayed = object : T3Transport by host {
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? {
+                if (fn == "terminal.write") delay(150)
+                return host.call(fn, args, timeoutMs)
+            }
+        }
+        val session = TerminalSession("thread-a")
+        val job = launch { session.collect(delayed) }; runCurrent()
+        session.write("first"); runCurrent()
+        repeat(200) { session.write("x") }; session.write("\r")
+        advanceTimeBy(150); runCurrent()
+        assertTrue(session.state.value.uncertainWrite)
+        session.write("later")
+        advanceTimeBy(10000); runCurrent()
+        assertEquals(listOf("first"), writes.map { it.getString("data") })
+        job.cancelAndJoin()
+        val resumed = launch { session.collect(delayed) }; runCurrent()
+        session.write("after resume"); runCurrent()
+        assertEquals(1, writes.size)
+        resumed.cancelAndJoin()
+    }
+
     @Test fun pasteAndArrowFollowTerminalModes() {
         val session = TerminalSession("thread-a")
         assertEquals("\u001b[A", session.arrow('A'))

@@ -52,13 +52,7 @@ internal fun TerminalPage(environmentId: String, threadId: String, onClose: () -
             connection?.let { session.collect(it.transport) }
         }
     }
-    val input = remember(session, connection) { Channel<Pair<Long, String>>(64) }
-    DisposableEffect(input) { onDispose { input.close() } }
-    LaunchedEffect(session, input) { for ((epoch, text) in input) session.write(text, epoch) }
-    var dropped by remember(connection) { mutableStateOf(false) }
-    val send: (String) -> Unit = { text ->
-        if (!input.trySend(session.inputEpoch to text).isSuccess) dropped = true
-    }
+    val send: (String) -> Unit = { text -> session.write(text) }
     val sizes = remember(session, connection) { Channel<Pair<Int, Int>>(Channel.CONFLATED) }
     DisposableEffect(sizes) { onDispose { sizes.close() } }
     LaunchedEffect(session, sizes) { for ((c, r) in sizes) session.resize(c, r) }
@@ -66,7 +60,7 @@ internal fun TerminalPage(environmentId: String, threadId: String, onClose: () -
     TerminalSurface(hostName, threadId, state, command,
         onSend = send, onPaste = { send(session.paste(it)) },
         onArrow = { send(session.arrow(it)) }, onSize = { c, r -> sizes.trySend(c to r) },
-        dropped = dropped, onClose = onClose)
+        onClose = onClose)
 }
 
 @Composable
@@ -76,7 +70,7 @@ internal fun TerminalSurface(
     onSize: (Int, Int) -> Unit, dropped: Boolean = false, onClose: () -> Unit,
 ) {
     val clipboard = LocalClipboardManager.current
-    val writable = state.connected && state.operate && !state.finished
+    val writable = state.connected && state.operate && !state.finished && !state.uncertainWrite
     var ctrl by remember { mutableStateOf(false) }
     var pending by rememberSaveable { mutableStateOf(command) }
     var paste by remember { mutableStateOf<String?>(null) }
@@ -131,7 +125,10 @@ internal fun TerminalSurface(
             text = { Column {
                 Text(stringResource(R.string.terminal_confirm))
                 Text("$environmentId · ${state.cwd}")
-                OutlinedTextField(value, onValueChange = { pending = it }, modifier = Modifier.testTag("terminal_command"))
+                OutlinedTextField(value, onValueChange = { pending = it },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None,
+                        autoCorrectEnabled = false, keyboardType = androidx.compose.ui.text.input.KeyboardType.Password), modifier = Modifier.testTag("terminal_command"))
             } },
             confirmButton = { TextButton(enabled = writable && value.isNotBlank(), onClick = {
                 if (pending != null) {
