@@ -12,6 +12,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
+@org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
 class DesktopGalleryTest {
     private fun payload(bytes: ByteArray, mime: String = "image/png") = JSONObject().put("mimeType", mime)
         .put("base64", Base64.encodeToString(bytes, Base64.NO_WRAP))
