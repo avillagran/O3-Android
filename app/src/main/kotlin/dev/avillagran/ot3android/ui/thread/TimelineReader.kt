@@ -481,13 +481,20 @@ internal fun MarkdownImage(image: JSONObject) {
 @Composable
 internal fun MarkdownInlineContent(spans: JSONArray?, style: TextStyle = MaterialTheme.typography.bodyMedium) {
     var run = JSONArray()
+    var imageEndedLine = false
     Column(Modifier.fillMaxWidth()) {
         spans.objects().forEach { span ->
             if (span.optString("type") == "image") {
                 if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current), style = style, modifier = Modifier.fillMaxWidth())
                 run = JSONArray()
                 MarkdownImage(span)
-            } else run.put(span)
+                imageEndedLine = true
+            } else {
+                // The image already occupies its own line. A Markdown soft break
+                // immediately after it must not introduce an empty caption line.
+                if (!(imageEndedLine && span.optString("type") == "break" && !span.optBoolean("hard"))) run.put(span)
+                imageEndedLine = false
+            }
         }
         if (run.length() > 0) Text(inlineSpans(run, LocalReaderMath.current, LocalReaderReference.current), style = style, modifier = Modifier.fillMaxWidth())
     }

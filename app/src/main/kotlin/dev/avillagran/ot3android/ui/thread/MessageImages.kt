@@ -123,9 +123,10 @@ internal fun AttachmentImage(attachment: JSONObject, markdown: Boolean = false) 
         var showMenu by remember { mutableStateOf(false) }
         val copyLabel = stringResource(R.string.ot3_copy_image)
         Box(if (markdown) Modifier.widthIn(max = if (naturalWidth > 0) naturalWidth.dp else androidx.compose.ui.unit.Dp.Infinity).fillMaxWidth() else Modifier.size(220.dp, 160.dp)
-            .clip(RoundedCornerShape(8.dp)).background(Ot3Theme.colors.foreground.copy(alpha = .04f))
-            .border(1.dp, Ot3Theme.colors.foreground.copy(alpha = .12f), RoundedCornerShape(8.dp))) {
-            ImageRead(attachment, attachment.toString(), source, 640,
+            // Desktop frames attachments; a Markdown image is bare and square.
+            .then(if (markdown) Modifier else Modifier.clip(RoundedCornerShape(8.dp)).background(Ot3Theme.colors.foreground.copy(alpha = .04f))
+                .border(1.dp, Ot3Theme.colors.foreground.copy(alpha = .12f), RoundedCornerShape(8.dp)))) {
+            ImageRead(attachment, attachment.toString(), source, 640, square = markdown, modifier =
                 (if (markdown) Modifier.fillMaxWidth() else Modifier.fillMaxSize().padding(4.dp)).combinedClickable(onClickLabel = attachment.optString("name"),
                     onClick = { open(attachment) }, onLongClickLabel = copyLabel,
                     onLongClick = { showMenu = true })
@@ -179,7 +180,7 @@ internal fun readerImageNearViewport(top: Float, bottom: Float, left: Float, rig
     width > 0 && height > 0 && bottom > -height && top < height * 2f && right > -width && left < width * 2f
 
 @Composable
-private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, fitThumbnail: Boolean = false) {
+private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, fitThumbnail: Boolean = false, square: Boolean = false) {
     var displayWidth by remember(identity, source.generation) { mutableIntStateOf(0) }
     var near by remember(identity, source.generation) { mutableStateOf(false) }
     val density = LocalDensity.current
@@ -191,14 +192,14 @@ private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderIm
             position.x, position.x + coordinates.size.width, root.width, root.height)
     }) {
         if (near && displayWidth > 0) key(identity, source.generation) {
-            ActiveImageRead(attachment, identity, source, if (zoom == null) displayWidth else maxEdge,
+            ActiveImageRead(attachment, identity, source, square, if (zoom == null) displayWidth else maxEdge,
                 Modifier.fillMaxWidth().then(if (fitThumbnail) Modifier.fillMaxHeight() else Modifier).onSizeChanged { height = it.height }, zoom, onNaturalWidth, height.takeIf { it > 0 } ?: displayWidth, fitThumbnail)
         } else Spacer(if (height > 0) Modifier.fillMaxWidth().height(with(density) { height.toDp() }) else Modifier.fillMaxWidth().aspectRatio(1f))
     }
 }
 
 @Composable
-private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, loadingHeightPx: Int = 160, fitThumbnail: Boolean = false) {
+private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, square: Boolean, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, loadingHeightPx: Int = 160, fitThumbnail: Boolean = false) {
     val cachedBytes = remember(identity, source.generation) { arrayOfNulls<ByteArray>(1) }
     var retry by remember(identity, source.generation) { mutableIntStateOf(0) }
     var complete by remember(identity, source.generation, retry) { mutableStateOf(false) }
@@ -237,7 +238,7 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
         finally { lease?.close(); thumbnailLease?.close(); value = null }
     }
     val stableModifier = if (bitmap == null) modifier.heightIn(min = with(LocalDensity.current) { loadingHeightPx.toDp() }) else modifier
-    Surface(shape = RoundedCornerShape(8.dp), modifier = stableModifier, color = MaterialTheme.colorScheme.surfaceVariant) {
+    Surface(shape = if (square) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(8.dp), modifier = stableModifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val decoded = bitmap
         if (decoded != null) {
             if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, filterQuality = androidx.compose.ui.graphics.FilterQuality.High, modifier = if (fitThumbnail) Modifier.fillMaxSize() else if (attachment.has("source")) Modifier.fillMaxWidth().aspectRatio(decoded.width.toFloat() / decoded.height) else Modifier.fillMaxSize())

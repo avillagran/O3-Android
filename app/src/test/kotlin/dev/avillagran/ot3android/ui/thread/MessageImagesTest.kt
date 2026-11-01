@@ -34,6 +34,25 @@ class MessageImagesTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
     private val row = JSONObject("""{"id":"prompt","role":"user","text":"Revisa la captura","attachments":[{"id":"shot","name":"Captura.png","type":"image","mimeType":"image/png"}]}""")
 
+    @Test fun imageSoftBreakStartsCaptionOnTheNextOccupiedLine() {
+        val bitmap = Bitmap.createBitmap(100, 20, Bitmap.Config.ARGB_8888)
+        val bytes = ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        bitmap.recycle()
+        val blocks = org.json.JSONArray("""[
+          {"type":"paragraph","spans":[{"type":"image","id":"soft","url":"/soft.png","alt":"Soft image"},{"type":"break","hard":false},{"type":"code","text":"caption.png"}]},
+          {"type":"paragraph","spans":[{"type":"image","id":"hard","url":"/hard.png","alt":"Hard image"},{"type":"break","hard":true},{"type":"text","text":"Explicit break"}]},
+          {"type":"paragraph","spans":[{"type":"text","text":"Before"},{"type":"break","hard":false},{"type":"text","text":"After"}]}
+        ]""")
+        rule.setContent { Ot3Theme {
+            CompositionLocalProvider(LocalReaderImages provides ReaderImages("caption-breaks") { bytes }) { MarkdownBlocks(blocks) }
+        } }
+        rule.waitUntil(5000) { rule.onAllNodesWithContentDescription("Soft image").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("caption.png").assertExists()
+        rule.onNodeWithText("\ncaption.png").assertDoesNotExist()
+        rule.onNodeWithText("\nExplicit break").assertExists()
+        rule.onNodeWithText("Before\nAfter").assertExists()
+    }
+
     @Test fun twoHundredMarkdownImagesReadOnlyNearViewportAndReleasePixelsOnScroll() {
         val image = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888)
         val bytes = ByteArrayOutputStream().also { image.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
