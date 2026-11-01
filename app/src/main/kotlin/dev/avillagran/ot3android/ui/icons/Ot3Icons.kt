@@ -95,6 +95,9 @@ object Ot3Icons {
 
     /** Every icon, keyed by its ot3 / Lucide name (`"git-pull-request"`). */
     val byName: Map<String, Int> = mapOf(
+        "image" to R.drawable.ic_image,
+        "camera" to R.drawable.ic_camera,
+        "mic" to R.drawable.ic_mic,
         "zoom-in" to ZoomIn,
         "zoom-out" to ZoomOut,
         "rotate-ccw" to RotateCcw,

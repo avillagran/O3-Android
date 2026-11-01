@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Локальний кеш діалогів</string>
+    <string name="cache_usage">Використано %1$d МБ · ліміт %2$d МБ</string>
+    <string name="cache_clear">Очистити кеш</string>
+</resources>

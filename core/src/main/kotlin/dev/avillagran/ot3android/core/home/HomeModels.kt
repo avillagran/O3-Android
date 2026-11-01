@@ -114,6 +114,7 @@ data class HomeRow(
     val swipe: SwipeActions,
     /** Already computed by sidebar.view; no PR inference in the host. */
     val pullRequestBadge: org.json.JSONObject? = null,
+    val parentKey: String? = null,
 )
 
 /** One entry of Home's single lazy list. */

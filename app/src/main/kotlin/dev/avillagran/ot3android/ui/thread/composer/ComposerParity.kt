@@ -47,6 +47,7 @@ sealed interface ComposerRequest {
  * VM or graph dependency. [capabilities] must omit unbound native/host operations.
  * The owner must revalidate each request against its current session, not just trust UI gates.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ComposerParity(
     snapshot: ComposerSnapshot,
@@ -57,6 +58,9 @@ fun ComposerParity(
     references: List<ComposerReference> = emptyList(),
     completions: List<ComposerCompletion> = emptyList(),
     error: String? = null,
+    expandedActions: @Composable () -> Unit = {},
+    toolbar: @Composable () -> Unit = {},
+    extraMenu: @Composable (() -> Unit) -> Unit = {},
 ) {
     var expanded by rememberSaveable(snapshot.scope) { mutableStateOf(false) }
     val editors = rememberSaveable(snapshot.scope.copy(queueMessage = null), saver = ComposerEditors.StateSaver) { ComposerEditors() }
@@ -91,7 +95,9 @@ fun ComposerParity(
             onRequest(ComposerRequest.ImportUri(origin, it.toString()))
         }
     }
-    val compact = LocalConfiguration.current.screenHeightDp < 420
+    val configuration = LocalConfiguration.current
+    val compact = configuration.screenHeightDp < 420 ||
+        (WindowInsets.isImeVisible && configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
     var overflow by remember { mutableStateOf(false) }
     var captureOpen by remember { mutableStateOf(false) }
     fun request(action: ComposerAction) {
@@ -124,9 +130,10 @@ fun ComposerParity(
             Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { overflow = true },
                 modifier = Modifier.testTag("composer_actions"))
             DropdownMenu(expanded = overflow, onDismissRequest = { overflow = false }) {
-                if (compact && ComposerAction.Attach in capabilities) DropdownMenuItem(
+                if (ComposerAction.Attach in capabilities) DropdownMenuItem(
                     text = { Text(stringResource(R.string.capture_title)) }, enabled = snapshot.transformable,
                     onClick = { overflow = false; captureOpen = true }, modifier = Modifier.testTag("capture_menu"))
+                extraMenu { overflow = false }
                 capabilities.forEach { action ->
                     val sendAction = action in setOf(ComposerAction.OppositeOnce, ComposerAction.Background, ComposerAction.SendAndNew)
                     DropdownMenuItem(text = { Text(actionLabel(action, snapshot.interaction)) },
@@ -138,7 +145,7 @@ fun ComposerParity(
     }
     val renderEditor: @Composable (Boolean, Modifier) -> Unit = { full, layout ->
         Column(layout) {
-            if (ComposerAction.Attach in capabilities) PhoneCapture(snapshot, onRequest, compact, captureOpen) { captureOpen = false }
+            if (ComposerAction.Attach in capabilities) PhoneCapture(snapshot, onRequest, true, captureOpen) { captureOpen = false }
             ComposerEditor(editor, full, snapshot.sendable, snapshot.sending,
                 onDraftChange = { _, _ -> },
                 onSend = { if (snapshot.sendable) onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
@@ -147,12 +154,12 @@ fun ComposerParity(
                 onEditorValue = { value ->
                     onEdit(snapshot, value.text, ComposerSelection(value.selection.start, value.selection.end), value.composition != null)
                 },
-                compact = compact, enabled = snapshot.editable, actions = editorActions)
+                compact = compact, enabled = snapshot.editable, actions = editorActions, toolbar = toolbar)
         }
     }
     Column(modifier) {
         if (snapshot.sending) Text(stringResource(R.string.approval_sending), Modifier.testTag("composer_busy"))
-        if (snapshot.uncertainCommand != null) Text(stringResource(R.string.composer_uncertain))
+        if (snapshot.uncertainCommand != null) Text(stringResource(R.string.composer_uncertain), Modifier.testTag("composer_uncertain"))
         if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
             snapshot.attachments.forEach { file ->
@@ -200,6 +207,7 @@ fun ComposerParity(
                         { onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
                         enabled = snapshot.sendable, modifier = Modifier.testTag("thread_send"))
                 }
+                expandedActions()
                 renderEditor(true, Modifier.weight(1f).testTag("composer_expanded"))
             }
         }

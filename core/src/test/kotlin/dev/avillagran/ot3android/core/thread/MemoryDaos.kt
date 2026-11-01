@@ -38,7 +38,7 @@ class MemoryOutboxDao : OutboxDao {
         rows.update { all ->
             changed = 0
             all.mapValues { (_, row) ->
-                if (row.state == OutboxEntity.STATE_SENDING && row.createdAt < before) {
+                if (row.state != OutboxEntity.STATE_UNKNOWN && row.createdAt < before) {
                     changed++
                     row.copy(state = OutboxEntity.STATE_UNKNOWN)
                 } else {

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Réflexion</string>
+    <string name="chat_activity_1">Compactage du contexte</string>
+    <string name="chat_activity_2">Contexte compacté</string>
+    <string name="chat_activity_3">Exécution des commandes</string>
+    <string name="chat_activity_4">Commandes exécutées</string>
+    <string name="chat_activity_5">Lecture des fichiers</string>
+    <string name="chat_activity_6">Fichiers lus</string>
+    <string name="chat_activity_7">Modification des fichiers</string>
+    <string name="chat_activity_8">Fichiers modifiés</string>
+    <string name="chat_activity_9">Recherche de fichiers</string>
+    <string name="chat_activity_10">Recherche de fichiers</string>
+    <string name="chat_activity_11">Recherche sur le Web</string>
+    <string name="chat_activity_12">Recherche Web</string>
+    <string name="chat_activity_13">Travail délégué</string>
+    <string name="chat_activity_14">Appel de l’outil</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">La commande a échoué</string>
+    <string name="chat_activity_17">La lecture a échoué</string>
+    <string name="chat_activity_18">La modification a échoué</string>
+    <string name="chat_activity_19">La recherche a échoué</string>
+    <string name="chat_activity_20">La recherche web a échoué</string>
+    <string name="chat_activity_21">Le travail délégué a échoué</string>
+    <string name="chat_activity_22">L’outil a échoué</string>
+    <string name="chat_activity_23">Échec de la compaction</string>
+    <string name="chat_activity_24">Exécution de %1$s</string>
+    <string name="chat_activity_25">%1$s exécuté</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d en échec</string>
+</resources>

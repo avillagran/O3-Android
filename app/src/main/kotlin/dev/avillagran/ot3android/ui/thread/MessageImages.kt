@@ -3,6 +3,9 @@ package dev.avillagran.ot3android.ui.thread
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.stringResource
 import dev.avillagran.ot3android.R
+import dev.avillagran.ot3android.ui.theme.Ot3Theme
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -118,12 +122,14 @@ internal fun AttachmentImage(attachment: JSONObject, markdown: Boolean = false) 
         var naturalWidth by remember { mutableIntStateOf(0) }
         var showMenu by remember { mutableStateOf(false) }
         val copyLabel = stringResource(R.string.ot3_copy_image)
-        Box(if (markdown) Modifier.widthIn(max = if (naturalWidth > 0) naturalWidth.dp else androidx.compose.ui.unit.Dp.Infinity).fillMaxWidth() else Modifier.size(220.dp, 160.dp)) {
+        Box(if (markdown) Modifier.widthIn(max = if (naturalWidth > 0) naturalWidth.dp else androidx.compose.ui.unit.Dp.Infinity).fillMaxWidth() else Modifier.size(220.dp, 160.dp)
+            .clip(RoundedCornerShape(8.dp)).background(Ot3Theme.colors.foreground.copy(alpha = .04f))
+            .border(1.dp, Ot3Theme.colors.foreground.copy(alpha = .12f), RoundedCornerShape(8.dp))) {
             ImageRead(attachment, attachment.toString(), source, 640,
-                (if (markdown) Modifier.fillMaxWidth() else Modifier.size(220.dp, 160.dp)).combinedClickable(onClickLabel = attachment.optString("name"),
+                (if (markdown) Modifier.fillMaxWidth() else Modifier.fillMaxSize().padding(4.dp)).combinedClickable(onClickLabel = attachment.optString("name"),
                     onClick = { open(attachment) }, onLongClickLabel = copyLabel,
                     onLongClick = { showMenu = true })
-                    .semantics { customActions = listOf(CustomAccessibilityAction(copyLabel) { showMenu = true; true }) }, onNaturalWidth = { naturalWidth = it })
+                    .semantics { customActions = listOf(CustomAccessibilityAction(copyLabel) { showMenu = true; true }) }, onNaturalWidth = { naturalWidth = it }, fitThumbnail = !markdown)
             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                 ImageCopyButton(attachment, source, "menu")
             }
@@ -173,7 +179,7 @@ internal fun readerImageNearViewport(top: Float, bottom: Float, left: Float, rig
     width > 0 && height > 0 && bottom > -height && top < height * 2f && right > -width && left < width * 2f
 
 @Composable
-private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}) {
+private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, fitThumbnail: Boolean = false) {
     var displayWidth by remember(identity, source.generation) { mutableIntStateOf(0) }
     var near by remember(identity, source.generation) { mutableStateOf(false) }
     val density = LocalDensity.current
@@ -186,13 +192,13 @@ private fun ImageRead(attachment: JSONObject, identity: String, source: ReaderIm
     }) {
         if (near && displayWidth > 0) key(identity, source.generation) {
             ActiveImageRead(attachment, identity, source, if (zoom == null) displayWidth else maxEdge,
-                Modifier.fillMaxWidth().onSizeChanged { height = it.height }, zoom, onNaturalWidth, height.takeIf { it > 0 } ?: displayWidth)
+                Modifier.fillMaxWidth().then(if (fitThumbnail) Modifier.fillMaxHeight() else Modifier).onSizeChanged { height = it.height }, zoom, onNaturalWidth, height.takeIf { it > 0 } ?: displayWidth, fitThumbnail)
         } else Spacer(if (height > 0) Modifier.fillMaxWidth().height(with(density) { height.toDp() }) else Modifier.fillMaxWidth().aspectRatio(1f))
     }
 }
 
 @Composable
-private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, loadingHeightPx: Int = 160) {
+private fun ActiveImageRead(attachment: JSONObject, identity: String, source: ReaderImages, maxEdge: Int, modifier: Modifier, zoom: ReaderImageZoom? = null, onNaturalWidth: (Int) -> Unit = {}, loadingHeightPx: Int = 160, fitThumbnail: Boolean = false) {
     val cachedBytes = remember(identity, source.generation) { arrayOfNulls<ByteArray>(1) }
     var retry by remember(identity, source.generation) { mutableIntStateOf(0) }
     var complete by remember(identity, source.generation, retry) { mutableStateOf(false) }
@@ -234,7 +240,7 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
     Surface(shape = RoundedCornerShape(8.dp), modifier = stableModifier, color = MaterialTheme.colorScheme.surfaceVariant) {
         val decoded = bitmap
         if (decoded != null) {
-            if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, filterQuality = androidx.compose.ui.graphics.FilterQuality.High, modifier = if (attachment.has("source")) Modifier.fillMaxWidth().aspectRatio(decoded.width.toFloat() / decoded.height) else Modifier.fillMaxSize())
+            if (zoom == null) Image(decoded.asImageBitmap(), attachment.optString("name"), contentScale = ContentScale.Fit, filterQuality = androidx.compose.ui.graphics.FilterQuality.High, modifier = if (fitThumbnail) Modifier.fillMaxSize() else if (attachment.has("source")) Modifier.fillMaxWidth().aspectRatio(decoded.width.toFloat() / decoded.height) else Modifier.fillMaxSize())
             else ZoomedReaderImage(decoded, attachment.optString("name"), zoom)
         }
         else Column(Modifier.padding(12.dp)) {

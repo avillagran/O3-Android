@@ -22,6 +22,18 @@ internal fun fixtureRow(host: String, id: String, state: String = "idle", pinned
     identity = dev.avillagran.ot3android.core.shell.ProjectIdentity(key = "$host/app", monogram = "O3", label = "O3", kind = "monogram", icon = null, colorSlot = 0, colorKey = "blue", color = "#5aa2e6", fill = .16), canSnooze = true, autoSettleDisabled = false, style = if (settled || snoozed) RowStyle.Slim else RowStyle.Card, swipe = SwipeActions.None,
 )
 class SidebarLayoutTest {
+    @Test fun nestedRowsFollowStableParentIdentityAcrossHostsAndMapOrder() {
+        val root = fixtureRow("node", "root")
+        val child = fixtureRow("node", "child").copy(parentKey = root.key, subagent = true)
+        val nested = fixtureRow("node", "nested").copy(parentKey = child.key, subagent = true)
+        val other = fixtureRow("mac", "root")
+        val rows = nestedSidebarRows(listOf(nested, other, child, root))
+        assertEquals(listOf(other.key, root.key, child.key, nested.key), rows.map { it.key })
+        assertEquals(listOf(0, 0, 1, 2), rows.map { it.depth })
+        val sections = sidebarSections(rows, "projects", true, SidebarMetadata(), false)
+        assertEquals(listOf(root.key, child.key, nested.key), sections.single { it.rows.firstOrNull()?.key == root.key }.rows.map { it.key })
+    }
+
     @Test fun groupingSeparatesPinsInputAndShelvesWithoutDuplicates() {
         val rows = sidebarFixture()
         val sections = sidebarSections(rows, "classic", true, SidebarMetadata(), false)

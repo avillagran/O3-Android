@@ -1,0 +1,212 @@
+{
+  "user": {
+    "id": "u",
+    "role": "user",
+    "text": "Check the project and run the tests.",
+    "createdAt": 1760000000000
+  },
+  "assistant": {
+    "id": "a",
+    "role": "assistant",
+    "text": "I will inspect the project and run the checks.",
+    "rendered": "<p>I will inspect the project and run the checks.</p>",
+    "createdAt": 1760000000000
+  },
+  "activity": {
+    "id": "g",
+    "role": "activity",
+    "activity": {
+      "category": "execute",
+      "count": 2,
+      "active": false,
+      "entries": [
+        {
+          "category": "execute",
+          "command": "rg --files src",
+          "active": false,
+          "status": "completed",
+          "inspector": {
+            "sourceItemId": "c1"
+          }
+        },
+        {
+          "category": "execute",
+          "command": "cargo test --locked",
+          "active": false,
+          "status": "completed",
+          "inspector": {
+            "sourceItemId": "c2"
+          }
+        }
+      ]
+    }
+  },
+  "tool": {
+    "id": "t",
+    "role": "activity",
+    "activity": {
+      "category": "execute",
+      "command": "cargo test --locked",
+      "active": false,
+      "status": "completed",
+      "inspector": {
+        "sourceItemId": "c2"
+      }
+    }
+  },
+  "plan": {
+    "id": "p",
+    "role": "plan",
+    "plan": {
+      "id": "p1",
+      "threadId": "chat",
+      "title": "Implementation plan",
+      "status": "ready",
+      "markdown": "1. Inspect the project\n2. Run the checks",
+      "rendered": "<ol><li>Inspect the project</li><li>Run the checks</li></ol>",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "1. Inspect the project\n2. Run the checks"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "approval": {
+    "requestId": "approve",
+    "requestKind": "command",
+    "responseCapability": "live",
+    "detail": "cargo test --locked",
+    "options": [
+      {
+        "decision": "accept",
+        "label": "Approve"
+      },
+      {
+        "decision": "decline",
+        "label": "Decline"
+      }
+    ]
+  },
+  "question": {
+    "requestId": "question",
+    "responseCapability": "live",
+    "questions": [
+      {
+        "id": "scope",
+        "header": "Scope",
+        "question": "Which checks should run?",
+        "options": [
+          {
+            "label": "All tests",
+            "description": "Run the full suite"
+          },
+          {
+            "label": "Changed files",
+            "description": "Check changed files"
+          }
+        ],
+        "allowCustomAnswer": true
+      }
+    ],
+    "dismissible": true
+  },
+  "working": {
+    "id": "w",
+    "role": "activity",
+    "activity": {
+      "category": "think",
+      "active": true
+    }
+  },
+  "queue": {
+    "held": false,
+    "canReorder": true,
+    "canSteer": true,
+    "items": [
+      {
+        "runId": "queued",
+        "text": "Review the result",
+        "pending": true,
+        "attachments": []
+      }
+    ]
+  },
+  "attachments": {
+    "id": "attach",
+    "role": "user",
+    "text": "Read the attached notes.",
+    "createdAt": 1760000000000,
+    "attachments": [
+      {
+        "id": "notes",
+        "name": "notes.txt",
+        "type": "file",
+        "mimeType": "text/plain",
+        "sizeBytes": 128
+      }
+    ]
+  },
+  "code": {
+    "id": "code",
+    "role": "assistant",
+    "text": "All checks passed.\n\n```sh\ncargo test --locked\n```",
+    "rendered": "<p>All checks passed.</p><table width=\"100%\"><tr><td>sh</td><td align=\"right\"><a href=\"ot3-code-copy://0\">Copy code</a></td></tr></table><pre><code>cargo test --locked\n</code></pre>",
+    "createdAt": 1760000000000,
+    "blocks": [
+      {
+        "type": "paragraph",
+        "spans": [
+          {
+            "type": "text",
+            "text": "All checks passed."
+          }
+        ]
+      },
+      {
+        "type": "code",
+        "language": "sh",
+        "code": "cargo test --locked\n"
+      }
+    ]
+  },
+  "composer": {
+    "text": "Review the result before sending."
+  },
+  "image": {
+    "id": "image",
+    "role": "user",
+    "text": "Review this capture.",
+    "createdAt": 1760000000000,
+    "attachments": [
+      {
+        "id": "fixture-image",
+        "type": "image",
+        "name": "chat-parity-image.png",
+        "source": "/fixture/chat-parity-image.png",
+        "mimeType": "image/png"
+      }
+    ]
+  },
+  "inspector": {
+    "available": true,
+    "title": "cargo test --locked",
+    "status": "completed",
+    "failed": false,
+    "exitCode": 0,
+    "sections": [
+      {
+        "key": "output",
+        "label": "Output",
+        "text": "All checks passed.\nNo failures."
+      }
+    ],
+    "metadata": "{}",
+    "raw": "{\"type\":\"command_execution\"}"
+  }
+}

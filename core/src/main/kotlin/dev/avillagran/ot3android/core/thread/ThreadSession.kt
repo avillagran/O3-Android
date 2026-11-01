@@ -473,7 +473,7 @@ class ThreadSession(
         // Disk I/O suspended: do not publish a record after its credential was withdrawn.
         if (cacheAuthority() != authority) { clearCachedProjection(); return }
         if (!replace(saved)) { store.remove(lease); return }
-        needSnapshot = false
+        needSnapshot = saved.optBoolean("cacheWindowed")
         stale = true
         cacheDirty = false
         if (!publish()) {

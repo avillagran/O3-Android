@@ -32,11 +32,12 @@ data class ComposerSnapshot(
     val loading: Boolean = false,
     val sending: Boolean = false,
     val uncertainCommand: String? = null,
+    val sendBlocked: Boolean = false,
     val interaction: ComposerInteraction = ComposerInteraction.Build,
 ) {
     val editable: Boolean get() = !loading && !sending && uncertainCommand == null
     val transformable: Boolean get() = editable && !composing && attachments.none { it.status == UploadStatus.Uploading }
-    val sendable: Boolean get() = transformable && attachments.all { it.status == UploadStatus.Ready && !it.descriptor.isNullOrBlank() } &&
+    val sendable: Boolean get() = !sendBlocked && transformable && attachments.all { it.status == UploadStatus.Ready && !it.descriptor.isNullOrBlank() } &&
         (text.isNotBlank() || attachments.isNotEmpty())
 }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">スレッドのローカルキャッシュ</string>
+    <string name="cache_usage">使用量 %1$d MB · 上限 %2$d MB</string>
+    <string name="cache_clear">キャッシュを消去</string>
+</resources>

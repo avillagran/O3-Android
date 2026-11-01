@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.CompositionLocalProvider
@@ -91,8 +92,7 @@ import dev.avillagran.ot3android.core.home.MessageMatch
 import dev.avillagran.ot3android.core.home.Shelf
 import dev.avillagran.ot3android.ui.icons.Ot3Icons
 import dev.avillagran.ot3android.ui.navigation.LocalSelectedThreadKey
-import dev.avillagran.ot3android.ui.kit.ThreadCardRow
-import dev.avillagran.ot3android.ui.kit.ThreadSlimRow
+import dev.avillagran.ot3android.ui.kit.DesktopThreadRow
 
 /** Everything Home's UI can ask for; the route turns each into a view-model call or a navigation. */
 sealed interface HomeIntent {
@@ -361,8 +361,13 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
     val selectedKey = LocalSelectedThreadKey.current
     val layoutItems = remember(state.items, state.rows, state.filter, state.query, settings.interfaceLayout) {
         if (settings.interfaceLayout != "classic" && !state.filter.active && state.query.isBlank()) {
-            state.rows.values.filterNot { it.subagent }.map { HomeItem.Row(it) } +
+            nestedSidebarRows(state.rows.values.toList()).map { HomeItem.Row(it) } +
                 state.items.filter { it is HomeItem.ShowMoreSettled || it is HomeItem.Message || it is HomeItem.MessagesHeader }
+        } else if (!state.filter.active && state.query.isBlank()) buildList {
+            val group = mutableListOf<HomeRow>()
+            fun flush() { addAll(nestedSidebarRows(group).map { HomeItem.Row(it) }); group.clear() }
+            state.items.forEach { item -> if (item is HomeItem.Row) group.add(item.row) else { flush(); add(item) } }
+            flush()
         } else state.items
     }
     val sections = remember(layoutItems) { homeListSections(layoutItems) }
@@ -385,13 +390,16 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                     val entries = sidebarEntries(sections.main, settings, state.shelves.grouped, metadata, chip)
                     val limited = entries.filterIsInstance<SidebarEntry.Header>().filter { it.count > 5 }.map { it.key }.toSet()
                     val shown = mutableMapOf<String, Int>()
-                    entries.forEach { entry ->
+                    var hiddenDepth: Int? = null
+                    entries.forEachIndexed { index, entry ->
                         fun hidden(section: String): Boolean = collapsed.any { section == it || section.startsWith("$it/") }
                         when (entry) {
                             is SidebarEntry.Header -> if (!collapsed.any { entry.key.startsWith("$it/") }) item(entry.key) {
+                                val expansion = stringResource(if (entry.key in collapsed) R.string.about_collapsed else R.string.about_expanded)
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                    TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f)) {
-                                        Text("${if (entry.key in collapsed) "▸" else "▾"} ${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
+                                    TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f).testTag("sidebar_toggle_${entry.key}").semantics { stateDescription = expansion }) {
+                                        dev.avillagran.ot3android.ui.kit.Ot3Icon(if (entry.key in collapsed) "chevron-right" else "chevron-down", null)
+                                        Text("${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
                                             modifier = Modifier.fillMaxWidth(), color = Ot3Theme.colors.dim,
                                             style = MaterialTheme.typography.labelLarge)
                                     }
@@ -401,12 +409,27 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                                 }
                             }
                             is SidebarEntry.Item -> {
-                                val position = shown.getOrDefault(entry.section, 0)
-                                shown[entry.section] = position + 1
+                                val row = (entry.value as? HomeItem.Row)?.row
+                                if (row != null && hiddenDepth != null && row.depth <= hiddenDepth!!) hiddenDepth = null
+                                val hideChild = row != null && hiddenDepth != null
+                                val treeKey = row?.let { "thread:${it.key}" }
+                                val children = if (row == null) emptyList() else entries.drop(index + 1).takeWhile {
+                                    it is SidebarEntry.Item && (it.value as? HomeItem.Row)?.row?.depth?.let { depth -> depth > row.depth } == true
+                                }
+                                if (!hideChild && treeKey in collapsed && children.isNotEmpty()) hiddenDepth = row!!.depth
+                                val position = shown.getOrDefault(entry.section, 0).let { roots -> if (row != null && row.depth > 0) (roots - 1).coerceAtLeast(0) else roots }
+                                if (row == null || row.depth == 0) shown[entry.section] = position + 1
                                 val selected = (entry.value as? HomeItem.Row)?.row?.key == selectedKey
-                                if (!hidden(entry.section) && (entry.section !in limited || entry.section in unlimited || position < 5 || selected))
-                                    item(entry.value.key) { HomeListItem(entry.value, onIntent, Modifier.animateItem(
-                                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                                if (!hideChild && !hidden(entry.section) && (entry.section !in limited || entry.section in unlimited || position < 5 || selected))
+                                    item(entry.value.key) {
+                                        val expansion = stringResource(if (treeKey in collapsed) R.string.about_collapsed else R.string.about_expanded)
+                                        val workingChildren = children.count { ((it as? SidebarEntry.Item)?.value as? HomeItem.Row)?.row?.working == true }
+                                        HomeListItem(entry.value, onIntent, Modifier.animateItem(
+                                            fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()),
+                                            subagents = children.takeIf { it.isNotEmpty() }?.let {
+                                                dev.avillagran.ot3android.ui.kit.SubagentsModel(it.size, workingChildren, treeKey !in collapsed)
+                                            }, onSubagents = { scope.launch { viewPreferences.toggleSidebarSection(treeKey!!) } })
+                                    }
                             }
                         }
                     }
@@ -417,10 +440,25 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                         if (header.expanded && members.isNotEmpty()) {
                             LazyColumn(Modifier.fillMaxWidth().heightIn(max = bodyLimit)
                                 .testTag("home_shelf_list_${header.shelf.name}")) {
-                                items((sidebarSections(members.filterIsInstance<HomeItem.Row>().map { it.row }, "classic", false, metadata,
+                                val shelfRows = sidebarSections(nestedSidebarRows(members.filterIsInstance<HomeItem.Row>().map { it.row }), "classic", false, metadata,
                                     settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.THREAD_ORDER) == "reply")
-                                    .flatMap { it.rows }.filter { matchesChip(it, chip, metadata) }.map { HomeItem.Row(it) } + members.filterNot { it is HomeItem.Row }), key = { it.key }, contentType = { it::class }) { HomeListItem(it, onIntent, Modifier.animateItem(
-                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                                    .flatMap { it.rows }.filter { matchesChip(it, chip, metadata) }
+                                var hiddenAt: Int? = null
+                                shelfRows.forEachIndexed { index, row ->
+                                    if (hiddenAt != null && row.depth <= hiddenAt!!) hiddenAt = null
+                                    val children = shelfRows.drop(index + 1).takeWhile { it.depth > row.depth }
+                                    val treeKey = "thread:${row.key}"
+                                    val hidden = hiddenAt != null
+                                    if (treeKey in collapsed && children.isNotEmpty()) hiddenAt = row.depth
+                                    if (!hidden) item(row.key) {
+                                        HomeListItem(HomeItem.Row(row), onIntent, Modifier.animateItem(
+                                            fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()),
+                                            subagents = children.takeIf { it.isNotEmpty() }?.let {
+                                                dev.avillagran.ot3android.ui.kit.SubagentsModel(it.size, it.count { child -> child.working }, treeKey !in collapsed)
+                                            }, onSubagents = { scope.launch { viewPreferences.toggleSidebarSection(treeKey) } })
+                                    }
+                                }
+                                items(members.filterNot { it is HomeItem.Row }, key = { it.key }) { HomeListItem(it, onIntent) }
                             }
                         }
                     }
@@ -431,9 +469,9 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
 }
 
 @Composable
-private fun HomeListItem(item: HomeItem, onIntent: (HomeIntent) -> Unit, rowModifier: Modifier = Modifier) {
+private fun HomeListItem(item: HomeItem, onIntent: (HomeIntent) -> Unit, rowModifier: Modifier = Modifier, subagents: dev.avillagran.ot3android.ui.kit.SubagentsModel? = null, onSubagents: (() -> Unit)? = null) {
     when (item) {
-        is HomeItem.Row -> ThreadRow(item.row, onIntent, rowModifier)
+        is HomeItem.Row -> ThreadRow(item.row, onIntent, rowModifier, subagents, onSubagents)
         is HomeItem.ShelfHeader -> ShelfHeader(item, onIntent)
         is HomeItem.ShowMoreSettled -> TextButton(
             onClick = { onIntent(HomeIntent.ShowMoreSettled) },
@@ -447,16 +485,16 @@ private fun HomeListItem(item: HomeItem, onIntent: (HomeIntent) -> Unit, rowModi
     }
 }
 
-/** A `sidebar.view` row in the kit's card or slim row. */
+/** A `sidebar.view` row rendered by the shared Desktop layout. */
 @Composable
-private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModifier: Modifier = Modifier) {
+private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModifier: Modifier = Modifier, subagents: dev.avillagran.ot3android.ui.kit.SubagentsModel? = null, onSubagents: (() -> Unit)? = null) {
     val haptics = LocalHapticFeedback.current
     val motion = Ot3Theme.motion
     val drift = remember(row.key) { Animatable(if (motion.animates) -18f else 0f) }
     LaunchedEffect(row.key, motion.animates) { drift.animateTo(0f, motion.rowArriveDrift()) }
     val density = LocalDensity.current.density
     val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
-    val model = row.toThreadRowModel()
+    val model = row.toThreadRowModel().copy(subagents = subagents)
     val onClick = { onIntent(HomeIntent.OpenRow(row)) }
     val onLongClick = {
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -473,11 +511,7 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
     val modifier = animatedModifier.graphicsLayer { translationX = drift.value * density * direction }.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
     CompositionLocalProvider(LocalSidebarRows provides LocalSidebarRows.current.copy(shelved = row.slim, host = LocalSidebarRows.current.hostStyles[row.environmentId] ?: HostStyle())) {
     ThreadSwipeActions(row, { onIntent(HomeIntent.Swipe(row, it)) }, modifier) { contentModifier ->
-    if (row.slim || LocalSidebarRows.current.compact) {
-        ThreadSlimRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
-    } else {
-        ThreadCardRow(model, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
-    }
+    DesktopThreadRow(model, onSubagentsClick = onSubagents, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
     }
     }
 }

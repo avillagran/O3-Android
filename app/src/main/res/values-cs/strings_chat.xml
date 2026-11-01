@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Přemýšlení</string>
+    <string name="chat_activity_1">Zhušťování kontextu</string>
+    <string name="chat_activity_2">Kontext zhuštěn</string>
+    <string name="chat_activity_3">Provádění příkazů</string>
+    <string name="chat_activity_4">Příkazy provedeny</string>
+    <string name="chat_activity_5">Čtení souborů</string>
+    <string name="chat_activity_6">Soubory přečteny</string>
+    <string name="chat_activity_7">Úprava souborů</string>
+    <string name="chat_activity_8">Soubory upraveny</string>
+    <string name="chat_activity_9">Vyhledávání souborů</string>
+    <string name="chat_activity_10">Hledání souborů</string>
+    <string name="chat_activity_11">Vyhledávání na webu</string>
+    <string name="chat_activity_12">Hledání na webu</string>
+    <string name="chat_activity_13">Delegovaná práce</string>
+    <string name="chat_activity_14">Volání nástroje</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Příkaz selhal</string>
+    <string name="chat_activity_17">Čtení selhalo</string>
+    <string name="chat_activity_18">Úprava selhala</string>
+    <string name="chat_activity_19">Hledání selhalo</string>
+    <string name="chat_activity_20">Hledání na webu selhalo</string>
+    <string name="chat_activity_21">Delegovaná práce selhala</string>
+    <string name="chat_activity_22">Nástroj selhal</string>
+    <string name="chat_activity_23">Kompaktování selhalo</string>
+    <string name="chat_activity_24">Spouští se %1$s</string>
+    <string name="chat_activity_25">Spuštěno %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · selhalo: %2$d</string>
+</resources>

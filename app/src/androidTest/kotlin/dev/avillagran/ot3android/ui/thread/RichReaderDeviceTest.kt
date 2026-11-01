@@ -90,8 +90,10 @@ class RichReaderDeviceTest {
             assertTrue("Horizontal swipe must move code", code.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0)
             rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_fold_work/think-reader"))
             rule.onNodeWithTag("thread_fold_work/think-reader").performClick()
-            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag("thread_inspect_work/think-reader_0"))
-            rule.onNodeWithTag("thread_inspect_work/think-reader_0").performClick()
+            rule.onNodeWithTag(ThreadScreenTags.TIMELINE).performScrollToNode(hasTestTag(ThreadScreenTags.message("work/think-reader")))
+            // Group entries have their own bounded scroll surface. Reveal the target
+            // through every scroll ancestor before injecting a real touch.
+            rule.onNodeWithTag("thread_inspect_work/think-reader_0").performScrollTo().assertIsDisplayed().performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_copy_inspector_reasoning").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithText("Reasoning").assertExists()
             rule.onNodeWithText("Compare the native reader with the reference", substring = true).assertExists()

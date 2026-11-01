@@ -34,10 +34,10 @@ class PhoneThreadScreenshotTest : ScreenshotTest() {
                     title = "Phone layout", readingPositionLoaded = true,
                     connection = ConnectionState.Connected(ServerDescriptor("env", "NODE", null, "linux", null))),
                     {}, {}, {}, {}, {}, {}, {}, {}, modifier = Modifier.weight(1f),
-                    composerSlot = {
+                    composerSlot = { controls ->
                         ComposerParity(ComposerSnapshot(ComposerScope("env", "project", "phone")),
                             setOf(ComposerAction.Attach, ComposerAction.Undo, ComposerAction.Redo, ComposerAction.QuickReplies),
-                            { _, _, _, _ -> }, {})
+                            { _, _, _, _ -> }, {}, toolbar = controls)
                     })
             }
         }

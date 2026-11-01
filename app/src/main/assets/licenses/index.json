@@ -873,5 +873,19 @@
     "license": "MIT / Apache-2.0 (DOMPurify dual-license option)",
     "file": "mermaid-bundled-notices.txt",
     "source": "https://github.com/mermaid-js/mermaid/tree/mermaid%4011.17.2"
+  },
+  {
+    "name": "FiraCode Nerd Font (preview glyph subset)",
+    "version": "installed distribution",
+    "license": "OFL-1.1",
+    "file": "firacode-nerd-OFL.txt",
+    "source": "https://github.com/ryanoasis/nerd-fonts"
+  },
+  {
+    "name": "Font Awesome (Nerd Font preview symbol)",
+    "version": "",
+    "license": "OFL-1.1 (font)",
+    "file": "font-awesome.txt",
+    "source": "https://fontawesome.com/license/free"
   }
 ]

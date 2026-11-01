@@ -50,6 +50,7 @@ internal fun HostMaintenancePage(navigator: Ot3Navigator, route: HostMaintenance
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(dev.avillagran.ot3android.ui.settings.maintenance.title(page))) },
         navigationIcon = { TextButton(onClick = { navigator.back() }) { Text(stringResource(R.string.action_back)) } }) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
+            if (page == MaintenancePage.STORAGE) dev.avillagran.ot3android.ui.settings.storage.LocalCacheSettings()
             ScopeChoice(stringResource(R.string.preferences_all_environments), environment,
                 environments.map { PreferencesScopeOption(it.id, it.label) }) { environment = it; project = null }
             val current = connection

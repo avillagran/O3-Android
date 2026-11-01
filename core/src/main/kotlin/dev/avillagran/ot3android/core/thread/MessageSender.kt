@@ -208,6 +208,11 @@ class MessageSender(
         if (error is CancellationException) throw error
         outbox.setState(commandId, OutboxEntity.STATE_UNKNOWN)
         SendResult.OutcomeUnknown(commandId)
+    } catch (error: Exception) {
+        // Legacy JSON, stale attachments and unexpected native failures must remain actionable.
+        if (error is CancellationException) throw error
+        outbox.setState(commandId, OutboxEntity.STATE_UNKNOWN)
+        SendResult.OutcomeUnknown(commandId)
     }
 
     /** Runs [block] in the app scope, so the caller going away does not cancel it. */

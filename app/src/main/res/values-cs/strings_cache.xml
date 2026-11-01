@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Místní mezipaměť vláken</string>
+    <string name="cache_usage">Použito %1$d MB · limit %2$d MB</string>
+    <string name="cache_clear">Vymazat mezipaměť</string>
+</resources>

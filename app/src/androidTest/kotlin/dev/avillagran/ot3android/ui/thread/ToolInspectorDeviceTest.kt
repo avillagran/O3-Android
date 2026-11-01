@@ -35,8 +35,10 @@ class ToolInspectorDeviceTest {
             timeline.performScrollToNode(hasTestTag("thread_fold_work/think-reader"))
             rule.onNodeWithTag("thread_fold_work/think-reader").performClick()
             scenario.onActivity { assertTrue(it.fixture.transport.calls.none { call -> call.fn == "orchestration.getTurnItem" }) }
-            timeline.performScrollToNode(hasTestTag("thread_inspect_work/think-reader_0"))
-            rule.onNodeWithTag("thread_inspect_work/think-reader_0").performClick()
+            timeline.performScrollToNode(hasTestTag(ThreadScreenTags.message("work/think-reader")))
+            // Group entries have their own bounded scroll surface. Reveal the target
+            // through every scroll ancestor before injecting a real touch.
+            rule.onNodeWithTag("thread_inspect_work/think-reader_0").performScrollTo().assertIsDisplayed().performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_copy_inspector_reasoning").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("thread_inspector_tab_details").performScrollTo()
             capture("$name-details-portrait")
@@ -62,7 +64,7 @@ class ToolInspectorDeviceTest {
             rule.onNodeWithTag("thread_inspector_close").performScrollTo()
             rule.onNodeWithTag("thread_inspector_close").performClick()
             rule.waitUntil(10_000) { rule.onAllNodesWithTag("thread_inspector").fetchSemanticsNodes().isEmpty() }
-            timeline.performScrollToNode(hasTestTag("thread_inspect_work/think-reader_0"))
+            timeline.performScrollToNode(hasTestTag(ThreadScreenTags.message("work/think-reader")))
             rule.onNodeWithTag("thread_inspect_work/think-reader_0").assertIsDisplayed()
             capture("$name-closed-landscape")
             scenario.onActivity { activity ->

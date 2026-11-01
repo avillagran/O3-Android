@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Lokalna pamięć wątków</string>
+    <string name="cache_usage">Użyto %1$d MB · limit %2$d MB</string>
+    <string name="cache_clear">Wyczyść pamięć podręczną</string>
+</resources>

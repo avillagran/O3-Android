@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Denken</string>
+    <string name="chat_activity_1">Context comprimeren</string>
+    <string name="chat_activity_2">Context gecomprimeerd</string>
+    <string name="chat_activity_3">Opdrachten uitvoeren</string>
+    <string name="chat_activity_4">Opdrachten uitgevoerd</string>
+    <string name="chat_activity_5">Bestanden lezen</string>
+    <string name="chat_activity_6">Bestanden gelezen</string>
+    <string name="chat_activity_7">Bestanden bewerken</string>
+    <string name="chat_activity_8">Bestanden bewerkt</string>
+    <string name="chat_activity_9">Bestanden zoeken</string>
+    <string name="chat_activity_10">Bestanden zoeken</string>
+    <string name="chat_activity_11">Zoeken op het web</string>
+    <string name="chat_activity_12">Zoeken op het web</string>
+    <string name="chat_activity_13">Gedelegeerd werk</string>
+    <string name="chat_activity_14">Hulpmiddel aanroepen</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Opdracht mislukt</string>
+    <string name="chat_activity_17">Lezen mislukt</string>
+    <string name="chat_activity_18">Bewerken mislukt</string>
+    <string name="chat_activity_19">Zoeken mislukt</string>
+    <string name="chat_activity_20">Zoeken op het web mislukt</string>
+    <string name="chat_activity_21">Gedelegeerd werk mislukt</string>
+    <string name="chat_activity_22">Tool mislukt</string>
+    <string name="chat_activity_23">Compactie mislukt</string>
+    <string name="chat_activity_24">%1$s uitvoeren</string>
+    <string name="chat_activity_25">%1$s uitgevoerd</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d mislukt</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">ذاكرة المحادثات المحلية</string>
+    <string name="cache_usage">المستخدم %1$d MB · الحد %2$d MB</string>
+    <string name="cache_clear">مسح الذاكرة المؤقتة</string>
+</resources>

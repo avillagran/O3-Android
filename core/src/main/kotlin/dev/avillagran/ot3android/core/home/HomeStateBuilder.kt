@@ -154,6 +154,7 @@ object HomeStateBuilder {
             working = row.working || row.activeRun,
             depth = row.depth,
             subagent = row.subagent,
+            parentKey = row.raw.optString("parentThreadId").takeIf { it.isNotBlank() && it != "null" }?.let { "${row.environmentId}/$it" },
             identity = sidebar.identity(row),
             canSnooze = row.canSnooze,
             autoSettleDisabled = row.autoSettleDisabled,

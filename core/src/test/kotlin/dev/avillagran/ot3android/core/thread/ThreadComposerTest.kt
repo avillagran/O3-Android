@@ -55,6 +55,36 @@ class ThreadComposerTest {
         assertEquals(0, dispatches())
     }
 
+    @Test fun legacyReceiptsOfferRecoveryAndNeverReplayOnLoad() = runTest {
+        val text = "Old unsent text — preserve me"
+        for (status in listOf("pending", "uncertain", "failed", "unknown", "sending")) {
+            outboxDao.insert(OutboxEntity(status, "env-1", "t1", JSONObject().put("text", text).toString(), 1, status))
+        }
+        assertEquals(4, outbox.recoverInterrupted(2))
+        val composer = composer()
+        assertEquals(5, composer.state.value.unconfirmed.size)
+        assertTrue(composer.state.value.unconfirmed.all { it.text == text })
+        composer.onDraftChange("Can still edit")
+        assertEquals("Can still edit", composer.state.value.draft)
+        assertFalse(composer.state.value.canSend)
+        assertEquals(0, dispatches())
+        composer.state.value.unconfirmed.forEach { composer.discard(it.commandId) }
+        runCurrent()
+        assertTrue(composer.state.value.canSend)
+        assertEquals("Can still edit", composer.state.value.draft)
+    }
+
+    @Test fun editRecoveryPersistsBeforeDiscardAndDoesNotOverwriteNewTypingOnRepeat() = runTest {
+        val composer = composer()
+        composer.onDraftChange("New draft")
+        assertTrue(composer.editPending("legacy", "Old text"))
+        assertEquals("New draft\n\nOld text", persistedDraft())
+        composer.onDraftChange("Typing after recovery")
+        assertTrue(composer.editPending("legacy", "Old text"))
+        assertEquals("Typing after recovery", composer.state.value.draft)
+        assertEquals(0, dispatches())
+    }
+
     private fun persistedDraft() = draftDao.rows.value[DraftRepository.key("env-1", "t1")]?.text
 
     private fun dispatches() = fake.calls.count { it.fn == MessageSender.DISPATCH }

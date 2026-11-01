@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Pohditaan</string>
+    <string name="chat_activity_1">Tiivistetään kontekstia</string>
+    <string name="chat_activity_2">Konteksti tiivistetty</string>
+    <string name="chat_activity_3">Suoritetaan komentoja</string>
+    <string name="chat_activity_4">Komennot suoritettu</string>
+    <string name="chat_activity_5">Luetaan tiedostoja</string>
+    <string name="chat_activity_6">Tiedostot luettu</string>
+    <string name="chat_activity_7">Muokataan tiedostoja</string>
+    <string name="chat_activity_8">Tiedostot muokattu</string>
+    <string name="chat_activity_9">Etsitään tiedostoja</string>
+    <string name="chat_activity_10">Tiedostohaku</string>
+    <string name="chat_activity_11">Haetaan verkosta</string>
+    <string name="chat_activity_12">Verkkohaku</string>
+    <string name="chat_activity_13">Delegoitu työ</string>
+    <string name="chat_activity_14">Kutsutaan työkalua</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Komento epäonnistui</string>
+    <string name="chat_activity_17">Luku epäonnistui</string>
+    <string name="chat_activity_18">Muokkaus epäonnistui</string>
+    <string name="chat_activity_19">Haku epäonnistui</string>
+    <string name="chat_activity_20">Verkkohaku epäonnistui</string>
+    <string name="chat_activity_21">Delegoitu työ epäonnistui</string>
+    <string name="chat_activity_22">Työkalu epäonnistui</string>
+    <string name="chat_activity_23">Tiivistys epäonnistui</string>
+    <string name="chat_activity_24">Suoritetaan %1$s</string>
+    <string name="chat_activity_25">Suoritettu %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d epäonnistui</string>
+</resources>

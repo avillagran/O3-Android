@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android.ui.thread
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.res.painterResource
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.res.stringResource
@@ -51,18 +54,14 @@ internal fun ComposerModels(
         it.optString("provider") == row.optString("instanceId") && it.optString("model") == row.optString("model")
     }
     val colors = Ot3Theme.colors
-    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        TextButton(onClick = {
+    Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
+        val modelLabel = stringResource(R.string.composer_model) + ": " + selection.optString("model")
+        IconButton(onClick = {
             provider = if (favorites.isNotEmpty()) "favorites" else selection.optString("instanceId")
             search = ""; legacy = selected?.optBoolean("isLegacy") == true; picker = true; onRefresh()
-        }, enabled = enabled, modifier = Modifier.weight(1f).testTag("composer_models")) {
-            selected?.let { ProviderIcon(it, colors.dim, Modifier.padding(end = 4.dp)) }
-            Text(
-                selected?.optString("shortName")?.takeIf { it.isNotBlank() && it != "null" }
-                    ?: selected?.optString("displayName")?.takeIf { it.isNotBlank() && it != "null" }
-                    ?: selection.optString("model").ifBlank { stringResource(R.string.composer_model) },
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
+        }, enabled = enabled, modifier = Modifier.size(48.dp).testTag("composer_models").semantics { contentDescription = modelLabel }) {
+            if (selected != null) ProviderIcon(selected, colors.dim)
+            else dev.avillagran.ot3android.ui.kit.Ot3Icon("bot", null)
         }
         permissions()
         Ot3IconButton("sliders-horizontal", stringResource(R.string.composer_options),

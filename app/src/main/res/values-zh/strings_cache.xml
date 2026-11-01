@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">本地会话缓存</string>
+    <string name="cache_usage">已用 %1$d MB · 上限 %2$d MB</string>
+    <string name="cache_clear">清除缓存</string>
+</resources>

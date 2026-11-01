@@ -125,4 +125,21 @@ class TimelineFollowLatestTest {
         rule.onNodeWithTag(ThreadScreenTags.message("m20")).assertIsNotDisplayed()
         assertTrue(scrollValue() > 0f)
     }
+
+    @Test fun cachedWindowDoesNotOverwriteAnAnchorMissingUntilRefresh() {
+        val full = view(20)
+        val all = full.getJSONArray("timeline")
+        data.value = JSONObject().put("timeline", JSONArray((15 until 20).map { all.getJSONObject(it) }))
+        val refreshing = mutableStateOf(true)
+        val saved = mutableListOf<ReadingPosition>()
+        rule.setContent { Ot3Theme { Box(Modifier.height(300.dp)) {
+            TimelineReader(data.value, emptyList(), initialPosition = ReadingPosition("m2", 17, 0),
+                refreshing = refreshing.value, onPosition = { saved.add(it) })
+        } } }
+        rule.waitForIdle()
+        assertTrue(saved.isEmpty())
+        rule.runOnIdle { data.value = full; refreshing.value = false }
+        rule.waitForIdle()
+        rule.onNodeWithTag(ThreadScreenTags.message("m2")).assertIsDisplayed()
+    }
 }

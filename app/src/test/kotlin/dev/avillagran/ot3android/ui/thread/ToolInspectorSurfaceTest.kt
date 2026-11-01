@@ -160,8 +160,7 @@ class ToolInspectorSurfaceTest {
             }
         } }
         val list = rule.onNodeWithTag(ThreadScreenTags.TIMELINE)
-        list.performScrollToNode(hasTestTag("thread_fold_tools"))
-        rule.onNodeWithTag("thread_fold_tools").performClick()
+        list.performScrollToNode(hasTestTag("thread_inspect_tools_0"))
         list.performScrollToNode(hasTestTag("thread_inspect_tools_0"))
         rule.onNodeWithTag("thread_inspect_tools_0").performClick()
         rule.onNodeWithTag("thread_inspector_tab_raw").performScrollTo()
@@ -191,7 +190,6 @@ class ToolInspectorSurfaceTest {
             JSONObject().put("id", "source").put("role", "activity").put("activity",
                 JSONObject().put("title", "Tool").put("inspector", JSONObject().put("revision", "source"))))))
         rule.setContent { Ot3Theme { TimelineReader(projected.value, emptyList(), onInspect = { reads++; view() }) } }
-        rule.onNodeWithTag("thread_fold_source").performClick()
         rule.onNodeWithTag("thread_inspect_source_0").performClick()
         rule.onNodeWithTag("thread_inspector_tab_raw").performClick()
         rule.runOnIdle { projected.value = JSONObject().put("timeline", org.json.JSONArray().put(

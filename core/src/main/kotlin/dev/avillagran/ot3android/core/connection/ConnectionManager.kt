@@ -38,6 +38,7 @@ class ConnectionManager(
     private val random: Random = Random.Default,
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val computation: CoroutineDispatcher = Dispatchers.Default,
+    private val cache: dev.avillagran.ot3android.core.thread.ThreadCache? = null,
 ) {
     private val _supervisors = MutableStateFlow<Map<String, ConnectionSupervisor>>(emptyMap())
     val supervisors: StateFlow<Map<String, ConnectionSupervisor>> = _supervisors.asStateFlow()
@@ -67,7 +68,16 @@ class ConnectionManager(
             _supervisors.value[environmentId] ?: run {
                 // Read under the lock, so a forget() running now cannot leave a supervisor behind.
                 val environment = repository.find(environmentId) ?: return@withLock null
-                create(environment).also { created ->
+                val created = create(environment)
+                try {
+                    val authority = repository.cacheAuthority(environmentId)
+                    if (authority != null) {
+                        val saved = cache?.readSidebar(environmentId, authority)
+                        if (saved != null && repository.cacheAuthority(environmentId) == authority)
+                            created.showCachedShell(dev.avillagran.ot3android.core.shell.ShellReducer.parse(saved))
+                    }
+                } catch (_: java.io.IOException) { /* Disposable cache; connection proceeds. */ }
+                created.also { created ->
                     synchronized(this) { _supervisors.update { it + (environmentId to created) } }
                 }
             }
