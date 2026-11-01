@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Tänker</string>
+    <string name="chat_activity_1">Komprimerar kontext</string>
+    <string name="chat_activity_2">Kontext komprimerad</string>
+    <string name="chat_activity_3">Kör kommandon</string>
+    <string name="chat_activity_4">Kommandon körda</string>
+    <string name="chat_activity_5">Läser filer</string>
+    <string name="chat_activity_6">Filer lästa</string>
+    <string name="chat_activity_7">Redigerar filer</string>
+    <string name="chat_activity_8">Filer redigerade</string>
+    <string name="chat_activity_9">Söker filer</string>
+    <string name="chat_activity_10">Filsökning</string>
+    <string name="chat_activity_11">Söker på webben</string>
+    <string name="chat_activity_12">Webbsökning</string>
+    <string name="chat_activity_13">Delegerat arbete</string>
+    <string name="chat_activity_14">Anropar verktyg</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Kommandot misslyckades</string>
+    <string name="chat_activity_17">Läsningen misslyckades</string>
+    <string name="chat_activity_18">Redigeringen misslyckades</string>
+    <string name="chat_activity_19">Sökningen misslyckades</string>
+    <string name="chat_activity_20">Webbsökningen misslyckades</string>
+    <string name="chat_activity_21">Delegerat arbete misslyckades</string>
+    <string name="chat_activity_22">Verktyget misslyckades</string>
+    <string name="chat_activity_23">Komprimering misslyckades</string>
+    <string name="chat_activity_24">Kör %1$s</string>
+    <string name="chat_activity_25">Körde %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d misslyckades</string>
+</resources>

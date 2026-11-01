@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android.ui.thread
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -53,7 +54,7 @@ internal fun ComposerModels(
         it.optString("provider") == row.optString("instanceId") && it.optString("model") == row.optString("model")
     }
     val colors = Ot3Theme.colors
-    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
         val modelLabel = stringResource(R.string.composer_model) + ": " + selection.optString("model")
         IconButton(onClick = {
             provider = if (favorites.isNotEmpty()) "favorites" else selection.optString("instanceId")

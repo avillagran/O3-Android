@@ -27,7 +27,9 @@ fun LocalCacheSettings() {
         TextButton(onClick = { expanded = !expanded }) {
             Text(stringResource(R.string.cache_title))
         }
-        if (expanded) {
+        if (expanded) dev.avillagran.ot3android.ui.kit.Ot3Sheet(
+            onDismissRequest = { expanded = false }, title = stringResource(R.string.cache_title)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
         usage?.let { current ->
             Text(stringResource(R.string.cache_usage, current.bytes / (1024 * 1024), current.limit / (1024 * 1024)))
             Row {
@@ -46,6 +48,7 @@ fun LocalCacheSettings() {
         TextButton(enabled = !busy, onClick = { busy = true; scope.launch {
             try { cache.clear(); usage = cache.usage() } finally { busy = false }
         } }) { Text(stringResource(R.string.cache_clear)) }
+        }
         }
     }
 }

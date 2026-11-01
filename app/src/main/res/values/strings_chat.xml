@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Thinking</string>
+    <string name="chat_activity_1">Compacting context</string>
+    <string name="chat_activity_2">Context compacted</string>
+    <string name="chat_activity_3">Running commands</string>
+    <string name="chat_activity_4">Ran commands</string>
+    <string name="chat_activity_5">Reading files</string>
+    <string name="chat_activity_6">Read files</string>
+    <string name="chat_activity_7">Editing files</string>
+    <string name="chat_activity_8">Edited files</string>
+    <string name="chat_activity_9">Searching files</string>
+    <string name="chat_activity_10">File search</string>
+    <string name="chat_activity_11">Searching the web</string>
+    <string name="chat_activity_12">Web search</string>
+    <string name="chat_activity_13">Delegated work</string>
+    <string name="chat_activity_14">Calling tool</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Command failed</string>
+    <string name="chat_activity_17">Read failed</string>
+    <string name="chat_activity_18">Edit failed</string>
+    <string name="chat_activity_19">Search failed</string>
+    <string name="chat_activity_20">Web search failed</string>
+    <string name="chat_activity_21">Delegated work failed</string>
+    <string name="chat_activity_22">Tool failed</string>
+    <string name="chat_activity_23">Compaction failed</string>
+    <string name="chat_activity_24">Running %1$s</string>
+    <string name="chat_activity_25">Ran %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d failed</string>
+</resources>

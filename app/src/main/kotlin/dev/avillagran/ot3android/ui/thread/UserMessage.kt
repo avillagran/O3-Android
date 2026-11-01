@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 internal fun UserMessage(row: JSONObject, onQuote: ((String) -> Unit)? = null) {
     val id = row.getString("id")
     val author = stringResource(R.string.ot3_reader_you)
-    BoxWithConstraints(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id))) {
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = 16.dp).testTag(ThreadScreenTags.message(id))) {
         val bubbleMaxWidth = maxWidth * .8f
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
             val attribution = when (row.optString("attribution")) {
@@ -53,8 +53,8 @@ internal fun UserMessage(row: JSONObject, onQuote: ((String) -> Unit)? = null) {
                     MessageDate(row.optLong("createdAt"))
                     CopyText(row.optString("text"), "message_$id")
                     if (row.optString("text").isNotBlank()) onQuote?.let { quote ->
-                        androidx.compose.material3.TextButton(onClick = { quote(row.optString("text")) },
-                            modifier = Modifier.testTag("transcript_quote_$id")) { Text(stringResource(R.string.transcript_quote)) }
+                        dev.avillagran.ot3android.ui.kit.Ot3IconButton("message-square", stringResource(R.string.transcript_quote),
+                            { quote(row.optString("text")) }, modifier = Modifier.size(32.dp).testTag("transcript_quote_$id"))
                     }
                 }
             }

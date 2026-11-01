@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Pensando</string>
+    <string name="chat_activity_1">Compactando contexto</string>
+    <string name="chat_activity_2">Contexto compactado</string>
+    <string name="chat_activity_3">Ejecutando comandos</string>
+    <string name="chat_activity_4">Comandos ejecutados</string>
+    <string name="chat_activity_5">Leyendo archivos</string>
+    <string name="chat_activity_6">Archivos leídos</string>
+    <string name="chat_activity_7">Editando archivos</string>
+    <string name="chat_activity_8">Archivos editados</string>
+    <string name="chat_activity_9">Buscando archivos</string>
+    <string name="chat_activity_10">Búsqueda de archivos</string>
+    <string name="chat_activity_11">Buscando en la web</string>
+    <string name="chat_activity_12">Búsqueda web</string>
+    <string name="chat_activity_13">Trabajo delegado</string>
+    <string name="chat_activity_14">Llamando herramienta</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">El comando falló</string>
+    <string name="chat_activity_17">La lectura falló</string>
+    <string name="chat_activity_18">La edición falló</string>
+    <string name="chat_activity_19">La búsqueda falló</string>
+    <string name="chat_activity_20">La búsqueda web falló</string>
+    <string name="chat_activity_21">El trabajo delegado falló</string>
+    <string name="chat_activity_22">La herramienta falló</string>
+    <string name="chat_activity_23">Falló la compactación</string>
+    <string name="chat_activity_24">Ejecutando %1$s</string>
+    <string name="chat_activity_25">Ejecutado %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d fallaron</string>
+</resources>

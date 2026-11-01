@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.ui.thread.rendering
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -35,8 +36,8 @@ internal fun VisualCodeBlock(block: JSONObject, index: Int, streaming: Boolean =
     var preview by remember(code, language) { mutableStateOf(false) }
     val actions = LocalCodeActions.current
     val supported = kind == VisualKind.Mermaid || LocalVisualRenderer.current.availability != VisualAvailability.Unsupported
-    Surface(color = Ot3Theme.colors.surface, shape = RoundedCornerShape(10.dp)) {
-        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+    Surface(color = androidx.compose.ui.graphics.Color.Transparent) {
+        Column(Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(language, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall)
                 CopyText(code, "code_$index")
@@ -55,8 +56,8 @@ internal fun VisualCodeBlock(block: JSONObject, index: Int, streaming: Boolean =
             else SelectionContainer {
                 val colors = Ot3Theme.colors
                 val highlighted = remember(code, language, colors) { highlightedCode(code, language, colors.accent, colors.dim, colors.done) }
-                Text(highlighted, fontFamily = FiraCode, fontSize = 12.sp, softWrap = false,
-                    modifier = Modifier.horizontalScroll(rememberScrollState()).testTag("thread_code_$index"))
+                Text(highlighted, fontFamily = FiraCode, fontSize = 10.sp, softWrap = false,
+                    modifier = Modifier.fillMaxWidth().background(colors.surface).horizontalScroll(rememberScrollState()).padding(4.dp).testTag("thread_code_$index"))
             }
         }
     }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Міркування</string>
+    <string name="chat_activity_1">Стиснення контексту</string>
+    <string name="chat_activity_2">Контекст стиснуто</string>
+    <string name="chat_activity_3">Виконання команд</string>
+    <string name="chat_activity_4">Команди виконано</string>
+    <string name="chat_activity_5">Читання файлів</string>
+    <string name="chat_activity_6">Файли прочитано</string>
+    <string name="chat_activity_7">Редагування файлів</string>
+    <string name="chat_activity_8">Файли змінено</string>
+    <string name="chat_activity_9">Пошук файлів</string>
+    <string name="chat_activity_10">Пошук файлів</string>
+    <string name="chat_activity_11">Пошук в інтернеті</string>
+    <string name="chat_activity_12">Пошук в інтернеті</string>
+    <string name="chat_activity_13">Делегована робота</string>
+    <string name="chat_activity_14">Виклик інструмента</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Команда не виконана</string>
+    <string name="chat_activity_17">Не вдалося прочитати</string>
+    <string name="chat_activity_18">Не вдалося змінити</string>
+    <string name="chat_activity_19">Пошук не вдався</string>
+    <string name="chat_activity_20">Вебпошук не вдався</string>
+    <string name="chat_activity_21">Делегована робота не вдалася</string>
+    <string name="chat_activity_22">Збій інструмента</string>
+    <string name="chat_activity_23">Помилка стискання контексту</string>
+    <string name="chat_activity_24">Виконується %1$s</string>
+    <string name="chat_activity_25">Виконано %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · з помилкою: %2$d</string>
+</resources>

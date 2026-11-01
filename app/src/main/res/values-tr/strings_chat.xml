@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Düşünüyor</string>
+    <string name="chat_activity_1">Bağlam sıkıştırılıyor</string>
+    <string name="chat_activity_2">Bağlam sıkıştırıldı</string>
+    <string name="chat_activity_3">Komutlar çalıştırılıyor</string>
+    <string name="chat_activity_4">Komutlar çalıştırıldı</string>
+    <string name="chat_activity_5">Dosyalar okunuyor</string>
+    <string name="chat_activity_6">Dosyalar okundu</string>
+    <string name="chat_activity_7">Dosyalar düzenleniyor</string>
+    <string name="chat_activity_8">Dosyalar düzenlendi</string>
+    <string name="chat_activity_9">Dosyalar aranıyor</string>
+    <string name="chat_activity_10">Dosya arama</string>
+    <string name="chat_activity_11">Web\'de aranıyor</string>
+    <string name="chat_activity_12">Web araması</string>
+    <string name="chat_activity_13">Devredilen iş</string>
+    <string name="chat_activity_14">Araç çağrılıyor</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Komut başarısız oldu</string>
+    <string name="chat_activity_17">Okuma başarısız oldu</string>
+    <string name="chat_activity_18">Düzenleme başarısız oldu</string>
+    <string name="chat_activity_19">Arama başarısız oldu</string>
+    <string name="chat_activity_20">Web araması başarısız oldu</string>
+    <string name="chat_activity_21">Devredilen iş başarısız oldu</string>
+    <string name="chat_activity_22">Araç başarısız oldu</string>
+    <string name="chat_activity_23">Sıkıştırma başarısız</string>
+    <string name="chat_activity_24">%1$s çalıştırılıyor</string>
+    <string name="chat_activity_25">%1$s çalıştırıldı</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d başarısız</string>
+</resources>

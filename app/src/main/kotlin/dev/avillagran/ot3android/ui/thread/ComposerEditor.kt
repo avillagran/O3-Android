@@ -168,9 +168,10 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
         update(TextFieldValue(current.text.replaceRange(start, current.selection.max, "\n"), TextRange(start + 1)))
     }
     Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
-        Column {
-            Row(Modifier.then(if (expanded) Modifier.weight(1f) else Modifier).padding(horizontal = 12.dp, vertical = if (compact && !expanded) 2.dp else 6.dp)
-                .border(1.dp, border, RoundedCornerShape(17.dp)).background(colors.surface, RoundedCornerShape(17.dp)).padding(4.dp), verticalAlignment = Alignment.Bottom) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = if (compact) 2.dp else 6.dp)
+            .border(1.dp, border, RoundedCornerShape(17.dp))
+            .background(colors.surface, RoundedCornerShape(17.dp))) {
+            Row(Modifier.then(if (expanded) Modifier.weight(1f) else Modifier).padding(4.dp), verticalAlignment = Alignment.Bottom) {
                 BasicTextField(value = editor.value, onValueChange = ::update, enabled = enabled, interactionSource = interaction,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foreground), cursorBrush = SolidColor(colors.accent),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default), keyboardActions = KeyboardActions { newline() },
@@ -203,16 +204,22 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
                         inner()
                     } },
                 )
-                if (!expanded) {
+            }
+            if (!expanded) {
+                Row(Modifier.fillMaxWidth().testTag("composer_control_row"), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.weight(1f)) { toolbar() }
                     actions()
                     Ot3IconButton("square-pen", stringResource(R.string.ot3_composer_edit), onToggle, modifier = Modifier.testTag("composer_expand"))
                     Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                         if (sending) Ot3Spinner(Modifier.testTag(ThreadScreenTags.SENDING), size = 24.dp)
-                        else Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = colors.accent)
+                        else {
+                            if (canSend) Box(Modifier.size(32.dp).background(colors.accent, androidx.compose.foundation.shape.CircleShape))
+                            Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = if (canSend) colors.background else colors.dim)
+                        }
                     }
                 }
             }
-            Box(Modifier.fillMaxWidth()) { toolbar() }
+            if (expanded) Box(Modifier.fillMaxWidth()) { toolbar() }
         }
     }
 }

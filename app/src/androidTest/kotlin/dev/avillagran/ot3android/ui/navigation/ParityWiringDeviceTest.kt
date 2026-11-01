@@ -54,6 +54,8 @@ class ParityWiringDeviceTest {
                     if (ready) payload = calls.single().args.toString()
                 }; ready }
                 rule.waitUntil(10_000) { rule.onAllNodesWithText("Send outcome unknown. Reconcile the existing command before editing or sending again.").fetchSemanticsNodes().isNotEmpty() }
+                rule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertIsNotEnabled()
+                rule.onNodeWithTag(ThreadScreenTags.SEND).assertIsNotEnabled()
                 org.junit.Assert.assertEquals(payload, org.json.JSONObject(file.readText()).getString("command"))
             }
             ActivityScenario.launch<WorkspaceFixtureActivity>(intent()).use { scenario ->

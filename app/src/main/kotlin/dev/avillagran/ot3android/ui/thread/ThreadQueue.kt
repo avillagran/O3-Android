@@ -48,8 +48,11 @@ internal fun ThreadQueue(queue: JSONObject?, enabled: Boolean, onCommand: (JSONO
     Surface(color = colors.card, shape = RoundedCornerShape(10.dp),
         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).fillMaxWidth().testTag("thread_queue")) {
         Row(Modifier.clickable { expanded = true }.padding(horizontal = 12.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(if (queue!!.optBoolean("held")) R.string.queue_paused else R.string.queue_label, rows.size), Modifier.weight(1f), color = colors.dim, style = MaterialTheme.typography.labelMedium)
-            if (queue.optBoolean("held")) TextButton(onClick = { onCommand(JSONObject().put("action", "resume")) }, enabled = enabled) { Text(stringResource(R.string.queue_resume)) }
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(if (queue!!.optBoolean("held")) R.string.queue_paused else R.string.queue_label, rows.size), color = colors.dim, style = MaterialTheme.typography.labelSmall)
+                Text(rows.first().optString("text"), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
+            }
+            if (queue?.optBoolean("held") == true) TextButton(onClick = { onCommand(JSONObject().put("action", "resume")) }, enabled = enabled) { Text(stringResource(R.string.queue_resume)) }
         }
     }
     if (expanded) Ot3Sheet(onDismissRequest = { expanded = false }, title = stringResource(R.string.queue_title)) {

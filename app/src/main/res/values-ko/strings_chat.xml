@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">생각 중</string>
+    <string name="chat_activity_1">컨텍스트 압축 중</string>
+    <string name="chat_activity_2">컨텍스트 압축됨</string>
+    <string name="chat_activity_3">명령 실행 중</string>
+    <string name="chat_activity_4">명령 실행됨</string>
+    <string name="chat_activity_5">파일 읽는 중</string>
+    <string name="chat_activity_6">파일 읽음</string>
+    <string name="chat_activity_7">파일 편집 중</string>
+    <string name="chat_activity_8">파일 편집됨</string>
+    <string name="chat_activity_9">파일 검색 중</string>
+    <string name="chat_activity_10">파일 검색</string>
+    <string name="chat_activity_11">웹 검색 중</string>
+    <string name="chat_activity_12">웹 검색</string>
+    <string name="chat_activity_13">위임된 작업</string>
+    <string name="chat_activity_14">도구 호출 중</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">명령 실패</string>
+    <string name="chat_activity_17">읽기 실패</string>
+    <string name="chat_activity_18">편집 실패</string>
+    <string name="chat_activity_19">검색 실패</string>
+    <string name="chat_activity_20">웹 검색 실패</string>
+    <string name="chat_activity_21">위임된 작업 실패</string>
+    <string name="chat_activity_22">도구 실패</string>
+    <string name="chat_activity_23">압축 실패</string>
+    <string name="chat_activity_24">%1$s 실행 중</string>
+    <string name="chat_activity_25">%1$s 실행됨</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d개 실패</string>
+</resources>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">思考中</string>
+    <string name="chat_activity_1">正在压缩上下文</string>
+    <string name="chat_activity_2">上下文已压缩</string>
+    <string name="chat_activity_3">正在执行命令</string>
+    <string name="chat_activity_4">命令已执行</string>
+    <string name="chat_activity_5">正在读取文件</string>
+    <string name="chat_activity_6">文件已读取</string>
+    <string name="chat_activity_7">正在编辑文件</string>
+    <string name="chat_activity_8">文件已编辑</string>
+    <string name="chat_activity_9">正在搜索文件</string>
+    <string name="chat_activity_10">文件搜索</string>
+    <string name="chat_activity_11">正在搜索网页</string>
+    <string name="chat_activity_12">网页搜索</string>
+    <string name="chat_activity_13">已委派的工作</string>
+    <string name="chat_activity_14">正在调用工具</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">命令失败</string>
+    <string name="chat_activity_17">读取失败</string>
+    <string name="chat_activity_18">编辑失败</string>
+    <string name="chat_activity_19">搜索失败</string>
+    <string name="chat_activity_20">网络搜索失败</string>
+    <string name="chat_activity_21">委派的工作失败</string>
+    <string name="chat_activity_22">工具失败</string>
+    <string name="chat_activity_23">上下文压缩失败</string>
+    <string name="chat_activity_24">正在执行 %1$s</string>
+    <string name="chat_activity_25">已执行 %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d 个失败</string>
+</resources>

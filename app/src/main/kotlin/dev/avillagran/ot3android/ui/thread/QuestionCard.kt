@@ -2,6 +2,11 @@ package dev.avillagran.ot3android.ui.thread
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -108,7 +113,10 @@ internal fun QuestionCard(
                             if (!question.optBoolean("multiSelect")) advanceToken++
                         }
                     }
-                    Row(Modifier.fillMaxWidth().clickable(enabled = !locked && optionValue != null, onClick = choose), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().heightIn(min = 44.dp)
+                        .background(if (selected) colors.accent.copy(alpha = .08f) else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(6.dp))
+                        .semantics { this.selected = selected; role = if (question.optBoolean("multiSelect")) Role.Checkbox else Role.RadioButton }
+                        .clickable(enabled = !locked && optionValue != null, onClick = choose).padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (question.optBoolean("multiSelect")) Checkbox(selected, { choose() }, enabled = !locked)
                         else RadioButton(selected, choose, enabled = !locked)
                         Column(Modifier.weight(1f)) {

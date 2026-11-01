@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Myślenie</string>
+    <string name="chat_activity_1">Skracanie kontekstu</string>
+    <string name="chat_activity_2">Kontekst skrócony</string>
+    <string name="chat_activity_3">Wykonywanie poleceń</string>
+    <string name="chat_activity_4">Polecenia wykonane</string>
+    <string name="chat_activity_5">Odczytywanie plików</string>
+    <string name="chat_activity_6">Pliki odczytane</string>
+    <string name="chat_activity_7">Edytowanie plików</string>
+    <string name="chat_activity_8">Edytowane pliki</string>
+    <string name="chat_activity_9">Wyszukiwanie plików</string>
+    <string name="chat_activity_10">Wyszukiwanie plików</string>
+    <string name="chat_activity_11">Przeszukiwanie sieci</string>
+    <string name="chat_activity_12">Wyszukiwanie w sieci</string>
+    <string name="chat_activity_13">Delegowana praca</string>
+    <string name="chat_activity_14">Wywoływanie narzędzia</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Polecenie nie powiodło się</string>
+    <string name="chat_activity_17">Odczyt nie powiódł się</string>
+    <string name="chat_activity_18">Edycja nie powiodła się</string>
+    <string name="chat_activity_19">Wyszukiwanie nie powiodło się</string>
+    <string name="chat_activity_20">Wyszukiwanie w sieci nie powiodło się</string>
+    <string name="chat_activity_21">Zlecone zadanie nie powiodło się</string>
+    <string name="chat_activity_22">Narzędzie nie powiodło się</string>
+    <string name="chat_activity_23">Kompaktowanie nie powiodło się</string>
+    <string name="chat_activity_24">Uruchamianie %1$s</string>
+    <string name="chat_activity_25">Uruchomiono %1$s</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · nieudane: %2$d</string>
+</resources>

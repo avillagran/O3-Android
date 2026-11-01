@@ -2,6 +2,7 @@ package dev.avillagran.ot3android.ui.thread
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -194,12 +195,16 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
                 if (finding && !compactReader) searchControls()
                 Box(Modifier.weight(1f)) {
                     LazyColumn(state = list, reverseLayout = true, contentPadding = PaddingValues(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
+                        verticalArrangement = Arrangement.spacedBy(0.dp), modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.TIMELINE)) {
                         items(rows, key = { it.getString("id") }) { row ->
                             // rev invalidates content, never the item's saveable expansion or reading anchor.
                             Column(Modifier.then(if (finding && row.optString("id") == selectedMatch)
                                 Modifier.background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp)) else Modifier)) {
-                                TimelineRow(row, view?.optJSONObject("planView")?.optJSONObject("ready"), actions, { openedInspector = it.toString() }) { openedDiff = it.toString() }
+                                val index = rows.indexOf(row)
+                                val commentary = row.optString("role") == "assistant" && rows.take(index).asReversed()
+                                    .takeWhile { it.optString("role") != "user" }.any { it.optString("role") == "assistant" && it.readerText("text").isNotBlank() }
+                                TimelineRow(row, view?.optJSONObject("planView")?.optJSONObject("ready"), actions,
+                                    { openedInspector = it.toString() }, { openedDiff = it.toString() }, commentary)
                             }
                         }
                         if (view?.optBoolean("hasMoreHistory") == true) item("history-boundary") {
@@ -250,7 +255,7 @@ private fun readingAnchorSaver(rows: List<JSONObject>): Saver<LazyListState, *> 
 )
 
 @Composable
-private fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: TranscriptActions, onOpenInspector: (JSONObject) -> Unit, onOpenDiff: (JSONObject) -> Unit) {
+internal fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: TranscriptActions, onOpenInspector: (JSONObject) -> Unit, onOpenDiff: (JSONObject) -> Unit, commentary: Boolean = false) {
     val role = row.optString("role")
     val id = row.getString("id")
     if (role == "user") {
@@ -263,18 +268,10 @@ private fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Transc
     }
     val colors = Ot3Theme.colors
     val typing = stringResource(R.string.thread_message_typing)
-    Row(Modifier.fillMaxWidth().testTag(ThreadScreenTags.message(id)).semantics { if (row.optBoolean("streaming")) stateDescription = typing }, horizontalArrangement = Arrangement.Start) {
-        Surface(color = colors.background, shape = RoundedCornerShape(16.dp),
+    Row(Modifier.fillMaxWidth().padding(bottom = if (role == "activity") 0.dp else if (commentary) 8.dp else 16.dp).testTag(ThreadScreenTags.message(id)).semantics { if (row.optBoolean("streaming")) stateDescription = typing }, horizontalArrangement = Arrangement.Start) {
+        Surface(color = colors.background, shape = RoundedCornerShape(0.dp),
             modifier = Modifier.widthIn(max = 760.dp).fillMaxWidth()) {
-            Column(Modifier.padding(horizontal = 4.dp, vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                val time = row.optLong("createdAt")
-                if (role != "assistant") Text(listOf(role,
-                    if (time > 0) when (LocalReaderTimeFormat.current) {
-                        "12-hour" -> java.text.SimpleDateFormat("h:mm a", androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
-                        "24-hour" -> java.text.SimpleDateFormat("HH:mm", androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
-                        else -> DateFormat.getTimeInstance(DateFormat.SHORT)
-                    }.format(Date(time)) else "").filter(String::isNotBlank).joinToString(" · "),
-                    style = MaterialTheme.typography.labelSmall, color = colors.dim)
+            Column(Modifier.padding(horizontal = 4.dp, vertical = if (role == "activity") 0.dp else 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 when (role) {
                     "assistant" -> {
                         if (row.optJSONArray("blocks").objects().isNotEmpty()) MarkdownBlocks(row.optJSONArray("blocks"))
@@ -285,12 +282,21 @@ private fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Transc
                     "changes" -> ChangesBlock(row.getJSONObject("changes"), id, onOpenDiff)
                     "plan" -> {
                         val plan = row.optJSONObject("plan") ?: JSONObject()
-                        Fold(stringResource(R.string.transcript_plan), id) {
-                            MarkdownBlocks(plan.optJSONArray("blocks"))
-                            Text(plan.readerText("status"), style = MaterialTheme.typography.labelSmall)
+                        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(stringResource(R.string.transcript_plan), color = colors.accent, style = MaterialTheme.typography.labelSmall)
+                                Text(plan.readerText("title"), Modifier.weight(1f).padding(horizontal = 6.dp), style = MaterialTheme.typography.bodyMedium)
+                                CopyText(plan.readerText("markdown"), "plan_$id")
+                            }
+                            Surface(color = colors.surface, shape = RoundedCornerShape(8.dp)) {
+                                Column(Modifier.fillMaxWidth().heightIn(max = 400.dp).verticalScroll(rememberScrollState()).padding(9.dp)) {
+                                    MarkdownBlocks(plan.optJSONArray("blocks"))
+                                }
+                            }
                             PlanLifecycle(plan, readyPlan, actions)
                         }
                     }
+
                     "error" -> Text(row.optJSONObject("error")?.optString("message").orEmpty(), color = MaterialTheme.colorScheme.error)
                     "context" -> {
                         val boundary = row.optJSONObject("context") ?: JSONObject()
@@ -316,10 +322,10 @@ private fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Transc
                         }
                     }
                     "secret" -> SecretRequestCard(row.optJSONObject("secret") ?: JSONObject(), actions.secrets)
-                    else -> Text("Unsupported timeline row: $role", color = colors.dim, modifier = Modifier.testTag("thread_unknown_$id"))
+                    else -> Unit
                 }
                 if (row.optBoolean("streaming")) Ot3Spinner(Modifier.testTag(ThreadScreenTags.streaming(id)), size = 12.dp)
-                if (role == "assistant" && !row.optBoolean("streaming")) {
+                if (role == "assistant" && !row.optBoolean("streaming") && !commentary) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CopyText(row.optString("text"), "message_$id")
                         MessageDate(row.optLong("createdAt"))
@@ -341,19 +347,33 @@ private fun Fold(title: String, id: String, content: @Composable () -> Unit) {
 
 @Composable
 internal fun ActivityBlock(activity: JSONObject, id: String, onOpenInspector: (JSONObject) -> Unit) {
-    val title = listOf(activity.optString("category"), activity.optString("title"), activity.optString("command"), activity.optString("status"))
-        .filter { it.isNotBlank() && it != "null" }.joinToString(" · ")
-    Fold(title.ifBlank { "Activity" }, id) {
-        val entries = activity.optJSONArray("entries").objects().ifEmpty { listOf(activity) }
-        entries.forEachIndexed { index, entry ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(listOf(entry.optString("category"), entry.optString("title"), entry.optString("command"), entry.optString("status"))
-                    .filter { it.isNotBlank() && it != "null" }.joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                entry.optJSONObject("inspector")?.let { item ->
-                    dev.avillagran.ot3android.ui.kit.Ot3Button(stringResource(R.string.ot3_inspector_details),
-                        { onOpenInspector(JSONObject(item.toString())) }, style = dev.avillagran.ot3android.ui.kit.Ot3ButtonStyle.SECONDARY,
-                        modifier = Modifier.testTag("thread_inspect_${id}_$index"))
+    var expanded by rememberSaveable(id) { mutableStateOf(false) }
+    val entries = activity.optJSONArray("entries").objects()
+    val grouped = entries.size > 1
+    val singleInspector = activity.optJSONObject("inspector") ?: entries.singleOrNull()?.optJSONObject("inspector")
+    val colors = Ot3Theme.colors
+    Column {
+        Row(Modifier.fillMaxWidth().heightIn(min = 28.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (grouped) dev.avillagran.ot3android.ui.kit.Ot3IconButton(
+                if (expanded) "chevron-down" else "chevron-right", activityLabel(activity), { expanded = !expanded },
+                modifier = Modifier.size(32.dp).testTag("thread_fold_$id"))
+            else singleInspector?.let { item ->
+                dev.avillagran.ot3android.ui.kit.Ot3IconButton("terminal", stringResource(R.string.ot3_inspector_details),
+                    { onOpenInspector(JSONObject(item.toString())) }, modifier = Modifier.size(32.dp).testTag("thread_inspect_${id}_0"))
+            }
+            if (activity.optBoolean("active")) Ot3Spinner(size = 12.dp)
+            Text(activityLabel(activity), style = MaterialTheme.typography.bodySmall,
+                color = if (activity.optBoolean("failed")) colors.failed else colors.dim,
+                modifier = Modifier.weight(1f), maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        }
+        if (expanded && grouped) Column(Modifier.padding(start = 20.dp).heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
+            entries.forEachIndexed { index, entry ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    entry.optJSONObject("inspector")?.let { item ->
+                        dev.avillagran.ot3android.ui.kit.Ot3IconButton("terminal", stringResource(R.string.ot3_inspector_details),
+                            { onOpenInspector(JSONObject(item.toString())) }, modifier = Modifier.size(32.dp).testTag("thread_inspect_${id}_$index"))
+                    }
+                    Text(activityLabel(entry), style = MaterialTheme.typography.bodySmall, color = colors.dim)
                 }
             }
         }
@@ -435,9 +455,8 @@ internal fun inlineSpans(spans: JSONArray?, mathEnabled: Boolean = true, onRefer
 @Composable
 internal fun CopyText(text: String, id: String) {
     val clipboard = LocalClipboardManager.current
-    TextButton(onClick = { clipboard.setText(AnnotatedString(text)) }, enabled = text.isNotEmpty(), modifier = Modifier.testTag("thread_copy_$id")) {
-        Text(stringResource(R.string.ot3_reader_copy), style = MaterialTheme.typography.labelSmall)
-    }
+    dev.avillagran.ot3android.ui.kit.Ot3IconButton("copy", stringResource(R.string.ot3_reader_copy),
+        { clipboard.setText(AnnotatedString(text)) }, enabled = text.isNotEmpty(), modifier = Modifier.size(32.dp).testTag("thread_copy_$id"))
 }
 
 @Composable

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Ragionamento</string>
+    <string name="chat_activity_1">Compattazione del contesto</string>
+    <string name="chat_activity_2">Contesto compattato</string>
+    <string name="chat_activity_3">Esecuzione dei comandi</string>
+    <string name="chat_activity_4">Comandi eseguiti</string>
+    <string name="chat_activity_5">Lettura dei file</string>
+    <string name="chat_activity_6">File letti</string>
+    <string name="chat_activity_7">Modifica dei file</string>
+    <string name="chat_activity_8">File modificati</string>
+    <string name="chat_activity_9">Ricerca dei file</string>
+    <string name="chat_activity_10">Ricerca file</string>
+    <string name="chat_activity_11">Ricerca sul web</string>
+    <string name="chat_activity_12">Ricerca web</string>
+    <string name="chat_activity_13">Lavoro delegato</string>
+    <string name="chat_activity_14">Chiamata allo strumento</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Comando non riuscito</string>
+    <string name="chat_activity_17">Lettura non riuscita</string>
+    <string name="chat_activity_18">Modifica non riuscita</string>
+    <string name="chat_activity_19">Ricerca non riuscita</string>
+    <string name="chat_activity_20">Ricerca web non riuscita</string>
+    <string name="chat_activity_21">Lavoro delegato non riuscito</string>
+    <string name="chat_activity_22">Strumento non riuscito</string>
+    <string name="chat_activity_23">Compattazione non riuscita</string>
+    <string name="chat_activity_24">Esecuzione di %1$s</string>
+    <string name="chat_activity_25">%1$s eseguito</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d non riusciti</string>
+</resources>

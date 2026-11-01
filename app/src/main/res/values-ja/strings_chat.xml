@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">思考中</string>
+    <string name="chat_activity_1">コンテキストを圧縮中</string>
+    <string name="chat_activity_2">コンテキスト圧縮済み</string>
+    <string name="chat_activity_3">コマンドを実行中</string>
+    <string name="chat_activity_4">コマンドを実行しました</string>
+    <string name="chat_activity_5">ファイルを読み取り中</string>
+    <string name="chat_activity_6">ファイルを読み取りました</string>
+    <string name="chat_activity_7">ファイルを編集中</string>
+    <string name="chat_activity_8">ファイルを編集しました</string>
+    <string name="chat_activity_9">ファイルを検索中</string>
+    <string name="chat_activity_10">ファイル検索</string>
+    <string name="chat_activity_11">ウェブを検索中</string>
+    <string name="chat_activity_12">ウェブ検索</string>
+    <string name="chat_activity_13">委任された作業</string>
+    <string name="chat_activity_14">ツールを呼び出し中</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">コマンドが失敗しました</string>
+    <string name="chat_activity_17">読み取りに失敗しました</string>
+    <string name="chat_activity_18">編集に失敗しました</string>
+    <string name="chat_activity_19">検索に失敗しました</string>
+    <string name="chat_activity_20">ウェブ検索に失敗しました</string>
+    <string name="chat_activity_21">委任した作業が失敗しました</string>
+    <string name="chat_activity_22">ツールが失敗しました</string>
+    <string name="chat_activity_23">コンパクションに失敗</string>
+    <string name="chat_activity_24">%1$s を実行中</string>
+    <string name="chat_activity_25">%1$s を実行済み</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d 件失敗</string>
+</resources>

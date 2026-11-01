@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_activity_0">Denkt nach</string>
+    <string name="chat_activity_1">Kontext wird komprimiert</string>
+    <string name="chat_activity_2">Kontext komprimiert</string>
+    <string name="chat_activity_3">Befehle werden ausgeführt</string>
+    <string name="chat_activity_4">Befehle ausgeführt</string>
+    <string name="chat_activity_5">Dateien werden gelesen</string>
+    <string name="chat_activity_6">Dateien gelesen</string>
+    <string name="chat_activity_7">Dateien werden bearbeitet</string>
+    <string name="chat_activity_8">Dateien bearbeitet</string>
+    <string name="chat_activity_9">Dateien werden gesucht</string>
+    <string name="chat_activity_10">Dateisuche</string>
+    <string name="chat_activity_11">Web wird durchsucht</string>
+    <string name="chat_activity_12">Websuche</string>
+    <string name="chat_activity_13">Delegierte Arbeit</string>
+    <string name="chat_activity_14">Werkzeug wird aufgerufen</string>
+    <string name="chat_activity_15">Tool</string>
+    <string name="chat_activity_16">Befehl fehlgeschlagen</string>
+    <string name="chat_activity_17">Lesen fehlgeschlagen</string>
+    <string name="chat_activity_18">Bearbeiten fehlgeschlagen</string>
+    <string name="chat_activity_19">Suche fehlgeschlagen</string>
+    <string name="chat_activity_20">Websuche fehlgeschlagen</string>
+    <string name="chat_activity_21">Delegierte Arbeit fehlgeschlagen</string>
+    <string name="chat_activity_22">Werkzeug fehlgeschlagen</string>
+    <string name="chat_activity_23">Komprimierung fehlgeschlagen</string>
+    <string name="chat_activity_24">%1$s wird ausgeführt</string>
+    <string name="chat_activity_25">%1$s ausgeführt</string>
+    <string name="chat_activity_26">%1$s · %2$s</string>
+    <string name="chat_activity_27">%1$s (%2$d)</string>
+    <string name="chat_activity_28">%1$s · %2$d fehlgeschlagen</string>
+</resources>
