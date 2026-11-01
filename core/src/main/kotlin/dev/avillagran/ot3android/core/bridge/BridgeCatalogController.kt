@@ -25,6 +25,12 @@ import org.json.JSONObject
 
 data class BridgeDeviceIdentity(val clientId: String, val bridgeId: String?)
 
+/** Local environment id to its fallback route; SDKs older than `route-fallback-v1` have none. */
+internal fun routeFallbacks(plan: JSONObject): Map<String, String> {
+    val rows = plan.optJSONArray("routeFallbacks") ?: return emptyMap()
+    return (0 until rows.length()).map(rows::getJSONObject).associate { it.getString("id") to it.getString("baseUrl") }
+}
+
 /** Host lifecycle and Room adapter for the native manager; never mints credentials. */
 class BridgeCatalogController(
     private val database: Ot3Database,
@@ -35,8 +41,10 @@ class BridgeCatalogController(
     private val clock: () -> Long = System::currentTimeMillis,
     private val mutations: Mutex,
     private val stopConnection: suspend (String) -> Unit = connections::forget,
+    random: kotlin.random.Random = kotlin.random.Random.Default,
 ) {
     private val mutex = Mutex()
+    private val addressSchedule = BridgeAddressSchedule(clock, random)
     @Volatile private var handle: Long? = null
     @Volatile private var selected = false
     @Volatile private var foreground = false
@@ -131,6 +139,7 @@ class BridgeCatalogController(
                 .put("authorizationExpiresAt", origin?.takeIf { it.status in SESSION_STATUSES }?.authorizationExpiresAt))
         }
         val plan = invoke("projection", JSONObject().put("local", local))
+        connections.setRouteFallbacks(routeFallbacks(plan))
         val stops = plan.getJSONArray("stop")
         // Await stream termination outside Room's transaction: shutdown may write cursors.
         val stopped = (0 until stops.length()).map { stops.getString(it) }
@@ -262,16 +271,36 @@ class BridgeCatalogController(
                 try { refresh() } catch (cancelled: kotlinx.coroutines.CancellationException) {
                     throw cancelled
                 } catch (_: Exception) { mutableStatus.value = "offline" }
+                refreshAddress()
                 delay(30_000)
             }
         } else null
     }
 
-    fun reconnect() { if (polling != null) setForeground(true) }
+    /**
+     * Keeps the bridge's address current under its paired identity, so renewal and catalog
+     * reads survive a bridge that moved. A failure here says nothing about the catalog.
+     */
+    private suspend fun refreshAddress() {
+        val status = mutableStatus.value
+        if (status == "revoked" || !addressSchedule.due(status.startsWith("available"))) return
+        val reachable = try {
+            mutex.withLock { invoke("hostRefresh") }.optBoolean("reachable")
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Exception) { false }
+        addressSchedule.answered(reachable)
+    }
+
+    fun reconnect() {
+        addressSchedule.wake()
+        if (polling != null) setForeground(true)
+    }
 
     suspend fun close() {
         polling?.cancelAndJoin()
         polling = null
+        connections.setRouteFallbacks(emptyMap())
         mutex.withLock {
             if (handle != null) invoke("close")
             handle = null

@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Yönetim izni var</string>
     <string name="bridge_peer_unmanaged">Yönetim izni yok</string>
     <string name="bridge_peer_selected">Seçili taslak yetkilisi</string>
+    <string name="environments_via_gateway">ağ geçidi üzerinden</string>
 </resources>

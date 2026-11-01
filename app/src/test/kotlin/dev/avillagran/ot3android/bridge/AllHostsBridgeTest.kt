@@ -50,6 +50,8 @@ class AllHostsBridgeTest {
     private var failDelete = false
     private var duringStop: suspend () -> Unit = {}
     private var sentLocal = JSONArray()
+    private var status = "available"
+    private var hostRefresh: () -> JSONObject = { JSONObject().put("reachable", true).put("changed", false) }
 
     private val tokens = object : TokenStore {
         override suspend fun token(environmentId: String) = secrets[environmentId]
@@ -97,10 +99,12 @@ class AllHostsBridgeTest {
             ops += op
             when (op) {
                 "open" -> JSONObject().put("handle", 1).put("clientId", "client").put("bridgeId", JSONObject.NULL)
-                "refresh" -> JSONObject().put("status", "available")
+                "refresh" -> JSONObject().put("status", status)
+                "cached" -> JSONObject().put("status", status)
                 "projection" -> { sentLocal = request.getJSONArray("local"); plan }
                 "enroll" -> receipt("read-session", now + 120_000).put("status", "authorized")
                 "hostPair" -> hostPair()
+                "hostRefresh" -> hostRefresh()
                 else -> JSONObject()
             }
         }, clock = { now }, mutations = repository.mutations, stopConnection = {
@@ -281,5 +285,55 @@ class AllHostsBridgeTest {
         controller.refresh()
         assertEquals("https://moved.example/", repository.find("row")!!.baseUrl)
         assertTrue("row" in connections.supervisors.value)
+    }
+
+    /** Polls until [op] has run, as the foreground loop does. */
+    private suspend fun awaitOp(op: String) {
+        repeat(500) {
+            if (op in ops) return
+            kotlinx.coroutines.delay(10)
+        }
+        fail("$op did not run: $ops")
+    }
+
+    private suspend fun selectBridge() {
+        controller.selectBridge("a".repeat(64))
+    }
+
+    @Test fun theForegroundLoopRefreshesTheBridgeAddressAfterTheCatalog() = runBlocking {
+        selectBridge()
+        controller.setForeground(true)
+        awaitOp("hostRefresh")
+        controller.setForeground(false)
+        assertTrue(ops.indexOf("projection") < ops.indexOf("hostRefresh"))
+    }
+
+    @Test fun aFailedAddressRefreshSaysNothingAboutTheCatalog() = runBlocking {
+        hostRefresh = { error("isolated-native-failure") }
+        selectBridge()
+        controller.setForeground(true)
+        awaitOp("hostRefresh")
+        controller.setForeground(false)
+        assertEquals("available", controller.status.value)
+    }
+
+    @Test fun aWithdrawnBridgeIsNotAskedForItsAddress() = runBlocking {
+        plan = plan()
+        selectBridge()
+        status = "revoked"
+        controller.setForeground(true)
+        awaitOp("projection")
+        kotlinx.coroutines.delay(100)
+        controller.setForeground(false)
+        assertFalse("hostRefresh" in ops)
+    }
+
+    @Test fun aRowOfThePlanGetsItsFallbackAndKeepsItsUrl() = runBlocking {
+        repository.save("lan", "NODE", "http://192.168.1.177:3773", "node", "secret")
+        plan = plan().put("routeFallbacks", JSONArray().put(JSONObject().put("id", "lan").put("baseUrl", "https://node.example/")))
+        controller.refresh()
+        assertEquals("http://192.168.1.177:3773", repository.find("lan")!!.baseUrl)
+        assertNull("independent: nothing the bridge owns", database.bridgeManagedDao().find("lan"))
+        assertEquals("secret", repository.token("lan"))
     }
 }

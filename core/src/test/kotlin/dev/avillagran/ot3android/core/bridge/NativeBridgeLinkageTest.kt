@@ -20,6 +20,8 @@ class NativeBridgeLinkageTest {
         val features = capabilities.getJSONArray("features")
         assertTrue((0 until features.length()).any { features.getString(it) == "shared-drafts-v1" })
         assertTrue((0 until features.length()).any { features.getString(it) == "mobile-admin-v1" })
+        assertTrue((0 until features.length()).any { features.getString(it) == "host-refresh-v1" })
+        assertTrue((0 until features.length()).any { features.getString(it) == "route-fallback-v1" })
         // Exercises the actual native symbol without creating a peer, runtime or credential.
         val error = assertThrows(IllegalStateException::class.java) {
             runBlocking { NativeBridge.request(JSONObject().put("op", "cached").put("handle", -1)) }

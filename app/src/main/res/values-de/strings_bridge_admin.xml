@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Verwaltung erlaubt</string>
     <string name="bridge_peer_unmanaged">Keine Verwaltungsberechtigung</string>
     <string name="bridge_peer_selected">Ausgewählte Entwurfsautorität</string>
+    <string name="environments_via_gateway">über Gateway</string>
 </resources>

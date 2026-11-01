@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Administration autorisée</string>
     <string name="bridge_peer_unmanaged">Aucun droit de gestion</string>
     <string name="bridge_peer_selected">Autorité des brouillons sélectionnée</string>
+    <string name="environments_via_gateway">via la passerelle</string>
 </resources>

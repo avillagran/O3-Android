@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Administración permitida</string>
     <string name="bridge_peer_unmanaged">Sin permiso de administración</string>
     <string name="bridge_peer_selected">Autoridad de borradores seleccionada</string>
+    <string name="environments_via_gateway">vía gateway</string>
 </resources>

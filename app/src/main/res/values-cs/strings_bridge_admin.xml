@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Správa povolena</string>
     <string name="bridge_peer_unmanaged">Bez oprávnění ke správě</string>
     <string name="bridge_peer_selected">Vybraná autorita konceptů</string>
+    <string name="environments_via_gateway">přes bránu</string>
 </resources>

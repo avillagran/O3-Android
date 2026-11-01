@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">الإدارة مسموحة</string>
     <string name="bridge_peer_unmanaged">بدون إذن إدارة</string>
     <string name="bridge_peer_selected">جهة المسودات المحددة</string>
+    <string name="environments_via_gateway">عبر البوابة</string>
 </resources>

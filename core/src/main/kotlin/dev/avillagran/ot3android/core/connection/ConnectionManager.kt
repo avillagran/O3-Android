@@ -45,6 +45,8 @@ class ConnectionManager(
     private val _supervisors = MutableStateFlow<Map<String, ConnectionSupervisor>>(emptyMap())
     val supervisors: StateFlow<Map<String, ConnectionSupervisor>> = _supervisors.asStateFlow()
 
+    private val routeFallbacks = MutableStateFlow<Map<String, String>>(emptyMap())
+
     /** Supervisors that were running when the app went to the background. */
     private val paused = mutableSetOf<String>()
     private var foreground = true
@@ -100,6 +102,14 @@ class ConnectionManager(
                 }
             }
         }
+    }
+
+    /**
+     * The route each independent environment may use while its own URL is out of reach, by
+     * local id. Replaces the previous set: a row left out stops using its fallback.
+     */
+    fun setRouteFallbacks(routes: Map<String, String>) {
+        routeFallbacks.value = routes
     }
 
     /** Foreground consumers follow replacement transports after pairing/route refresh. */
@@ -191,5 +201,6 @@ class ConnectionManager(
         onConnected = { descriptor -> repository.markConnected(environment.id, descriptor.environmentId) },
         io = io,
         computation = computation,
+        routeFallbacks = routeFallbacks,
     )
 }

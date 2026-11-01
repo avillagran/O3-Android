@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Administração permitida</string>
     <string name="bridge_peer_unmanaged">Sem permissão de administração</string>
     <string name="bridge_peer_selected">Autoridade de rascunhos selecionada</string>
+    <string name="environments_via_gateway">via gateway</string>
 </resources>

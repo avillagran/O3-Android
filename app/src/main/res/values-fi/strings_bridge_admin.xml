@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Hallinta sallittu</string>
     <string name="bridge_peer_unmanaged">Ei hallintaoikeutta</string>
     <string name="bridge_peer_selected">Valittu luonnosten auktoriteetti</string>
+    <string name="environments_via_gateway">yhdyskäytävän kautta</string>
 </resources>

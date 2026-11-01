@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Управление разрешено</string>
     <string name="bridge_peer_unmanaged">Нет разрешения на управление</string>
     <string name="bridge_peer_selected">Выбранный центр черновиков</string>
+    <string name="environments_via_gateway">через шлюз</string>
 </resources>

@@ -168,3 +168,47 @@ See [remote authority evidence and exact implementation plan](bridge/REMOTE_AUTH
 This is separate from the proven missing deployment of catalog-publish. Existing
 isolated two-T3-on-one-host tests do not prove remote issuance. Default denial and
 natural expiry vs immediate server-side revocation must remain explicit.
+
+## OB7 — A phone must learn a moved bridge, and a manual row must survive leaving home (2026-11-01)
+
+Found by the off-LAN validation: the SDK froze the bridge address at pairing, so moving a
+bridge to another relay meant pairing again at home, and renewal depended on that address.
+A row added by hand with a LAN URL stayed down outside the LAN even with a verified route to
+the same environment in the catalog (`catalog_client.rs:216-218`).
+
+Both are additive to the C ABI v1. Check `capabilities.features` for each.
+
+| Feature | Request | Response |
+|---|---|---|
+| `host-refresh-v1` | `{"op":"hostRefresh","handle":H}`, optional `"peer":"<id>"` (default: the selected bridge) | `{"reachable":bool,"changed":bool}`, never an address |
+| `route-fallback-v1` | `projection` plan | adds `routeFallbacks: [{"id":"<local row>","baseUrl":"https://…"}]` |
+
+`hostRefresh` is one authenticated `Hello`, 8 s at most, with no retry. Identity stays the
+paired key: the answer counts only from the authenticated peer and for that id, addresses are
+hints and no grant changes. An empty answer changes nothing, and one with no relay keeps the
+known relay. The running catalog manager follows the result. `reachable:false` covers out of
+reach, refused and rejected alike, and leaves what is stored as it was. Bridges need no update:
+they already answer `Hello` with a live address. Contract:
+[omabridge `docs/mobile-administration.md`](https://github.com/avillagran/omabridge/blob/main/docs/mobile-administration.md#bridge-address-refresh-host-refresh-v1).
+
+The app:
+
+- `BridgeCatalogController` asks after the catalog poll: when the bridge comes back, every
+  2.5–5 minutes while it is reachable, on a 30 s–5 min jittered backoff while it is not, and on
+  a network change or the Refresh icon (`BridgeAddressSchedule`). A failure there does not touch
+  the catalog status, and a withdrawn bridge is not asked.
+- `ConnectionSupervisor` uses a row's `routeFallbacks` entry when the row's own URL fails with
+  a route error, within the same backoff step. The descriptor must match the known environment
+  UUID before the token is sent. The own URL is probed with no credential every 15 s–2 min with
+  jitter, and on a network change, and the stream goes back as soon as it answers, resuming from
+  the held cursor. The row keeps its URL, credential and independence, and shows "via gateway".
+
+**Trust note.** The bearer of an independent row can reach a URL the bridge named. The bridge
+never receives the bearer, but HTTPS plus a matching UUID proves only that the name serves that
+UUID, and a descriptor is public. This extends to independent rows the trust already given to
+the routes of bridge rows.
+
+Limit: `hostRefresh` needs a route that still works, so a moved bridge must stay reachable
+until the phone has asked once. The first dead attempt on a cold start still costs about 12 s
+until `connectTimeoutMs` is passed (validation P2).
+

@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Gestione consentita</string>
     <string name="bridge_peer_unmanaged">Nessun permesso di gestione</string>
     <string name="bridge_peer_selected">Autorità bozze selezionata</string>
+    <string name="environments_via_gateway">tramite gateway</string>
 </resources>

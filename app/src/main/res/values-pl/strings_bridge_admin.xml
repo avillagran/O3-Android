@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Zarządzanie dozwolone</string>
     <string name="bridge_peer_unmanaged">Brak uprawnienia zarządzania</string>
     <string name="bridge_peer_selected">Wybrany organ szkiców</string>
+    <string name="environments_via_gateway">przez bramę</string>
 </resources>

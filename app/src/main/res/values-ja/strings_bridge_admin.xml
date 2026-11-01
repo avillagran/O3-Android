@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">管理権限あり</string>
     <string name="bridge_peer_unmanaged">管理権限なし</string>
     <string name="bridge_peer_selected">選択中の下書き管理元</string>
+    <string name="environments_via_gateway">ゲートウェイ経由</string>
 </resources>

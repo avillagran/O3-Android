@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">已获管理授权</string>
     <string name="bridge_peer_unmanaged">无管理授权</string>
     <string name="bridge_peer_selected">已选择的草稿授权方</string>
+    <string name="environments_via_gateway">通过网关</string>
 </resources>

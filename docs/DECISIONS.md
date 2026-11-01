@@ -1261,3 +1261,22 @@ API34 CI; its exact touch/layout cause remains unproven. The replacement is
 verified by a compact-viewport close test and a row-replacement lifetime test,
 with device acceptance still required. Short content wraps instead of reserving
 a mostly empty full-height panel. No subscription or protocol rules moved into UI.
+
+### 2026-11-01 — A manual row borrows the catalog route; it never changes hands
+
+A row added by hand stays independent: its URL, credential and provenance do not move when it
+runs over the bridge catalog's route, so `cacheAuthority` and saved cursors keep their meaning.
+The fallback lives in memory, rebuilt from each projection, including one served from a stale
+cached catalog, because an unreachable bridge is the case that needs it. Only reachability
+errors trigger it: a home server that answers with a refusal keeps its own route. A refusal at
+the fallback is never shown as the row's failure, and that route is not offered the token again
+in the same run. This is one fallback, not the multi-route model of UI_SPEC 4.2.1 (validation
+P2), which would replace it.
+
+### 2026-11-01 — Environments keeps its bar to one line
+
+Three text actions wrapped the title until the bar filled a portrait screen, which looked like
+an empty list to an off-LAN phone. Refresh is an icon, Administration and Appearance are in a
+menu, the title ellipsizes, and the bridge status has its own line under the bar, because that
+text is long and is what an offline user needs to read.
+

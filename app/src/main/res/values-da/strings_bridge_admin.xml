@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">Administration tilladt</string>
     <string name="bridge_peer_unmanaged">Ingen administrationstilladelse</string>
     <string name="bridge_peer_selected">Valgt kladdeautoritet</string>
+    <string name="environments_via_gateway">via gateway</string>
 </resources>

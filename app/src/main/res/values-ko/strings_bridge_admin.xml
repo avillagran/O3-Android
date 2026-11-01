@@ -30,4 +30,5 @@
     <string name="bridge_peer_managed">관리 권한 있음</string>
     <string name="bridge_peer_unmanaged">관리 권한 없음</string>
     <string name="bridge_peer_selected">선택한 초안 관리 주체</string>
+    <string name="environments_via_gateway">게이트웨이 경유</string>
 </resources>
