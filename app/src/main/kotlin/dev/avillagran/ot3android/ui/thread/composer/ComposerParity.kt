@@ -37,6 +37,7 @@ sealed interface ComposerRequest {
     data class CaptureText(override val expected: ComposerSnapshot, val text: String) : ComposerRequest
     data class PasteText(override val expected: ComposerSnapshot, val text: String) : ComposerRequest
     data class RemoveAttachment(override val expected: ComposerSnapshot, val id: String) : ComposerRequest
+    data class RetryAttachment(override val expected: ComposerSnapshot, val id: String) : ComposerRequest
     data class Reference(override val expected: ComposerSnapshot, val reference: ComposerReference) : ComposerRequest
     data class Complete(override val expected: ComposerSnapshot, val id: String) : ComposerRequest
     data class Restore(override val expected: ComposerSnapshot, val id: String, val revision: String) : ComposerRequest
@@ -91,12 +92,13 @@ fun ComposerParity(
     }
     val context = LocalContext.current
     // Capture picker origin. A result is never rebound to the currently selected thread.
-    var picking by remember { mutableStateOf<ComposerSnapshot?>(null) }
+    // Saved: a picker or camera can rotate the display, which recreates this Activity.
+    var picking by rememberSaveable { mutableStateOf<String?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         val origin = picking
         picking = null
-        if (origin != null && origin.scope == snapshot.scope) uris.take(100).forEach {
-            onRequest(ComposerRequest.ImportUri(origin, it.toString()))
+        if (origin == snapshot.scope.toString()) uris.take(100).forEach {
+            onRequest(ComposerRequest.ImportUri(snapshot, it.toString()))
         }
     }
     val configuration = LocalConfiguration.current
@@ -104,9 +106,22 @@ fun ComposerParity(
         (WindowInsets.isImeVisible && configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
     var overflow by remember { mutableStateOf(false) }
     var captureOpen by remember { mutableStateOf(false) }
+    /** The composed word is what the user sees, so it is committed and sent, not held back. */
+    fun send(delivery: ComposerDelivery) {
+        if (!snapshot.sendable) return
+        if (editor.value.composition == null && !snapshot.composing) {
+            onRequest(ComposerRequest.Send(snapshot, delivery))
+            return
+        }
+        editor.finishComposition()
+        val committed = editor.value
+        val selection = ComposerSelection(committed.selection.start, committed.selection.end)
+        onEdit(snapshot, committed.text, selection, false)
+        onRequest(ComposerRequest.Send(snapshot.copy(text = committed.text, selection = selection, composing = false), delivery))
+    }
     fun request(action: ComposerAction) {
         when (action) {
-            ComposerAction.Attach -> { picking = snapshot; picker.launch(arrayOf("*/*")) }
+            ComposerAction.Attach -> { picking = snapshot.scope.toString(); picker.launch(arrayOf("*/*")) }
             ComposerAction.Paste -> {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = clipboard.primaryClip
@@ -116,9 +131,9 @@ fun ComposerParity(
                     else item.text?.toString()?.let { onRequest(ComposerRequest.PasteText(snapshot, it)) }
                 }
             }
-            ComposerAction.OppositeOnce -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.OppositeOnce))
-            ComposerAction.Background -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Background))
-            ComposerAction.SendAndNew -> onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.SendAndNew))
+            ComposerAction.OppositeOnce -> send(ComposerDelivery.OppositeOnce)
+            ComposerAction.Background -> send(ComposerDelivery.Background)
+            ComposerAction.SendAndNew -> send(ComposerDelivery.SendAndNew)
             else -> onRequest(ComposerRequest.Action(snapshot, action))
         }
     }
@@ -152,7 +167,7 @@ fun ComposerParity(
             if (ComposerAction.Attach in capabilities) PhoneCapture(snapshot, onRequest, true, captureOpen) { captureOpen = false }
             ComposerEditor(editor, full, snapshot.sendable, snapshot.sending,
                 onDraftChange = { _, _ -> },
-                onSend = { if (snapshot.sendable) onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
+                onSend = { send(ComposerDelivery.Default) },
                 onToggle = { editor.newSurface(); editor.requestFocus = true; expanded = true },
                 modifier = if (full) Modifier.weight(1f) else Modifier,
                 onEditorValue = { value ->
@@ -167,8 +182,11 @@ fun ComposerParity(
         if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
             snapshot.attachments.forEach { file ->
-                InputChip(selected = false, onClick = {}, label = {
+                InputChip(selected = false, onClick = {
+                    if (file.status == UploadStatus.Failed) onRequest(ComposerRequest.RetryAttachment(snapshot, file.id))
+                }, label = {
                     Text(when (file.status) {
+                        UploadStatus.Queued -> stringResource(R.string.composer_upload_waiting, file.name)
                         UploadStatus.Uploading -> stringResource(R.string.composer_uploading, file.name)
                         UploadStatus.Failed -> stringResource(R.string.composer_upload_failed, file.name)
                         UploadStatus.Ready -> file.name
@@ -208,7 +226,7 @@ fun ComposerParity(
                     editorActions()
                     if (snapshot.sending) dev.avillagran.ot3android.ui.kit.Ot3Spinner(Modifier.size(48.dp))
                     else Ot3IconButton("arrow-up", stringResource(R.string.thread_send),
-                        { onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
+                        { send(ComposerDelivery.Default) },
                         enabled = snapshot.sendable, modifier = Modifier.testTag("thread_send"))
                 }
                 expandedActions()

@@ -42,6 +42,16 @@ class ComposerEditorStateTest {
         state.presented(state.value)
         assertEquals(TextFieldValue("abcdefgh", TextRange(8)), state.rebased(TextFieldValue("abcdefgh", TextRange(8))))
     }
+    @Test fun finishingForSendKeepsTheWordAndALateImeCommandCannotMoveTheRange() {
+        val state = ComposerEditorState("")
+        state.edit(TextFieldValue("hello", TextRange(5), TextRange(0, 5)))
+        state.presented(state.value)
+        state.edit(state.value.copy(selection = TextRange(1, 3)))
+        state.finishComposition()
+        assertEquals(TextFieldValue("hello", TextRange(1, 3)), state.value)
+        // PR 115's race: the field still composes the old value when the IME answers.
+        assertEquals(TextRange(1, 3), state.rebased(TextFieldValue("hello", TextRange(5), TextRange(0, 5))).selection)
+    }
     @Test fun externalDraftIsAuthoritativeAndSelectionClampsWithoutLosingImeOnEcho() {
         val state = ComposerEditorState("abcdef")
         state.edit(TextFieldValue("abcdef", TextRange(2, 5), TextRange(1, 5)))

@@ -27,8 +27,9 @@ the native authenticated upload. Uploading/failed/missing descriptors block Send
 the user reviews the attachment and explicitly sends after successful upload.
 The camera receives only a transient grant to one file under the non-exported
 phone-capture FileProvider's dedicated cache directory. No storage-wide grant.
-Camera cancellation deletes that file; import completion (success/failure) deletes
-it too. Old capture orphans are swept after 24 h when starting another capture.
+Camera cancellation deletes that file. An import moves its bytes to the composer's
+private spool first and deletes it then; a failed copy keeps it until the chip is
+removed (see `composer-recovery.md`). Old capture orphans are swept after 24 h when starting another capture.
 Process death does not restore a capture or upload it automatically. Android owns
 the external camera activity; its own storage/retention policy is outside O3.
 

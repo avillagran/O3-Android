@@ -23,6 +23,7 @@
     <string name="composer_refresh">更新</string>
     <string name="composer_uncertain">送信結果が不明です。編集や再送信の前に既存のコマンドを確認してください。</string>
     <string name="composer_uploading">%1$s をアップロード中…</string>
+    <string name="composer_upload_waiting">接続を待って %1$s をアップロードします…</string>
     <string name="composer_upload_failed">アップロード失敗: %1$s</string>
     <string name="composer_attachment_count">添付ファイル: %1$d</string>
 </resources>

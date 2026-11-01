@@ -23,6 +23,7 @@
     <string name="composer_refresh">Refresh</string>
     <string name="composer_uncertain">Send outcome unknown. Reconcile the existing command before editing or sending again.</string>
     <string name="composer_uploading">Uploading %1$s…</string>
+    <string name="composer_upload_waiting">Waiting to upload %1$s…</string>
     <string name="composer_upload_failed">Upload failed: %1$s</string>
     <string name="composer_attachment_count">Attachments: %1$d</string>
 </resources>

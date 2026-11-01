@@ -11,8 +11,11 @@ data class ComposerAttachment(
     /** Native validated descriptor serialized unchanged; never a content:// URI. */
     val descriptor: String? = null,
     val error: String? = null,
+    /** Set once the bytes are in the private spool; a retry needs nothing from the picker. */
+    val mimeType: String? = null,
 )
-enum class UploadStatus { Uploading, Ready, Failed }
+/** [Queued] files wait in the private spool for a connection and leave the editor usable. */
+enum class UploadStatus { Queued, Uploading, Ready, Failed }
 enum class ComposerDelivery { Default, OppositeOnce, Background, SendAndNew }
 enum class ComposerInteraction { Build, Plan }
 
@@ -37,7 +40,8 @@ data class ComposerSnapshot(
 ) {
     val editable: Boolean get() = !loading && !sending && uncertainCommand == null
     val transformable: Boolean get() = editable && !composing && attachments.none { it.status == UploadStatus.Uploading }
-    val sendable: Boolean get() = !sendBlocked && transformable && attachments.all { it.status == UploadStatus.Ready && !it.descriptor.isNullOrBlank() } &&
+    /** Not gated on [composing]: the composed word is visible text. The owner commits it first. */
+    val sendable: Boolean get() = !sendBlocked && editable && attachments.all { it.status == UploadStatus.Ready && !it.descriptor.isNullOrBlank() } &&
         (text.isNotBlank() || attachments.isNotEmpty())
 }
 

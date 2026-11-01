@@ -23,6 +23,7 @@
     <string name="composer_refresh">Odśwież</string>
     <string name="composer_uncertain">Nieznany wynik wysyłania. Sprawdź istniejące polecenie przed edycją lub ponowną wysyłką.</string>
     <string name="composer_uploading">Przesyłanie %1$s…</string>
+    <string name="composer_upload_waiting">Oczekiwanie na połączenie, aby przesłać %1$s…</string>
     <string name="composer_upload_failed">Błąd przesyłania: %1$s</string>
     <string name="composer_attachment_count">Załączniki: %1$d</string>
 </resources>

@@ -23,6 +23,7 @@
     <string name="composer_refresh">Uppdatera</string>
     <string name="composer_uncertain">Okänt sändningsresultat. Kontrollera befintligt kommando före redigering eller nytt försök.</string>
     <string name="composer_uploading">Laddar upp %1$s…</string>
+    <string name="composer_upload_waiting">Väntar på anslutning för att ladda upp %1$s…</string>
     <string name="composer_upload_failed">Uppladdning misslyckades: %1$s</string>
     <string name="composer_attachment_count">Bilagor: %1$d</string>
 </resources>

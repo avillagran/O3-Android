@@ -23,6 +23,7 @@
     <string name="composer_refresh">새로고침</string>
     <string name="composer_uncertain">전송 결과를 알 수 없습니다. 편집하거나 다시 보내기 전에 기존 명령을 확인하세요.</string>
     <string name="composer_uploading">%1$s 업로드 중…</string>
+    <string name="composer_upload_waiting">연결되면 %1$s을(를) 업로드합니다…</string>
     <string name="composer_upload_failed">업로드 실패: %1$s</string>
     <string name="composer_attachment_count">첨부 파일: %1$d</string>
 </resources>

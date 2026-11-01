@@ -23,6 +23,7 @@
     <string name="composer_refresh">Aggiorna</string>
     <string name="composer_uncertain">Esito sconosciuto. Verifica il comando esistente prima di modificare o inviare di nuovo.</string>
     <string name="composer_uploading">Caricamento di %1$s…</string>
+    <string name="composer_upload_waiting">In attesa di connessione per caricare %1$s…</string>
     <string name="composer_upload_failed">Caricamento fallito: %1$s</string>
     <string name="composer_attachment_count">Allegati: %1$d</string>
 </resources>

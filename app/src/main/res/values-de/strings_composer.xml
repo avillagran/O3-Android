@@ -23,6 +23,7 @@
     <string name="composer_refresh">Aktualisieren</string>
     <string name="composer_uncertain">Sendeergebnis unbekannt. Bestehenden Befehl vor dem Bearbeiten oder erneuten Senden abgleichen.</string>
     <string name="composer_uploading">%1$s wird hochgeladen…</string>
+    <string name="composer_upload_waiting">Warten auf Verbindung, um %1$s hochzuladen…</string>
     <string name="composer_upload_failed">Upload fehlgeschlagen: %1$s</string>
     <string name="composer_attachment_count">Anhänge: %1$d</string>
 </resources>

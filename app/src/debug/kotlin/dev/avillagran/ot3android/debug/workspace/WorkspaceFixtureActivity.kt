@@ -34,6 +34,15 @@ import org.json.JSONObject
 /** Debug-only deterministic server. Real graph, screens, VMs, Room and Rust views; no network. */
 class WorkspaceFixtureActivity : ComponentActivity() {
     lateinit var fixture: WorkspaceFixture
+    /** Manual device runs: `am start -f 0x20000000 ... --es connection offline|online --es reject <reason>`. */
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        if (!::fixture.isInitialized) return
+        intent.getStringExtra("reject")?.let { fixture.composerRejection = it }
+        intent.getStringExtra("connection")?.let { state ->
+            fixture.viewModelScope.launch { fixture.setCacheOffline(state == "offline") }
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (intent.getBooleanExtra("landscape", false)) requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -172,6 +181,7 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
     var queueHold: kotlinx.coroutines.CompletableDeferred<Unit>? = null
     var queueUnknownFirst = false
     var queueRejectNext = false
+    var composerRejection: String? = null
     private var queueDispatches = 0
     private var queueOrder = listOf("q1", "q2", "q3", "q4")
     private var queueSequence = 1L
@@ -266,6 +276,8 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
             if (request in listOf("queue", "editor")) {
                 queueDispatches++
                 queueHold?.await()
+                android.util.Log.i("ComposerFixture", "dispatch text=[${args.optString("text")}] attachments=${args.optJSONArray("attachments")?.length()} rejecting=${composerRejection != null}")
+                composerRejection?.let { reason -> composerRejection = null; throw dev.avillagran.t3.T3Exception("rpc_rejected", reason) }
                 if (queueRejectNext) { queueRejectNext = false; throw dev.avillagran.t3.T3Exception("rpc_rejected") }
                 if (queueUnknownFirst && queueDispatches == 1) throw dev.avillagran.t3.T3Exception("rpc_outcome_unknown")
             }
@@ -312,6 +324,11 @@ class WorkspaceFixture(application: Application, private val rich: Boolean = fal
     val connections = ConnectionManager(repository, cursors, object : T3TransportFactory {
         override fun create(): T3Transport = if (request == "wiring") maintenanceTransport() else if (request == "checkpoint") object : T3Transport by transport {
             override suspend fun authSession() = JSONObject().put("authenticated", true).put("scopes", JSONArray().put("orchestration:operate"))
+        } else if (request == "editor") object : T3Transport by transport, dev.avillagran.ot3android.ui.thread.composer.ComposerBinaryUpload {
+            override suspend fun upload(fd: Int, name: String, mimeType: String, sizeBytes: Long): JSONObject {
+                android.util.Log.i("ComposerFixture", "upload $name $sizeBytes")
+                return JSONObject().put("type", "file").put("id", "fixture-" + java.util.UUID.randomUUID()).put("name", name).put("mimeType", mimeType).put("sizeBytes", sizeBytes)
+            }
         } else transport
     }, viewModelScope)
     val drafts = DraftRepository(database.draftDao())

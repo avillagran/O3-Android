@@ -23,6 +23,7 @@
     <string name="composer_refresh">تحديث</string>
     <string name="composer_uncertain">نتيجة الإرسال غير معروفة. تحقق من الأمر الحالي قبل التحرير أو الإرسال مجددًا.</string>
     <string name="composer_uploading">جارٍ رفع %1$s…</string>
+    <string name="composer_upload_waiting">في انتظار الاتصال لرفع %1$s…</string>
     <string name="composer_upload_failed">فشل الرفع: %1$s</string>
     <string name="composer_attachment_count">المرفقات: %1$d</string>
 </resources>

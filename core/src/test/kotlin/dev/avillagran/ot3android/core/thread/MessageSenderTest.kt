@@ -293,8 +293,24 @@ class MessageSenderTest {
 
         val result = sender.send(connected(), "env-1", "t1", "Hello", null)
 
-        assertEquals(SendResult.Failed("rpc_rejected", "Thread is archived"), result)
+        assertEquals(SendResult.Failed("rpc_rejected", "Thread is archived", rejected = true), result)
         assertTrue(dao.rows.value.isEmpty())
+    }
+
+    @Test
+    fun onlyADefiniteAnswerCountsAsRejected() = runTest {
+        val sender = MessageSender(OutboxRepository(dao), this, ids)
+        for (code in listOf("write_not_authorized", "invalid_input", "rpc_connection_failed", "disconnected")) {
+            fake.onCall(MessageSender.DISPATCH) { throw T3Exception(code) }
+            val result = sender.send(connected(), "env-1", "t1", "Hello", null)
+            assertEquals(SendResult.Failed(code, rejected = true), result)
+            assertTrue(dao.rows.value.isEmpty())
+        }
+        fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_outcome_unknown") }
+        assertTrue(sender.send(connected(), "env-1", "t1", "Hello", null) is SendResult.OutcomeUnknown)
+        assertEquals(1, dao.rows.value.size)
+        assertEquals(SendResult.Failed(MessageSender.NOT_CONNECTED), sender.retry(null, dao.rows.value.keys.single()))
+        assertEquals(1, dao.rows.value.size)
     }
 
     @Test

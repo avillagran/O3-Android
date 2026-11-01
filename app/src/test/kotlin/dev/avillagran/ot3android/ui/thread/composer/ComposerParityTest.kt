@@ -53,6 +53,38 @@ class ComposerParityTest {
         rule.onNodeWithTag("composer_busy").assertTextEquals("Sending…")
     }
 
+    @Test fun sendWhileComposingCommitsTheWordBeforeTheRequest() {
+        val events = mutableListOf<String>()
+        val editors = dev.avillagran.ot3android.ui.thread.ComposerEditors()
+        val editor = editors.editor(null, "")
+        editor.edit(androidx.compose.ui.text.input.TextFieldValue("helo", TextRange(4), TextRange(0, 4)))
+        val composing = ComposerSnapshot(scope, text = "helo", selection = ComposerSelection(4, 4), composing = true)
+        rule.setContent { Ot3Theme {
+            CompositionLocalProvider(dev.avillagran.ot3android.ui.thread.LocalComposerEditors provides editors) {
+                ComposerParity(composing, emptySet(), { _, text, _, active -> events += "edit $text $active" }, { request ->
+                    if (request is ComposerRequest.Send) events += "send ${request.expected.text} ${request.expected.composing}"
+                })
+            }
+        } }
+        rule.onNodeWithTag("thread_send").assertIsEnabled().performClick()
+        rule.runOnIdle {
+            assertEquals(listOf("edit helo false", "send helo false"), events.takeLast(2))
+            assertNull(editor.value.composition)
+            assertEquals("helo", editor.value.text)
+        }
+    }
+
+    @Test fun onlyAFailedUploadOffersARetry() {
+        val requests = mutableListOf<ComposerRequest>()
+        val files = listOf(ComposerAttachment("waiting", "waiting.md", UploadStatus.Queued),
+            ComposerAttachment("failed", "failed.md", UploadStatus.Failed))
+        rule.setContent { Ot3Theme { ComposerParity(ComposerSnapshot(scope, attachments = files), emptySet(), { _, _, _, _ -> }, requests::add) } }
+        rule.onNodeWithText("Waiting to upload waiting.md…").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        rule.runOnIdle { assertTrue(requests.isEmpty()) }
+        rule.onNodeWithText("Upload failed: failed.md").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        rule.runOnIdle { assertEquals("failed", (requests.single() as ComposerRequest.RetryAttachment).id) }
+    }
+
     @Test fun losingFocusPublishesCommittedCompositionWithoutChangingText() {
         val editor = dev.avillagran.ot3android.ui.thread.ComposerEditorState("Compose")
         lateinit var focus: androidx.compose.ui.focus.FocusManager

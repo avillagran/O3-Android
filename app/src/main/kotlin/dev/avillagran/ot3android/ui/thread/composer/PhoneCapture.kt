@@ -13,6 +13,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -39,22 +40,23 @@ internal fun PhoneCapture(snapshot: ComposerSnapshot, onRequest: (ComposerReques
     val latest by rememberUpdatedState(snapshot)
     val sendRequest by rememberUpdatedState(onRequest)
     var error by remember(snapshot.scope) { mutableStateOf(false) }
-    var photoOrigin by remember { mutableStateOf<ComposerSnapshot?>(null) }
-    var photoUri by remember { mutableStateOf<android.net.Uri?>(null) }
-    var imageOrigin by remember { mutableStateOf<ComposerSnapshot?>(null) }
+    // Origins are saved: the camera can rotate the display, which recreates this Activity.
+    var photoOrigin by rememberSaveable { mutableStateOf<String?>(null) }
+    var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var imageOrigin by rememberSaveable { mutableStateOf<String?>(null) }
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         val origin = imageOrigin; imageOrigin = null
         if (uri != null && origin != null) {
-            if (origin.scope == latest.scope && latest.transformable) sendRequest(ComposerRequest.ImportUri(origin, uri.toString()))
+            if (origin == latest.scope.toString()) sendRequest(ComposerRequest.ImportUri(latest, uri.toString()))
             else error = true
         }
     }
-    fun deletePhoto() { photoUri?.let { runCatching { context.contentResolver.delete(it, null, null) } }; photoUri = null; photoOrigin = null }
+    fun deletePhoto() { photoUri?.let { runCatching { context.contentResolver.delete(android.net.Uri.parse(it), null, null) } }; photoUri = null; photoOrigin = null }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         val uri = photoUri; val origin = photoOrigin
-        if (success && uri != null && origin != null && origin.scope == latest.scope && latest.transformable) {
-            // The import owner deletes the private capture file after upload, including failure.
-            sendRequest(ComposerRequest.ImportUri(origin, uri.toString()))
+        if (success && uri != null && origin == latest.scope.toString()) {
+            // The import owner keeps the capture until its bytes are spooled or the chip is removed.
+            sendRequest(ComposerRequest.ImportUri(latest, uri))
             photoUri = null; photoOrigin = null
         } else { deletePhoto(); if (success) error = true }
     }
@@ -64,12 +66,13 @@ internal fun PhoneCapture(snapshot: ComposerSnapshot, onRequest: (ComposerReques
             // Orphans from process death are never restored or uploaded automatically.
             directory.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > 86_400_000L }?.forEach { it.delete() }
             val file = File.createTempFile("photo-", ".jpg", directory)
-            photoUri = FileProvider.getUriForFile(context, "${context.packageName}.phone-capture", file)
-            camera.launch(photoUri!!)
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.phone-capture", file)
+            photoUri = uri.toString()
+            camera.launch(uri)
         } catch (_: Exception) { deletePhoto(); error = true }
     }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted && photoOrigin?.scope == latest.scope && latest.transformable) takePhoto()
+        if (granted && photoOrigin == latest.scope.toString() && latest.transformable) takePhoto()
         else { deletePhoto(); error = true }
     }
     var speechOpen by remember(snapshot.scope) { mutableStateOf(false) }
@@ -77,11 +80,11 @@ internal fun PhoneCapture(snapshot: ComposerSnapshot, onRequest: (ComposerReques
     val buttons: @Composable () -> Unit = {
         Ot3IconButton("mic", stringResource(R.string.capture_dictate), enabled = snapshot.transformable, onClick = { onDismissActions(); error = false; speechOrigin = snapshot; speechOpen = true }, modifier = Modifier.testTag("capture_dictate"))
         Ot3IconButton("image", stringResource(R.string.capture_image), enabled = snapshot.transformable && photoOrigin == null, onClick = {
-            onDismissActions(); error = false; imageOrigin = snapshot
+            onDismissActions(); error = false; imageOrigin = snapshot.scope.toString()
             try { imagePicker.launch("image/*") } catch (_: Exception) { imageOrigin = null; error = true }
         }, modifier = Modifier.testTag("capture_image"))
         Ot3IconButton("camera", stringResource(R.string.capture_photo), enabled = snapshot.transformable && photoOrigin == null, onClick = {
-            onDismissActions(); error = false; photoOrigin = snapshot
+            onDismissActions(); error = false; photoOrigin = snapshot.scope.toString()
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) takePhoto()
             else cameraPermission.launch(Manifest.permission.CAMERA)
         }, modifier = Modifier.testTag("capture_photo"))

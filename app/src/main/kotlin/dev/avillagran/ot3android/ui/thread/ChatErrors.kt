@@ -31,6 +31,7 @@ internal fun chatErrorMessage(code: String): Int? = when (code) {
     "thread_is_working" -> R.string.chat_error_thread_working
     "attachment_authority_unavailable", "attachment_authority_changed" -> R.string.chat_error_attachment_access
     "attachment_storage_unavailable" -> R.string.chat_error_storage
+    "attachment_refused" -> R.string.capture_failed
     else -> null
 }
 

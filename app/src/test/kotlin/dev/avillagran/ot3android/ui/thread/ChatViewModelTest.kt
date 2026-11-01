@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.avillagran.ot3android.core.composer.SharedDraftRepository
 import dev.avillagran.ot3android.core.composer.SharedDraftSynchronizer
+import dev.avillagran.ot3android.core.composer.UploadStatus
 import dev.avillagran.ot3android.core.connection.*
 import dev.avillagran.ot3android.core.data.EnvironmentRepository
 import dev.avillagran.ot3android.core.data.local.Ot3Database
@@ -16,6 +17,7 @@ import dev.avillagran.ot3android.core.settings.GeneralClientPreferences
 import dev.avillagran.ot3android.core.thread.*
 import dev.avillagran.ot3android.core.transport.*
 import dev.avillagran.ot3android.testing.assumeHostJni
+import dev.avillagran.ot3android.ui.thread.composer.ComposerBinaryUpload
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -265,6 +267,237 @@ class ChatViewModelTest {
         }
     }
 
+    @Test fun aServerRefusalFreesTheComposerAndKeepsTextAndChips() = runBlocking {
+        fixture("default") { f ->
+            val chip = f.readyAttachment("notes.md")
+            f.fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_rejected", "Model is not available") }
+            f.vm.onDraftChange("Please review")
+            f.await { f.vm.state.value.draft == "Please review" }
+            f.vm.dispatchAttachments()
+            f.await { f.vm.state.value.notice != null && !f.vm.state.value.sending }
+            assertEquals(ThreadNotice.Failed("rpc_rejected", "Model is not available", rejected = true), f.vm.state.value.notice)
+            assertNull(f.vm.attachmentPending.value)
+            assertTrue(f.vm.state.value.unconfirmed.isEmpty())
+            assertEquals("Please review", f.vm.state.value.draft)
+            assertEquals(listOf(chip), f.vm.attachmentDraft.value.map { it.id })
+            assertTrue(f.vm.state.value.canSend)
+            assertEquals("", f.journal().getString("command"))
+            // Resending is a new command; a success empties the editor and the notice.
+            val first = f.fake.calls.single { it.fn == MessageSender.DISPATCH }.args.getString("commandId")
+            f.fake.onCall(MessageSender.DISPATCH) { JSONObject().put("sequence", 2) }
+            f.vm.dispatchAttachments()
+            f.await { f.vm.state.value.draft.isEmpty() && !f.vm.state.value.sending }
+            assertNull(f.vm.state.value.notice)
+            assertNotEquals(first, f.fake.calls.last { it.fn == MessageSender.DISPATCH }.args.getString("commandId"))
+            assertTrue(f.vm.attachmentDraft.value.isEmpty())
+        }
+    }
+
+    @Test fun anAuthorizationRefusalAlsoFreesTheComposerWithItsScope() = runBlocking {
+        fixture("default") { f ->
+            f.fake.onCall(MessageSender.DISPATCH) { throw T3Exception("write_not_authorized", null, "orchestration:operate") }
+            f.vm.onDraftChange("Hello")
+            f.await { f.vm.state.value.draft == "Hello" }
+            f.vm.dispatchAttachments()
+            f.await { f.vm.state.value.notice != null && !f.vm.state.value.sending }
+            assertEquals(ThreadNotice.Failed("write_not_authorized", null, "orchestration:operate", rejected = true), f.vm.state.value.notice)
+            assertNull(f.vm.attachmentPending.value)
+            assertEquals("Hello", f.vm.state.value.draft)
+        }
+    }
+
+    @Test fun anUnknownOutcomeStaysPendingUntilAResendIsRefused() = runBlocking {
+        fixture("default") { f ->
+            f.fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_outcome_unknown") }
+            f.vm.onDraftChange("Hello")
+            f.await { f.vm.state.value.draft == "Hello" }
+            f.vm.dispatchAttachments()
+            f.await { f.vm.attachmentPending.value != null && f.vm.state.value.unconfirmed.isNotEmpty() && !f.vm.state.value.sending }
+            val id = f.vm.attachmentPending.value!!
+            assertEquals(ThreadNotice.Unconfirmed(id), f.vm.state.value.notice)
+            assertFalse(f.vm.state.value.canSend)
+            f.fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_rejected", "Thread is archived") }
+            f.vm.retry(id)
+            f.await { f.vm.attachmentPending.value == null && !f.vm.state.value.sending }
+            assertEquals("Hello", f.vm.state.value.draft)
+            assertTrue(f.vm.state.value.unconfirmed.isEmpty())
+            assertEquals(ThreadNotice.Failed("rpc_rejected", "Thread is archived", rejected = true), f.vm.state.value.notice)
+        }
+    }
+
+    @Test fun aRowResentAndRefusedReturnsItsTextToTheEditor() = runBlocking {
+        fixture("default") { f ->
+            f.fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_outcome_unknown") }
+            f.vm.onDraftChange("Moved to the row")
+            f.await { f.vm.state.value.draft == "Moved to the row" }
+            f.vm.send()
+            f.await { f.vm.state.value.unconfirmed.isNotEmpty() && !f.vm.state.value.sending }
+            assertEquals("", f.vm.state.value.draft)
+            f.fake.onCall(MessageSender.DISPATCH) { throw T3Exception("rpc_rejected", "Thread is archived") }
+            f.vm.retry(f.vm.state.value.unconfirmed.single().commandId)
+            f.await { f.vm.state.value.draft == "Moved to the row" && f.vm.state.value.unconfirmed.isEmpty() }
+            assertEquals(true, (f.vm.state.value.notice as ThreadNotice.Failed).rejected)
+        }
+    }
+
+    @Test fun aFilePickedOfflineStaysAsAChipAndUploadsOnReconnect() = runBlocking {
+        fixture("default") { f ->
+            f.offline()
+            f.vm.importAttachment(f.context, f.content("notes.md", "offline bytes"))
+            // The chip is immediate; the background copy may already have queued its bytes.
+            assertEquals(1, f.vm.attachmentDraft.value.size)
+            f.await { f.vm.attachmentDraft.value.single().status == UploadStatus.Queued }
+            val chip = f.vm.attachmentDraft.value.single()
+            assertEquals("notes.md", chip.name)
+            assertEquals(0, f.uploads.size)
+            assertEquals("offline bytes", f.spool(chip.id).readText())
+            f.online()
+            f.await { f.vm.attachmentDraft.value.single().status == UploadStatus.Ready }
+            assertEquals(listOf("notes.md" to "offline bytes"), f.uploads)
+            assertFalse(f.spool(chip.id).exists())
+            assertEquals(1, f.journal().getJSONArray("attachments").length())
+        }
+    }
+
+    @Test fun aCameraCaptureOutlivesTheConnectionAndOnlyItsSpoolReachesTheHost() = runBlocking {
+        fixture("default") { f ->
+            f.offline()
+            val capture = f.capture("offline photo")
+            f.vm.importAttachment(f.context, capture.first)
+            f.await { f.vm.attachmentDraft.value.singleOrNull()?.status == UploadStatus.Queued }
+            val chip = f.vm.attachmentDraft.value.single()
+            assertEquals("offline photo", f.spool(chip.id).readText())
+            assertFalse("the spool now owns the bytes", capture.second.exists())
+            f.vm.removeAttachment(chip.id)
+            assertFalse(f.spool(chip.id).exists())
+            assertTrue(f.vm.attachmentDraft.value.isEmpty())
+            f.online()
+            delay(50)
+            assertTrue(f.uploads.isEmpty())
+        }
+    }
+
+    @Test fun aRefusedCopyKeepsTheCaptureUntilTheChipIsRemoved() = runBlocking {
+        fixture("default") { f ->
+            val capture = f.capture("")
+            f.vm.importAttachment(f.context, capture.first)
+            f.await { f.vm.attachmentDraft.value.singleOrNull()?.status == UploadStatus.Failed }
+            assertTrue(capture.second.exists())
+            f.vm.removeAttachment(f.vm.attachmentDraft.value.single().id)
+            assertFalse(capture.second.exists())
+        }
+    }
+
+    @Test fun aSpooledChipSurvivesAProcessDeathAndUploadsFromTheJournal() = runBlocking {
+        fixture("default") { f ->
+            f.offline()
+            f.vm.importAttachment(f.context, f.content("notes.md", "durable bytes"))
+            f.await { f.vm.attachmentDraft.value.singleOrNull()?.status == UploadStatus.Queued }
+            val orphan = java.io.File(f.spool("x").parentFile, "orphan").apply { writeText("no chip") }
+            // A new owner restarts the connection, so the journal's chip goes straight out.
+            val restored = f.reopen()
+            f.await { restored.attachmentDraft.value.singleOrNull()?.status == UploadStatus.Ready }
+            assertEquals("notes.md", restored.attachmentDraft.value.single().name)
+            assertFalse(orphan.exists())
+            assertEquals(listOf("notes.md" to "durable bytes"), f.uploads)
+        }
+    }
+
+    @Test fun aFailedUploadKeepsItsBytesForARetryAndTheNextConnection() = runBlocking {
+        fixture("default") { f ->
+            f.failUploads = true
+            f.vm.importAttachment(f.context, f.content("notes.md", "bytes"))
+            f.await { f.vm.attachmentDraft.value.singleOrNull()?.status == UploadStatus.Failed }
+            val chip = f.vm.attachmentDraft.value.single()
+            assertTrue(f.spool(chip.id).exists())
+            f.vm.retryAttachment(chip.id)
+            f.await { f.attempts == 2 && f.vm.attachmentDraft.value.single().status == UploadStatus.Failed }
+            f.failUploads = false
+            f.offline(); f.online()
+            f.await { f.vm.attachmentDraft.value.single().status == UploadStatus.Ready }
+            assertEquals(listOf("notes.md" to "bytes"), f.uploads)
+        }
+    }
+
+    @Test fun retryWhileTheFailedUploadIsFinishingIsNotLost() = runBlocking {
+        fixture("default") { f ->
+            f.failUploads = true
+            var retried = false
+            val retry = launch(main, start = CoroutineStart.UNDISPATCHED) {
+                f.vm.attachmentDraft.collect { files ->
+                    val failed = files.singleOrNull()?.takeIf { it.status == UploadStatus.Failed }
+                    if (failed != null && !retried) {
+                        retried = true
+                        f.vm.retryAttachment(failed.id)
+                    }
+                }
+            }
+            try {
+                f.vm.importAttachment(f.context, f.content("notes.md", "bytes"))
+                f.await { f.attempts == 2 && f.vm.attachmentDraft.value.single().status == UploadStatus.Failed }
+                assertTrue(f.spool(f.vm.attachmentDraft.value.single().id).exists())
+            } finally { retry.cancelAndJoin() }
+        }
+    }
+
+    @Test fun aFileThatArrivesDuringASendJoinsTheDraftNotTheCommand() = runBlocking {
+        fixture("default") { f ->
+            val sent = f.readyAttachment("sent.md")
+            val gate = CompletableDeferred<Unit>()
+            f.fake.onCall(MessageSender.DISPATCH) { gate.await(); JSONObject().put("sequence", 2) }
+            f.vm.onDraftChange("Hello")
+            f.await { f.vm.state.value.draft == "Hello" }
+            f.vm.dispatchAttachments()
+            f.await { f.fake.calls.any { it.fn == MessageSender.DISPATCH } }
+            f.vm.importAttachment(f.context, f.content("late.md", "late"))
+            f.await { f.vm.attachmentDraft.value.any { it.name == "late.md" && it.status == UploadStatus.Ready } }
+            gate.complete(Unit)
+            f.await { f.vm.state.value.draft.isEmpty() && !f.vm.state.value.sending }
+            assertEquals(listOf("late.md"), f.vm.attachmentDraft.value.map { it.name })
+            assertFalse(f.vm.attachmentDraft.value.any { it.id == sent })
+            assertEquals(1, f.fake.calls.single { it.fn == MessageSender.DISPATCH }.args.getJSONArray("attachments").length())
+        }
+    }
+
+    @Test fun aFileThatArrivesWhileACommandIsPreparedStaysOutOfIt() = runBlocking {
+        fixture { f ->
+            f.vm.chosenInteraction.value = "plan"
+            val sent = f.readyAttachment("sent.md")
+            val gate = CompletableDeferred<Unit>()
+            val policy = CompletableDeferred<Unit>()
+            f.fake.onCall("server.getConfig") {
+                policy.complete(Unit); gate.await()
+                JSONObject("""{"providers":[{"instanceId":"provider","enabled":true,"showInteractionModeToggle":true,"models":[{"slug":"model","name":"Model"}]}]}""")
+            }
+            f.fake.onCall(MessageSender.DISPATCH) { JSONObject().put("sequence", 2) }
+            f.vm.onDraftChange("Hello")
+            f.await { f.vm.state.value.draft == "Hello" }
+            f.vm.dispatchAttachments()
+            policy.await()
+            f.vm.importAttachment(f.context, f.content("late.md", "late"))
+            f.await { f.vm.attachmentDraft.value.any { it.name == "late.md" && it.status == UploadStatus.Ready } }
+            gate.complete(Unit)
+            f.await { f.vm.state.value.draft.isEmpty() && !f.vm.state.value.sending }
+            assertEquals(listOf("late.md"), f.vm.attachmentDraft.value.map { it.name })
+            assertFalse(f.vm.attachmentDraft.value.any { it.id == sent })
+            val message = f.fake.calls.last { it.fn == MessageSender.DISPATCH }.args
+            assertEquals(1, message.getJSONArray("attachments").length())
+        }
+    }
+
+    @Test fun aSocketThatNeverOpenedLeavesNoPendingCommand() = runBlocking {
+        fixture("default") { f ->
+            f.fake.onCall(MessageSender.DISPATCH) { throw T3Exception("disconnected") }
+            f.vm.onDraftChange("Hello")
+            f.await { f.vm.state.value.draft == "Hello" }
+            f.vm.dispatchAttachments()
+            f.await { f.vm.state.value.notice != null && !f.vm.state.value.sending }
+            assertNull(f.vm.attachmentPending.value)
+            assertTrue(f.vm.state.value.unconfirmed.isEmpty())
+            assertEquals("Hello", f.vm.state.value.draft)
+        }
+    }
+
     private fun draftPayload(text: String) = JSONObject().put("schema", 1).put("text", text).put("attachments", JSONArray())
 
     private fun assertPlainMessage(command: JSONObject, text: String) {
@@ -283,7 +516,10 @@ class ChatViewModelTest {
     }
 
     private class Fixture(interactionMode: String) {
-        private val context = ApplicationProvider.getApplicationContext<Application>()
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        val uploads = mutableListOf<Pair<String, String>>()
+        var failUploads = false
+        var attempts = 0
         private val db = Room.inMemoryDatabaseBuilder(context, Ot3Database::class.java).allowMainThreadQueries()
             .setQueryExecutor { it.run() }.setTransactionExecutor { it.run() }.build()
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
@@ -301,9 +537,15 @@ class ChatViewModelTest {
             onCall("server.getConfig") { JSONObject("""{"providers":[{"instanceId":"provider","enabled":true,"showInteractionModeToggle":true,"models":[{"slug":"model","name":"Model"}]}]}""") }
         }
         var session: JSONObject = JSONObject().put("authenticated", true).put("scopes", JSONArray().put("orchestration:operate"))
-        private val live = object : T3Transport by fake {
+        private val live = object : T3Transport by fake, ComposerBinaryUpload {
             override suspend fun domain(fn: String, args: JSONObject) = DomainEngine.shared.domain(fn, args)
             override suspend fun authSession() = session
+            override suspend fun upload(fd: Int, name: String, mimeType: String, sizeBytes: Long): JSONObject {
+                attempts++
+                check(!failUploads) { "upload_failed" }
+                uploads += name to java.io.File("/proc/self/fd/$fd").readText()
+                return JSONObject().put("id", "host-" + uploads.size).put("name", name).put("mimeType", mimeType)
+            }
         }
         private val cursors = object : ShellCursorStore {
             override suspend fun cursor(environmentId: String): Long? = null
@@ -325,14 +567,15 @@ class ChatViewModelTest {
         suspend fun start() {
             prefs.update("planModeEnabled", true)
             repository.save("node", "Fixture", "http://fixture.invalid", "node", null)
-            vm = ThreadViewModel("node", "chat", connections, DraftRepository(db.draftDao()), outbox,
-                MessageSender(outbox, scope), scope, attachmentDirectory = directory,
-                cacheAuthority = { credential }, clientPreferences = prefs)
+            vm = newViewModel()
             store.put("chat", vm)
             scope.launch { vm.state.collect() }
             await { vm.state.value.connected && vm.state.value.view.loaded && vm.state.value.composer.loaded }
             assertTrue(vm.refreshPlanControls().getBoolean("enabled"))
         }
+        private fun newViewModel() = ThreadViewModel("node", "chat", connections, DraftRepository(db.draftDao()), outbox,
+            MessageSender(outbox, scope), scope, attachmentDirectory = directory,
+            cacheAuthority = { credential }, clientPreferences = prefs)
         /** Selects an authority backed by [remote]; the default answers like one holding no documents. */
         fun sharedDrafts(remote: suspend (JSONObject) -> JSONObject = { JSONObject().put("cursor", "a:1").put("items", JSONArray()).put("nextOffset", JSONObject.NULL) }): SharedDraftSynchronizer {
             var disk: String? = null
@@ -352,6 +595,65 @@ class ChatViewModelTest {
             assertNull(vm.state.value.notice)
             await { vm.state.value.draft.isEmpty() && vm.attachmentPending.value == null && !vm.state.value.sending }
             return fake.calls.single { it.fn == MessageSender.DISPATCH }.args
+        }
+        private var contents = 0
+        private val captures = java.io.File(context.cacheDir, "phone-captures").apply { mkdirs() }
+        private val threadKey = java.security.MessageDigest.getInstance("SHA-256").digest("node/chat".toByteArray()).joinToString("") { "%02x".format(it) }
+        fun spool(id: String) = java.io.File(directory, "$threadKey.spool/$id")
+        fun journal() = JSONObject(java.io.File(directory, "$threadKey.json").readText())
+        /** A one-off grant, as the system picker gives. */
+        fun content(name: String, text: String): String {
+            val authority = "picker.test.${contents++}"
+            val file = java.io.File.createTempFile("picked-", ".data", context.cacheDir).apply { writeText(text) }
+            val provider = object : android.content.ContentProvider() {
+                override fun onCreate() = true
+                override fun query(uri: android.net.Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?) =
+                    android.database.MatrixCursor(arrayOf(android.provider.OpenableColumns.DISPLAY_NAME)).apply { addRow(arrayOf(name)) }
+                override fun getType(uri: android.net.Uri) = "text/plain"
+                override fun openFile(uri: android.net.Uri, mode: String) = android.os.ParcelFileDescriptor.open(file, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+                override fun insert(uri: android.net.Uri, values: android.content.ContentValues?): android.net.Uri? = null
+                override fun delete(uri: android.net.Uri, selection: String?, selectionArgs: Array<out String>?) = 0
+                override fun update(uri: android.net.Uri, values: android.content.ContentValues?, selection: String?, selectionArgs: Array<out String>?) = 0
+            }
+            provider.attachInfo(context, android.content.pm.ProviderInfo().apply { this.authority = authority; exported = false })
+            org.robolectric.shadows.ShadowContentResolver.registerProviderInternal(authority, provider)
+            return "content://$authority/file"
+        }
+        /** The same provider shape, but under the camera's authority, which owns its file. */
+        fun capture(text: String): Pair<String, java.io.File> {
+            val authority = context.packageName + ".phone-capture"
+            val file = java.io.File.createTempFile("photo-", ".jpg", captures).apply { writeText(text) }
+            val provider = object : android.content.ContentProvider() {
+                override fun onCreate() = true
+                override fun query(uri: android.net.Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?) =
+                    android.database.MatrixCursor(arrayOf(android.provider.OpenableColumns.DISPLAY_NAME)).apply { addRow(arrayOf(file.name)) }
+                override fun getType(uri: android.net.Uri) = "image/jpeg"
+                override fun openFile(uri: android.net.Uri, mode: String) = android.os.ParcelFileDescriptor.open(file, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+                override fun insert(uri: android.net.Uri, values: android.content.ContentValues?): android.net.Uri? = null
+                override fun delete(uri: android.net.Uri, selection: String?, selectionArgs: Array<out String>?) = if (file.delete()) 1 else 0
+                override fun update(uri: android.net.Uri, values: android.content.ContentValues?, selection: String?, selectionArgs: Array<out String>?) = 0
+            }
+            provider.attachInfo(context, android.content.pm.ProviderInfo().apply { this.authority = authority; exported = false })
+            org.robolectric.shadows.ShadowContentResolver.registerProviderInternal(authority, provider)
+            return "content://$authority/capture/${file.name}" to file
+        }
+        suspend fun readyAttachment(name: String): String {
+            vm.importAttachment(context, content(name, "bytes of $name"))
+            await { vm.attachmentDraft.value.any { it.name == name && it.status == UploadStatus.Ready } }
+            return vm.attachmentDraft.value.first { it.name == name }.id
+        }
+        suspend fun offline() {
+            connections.supervisor("node")!!.stopAndJoin()
+            await { !vm.state.value.connected }
+        }
+        suspend fun online() = connections.startIfCurrent(connections.supervisor("node"))
+        /** The same files and database under a new owner, as after the process died. */
+        suspend fun reopen(): ThreadViewModel {
+            vm.viewModelScope.coroutineContext[Job]?.cancelAndJoin()
+            vm = newViewModel()
+            store.put("chat-reopened", vm)
+            scope.launch { vm.state.collect() }
+            return vm
         }
         suspend fun nativePlan() = dev.avillagran.ot3android.core.composer.NativeComposer(live).planView(projection).getJSONObject("ready")
         suspend fun await(timeoutMs: Long = 5_000, condition: () -> Boolean) { withTimeout(timeoutMs) { while (!condition()) delay(10) } }

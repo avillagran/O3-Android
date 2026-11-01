@@ -23,6 +23,7 @@
     <string name="composer_refresh">Оновити</string>
     <string name="composer_uncertain">Результат надсилання невідомий. Перевірте наявну команду перед зміною чи повторним надсиланням.</string>
     <string name="composer_uploading">Завантаження %1$s…</string>
+    <string name="composer_upload_waiting">Очікування зʼєднання для надсилання %1$s…</string>
     <string name="composer_upload_failed">Помилка завантаження: %1$s</string>
     <string name="composer_attachment_count">Вкладення: %1$d</string>
 </resources>

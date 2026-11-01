@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -106,6 +107,17 @@ class ThreadScreenTest {
 
         state = state.copy(connection = ConnectionState.Unreachable("unreachable", nextRetryAt = null))
         composeRule.onNodeWithTag(ThreadScreenTags.SEND).assertIsNotEnabled()
+    }
+
+    @Test
+    fun aRefusalStaysAboveTheComposerWithTheServersReason() {
+        val refused = ThreadNotice.Failed("rpc_rejected", "Model is turned off", rejected = true)
+        setContent({ ThreadUiState(view = view, connection = connected, composer = ComposerState(draft = "Keep me"), notice = refused) })
+
+        composeRule.onNodeWithTag(ThreadScreenTags.REJECTED).assertIsDisplayed()
+        composeRule.onNodeWithText("Model is turned off", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(ThreadScreenTags.REJECTED_DISMISS).assertIsDisplayed()
+        composeRule.onNodeWithTag(ThreadScreenTags.COMPOSER).assertIsEnabled()
     }
 
     @Test

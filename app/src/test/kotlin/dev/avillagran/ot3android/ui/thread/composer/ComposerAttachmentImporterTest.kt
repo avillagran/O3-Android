@@ -52,6 +52,31 @@ class ComposerAttachmentImporterTest {
             assertEquals(before, staged().toSet())
         } finally { source.delete() }
     }
+    @Test fun spoolKeepsTheBytesWithoutAnyUploadAndLaterSendsThem() = runTest {
+        val source = source(13)
+        val target = File(context.noBackupFilesDir, "spooled-file")
+        try {
+            val spooled = ComposerAttachmentImporter.spool(context, "content://composer.test/file", target)
+            assertEquals(SpooledAttachment("test.txt", "text/plain", 13), spooled)
+            assertEquals(13L, target.length())
+            assertFalse(File(target.path + ".part").exists())
+            val sent = ComposerAttachmentImporter.upload({ fd, name, mime, size ->
+                assertTrue(fd >= 0); assertEquals("test.txt", name); assertEquals("text/plain", mime); assertEquals(13L, size)
+                JSONObject().put("id", "native-result")
+            }, target, spooled.name, spooled.mimeType)
+            assertEquals("native-result", sent.getString("id"))
+            assertTrue("the caller decides when the spool goes", target.exists())
+        } finally { source.delete(); target.delete() }
+    }
+    @Test fun aRefusedSpoolLeavesNoPartialFile() = runTest {
+        val source = source(0)
+        val target = File(context.noBackupFilesDir, "empty-file")
+        try {
+            try { ComposerAttachmentImporter.spool(context, "content://composer.test/file", target); fail() }
+            catch (error: IllegalArgumentException) { assertEquals("attachment_empty", error.message) }
+            assertFalse(target.exists()); assertFalse(File(target.path + ".part").exists())
+        } finally { source.delete() }
+    }
     @Test fun nativeFailureCleansStagingWithoutRetry() = runTest {
         val source = source(3); var calls = 0
         try {
