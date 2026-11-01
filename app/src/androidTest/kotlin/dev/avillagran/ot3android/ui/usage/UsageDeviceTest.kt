@@ -23,7 +23,7 @@ class UsageDeviceTest {
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
             .putExtra("dark", true)).use { scenario ->
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
-            rule.onNodeWithTag("nav_tab_Settings").performClick()
+            openSettingsTab(scenario)
             rule.onNodeWithTag("settings_Usage").performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("usage_metric_tokens").performClick()
@@ -49,6 +49,17 @@ class UsageDeviceTest {
         }
     }
 
+    /** A preceding editor can restore the platform IME into a fresh Home; tabs stay hidden while it shows. */
+    private fun openSettingsTab(scenario: ActivityScenario<WorkspaceFixtureActivity>) {
+        scenario.onActivity {
+            it.currentFocus?.clearFocus()
+            androidx.core.view.WindowCompat.getInsetsController(it.window, it.window.decorView)
+                .hide(androidx.core.view.WindowInsetsCompat.Type.ime())
+        }
+        rule.waitUntil(15_000) { rule.onAllNodesWithTag("nav_tab_Settings").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithTag("nav_tab_Settings").performClick()
+    }
+
     private fun recordEntranceFrames() {
         if (!recordMotionEvidence) return
         // Compose tests otherwise fast-forward animations before screenrecord sees them.
@@ -64,7 +75,7 @@ class UsageDeviceTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)).use { scenario ->
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
-            rule.onNodeWithTag("nav_tab_Settings").performClick()
+            openSettingsTab(scenario)
             rule.onNodeWithTag("settings_Usage").performClick()
             rule.onNodeWithTag("usage_tab_limits").performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithText("38% used").fetchSemanticsNodes().isNotEmpty() }
@@ -96,15 +107,7 @@ class UsageDeviceTest {
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
             .putExtra("request", "prices")).use { scenario ->
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
-            // A preceding editor can restore the platform IME into the fresh Home
-            // window. Tabs intentionally stay hidden while it is visible.
-            scenario.onActivity {
-                it.currentFocus?.clearFocus()
-                androidx.core.view.WindowCompat.getInsetsController(it.window, it.window.decorView)
-                    .hide(androidx.core.view.WindowInsetsCompat.Type.ime())
-            }
-            rule.waitUntil(15_000) { rule.onAllNodesWithTag("nav_tab_Settings").fetchSemanticsNodes().isNotEmpty() }
-            rule.onNodeWithTag("nav_tab_Settings").performClick()
+            openSettingsTab(scenario)
             rule.onNodeWithTag("settings_Usage").performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("usage_page").performScrollToNode(hasTestTag("usage_refresh_prices"))
@@ -129,7 +132,7 @@ class UsageDeviceTest {
             // Home rows also exist in the landscape sidebar and before the nav bar
             // settles after an IME-owning activity. Wait for the actual destination.
             rule.waitUntil(15_000) { rule.onNodeWithTag("nav_tab_Settings").isDisplayed() }
-            rule.onNodeWithTag("nav_tab_Settings").performClick()
+            openSettingsTab(scenario)
             rule.onNodeWithTag("settings_Usage").performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("usage_total_tokens").assertTextEquals("280,800")
