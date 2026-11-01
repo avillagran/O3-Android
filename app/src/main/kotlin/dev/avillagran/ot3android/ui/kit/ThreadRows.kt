@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
@@ -73,8 +72,8 @@ fun DesktopThreadRow(
     val type = Ot3Theme.typography.material
     val appearance = LocalSidebarRows.current
     val density = androidx.compose.ui.platform.LocalDensity.current
-    val titleHeight = maxOf(24.dp, with(density) { (type.bodyMedium.fontSize * 1.4f).toDp() })
-    val metadataHeight = maxOf(24.dp, with(density) { (type.bodySmall.fontSize * 1.4f).toDp() } + 4.dp)
+    val titleHeight = maxOf(Ot3Sizes.touchTarget, with(density) { (type.bodyMedium.fontSize * 1.5f).toDp() })
+    val metadataHeight = maxOf(24.dp, with(density) { (type.bodySmall.fontSize * 1.5f).toDp() } + 4.dp)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val focused by interaction.collectIsFocusedAsState()
@@ -120,7 +119,7 @@ fun DesktopThreadRow(
                         contentAlignment = Alignment.Center) {
                         Ot3Icon("pin", stringResource(R.string.ot3_row_unpin), tint = colors.dim, size = 12.dp)
                     }
-                    row.subagents?.let { SubagentsToggle(it, onSubagentsClick, titleHeight) }
+                    row.subagents?.let { SubagentsToggle(it, onSubagentsClick) }
                     row.time?.label?.let { Text(it, color = if (row.time.kind == TimeKind.COUNTDOWN) colors.working else colors.dim,
                         style = type.bodySmall.copy(fontFamily = if (appearance.sober) androidx.compose.ui.text.font.FontFamily.Monospace else null), maxLines = 1) }
                 }
@@ -143,7 +142,7 @@ fun DesktopThreadRow(
 
 /** "Show {count} subagents": bot, "working/count" or "count", chevron (`ot3:ui/qml/T3ThreadRow.qml:244-256`). */
 @Composable
-private fun SubagentsToggle(model: SubagentsModel, onClick: (() -> Unit)?, lineHeight: androidx.compose.ui.unit.Dp) {
+private fun SubagentsToggle(model: SubagentsModel, onClick: (() -> Unit)?) {
     val colors = Ot3Theme.colors
     val name = stringResource(
         if (model.expanded) R.string.ot3_row_hide_subagents else R.string.ot3_row_show_subagents,
@@ -155,14 +154,14 @@ private fun SubagentsToggle(model: SubagentsModel, onClick: (() -> Unit)?, lineH
     val shape = RoundedCornerShape(4.dp)
     val expansion = stringResource(if (model.expanded) R.string.about_expanded else R.string.about_collapsed)
     Box(
-        Modifier.requiredHeight(Ot3Sizes.touchTarget).offset(y = (Ot3Sizes.touchTarget - lineHeight).coerceAtLeast(0.dp) / 2).widthIn(min = Ot3Sizes.touchTarget)
+        Modifier.heightIn(min = Ot3Sizes.touchTarget).widthIn(min = Ot3Sizes.touchTarget)
             .then(if (onClick != null) Modifier.clickable(interactionSource = interaction, indication = null,
                 role = Role.Button, onClickLabel = name, onClick = onClick) else Modifier)
             .semantics { contentDescription = name; stateDescription = expansion },
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            Modifier.offset(y = -(Ot3Sizes.touchTarget - lineHeight).coerceAtLeast(0.dp) / 2).heightIn(min = CAPTION_LINE)
+            Modifier.heightIn(min = CAPTION_LINE)
                 .background(colors.foreground.copy(alpha = if (pressed) .08f else SUBAGENTS_FILL), shape)
                 .then(if (focused) Modifier.border(1.dp, colors.accent, shape) else Modifier)
                 .padding(horizontal = Ot3Spacing.sm),

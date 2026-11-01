@@ -485,7 +485,7 @@ private fun HomeListItem(item: HomeItem, onIntent: (HomeIntent) -> Unit, rowModi
     }
 }
 
-/** A `sidebar.view` row in the kit's card or slim row. */
+/** A `sidebar.view` row rendered by the shared Desktop layout. */
 @Composable
 private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModifier: Modifier = Modifier, subagents: dev.avillagran.ot3android.ui.kit.SubagentsModel? = null, onSubagents: (() -> Unit)? = null) {
     val haptics = LocalHapticFeedback.current
