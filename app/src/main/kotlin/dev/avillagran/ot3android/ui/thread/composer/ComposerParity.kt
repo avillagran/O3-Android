@@ -57,6 +57,7 @@ fun ComposerParity(
     references: List<ComposerReference> = emptyList(),
     completions: List<ComposerCompletion> = emptyList(),
     error: String? = null,
+    expandedActions: @Composable () -> Unit = {},
 ) {
     var expanded by rememberSaveable(snapshot.scope) { mutableStateOf(false) }
     val editors = rememberSaveable(snapshot.scope.copy(queueMessage = null), saver = ComposerEditors.StateSaver) { ComposerEditors() }
@@ -200,6 +201,7 @@ fun ComposerParity(
                         { onRequest(ComposerRequest.Send(snapshot, ComposerDelivery.Default)) },
                         enabled = snapshot.sendable, modifier = Modifier.testTag("thread_send"))
                 }
+                expandedActions()
                 renderEditor(true, Modifier.weight(1f).testTag("composer_expanded"))
             }
         }

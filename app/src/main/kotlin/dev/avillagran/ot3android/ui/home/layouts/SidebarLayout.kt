@@ -86,3 +86,19 @@ fun sidebarSections(rows: List<HomeRow>, layout: String, grouped: Boolean, metad
             SidebarSection(state, if (state == "idle") "" else state, it.flatten()) }
     }
 }
+
+/** Native parent identity wins over map order. Hosts cannot share a subtree. Cycles stay bounded. */
+internal fun nestedSidebarRows(rows: List<HomeRow>): List<HomeRow> {
+    val keys = rows.map { it.key }.toSet()
+    val children = rows.filter { it.parentKey in keys }.groupBy { it.parentKey }
+    val seen = mutableSetOf<String>()
+    return buildList {
+        fun append(row: HomeRow, depth: Int) {
+            if (!seen.add(row.key)) return
+            add(row.copy(depth = depth))
+            children[row.key].orEmpty().forEach { append(it, depth + 1) }
+        }
+        rows.filter { it.parentKey !in keys }.forEach { append(it, 0) }
+        rows.forEach { if (it.key !in seen) append(it, 0) }
+    }
+}

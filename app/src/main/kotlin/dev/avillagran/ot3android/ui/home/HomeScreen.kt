@@ -361,7 +361,7 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
     val selectedKey = LocalSelectedThreadKey.current
     val layoutItems = remember(state.items, state.rows, state.filter, state.query, settings.interfaceLayout) {
         if (settings.interfaceLayout != "classic" && !state.filter.active && state.query.isBlank()) {
-            state.rows.values.map { HomeItem.Row(it) } +
+            nestedSidebarRows(state.rows.values.toList()).map { HomeItem.Row(it) } +
                 state.items.filter { it is HomeItem.ShowMoreSettled || it is HomeItem.Message || it is HomeItem.MessagesHeader }
         } else state.items
     }
@@ -391,7 +391,7 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                         when (entry) {
                             is SidebarEntry.Header -> if (!collapsed.any { entry.key.startsWith("$it/") }) item(entry.key) {
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                    TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f)) {
+                                    TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f).testTag("sidebar_toggle_${entry.key}")) {
                                         dev.avillagran.ot3android.ui.kit.Ot3Icon(if (entry.key in collapsed) "chevron-right" else "chevron-down", null)
                                         Text("${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
                                             modifier = Modifier.fillMaxWidth(), color = Ot3Theme.colors.dim,
@@ -419,7 +419,9 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             if (children.isNotEmpty()) dev.avillagran.ot3android.ui.kit.Ot3IconButton(
                                                 if (treeKey in collapsed) "chevron-right" else "chevron-down",
-                                                "${row!!.title} (${children.size})", { scope.launch { viewPreferences.toggleSidebarSection(treeKey!!) } })
+                                                "${row!!.title} (${children.size})", { scope.launch { viewPreferences.toggleSidebarSection(treeKey!!) } },
+                                                modifier = Modifier.testTag("sidebar_toggle_$treeKey"))
+                                            if (children.isNotEmpty()) Text(children.size.toString(), color = Ot3Theme.colors.dim, style = MaterialTheme.typography.labelSmall)
                                             HomeListItem(entry.value, onIntent, Modifier.weight(1f).animateItem(
                                                 fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()))
                                         }

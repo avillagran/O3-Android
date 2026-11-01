@@ -20,6 +20,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import dev.avillagran.ot3android.ui.icons.Ot3Icons
 import dev.avillagran.ot3android.ui.theme.Ot3Radii
@@ -35,6 +37,13 @@ fun Ot3Icon(
     tint: Color = Ot3Theme.colors.foreground,
     size: Dp = Ot3Sizes.inlineIcon,
 ) {
+    if (name == "eye") {
+        androidx.compose.material3.Text("\uf06e", color = tint,
+            fontFamily = androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(dev.avillagran.ot3android.R.font.nerd_preview)),
+            fontSize = with(androidx.compose.ui.platform.LocalDensity.current) { size.toSp() },
+            modifier = modifier.then(if (contentDescription == null) Modifier else Modifier.semantics { this.contentDescription = contentDescription }))
+        return
+    }
     Icon(Ot3Icons.painter(name), contentDescription, modifier.size(size), tint = tint)
 }
 

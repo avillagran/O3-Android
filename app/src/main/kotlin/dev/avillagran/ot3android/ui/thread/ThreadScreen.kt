@@ -534,7 +534,7 @@ private fun UnconfirmedRow(
                 modifier = Modifier.testTag(ThreadScreenTags.resend(command.commandId)),
             ) { Text(stringResource(R.string.thread_resend)) }
             ConfirmOutboxDiscard(command.commandId, true, onDiscard)
-            TextButton(onClick = { onEditPending(command.commandId) }) { Text(stringResource(R.string.ot3_composer_edit)) }
+            ConfirmOutboxEdit(command.commandId, onEditPending)
         }
     }
 }
@@ -602,7 +602,10 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
     val attachments by model.attachmentDraft.collectAsStateWithLifecycle()
     val pending by model.attachmentPending.collectAsStateWithLifecycle()
     val storageError by model.attachmentStorageError.collectAsStateWithLifecycle()
-    if (storageError) Text(stringResource(R.string.composer_uncertain), color = MaterialTheme.colorScheme.error)
+    if (storageError) {
+        Text(stringResource(R.string.thread_notice_unknown), color = MaterialTheme.colorScheme.error)
+        TextButton(onClick = model::repairAttachmentStorage) { Text(stringResource(R.string.composer_restore)) }
+    }
     var draftOptions by remember(scope) { mutableStateOf<org.json.JSONObject?>(null) }
     val displayed = snapshot.copy(attachments = attachments, loading = unavailable, sending = state.sending, uncertainCommand = null, sendBlocked = !state.connected || state.view.stale || storageError || pending != null || state.unconfirmed.isNotEmpty())
     SideEffect { synchronizer?.pause(snapshot.composing || state.unconfirmed.isNotEmpty() || !state.composer.loaded || state.sending || pending != null || attachments.size > 16 || attachments.any { it.status != dev.avillagran.ot3android.core.composer.UploadStatus.Ready }) }
@@ -668,14 +671,17 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
         }
     }
     if (pending != null) {
-        Text(stringResource(R.string.composer_uncertain))
+        Text(stringResource(R.string.thread_notice_unknown))
         Row {
             TextButton(onClick = { model.retry(pending!!) }, enabled = state.connected && !state.sending) { Text(stringResource(R.string.thread_resend)) }
             ConfirmOutboxDiscard(pending!!, !state.sending, model::discard)
-            TextButton(onClick = { model.editPending(pending!!) }, enabled = !state.sending) { Text(stringResource(R.string.ot3_composer_edit)) }
+            ConfirmOutboxEdit(pending!!, model::editPending)
         }
     }
-    if (state.view.timeline?.optBoolean("hasMoreHistory") == true) Ot3IconButton("clock", stringResource(R.string.ot3_pr_more), model::loadOlderHistory, enabled = state.connected)
+    Row {
+        if (state.view.timeline?.optBoolean("hasMoreHistory") == true) Ot3IconButton("clock", stringResource(R.string.ot3_pr_more), model::loadOlderHistory, enabled = state.connected)
+        if (shared != null && scope.queueMessage == null) Ot3IconButton("layers", stringResource(R.string.shared_draft_title), { sharedOpen = true })
+    }
     LaunchedEffect(snapshot.version, state.connected) {
         completionRead = null
         val captured = session.snapshot
@@ -688,6 +694,18 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
         }
     }
     dev.avillagran.ot3android.ui.thread.composer.ComposerParity(displayed,
+        expandedActions = {
+            state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, model::retry, model::discard, model::editPending) }
+            if (pending != null && state.unconfirmed.none { it.commandId == pending }) {
+                Text(stringResource(R.string.thread_notice_unknown))
+                Row {
+                    TextButton(onClick = { model.retry(pending!!) }, enabled = state.connected && !state.sending) { Text(stringResource(R.string.thread_resend)) }
+                    ConfirmOutboxEdit(pending!!, model::editPending)
+                    ConfirmOutboxDiscard(pending!!, !state.sending, model::discard)
+                }
+            }
+            if (storageError) TextButton(onClick = model::repairAttachmentStorage) { Text(stringResource(R.string.composer_restore)) }
+        },
         completions = completionRead?.third?.let { rows -> (0 until rows.length()).map { i -> rows.getJSONObject(i).let { row ->
             dev.avillagran.ot3android.core.composer.ComposerCompletion(i.toString(), row.getString("label"), row.optString("description")) } } }.orEmpty(),
         capabilities = buildSet {
@@ -766,7 +784,6 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
                 }
             }
         })
-    if (shared != null && scope.queueMessage == null) Ot3IconButton("layers", stringResource(R.string.shared_draft_title), { sharedOpen = true })
     if (sharedOpen && shared != null) dev.avillagran.ot3android.ui.thread.composer.SharedDraftPanel(shared, displayed,
         onAdopt = { expected, text ->
             if (session.replace(expected, text, dev.avillagran.ot3android.core.composer.ComposerSelection(text.length, text.length))) publish()
@@ -805,7 +822,17 @@ private fun ConfirmOutboxDiscard(id: String, enabled: Boolean, discard: (String)
     var open by remember(id) { mutableStateOf(false) }
     TextButton(onClick = { open = true }, enabled = enabled) { Text(stringResource(R.string.thread_discard)) }
     if (open) androidx.compose.material3.AlertDialog(onDismissRequest = { open = false },
-        text = { Text(stringResource(R.string.thread_unconfirmed_plain)) },
+        text = { Text(stringResource(R.string.thread_notice_unknown)) },
         confirmButton = { TextButton(onClick = { open = false; discard(id) }) { Text(stringResource(R.string.thread_discard)) } },
+        dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.ot3_dialog_close)) } })
+}
+
+@Composable
+private fun ConfirmOutboxEdit(id: String, edit: (String) -> Unit) {
+    var open by remember(id) { mutableStateOf(false) }
+    TextButton(onClick = { open = true }) { Text(stringResource(R.string.ot3_composer_edit)) }
+    if (open) androidx.compose.material3.AlertDialog(onDismissRequest = { open = false },
+        text = { Text(stringResource(R.string.thread_notice_unknown)) },
+        confirmButton = { TextButton(onClick = { open = false; edit(id) }) { Text(stringResource(R.string.ot3_composer_edit)) } },
         dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.ot3_dialog_close)) } })
 }

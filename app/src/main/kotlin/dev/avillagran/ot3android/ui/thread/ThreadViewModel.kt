@@ -108,7 +108,7 @@ class ThreadViewModel(
     private val environmentId: String,
     private val threadId: String,
     private val connections: ConnectionManager,
-    private val drafts: DraftRepository,
+    drafts: DraftRepository,
     private val outbox: OutboxRepository,
     private val sender: MessageSender,
     private val appScope: CoroutineScope,
@@ -163,8 +163,20 @@ class ThreadViewModel(
             try { stream.write(saved.toString().toByteArray()); file.finishWrite(stream) }
             catch (error: Exception) { file.failWrite(stream); throw error }
         }
+        attachmentStorageError.value = false
         true
     } catch (_: Exception) { attachmentStorageError.value = true; false }
+    /** Preserve a corrupt journal for recovery before explicitly replacing it. Text stays in Room. */
+    fun repairAttachmentStorage() {
+        if (state.value.sending) return
+        runCatching {
+            attachmentFile?.baseFile?.takeIf { it.exists() }?.let { source ->
+                source.copyTo(java.io.File(source.parentFile, source.name + ".recovery-" + System.currentTimeMillis()))
+            }
+            persistAttachments()
+        }
+    }
+
     private suspend fun verifyAttachmentAuthority() {
         val authority = cacheAuthority() ?: error("attachment_authority_unavailable")
         val previous = attachmentAuthority
@@ -744,10 +756,7 @@ class ThreadViewModel(
         appScope.launch {
             val command = outbox.find(commandId)?.commandJson ?: attachmentCommand
             val restored = command?.let { runCatching { org.json.JSONObject(it).optString("text") }.getOrNull() }.orEmpty()
-            val current = state.value.draft
-            val merged = if (restored.isBlank() || current == restored) current else listOf(current, restored).filter { it.isNotEmpty() }.joinToString("\n\n")
-            drafts.save(environmentId, threadId, merged)
-            composer.onDraftChange(merged)
+            if (!composer.editPending(commandId, restored)) return@launch
             // Retain uploaded descriptors as editable chips; a stale one can be removed.
             if (commandId == attachmentPending.value) {
                 attachmentCommand = null; attachmentPending.value = null; sharedClear = null

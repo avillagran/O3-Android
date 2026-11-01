@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import dev.avillagran.ot3android.R
+import dev.avillagran.ot3android.ui.kit.Ot3IconButton
 import dev.avillagran.ot3android.core.composer.ComposerSnapshot
 import java.io.File
 
@@ -74,16 +75,16 @@ internal fun PhoneCapture(snapshot: ComposerSnapshot, onRequest: (ComposerReques
     var speechOpen by remember(snapshot.scope) { mutableStateOf(false) }
     var speechOrigin by remember { mutableStateOf<ComposerSnapshot?>(null) }
     val buttons: @Composable () -> Unit = {
-        TextButton(enabled = snapshot.transformable, onClick = { onDismissActions(); error = false; speechOrigin = snapshot; speechOpen = true }, modifier = Modifier.testTag("capture_dictate")) { Text(stringResource(R.string.capture_dictate)) }
-        TextButton(enabled = snapshot.transformable && photoOrigin == null, onClick = {
+        Ot3IconButton("mic", stringResource(R.string.capture_dictate), enabled = snapshot.transformable, onClick = { onDismissActions(); error = false; speechOrigin = snapshot; speechOpen = true }, modifier = Modifier.testTag("capture_dictate"))
+        Ot3IconButton("image", stringResource(R.string.capture_image), enabled = snapshot.transformable && photoOrigin == null, onClick = {
             onDismissActions(); error = false; imageOrigin = snapshot
             try { imagePicker.launch("image/*") } catch (_: Exception) { imageOrigin = null; error = true }
-        }, modifier = Modifier.testTag("capture_image")) { Text(stringResource(R.string.capture_image)) }
-        TextButton(enabled = snapshot.transformable && photoOrigin == null, onClick = {
+        }, modifier = Modifier.testTag("capture_image"))
+        Ot3IconButton("camera", stringResource(R.string.capture_photo), enabled = snapshot.transformable && photoOrigin == null, onClick = {
             onDismissActions(); error = false; photoOrigin = snapshot
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) takePhoto()
             else cameraPermission.launch(Manifest.permission.CAMERA)
-        }, modifier = Modifier.testTag("capture_photo")) { Text(stringResource(R.string.capture_photo)) }
+        }, modifier = Modifier.testTag("capture_photo"))
     }
     if (compact) DropdownMenu(expanded = actionsOpen, onDismissRequest = onDismissActions) { buttons() }
     else Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) { buttons() }

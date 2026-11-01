@@ -142,6 +142,22 @@ class ThreadComposer(
         appScope.launch { sender.discard(commandId) }
     }
 
+    /** Save before retiring a receipt; a crash between the two steps cannot duplicate recovered text. */
+    suspend fun editPending(commandId: String, restored: String): Boolean = draftSaveMutex.withLock {
+        if (drafts.recoveryApplied(environmentId, threadId, "outbox-$commandId")) return@withLock true
+        val before = _state.value
+        if (!draftLoaded || before.sending || !_state.compareAndSet(before, before.copy(sending = true))) return@withLock false
+        try {
+            val merged = if (restored.isEmpty() || before.draft == restored) before.draft
+                else listOf(before.draft, restored).filter { it.isNotEmpty() }.joinToString("\n\n")
+            val saved = drafts.recoverOnce(environmentId, threadId, "outbox-$commandId", merged)
+            savedDraft = saved
+            editedSinceInit = true
+            _state.update { it.copy(draft = saved, draftToken = null) }
+            true
+        } finally { _state.update { it.copy(sending = false) } }
+    }
+
     /** Writes a change still inside the debounce window, off the screen's scope. */
     fun flush() {
         val current = _state.value

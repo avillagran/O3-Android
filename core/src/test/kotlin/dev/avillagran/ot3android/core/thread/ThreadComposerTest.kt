@@ -74,6 +74,17 @@ class ThreadComposerTest {
         assertEquals("Can still edit", composer.state.value.draft)
     }
 
+    @Test fun editRecoveryPersistsBeforeDiscardAndDoesNotOverwriteNewTypingOnRepeat() = runTest {
+        val composer = composer()
+        composer.onDraftChange("New draft")
+        assertTrue(composer.editPending("legacy", "Old text"))
+        assertEquals("New draft\n\nOld text", persistedDraft())
+        composer.onDraftChange("Typing after recovery")
+        assertTrue(composer.editPending("legacy", "Old text"))
+        assertEquals("Typing after recovery", composer.state.value.draft)
+        assertEquals(0, dispatches())
+    }
+
     private fun persistedDraft() = draftDao.rows.value[DraftRepository.key("env-1", "t1")]?.text
 
     private fun dispatches() = fake.calls.count { it.fn == MessageSender.DISPATCH }

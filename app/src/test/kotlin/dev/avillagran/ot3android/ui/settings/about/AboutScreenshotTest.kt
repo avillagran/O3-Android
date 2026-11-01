@@ -76,7 +76,7 @@ class AboutScreenshotTest : ScreenshotTest() {
             assertTrue(it.source.startsWith("https://"))
             assertTrue(context.assets.open("licenses/${it.file}").bufferedReader().use { it.readText() }.isNotBlank())
         }
-        assertEquals("Fira Code", BundledLicenses.filter(entries, "FIRA ofl").single().name)
+        assertEquals(setOf("Fira Code", "FiraCode Nerd Font (preview glyph subset)"), BundledLicenses.filter(entries, "FIRA ofl").map { it.name }.toSet())
         assertTrue(BundledLicenses.filter(entries, "no-such-license").isEmpty())
     }
 }

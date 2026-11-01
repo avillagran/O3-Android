@@ -10,6 +10,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.res.painterResource
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.res.stringResource
@@ -52,10 +54,14 @@ internal fun ComposerModels(
     }
     val colors = Ot3Theme.colors
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Ot3IconButton("bot", stringResource(R.string.composer_model) + ": " + selection.optString("model"), {
+        val modelLabel = stringResource(R.string.composer_model) + ": " + selection.optString("model")
+        IconButton(onClick = {
             provider = if (favorites.isNotEmpty()) "favorites" else selection.optString("instanceId")
             search = ""; legacy = selected?.optBoolean("isLegacy") == true; picker = true; onRefresh()
-        }, enabled = enabled, modifier = Modifier.testTag("composer_models"))
+        }, enabled = enabled, modifier = Modifier.size(48.dp).testTag("composer_models").semantics { contentDescription = modelLabel }) {
+            if (selected != null) ProviderIcon(selected, colors.dim)
+            else dev.avillagran.ot3android.ui.kit.Ot3Icon("bot", null)
+        }
         permissions()
         Ot3IconButton("sliders-horizontal", stringResource(R.string.composer_options),
             { options = true; onRefresh() }, enabled = enabled && selection.has("model"))

@@ -25,7 +25,7 @@ class OutboxMigrationTest {
             val db = it.writableDatabase
             val bytes = """{"text":"old unsent message","attachments":[],"commandId":"legacy"}"""
             for (state in listOf("sending", "pending", "uncertain", "unknown")) {
-                db.execSQL("INSERT INTO outbox VALUES (?, ?, ?, ?, ?, ?)", arrayOf(state, "env", "chat", bytes, 1, state))
+                db.execSQL("INSERT INTO outbox VALUES (?, ?, ?, ?, ?, ?)", arrayOf<Any>(state, "env", "chat", bytes, 1, state))
             }
             Ot3Database.MIGRATION_4_5.migrate(db)
             db.query("SELECT state, commandJson FROM outbox").use { cursor ->
