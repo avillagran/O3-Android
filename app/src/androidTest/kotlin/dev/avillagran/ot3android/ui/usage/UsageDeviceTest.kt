@@ -96,6 +96,14 @@ class UsageDeviceTest {
         ActivityScenario.launch<WorkspaceFixtureActivity>(Intent(context, WorkspaceFixtureActivity::class.java)
             .putExtra("request", "prices")).use { scenario ->
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
+            // A preceding editor can restore the platform IME into the fresh Home
+            // window. Tabs intentionally stay hidden while it is visible.
+            scenario.onActivity {
+                it.currentFocus?.clearFocus()
+                androidx.core.view.WindowCompat.getInsetsController(it.window, it.window.decorView)
+                    .hide(androidx.core.view.WindowInsetsCompat.Type.ime())
+            }
+            rule.waitUntil(15_000) { rule.onAllNodesWithTag("nav_tab_Settings").fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag("nav_tab_Settings").performClick()
             rule.onNodeWithTag("settings_Usage").performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag("usage_total_tokens").fetchSemanticsNodes().isNotEmpty() }

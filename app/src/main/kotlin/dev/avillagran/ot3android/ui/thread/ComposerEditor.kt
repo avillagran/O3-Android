@@ -167,6 +167,17 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
         val start = current.selection.min
         update(TextFieldValue(current.text.replaceRange(start, current.selection.max, "\n"), TextRange(start + 1)))
     }
+    val editorControls: @Composable () -> Unit = {
+        actions()
+        Ot3IconButton("square-pen", stringResource(R.string.ot3_composer_edit), onToggle, modifier = Modifier.testTag("composer_expand"))
+        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            if (sending) Ot3Spinner(Modifier.testTag(ThreadScreenTags.SENDING), size = 24.dp)
+            else {
+                if (canSend) Box(Modifier.size(32.dp).background(colors.accent, androidx.compose.foundation.shape.CircleShape))
+                Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = if (canSend) colors.background else colors.dim)
+            }
+        }
+    }
     Surface(color = colors.background, modifier = modifier.fillMaxWidth().testTag("thread_composer_surface")) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = if (compact) 2.dp else 6.dp)
             .border(1.dp, border, RoundedCornerShape(17.dp))
@@ -204,19 +215,14 @@ internal fun ComposerEditor(editor: ComposerEditorState, expanded: Boolean, canS
                         inner()
                     } },
                 )
+                // A short landscape window cannot afford a second 48dp row above the IME.
+                // Model and permission controls remain in the header overflow.
+                if (!expanded && compact) editorControls()
             }
-            if (!expanded) {
+            if (!expanded && !compact) {
                 Row(Modifier.fillMaxWidth().testTag("composer_control_row"), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f)) { toolbar() }
-                    actions()
-                    Ot3IconButton("square-pen", stringResource(R.string.ot3_composer_edit), onToggle, modifier = Modifier.testTag("composer_expand"))
-                    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                        if (sending) Ot3Spinner(Modifier.testTag(ThreadScreenTags.SENDING), size = 24.dp)
-                        else {
-                            if (canSend) Box(Modifier.size(32.dp).background(colors.accent, androidx.compose.foundation.shape.CircleShape))
-                            Ot3IconButton("arrow-up", stringResource(R.string.thread_send), onSend, modifier = Modifier.testTag(ThreadScreenTags.SEND), enabled = canSend, tint = if (canSend) colors.background else colors.dim)
-                        }
-                    }
+                    editorControls()
                 }
             }
             if (expanded) Box(Modifier.fillMaxWidth()) { toolbar() }

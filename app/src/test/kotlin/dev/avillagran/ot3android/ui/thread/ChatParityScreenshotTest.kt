@@ -22,6 +22,14 @@ import org.robolectric.annotation.Config
 @Config(qualifiers = "w444dp-h1200dp-port-mdpi")
 @OptIn(com.github.takahirom.roborazzi.ExperimentalRoborazziApi::class)
 class ChatParityScreenshotTest : ScreenshotTest() {
+    private lateinit var previousTimeZone: java.util.TimeZone
+    @org.junit.Before fun useFixtureTimeZone() {
+        previousTimeZone = java.util.TimeZone.getDefault()
+        // Match the shared Desktop fixture captures, independently of the CI host.
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("America/Santiago"))
+    }
+    @org.junit.After fun restoreTimeZone() { java.util.TimeZone.setDefault(previousTimeZone) }
+
     private val fixtures = JSONObject(checkNotNull(javaClass.classLoader!!.getResource("chat-parity.json")).readText())
     @Test fun components() {
         var name by mutableStateOf("user")
