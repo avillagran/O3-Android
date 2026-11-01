@@ -1,4 +1,4 @@
-# Desktop parity status — dependency adoption, terminal and phone capture
+# Desktop parity status — dependencies, terminal, capture and host surfaces
 
 Consumer pins updated 2026-11-01: lib-t3-rust v0.3.7 / 7cbad5d8198d37e9ded767d33ac03f2cf15875f4,
 OmaBridge 1097f0e7cd4e91e58dce94744f13606a26756601 (mobile ABI 1).
@@ -95,4 +95,9 @@ even after a report refresh. Read consent failure hides surface actions until a 
 session query succeeds. Settings changes apply on the host worker poll; there is no
 immediate compact/release control. Host sync is status-only.
 
-Validation and limits: see `host-surfaces.md`. P08 remains **Partial, not Blocked**.
+Validation and limits: see `host-surfaces.md`. Latest source has green unit tests,
+144 goldens, lint, strings/notices and required-SDK APK. An initial complete device
+run passed 120 + 9 skipped; three final-source repeats stalled in unchanged UI
+tests and were stopped. Final full instrumented acceptance and the cause of those
+stalls remain unverified; the new Settings navigation case passed with a clean
+runner. P08 remains **Partial, not Blocked**.

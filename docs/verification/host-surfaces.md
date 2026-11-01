@@ -30,8 +30,39 @@ Source contracts: Desktop `docs/REMOTE_SURFACES.md`; OmaBridge
 ## Verification
 
 SDK rebuilt with `scripts/build-bridge-sdk.sh` for host/x86_64/arm64-v8a,
-production flavor, exact pinned source. Initial compile passed. Final results
-will be recorded below after all required checks complete.
+production flavor, exact pinned source. Final source is `e948b43` (later changes
+are verification documentation only). Java 21 from `mise where java@temurin-21`,
+`ANDROID_HOME=$HOME/.android-sdk`, `--max-workers=2`, `ActiveProcessorCount=2`,
+one Gradle run at a time.
+
+| Check | Verified result |
+| --- | --- |
+| Core debug and release unit tests | Each 521 passed, 5 skipped; 526 XML cases |
+| App debug unit tests | 540 passed, 1 skipped; 541 XML cases |
+| verifyRoborazziDebug | 144 unchanged goldens, zero additions/changes |
+| :app:lint and :core:lint | Zero errors; app 109 warnings + 1 hint, core 2 warnings |
+| tools/import-ot3-strings --check | 261 imported keys × 20 locales, pass |
+| Hand-kept copy and license checks | 18 keys × 20 locales/placeholder parity; 125 notices, pass |
+| :app:assembleDebug -Pot3a.requireBridgeSdk=true | Pass, production SDK source/ABI/checksum checks |
+| Full :app:connectedDebugAndroidTest | Initial full pass at `f734717`: 120 passed, 9 skipped; 129 XML cases |
+| Final-source navigation regression, fresh runner | 1 passed, zero skipped/failures |
+
+**The final-source full instrumented suite remains unverified.** Three subsequent
+unfiltered attempts were stopped after several minutes without progress in
+unchanged tests: `PullRequestsReturnDeviceTest.laterPageAndPixelAnchorSurviveDetailBackRecreateAndRotation`,
+`PullRequestsDeviceTest.latteReader`, and `ReaderImagesDeviceTest.tokyoNight`.
+The first used emulator 37.2; the latter two used 36.6.11 with Vulkan disabled,
+the last with a fresh `--no-daemon` Gradle process. No assertion/deadline was weakened
+and those test files are unchanged. Their cause is not demonstrated; changing the
+emulator or runner did not establish a fix. A focused navigation run after cancellation
+also lost the runner result despite AndroidJUnit reporting zero failures; a clean
+single-use runner then passed that case. Do not present the initial complete pass
+as a complete acceptance run of the final revision.
+
+Dedicated API 34 AVD `ot3a-host-surfaces`, serial `emulator-5584`, 2 cores/2 GiB,
+was stopped after verification. No physical device was addressed. Logs, APK and
+SHA256SUMS are retained in `~/.cache/o3-android-artifacts/host-surfaces/`.
+APK SHA-256: `4c0aa1804767607131cc480ba02fb6b383ab6bee2215b4880ae2fe3c7598aaea`.
 
 Core fixtures cover disabled consent, denied/revoked credentials, expired confirmation,
 stale report, notSent, transport/host unknown, cancellation and a changed prepared
