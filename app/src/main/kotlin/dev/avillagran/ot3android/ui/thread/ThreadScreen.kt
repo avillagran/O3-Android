@@ -149,6 +149,7 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             onInterrupt = viewModel::interrupt,
             onResend = viewModel::retry,
             onDiscard = viewModel::discard,
+            onEditPending = viewModel::editPending,
             onRetryStream = viewModel::retryStream,
             onDismissNotice = viewModel::dismissNotice,
             onBack = onBack,
@@ -212,6 +213,7 @@ fun ThreadContent(
     onDraftChangeTagged: ((String, String) -> Unit)? = null,
     onReadingPosition: (dev.avillagran.ot3android.core.data.prefs.ReadingPosition) -> Unit = {},
     onTerminal: (() -> Unit)? = null,
+    onEditPending: (String) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val notice = state.notice
@@ -359,7 +361,7 @@ fun ThreadContent(
                     dragOwner = state.view.threadId to state.queueConnection,
                     feedback = {
                         state.notice?.let { Text(noticeText(it), Modifier.padding(horizontal = 16.dp), color = Ot3Theme.colors.failed) }
-                        state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
+                        state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard, onEditPending) }
                     },
                 )
                 if (state.queueEdit != null) {
@@ -390,7 +392,7 @@ fun ThreadContent(
                 Column(Modifier.fillMaxSize()) {
                     Column(Modifier.fillMaxWidth().heightIn(max = feedbackHeight).then(Modifier.verticalScroll(rememberScrollState()))) {
                         StreamState(state.view.connectionState, state.view.stale, onRetryStream)
-                        state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
+                        state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard, onEditPending) }
                         if (state.queueEdit != null) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.queue_editing), Modifier.weight(1f), color = Ot3Theme.colors.dim)
                             TextButton(onClick = onCancelQueueEdit, enabled = !state.queueBusy) { Text(stringResource(R.string.queue_cancel_edit)) }
@@ -406,7 +408,7 @@ fun ThreadContent(
                 StreamState(state.view.connectionState, state.view.stale, onRetryStream)
                 state.view.pendingRequests.filter { state.view.timeline?.has(if (it.kind == "user_input") "questions" else "approvals") != true }
                     .forEach { PendingRequestBanner(it) }
-                state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard) }
+                state.unconfirmed.forEach { UnconfirmedRow(it, state.connected, onResend, onDiscard, onEditPending) }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     when {
                         !state.view.loaded -> Ot3Spinner(Modifier.align(Alignment.Center).testTag(ThreadScreenTags.LOADING), size = 24.dp)
@@ -509,6 +511,7 @@ private fun UnconfirmedRow(
     connected: Boolean,
     onResend: (String) -> Unit,
     onDiscard: (String) -> Unit,
+    onEditPending: (String) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     Surface(
@@ -530,7 +533,8 @@ private fun UnconfirmedRow(
                 enabled = connected,
                 modifier = Modifier.testTag(ThreadScreenTags.resend(command.commandId)),
             ) { Text(stringResource(R.string.thread_resend)) }
-            TextButton(onClick = { onDiscard(command.commandId) }) { Text(stringResource(R.string.thread_discard)) }
+            ConfirmOutboxDiscard(command.commandId, true, onDiscard)
+            TextButton(onClick = { onEditPending(command.commandId) }) { Text(stringResource(R.string.ot3_composer_edit)) }
         }
     }
 }
@@ -594,14 +598,14 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
     }
     val current by androidx.compose.runtime.rememberUpdatedState(state)
     fun publish() { snapshot = session.snapshot; model.onDraftChange(snapshot.text) }
-    val unavailable = !state.connected || state.view.stale || state.sending || state.unconfirmed.isNotEmpty()
+    val unavailable = state.sending
     val attachments by model.attachmentDraft.collectAsStateWithLifecycle()
     val pending by model.attachmentPending.collectAsStateWithLifecycle()
     val storageError by model.attachmentStorageError.collectAsStateWithLifecycle()
     if (storageError) Text(stringResource(R.string.composer_uncertain), color = MaterialTheme.colorScheme.error)
     var draftOptions by remember(scope) { mutableStateOf<org.json.JSONObject?>(null) }
-    val displayed = snapshot.copy(attachments = attachments, loading = unavailable || storageError, sending = state.sending, uncertainCommand = pending)
-    SideEffect { synchronizer?.pause(snapshot.composing || !state.composer.loaded || state.sending || pending != null || attachments.size > 16 || attachments.any { it.status != dev.avillagran.ot3android.core.composer.UploadStatus.Ready }) }
+    val displayed = snapshot.copy(attachments = attachments, loading = unavailable, sending = state.sending, uncertainCommand = null, sendBlocked = !state.connected || state.view.stale || storageError || pending != null || state.unconfirmed.isNotEmpty())
+    SideEffect { synchronizer?.pause(snapshot.composing || state.unconfirmed.isNotEmpty() || !state.composer.loaded || state.sending || pending != null || attachments.size > 16 || attachments.any { it.status != dev.avillagran.ot3android.core.composer.UploadStatus.Ready }) }
     val sharedFailed by (synchronizer?.failed ?: kotlinx.coroutines.flow.flowOf(false)).collectAsStateWithLifecycle(initialValue = false)
     val sharedConflicts by (synchronizer?.conflicts ?: kotlinx.coroutines.flow.flowOf(0)).collectAsStateWithLifecycle(initialValue = 0)
     var sharedBound by remember(synchronizer) { mutableStateOf(false) }
@@ -609,7 +613,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
     if (sharedFailed || sharedAdoptionFailed || (shared != null && attachments.size > 16)) Text(stringResource(R.string.shared_draft_failed), color = MaterialTheme.colorScheme.error)
     if (sharedConflicts > 0) Text(stringResource(R.string.shared_draft_conflict), color = MaterialTheme.colorScheme.error)
     LaunchedEffect(synchronizer, snapshot.text, snapshot.selection, snapshot.composing, attachments, state.modelSelection, state.composer.loaded, state.sending, pending) {
-        if (snapshot.text == state.draft && state.composer.loaded && synchronizer != null && !snapshot.composing && pending == null && !state.sending && attachments.size <= 16 && attachments.all { it.status == dev.avillagran.ot3android.core.composer.UploadStatus.Ready && it.descriptor != null }) {
+        if (snapshot.text == state.draft && state.unconfirmed.isEmpty() && state.composer.loaded && synchronizer != null && !snapshot.composing && pending == null && !state.sending && attachments.size <= 16 && attachments.all { it.status == dev.avillagran.ot3android.core.composer.UploadStatus.Ready && it.descriptor != null }) {
             val draftPayload = org.json.JSONObject().put("schema", 1).put("text", snapshot.text)
                 .put("attachments", org.json.JSONArray(attachments.map { file ->
                     val descriptor = org.json.JSONObject(file.descriptor!!)
@@ -639,7 +643,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
     val currentPending by rememberUpdatedState(pending)
     LaunchedEffect(synchronizer) {
         synchronizer?.remote?.collect { update ->
-            if (update != null && synchronizer.isCurrent(update) && !session.snapshot.composing && !current.sending && currentPending == null) {
+            if (update != null && synchronizer.isCurrent(update) && !session.snapshot.composing && current.unconfirmed.isEmpty() && !current.sending && currentPending == null) {
                 val doc = org.json.JSONObject(update.document)
                 val text = if (doc.optBoolean("deleted")) "" else doc.getJSONObject("payload").getString("text")
                 val expected = session.snapshot
@@ -664,12 +668,14 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
         }
     }
     if (pending != null) {
+        Text(stringResource(R.string.composer_uncertain))
         Row {
             TextButton(onClick = { model.retry(pending!!) }, enabled = state.connected && !state.sending) { Text(stringResource(R.string.thread_resend)) }
-            TextButton(onClick = { model.discard(pending!!) }, enabled = !state.sending) { Text(stringResource(R.string.thread_discard)) }
+            ConfirmOutboxDiscard(pending!!, !state.sending, model::discard)
+            TextButton(onClick = { model.editPending(pending!!) }, enabled = !state.sending) { Text(stringResource(R.string.ot3_composer_edit)) }
         }
     }
-    if (state.view.timeline?.optBoolean("hasMoreHistory") == true) TextButton(onClick = model::loadOlderHistory, enabled = state.connected) { Text(stringResource(R.string.ot3_pr_more)) }
+    if (state.view.timeline?.optBoolean("hasMoreHistory") == true) Ot3IconButton("clock", stringResource(R.string.ot3_pr_more), model::loadOlderHistory, enabled = state.connected)
     LaunchedEffect(snapshot.version, state.connected) {
         completionRead = null
         val captured = session.snapshot
@@ -760,7 +766,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
                 }
             }
         })
-    if (shared != null && scope.queueMessage == null) TextButton(onClick = { sharedOpen = true }) { Text(stringResource(R.string.shared_draft_title)) }
+    if (shared != null && scope.queueMessage == null) Ot3IconButton("layers", stringResource(R.string.shared_draft_title), { sharedOpen = true })
     if (sharedOpen && shared != null) dev.avillagran.ot3android.ui.thread.composer.SharedDraftPanel(shared, displayed,
         onAdopt = { expected, text ->
             if (session.replace(expected, text, dev.avillagran.ot3android.core.composer.ComposerSelection(text.length, text.length))) publish()
@@ -792,3 +798,14 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState) {
 }
 
 private fun android.content.Context.devGraph() = (applicationContext as dev.avillagran.ot3android.Ot3Application).graph
+
+/** A local discard never retracts a message already accepted by the host. */
+@Composable
+private fun ConfirmOutboxDiscard(id: String, enabled: Boolean, discard: (String) -> Unit) {
+    var open by remember(id) { mutableStateOf(false) }
+    TextButton(onClick = { open = true }, enabled = enabled) { Text(stringResource(R.string.thread_discard)) }
+    if (open) androidx.compose.material3.AlertDialog(onDismissRequest = { open = false },
+        text = { Text(stringResource(R.string.thread_unconfirmed_plain)) },
+        confirmButton = { TextButton(onClick = { open = false; discard(id) }) { Text(stringResource(R.string.thread_discard)) } },
+        dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.ot3_dialog_close)) } })
+}

@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [EnvironmentEntity::class, OutboxEntity::class, DraftEntity::class, BridgeManagedEntity::class, SharedDraftJournal::class],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class Ot3Database : RoomDatabase() {
@@ -51,7 +51,13 @@ abstract class Ot3Database : RoomDatabase() {
                 db.execSQL("CREATE TABLE IF NOT EXISTS `shared_draft_journal` (`authority` TEXT NOT NULL, `json` TEXT NOT NULL, PRIMARY KEY(`authority`))")
             }
         }
-        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        /** Old receipts remain byte-identical and require a visible explicit decision. */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("UPDATE outbox SET state = 'unknown'")
+            }
+        }
+        val MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 
         fun create(context: Context): Ot3Database =
             Room.databaseBuilder(context.applicationContext, Ot3Database::class.java, NAME)

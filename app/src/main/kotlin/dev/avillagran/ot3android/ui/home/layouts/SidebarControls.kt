@@ -32,7 +32,7 @@ internal fun sidebarEntries(items: List<HomeItem>, settings: AppearanceSettings,
     val sections = sidebarSections(rows, settings.interfaceLayout, grouped, metadata,
         settings.localValue(LocalAppearancePreference.THREAD_ORDER) == "reply")
     return sections.flatMap { section ->
-        (if (section.title.isNotEmpty()) listOf(SidebarEntry.Header(section.key, section.title, section.rows.size)) else emptyList()) +
+        (if (section.title.isNotEmpty()) listOf(SidebarEntry.Header(section.key, section.title, if (section.rows.isNotEmpty()) section.rows.count { it.depth == 0 } else sections.filter { it.key.startsWith(section.key + "/") }.sumOf { child -> child.rows.count { it.depth == 0 } })) else emptyList()) +
             section.rows.map { SidebarEntry.Item(HomeItem.Row(it), section.key) }
     } + (if (settings.interfaceLayout == "projects") items.filterNot { it is HomeItem.Row || it is HomeItem.ShelfHeader }
         else items.drop(shelfStart)).filter { it !is HomeItem.Row || matchesChip(it.row, chip, metadata) }.map { SidebarEntry.Item(it) }

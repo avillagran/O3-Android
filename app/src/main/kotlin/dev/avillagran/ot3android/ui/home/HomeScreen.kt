@@ -361,7 +361,7 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
     val selectedKey = LocalSelectedThreadKey.current
     val layoutItems = remember(state.items, state.rows, state.filter, state.query, settings.interfaceLayout) {
         if (settings.interfaceLayout != "classic" && !state.filter.active && state.query.isBlank()) {
-            state.rows.values.filterNot { it.subagent }.map { HomeItem.Row(it) } +
+            state.rows.values.map { HomeItem.Row(it) } +
                 state.items.filter { it is HomeItem.ShowMoreSettled || it is HomeItem.Message || it is HomeItem.MessagesHeader }
         } else state.items
     }
@@ -385,13 +385,15 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                     val entries = sidebarEntries(sections.main, settings, state.shelves.grouped, metadata, chip)
                     val limited = entries.filterIsInstance<SidebarEntry.Header>().filter { it.count > 5 }.map { it.key }.toSet()
                     val shown = mutableMapOf<String, Int>()
-                    entries.forEach { entry ->
+                    var hiddenDepth: Int? = null
+                    entries.forEachIndexed { index, entry ->
                         fun hidden(section: String): Boolean = collapsed.any { section == it || section.startsWith("$it/") }
                         when (entry) {
                             is SidebarEntry.Header -> if (!collapsed.any { entry.key.startsWith("$it/") }) item(entry.key) {
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                     TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f)) {
-                                        Text("${if (entry.key in collapsed) "▸" else "▾"} ${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
+                                        dev.avillagran.ot3android.ui.kit.Ot3Icon(if (entry.key in collapsed) "chevron-right" else "chevron-down", null)
+                                        Text("${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
                                             modifier = Modifier.fillMaxWidth(), color = Ot3Theme.colors.dim,
                                             style = MaterialTheme.typography.labelLarge)
                                     }
@@ -401,12 +403,27 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                                 }
                             }
                             is SidebarEntry.Item -> {
+                                val row = (entry.value as? HomeItem.Row)?.row
+                                if (row != null && hiddenDepth != null && row.depth <= hiddenDepth!!) hiddenDepth = null
+                                val hideChild = row != null && hiddenDepth != null
+                                val treeKey = row?.let { "thread:${it.key}" }
+                                val children = if (row == null) emptyList() else entries.drop(index + 1).takeWhile {
+                                    it is SidebarEntry.Item && (it.value as? HomeItem.Row)?.row?.depth?.let { depth -> depth > row.depth } == true
+                                }
+                                if (!hideChild && treeKey in collapsed && children.isNotEmpty()) hiddenDepth = row!!.depth
                                 val position = shown.getOrDefault(entry.section, 0)
                                 shown[entry.section] = position + 1
                                 val selected = (entry.value as? HomeItem.Row)?.row?.key == selectedKey
-                                if (!hidden(entry.section) && (entry.section !in limited || entry.section in unlimited || position < 5 || selected))
-                                    item(entry.value.key) { HomeListItem(entry.value, onIntent, Modifier.animateItem(
-                                        fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart())) }
+                                if (!hideChild && !hidden(entry.section) && (entry.section !in limited || entry.section in unlimited || position < 5 || selected))
+                                    item(entry.value.key) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (children.isNotEmpty()) dev.avillagran.ot3android.ui.kit.Ot3IconButton(
+                                                if (treeKey in collapsed) "chevron-right" else "chevron-down",
+                                                "${row!!.title} (${children.size})", { scope.launch { viewPreferences.toggleSidebarSection(treeKey!!) } })
+                                            HomeListItem(entry.value, onIntent, Modifier.weight(1f).animateItem(
+                                                fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()))
+                                        }
+                                    }
                             }
                         }
                     }

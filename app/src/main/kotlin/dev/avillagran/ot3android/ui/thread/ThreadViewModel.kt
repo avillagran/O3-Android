@@ -108,7 +108,7 @@ class ThreadViewModel(
     private val environmentId: String,
     private val threadId: String,
     private val connections: ConnectionManager,
-    drafts: DraftRepository,
+    private val drafts: DraftRepository,
     private val outbox: OutboxRepository,
     private val sender: MessageSender,
     private val appScope: CoroutineScope,
@@ -736,6 +736,25 @@ class ThreadViewModel(
         if (commandId == attachmentPending.value) { dispatchAttachments(); return }
         local.update { it.copy(notice = null) }
         composer.retry(commandId)
+    }
+
+    /** Explicit recovery: persist all text before removing an uncertain retry identity. Never sends. */
+    fun editPending(commandId: String) {
+        if (state.value.sending) return
+        appScope.launch {
+            val command = outbox.find(commandId)?.commandJson ?: attachmentCommand
+            val restored = command?.let { runCatching { org.json.JSONObject(it).optString("text") }.getOrNull() }.orEmpty()
+            val current = state.value.draft
+            val merged = if (restored.isBlank() || current == restored) current else listOf(current, restored).filter { it.isNotEmpty() }.joinToString("\n\n")
+            drafts.save(environmentId, threadId, merged)
+            composer.onDraftChange(merged)
+            // Retain uploaded descriptors as editable chips; a stale one can be removed.
+            if (commandId == attachmentPending.value) {
+                attachmentCommand = null; attachmentPending.value = null; sharedClear = null
+                if (!persistAttachments()) return@launch
+            }
+            sender.discard(commandId)
+        }
     }
 
     fun discard(commandId: String) {

@@ -89,7 +89,7 @@ class ThreadComposer(
         }
         scope.launch {
             outbox.observeThread(environmentId, threadId).collect { rows ->
-                val unknown = rows.filter { it.state == OutboxEntity.STATE_UNKNOWN }
+                val unknown = rows.filter { it.state != OutboxEntity.STATE_SENDING }
                 _state.update { it.copy(unconfirmed = unknown) }
             }
         }

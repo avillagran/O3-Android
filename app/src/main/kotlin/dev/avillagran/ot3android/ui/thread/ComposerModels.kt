@@ -52,18 +52,10 @@ internal fun ComposerModels(
     }
     val colors = Ot3Theme.colors
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        TextButton(onClick = {
+        Ot3IconButton("bot", stringResource(R.string.composer_model) + ": " + selection.optString("model"), {
             provider = if (favorites.isNotEmpty()) "favorites" else selection.optString("instanceId")
             search = ""; legacy = selected?.optBoolean("isLegacy") == true; picker = true; onRefresh()
-        }, enabled = enabled, modifier = Modifier.weight(1f).testTag("composer_models")) {
-            selected?.let { ProviderIcon(it, colors.dim, Modifier.padding(end = 4.dp)) }
-            Text(
-                selected?.optString("shortName")?.takeIf { it.isNotBlank() && it != "null" }
-                    ?: selected?.optString("displayName")?.takeIf { it.isNotBlank() && it != "null" }
-                    ?: selection.optString("model").ifBlank { stringResource(R.string.composer_model) },
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
-        }
+        }, enabled = enabled, modifier = Modifier.testTag("composer_models"))
         permissions()
         Ot3IconButton("sliders-horizontal", stringResource(R.string.composer_options),
             { options = true; onRefresh() }, enabled = enabled && selection.has("model"))

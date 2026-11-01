@@ -29,7 +29,7 @@ interface OutboxDao {
     suspend fun deleteById(id: String)
 
     /** Marks every command still `sending` that was created before [before] as `unknown`; returns how many. */
-    @Query("UPDATE outbox SET state = 'unknown' WHERE state = 'sending' AND createdAt < :before")
+    @Query("UPDATE outbox SET state = 'unknown' WHERE state != 'unknown' AND createdAt < :before")
     suspend fun markInterrupted(before: Long): Int
 }
 
