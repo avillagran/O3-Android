@@ -48,6 +48,31 @@ class NativeTerminalTest {
             server.join()
         }
     }
+    @Test fun unaryWritesPayForANewWebSocketUpgradeEveryTime() = runBlocking {
+        val received = mutableListOf<String>()
+        val elapsed = mutableListOf<Long>()
+        val server = FakeWebSocketServer(connections = 3, handshakeDelayMs = 150) { request, ws ->
+            assertEquals("terminal.write", request.getString("tag"))
+            received += request.getJSONObject("payload").getString("data")
+            Thread.sleep(150)
+            ws.send(item("_tag" to "Exit", "requestId" to "1",
+                "exit" to item("_tag" to "Success", "value" to JSONObject.NULL)))
+        }
+        server.use {
+            NativeT3Transport().use { host ->
+                host.connect(ConnectRoute.Bearer(server.baseUrl, "fixture-token-123"))
+                for (text in listOf("a", "b", "\r")) {
+                    val start = System.nanoTime()
+                    host.call("terminal.write", item("threadId" to "thread-a", "terminalId" to "term-1", "data" to text))
+                    elapsed += (System.nanoTime() - start) / 1_000_000
+                }
+            }
+            server.join()
+        }
+        assertEquals(listOf("a", "b", "\r"), received)
+        assertTrue(elapsed.all { it >= 300 })
+        println("TERMINAL_NATIVE: 150ms upgrade + 150ms response, 3 writes, 3 TCP/WebSocket connections, elapsedMs=$elapsed")
+    }
     @Test fun nativeContextResumeAndSnapshotReplacementAreAuthoritative() = runBlocking {
         NativeT3Transport().use { host ->
             val shell = JSONObject("""{"projects":[{"id":"p","workspaceRoot":"/remote/root"}],"threads":[{"id":"t","projectId":"p","worktreePath":"/remote/tree","modelSelection":{"instanceId":"provider-a"}}]}""")

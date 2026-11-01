@@ -198,6 +198,46 @@ class TerminalSessionTest {
         resumed.cancelAndJoin()
     }
 
+    @Test fun coalescingHonorsUtf8ByteLimitWithoutSplittingOrReorderingPackets() = runTest {
+        val batches = mutableListOf<String>()
+        val delayed = object : T3Transport by host {
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? {
+                if (fn != "terminal.write") return host.call(fn, args, timeoutMs)
+                batches += args.getString("data")
+                delay(150)
+                return null
+            }
+        }
+        val session = TerminalSession("thread-a")
+        val job = launch { session.collect(delayed) }; runCurrent()
+        session.write("a"); runCurrent()
+        session.write("é".repeat(32768)); session.write("😀"); session.write("\r")
+        advanceTimeBy(450); runCurrent()
+        assertEquals(listOf("a", "é".repeat(32768), "😀\r"), batches)
+        assertTrue(batches.all { it.toByteArray(Charsets.UTF_8).size <= 65536 })
+        job.cancelAndJoin()
+    }
+
+    @Test fun cancellingAnInflightWriteLatchesVisibleFailureAndNeverReplays() = runTest {
+        val batches = mutableListOf<String>()
+        val blocked = object : T3Transport by host {
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? {
+                if (fn != "terminal.write") return host.call(fn, args, timeoutMs)
+                batches += args.getString("data")
+                awaitCancellation()
+            }
+        }
+        val session = TerminalSession("thread-a")
+        val first = launch { session.collect(blocked) }; runCurrent()
+        session.write("uncertain"); runCurrent(); session.write("queued")
+        first.cancelAndJoin()
+        assertTrue(session.state.value.uncertainWrite)
+        val resumed = launch { session.collect(blocked) }; runCurrent()
+        session.write("later"); advanceTimeBy(1000); runCurrent()
+        assertEquals(listOf("uncertain"), batches)
+        resumed.cancelAndJoin()
+    }
+
     @Test fun pasteAndArrowFollowTerminalModes() {
         val session = TerminalSession("thread-a")
         assertEquals("\u001b[A", session.arrow('A'))

@@ -145,7 +145,8 @@ class TerminalSession(
         while (currentCoroutineContext().isActive) {
             val first = pending ?: input.receive()
             pending = null
-            if (first.epoch != inputEpoch || mutable.value.uncertainWrite || !mutable.value.connected) continue
+            val view = mutable.value
+            if (first.epoch != inputEpoch || view.uncertainWrite || !view.connected || !view.operate || view.finished) continue
             val bytes = StringBuilder(first.data)
             var size = first.data.toByteArray(Charsets.UTF_8).size
             while (true) {

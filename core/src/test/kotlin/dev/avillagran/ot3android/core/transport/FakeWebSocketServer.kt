@@ -18,17 +18,19 @@ import java.util.concurrent.atomic.AtomicReference
  * `Request` frame and the socket to [script]: enough to script T3's Effect RPC stream frames,
  * the same idea as lib-t3-rust's `StreamFixture`. Never a real T3 server.
  */
-internal class FakeWebSocketServer(private val script: (request: JSONObject, socket: Peer) -> Unit) : Closeable {
+internal class FakeWebSocketServer(
+    private val connections: Int = 1, private val handshakeDelayMs: Long = 0,
+    private val script: (request: JSONObject, socket: Peer) -> Unit) : Closeable {
     private val server = ServerSocket(0, 1, InetAddress.getLoopbackAddress())
     private val failure = AtomicReference<Throwable?>(null)
     private val thread = Thread {
         try {
-            server.accept().use { socket ->
-                val peer = Peer(socket)
+            repeat(connections) { server.accept().use { socket ->
+                val peer = Peer(socket, handshakeDelayMs)
                 val request = checkNotNull(peer.read()) { "no Request frame" }
                 check(request.getString("_tag") == "Request") { request.toString() }
                 script(request, peer)
-            }
+            } }
         } catch (error: Throwable) {
             failure.compareAndSet(null, error)
         }
@@ -45,7 +47,7 @@ internal class FakeWebSocketServer(private val script: (request: JSONObject, soc
 
     override fun close() = server.close()
 
-    class Peer(socket: Socket) {
+    class Peer(socket: Socket, handshakeDelayMs: Long = 0) {
         private val input = DataInputStream(socket.getInputStream().buffered())
         private val output = socket.getOutputStream()
 
@@ -60,6 +62,7 @@ internal class FakeWebSocketServer(private val script: (request: JSONObject, soc
                 MessageDigest.getInstance("SHA-1")
                     .digest((key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").toByteArray(Charsets.US_ASCII)),
             )
+            if (handshakeDelayMs > 0) Thread.sleep(handshakeDelayMs)
             output.write(
                 ("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n" +
                     "Sec-WebSocket-Accept: $accept\r\n\r\n").toByteArray(Charsets.US_ASCII),

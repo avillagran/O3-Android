@@ -69,8 +69,10 @@ class TerminalScreenTest {
     @Test fun rawEditorDisablesPredictionAndCapitalization() {
         val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
         view.writable = true
-        val info = EditorInfo()
-        view.onCreateInputConnection(info)
+        val info = EditorInfo().apply { initialCapsMode = android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES }
+        val ime = view.onCreateInputConnection(info)!!
+        assertEquals(0, info.initialCapsMode)
+        assertEquals(0, ime.getCursorCapsMode(-1))
         assertEquals(android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
             info.inputType and android.text.InputType.TYPE_MASK_VARIATION)
         assertEquals(0, info.inputType and (android.text.InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
@@ -132,6 +134,33 @@ class TerminalScreenTest {
         ime.finishComposingText()
         assertEquals("echo ok\r", sent.joinToString(""))
     }
+    @Test fun mixedCommitHardwareAndEditorActionKeepOneOrderedStreamAndExplicitCase() {
+        val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
+        view.writable = true; view.send = sent::add
+        val ime = view.onCreateInputConnection(EditorInfo())!!
+        ime.commitText("e", 1)
+        view.onKeyDown(android.view.KeyEvent.KEYCODE_C,
+            android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_C))
+        ime.setComposingText("ho", 1)
+        ime.sendKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_SPACE))
+        ime.commitText("OK", 1) // Explicit uppercase must survive; only automatic caps are disabled.
+        ime.performEditorAction(EditorInfo.IME_ACTION_DONE)
+        assertEquals("echo OK\r", sent.joinToString(""))
+    }
+
+    @Test fun uncertainWriteDisablesEveryInteractiveInputPathAndShowsWarning() {
+        rule.setContent { Ot3Theme { TerminalSurface("host", "thread",
+            TerminalSession.View(TerminalEmulator().frame(), "/worktree", true, true, uncertainWrite = true),
+            onSend = { error("stopped writer") }, onPaste = { error("stopped writer") },
+            onArrow = { error("stopped writer") }, onSize = { _, _ -> }, onClose = {}) } }
+        rule.onNodeWithTag("terminal_run").assertIsNotEnabled()
+        rule.onNodeWithTag("terminal_paste").assertIsNotEnabled()
+        rule.onNodeWithText("Esc").assertIsNotEnabled()
+        rule.onNodeWithText("↵").assertIsNotEnabled()
+        rule.onNodeWithText(ApplicationProvider.getApplicationContext<Context>()
+            .getString(dev.avillagran.ot3android.R.string.terminal_uncertain)).assertExists()
+    }
+
     @Test fun fallbackContainsPowerlineAndCommonPromptGlyphs() {
         val font = androidx.core.content.res.ResourcesCompat.getFont(
             ApplicationProvider.getApplicationContext(), dev.avillagran.ot3android.R.font.nerd_terminal)!!
