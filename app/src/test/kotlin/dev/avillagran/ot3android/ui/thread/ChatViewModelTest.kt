@@ -52,7 +52,7 @@ class ChatViewModelTest {
             assertEquals(calls, f.fake.calls.count { it.fn == MessageSender.DISPATCH })
             unknown = false
             f.vm.retry(f.vm.attachmentPending.value!!)
-            f.await { f.vm.attachmentPending.value == null && !f.vm.state.value.sending }
+            f.await { f.vm.attachmentPending.value == null && !f.vm.state.value.sending && f.vm.state.value.draft.isEmpty() }
             assertEquals("", f.vm.state.value.draft)
             assertEquals(message.toString(), f.fake.calls.last { it.fn == MessageSender.DISPATCH }.args.toString())
         }
@@ -65,6 +65,7 @@ class ChatViewModelTest {
             f.fake.onCall("orchestration.launchThread") { args ->
                 assertNull(f.vm.chatNavigation.value)
                 assertEquals("default", args.getString("interactionMode"))
+                assertEquals("full-access", args.getString("runtimeMode"))
                 assertEquals("root", args.getJSONObject("workspaceStrategy").getString("type"))
                 JSONObject().put("threadId", args.getString("threadId"))
             }
@@ -76,7 +77,7 @@ class ChatViewModelTest {
                 JSONObject().put("sequence", 3)
             }
             f.vm.followUpPlan(f.nativePlan(), true)
-            f.await { f.vm.chatNavigation.value != null }
+            f.await { f.vm.chatNavigation.value != null && f.vm.state.value.draft.isEmpty() }
             val launch = f.fake.calls.single { it.fn == "orchestration.launchThread" }.args
             val send = f.fake.calls.single { it.fn == MessageSender.DISPATCH }.args
             assertEquals(launch.getString("threadId"), send.getString("threadId"))
@@ -107,7 +108,7 @@ class ChatViewModelTest {
                 JSONObject().put("threadId", args.getString("threadId"))
             }
             f.vm.dispatchAttachments(newThread = true)
-            f.await { f.vm.chatNavigation.value != null }
+            f.await { f.vm.chatNavigation.value != null && f.vm.state.value.draft.isEmpty() }
             assertFalse(f.fake.calls.any { it.fn == MessageSender.DISPATCH })
             assertEquals("", f.vm.state.value.draft)
         }

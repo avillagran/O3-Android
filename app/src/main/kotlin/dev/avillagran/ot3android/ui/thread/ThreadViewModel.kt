@@ -468,9 +468,12 @@ class ThreadViewModel(
             if (!source.isNull("branch")) workspace.put("branch", source.getString("branch"))
             val title = if (plan != null) live.domain("planWorkflow.implementationTitle", org.json.JSONObject().put("markdown", plan.getString("markdown"))) as String
                 else state.value.title?.take(255)?.takeIf { it.isNotBlank() } ?: threadId
+            val launchSource = org.json.JSONObject(source.toString()).put("modelSelection", state.value.modelSelection?.let(::orgJson))
+            // Desktop's explicit new-thread implementation starts in full-access Build mode.
+            if (plan != null) launchSource.put("runtimeMode", "full-access")
             val input = org.json.JSONObject().put("environmentId", environmentId).put("projectId", projectId)
                 .put("projects", org.json.JSONArray().put(org.json.JSONObject(project.raw.toString()).put("environmentId", environmentId)))
-                .put("source", org.json.JSONObject(source.toString()).put("modelSelection", state.value.modelSelection?.let(::orgJson)))
+                .put("source", launchSource)
                 .put("workspaceStrategy", workspace).put("threadId", target).put("commandId", id + "-launch")
                 .put("title", title).put("interactionMode", mode)
             // Native launch delivers an ordinary first message atomically. Plans need the
