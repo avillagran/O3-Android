@@ -6,6 +6,9 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.text.InputType
+import android.text.Selection
+import androidx.core.content.res.ResourcesCompat
+import dev.avillagran.ot3android.R
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -22,6 +25,7 @@ internal class TerminalView(context: Context) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = Typeface.MONOSPACE; textSize = 14 * resources.displayMetrics.scaledDensity
     }
+    private val promptTypeface = ResourcesCompat.getFont(context, R.font.nerd_terminal)!!
     private val cellWidth get() = paint.measureText("M")
     private val cellHeight get() = ceil(paint.fontSpacing.toDouble()).toFloat()
     var send: (String) -> Unit = {}
@@ -34,6 +38,7 @@ internal class TerminalView(context: Context) : View(context) {
     private var downY = 0f
     private var downX = 0f
     private var pan = 0f
+    private var finishInput: () -> Unit = {}
     var applicationCursor = false
     private var moved = false
     init { isFocusable = true; isFocusableInTouchMode = true; setBackgroundColor(Color.BLACK) }
@@ -58,7 +63,10 @@ internal class TerminalView(context: Context) : View(context) {
                 val cell = line[c]; val left = c * cellWidth; val top = (r - start) * cellHeight
                 paint.color = color(if (cell.inverse) cell.bg else cell.fg)
                 paint.isFakeBoldText = cell.bold; paint.isUnderlineText = cell.underline
+                val primary = paint.typeface
+                if (cell.text.codePoints().anyMatch { it in 0xe000..0xf8ff || it in 0xf0000..0x10ffff }) paint.typeface = promptTypeface
                 canvas.drawText(cell.text, left, top - paint.fontMetrics.ascent, paint)
+                paint.typeface = primary
             }
         }
         paint.isFakeBoldText = false; paint.isUnderlineText = false
@@ -99,20 +107,87 @@ internal class TerminalView(context: Context) : View(context) {
     override fun onCheckIsTextEditor() = writable
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         if (!writable) return null
-        outAttrs.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        outAttrs.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        outAttrs.initialCapsMode = 0
+        outAttrs.initialSelStart = 0; outAttrs.initialSelEnd = 0
         outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
-        return object : BaseInputConnection(this, false) {
-            private var composing = ""
-            override fun setComposingText(text: CharSequence?, newCursorPosition: Int): Boolean { composing = text?.toString().orEmpty(); return true }
-            override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean { composing = ""; emit(text?.toString().orEmpty().replace("\n", "\r")); return true }
-            override fun finishComposingText(): Boolean { val text = composing; composing = ""; emit(text); return true }
-            override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
-                if (composing.isNotEmpty()) { composing = composing.dropLast(beforeLength.coerceAtMost(composing.length)); return true }
-                emit("\u007f".repeat(beforeLength.coerceIn(0, 1000)) + "\u001b[3~".repeat(afterLength.coerceIn(0, 1000))); return true
+        // A real editable is essential: OEM IMEs read composing spans/selection and may
+        // replace them through setComposingRegion before committing. Never echo drafts.
+        return object : BaseInputConnection(this, true) {
+            init { finishInput = { finishComposingText() } }
+            private fun updateSelection() {
+                val buffer = requireNotNull(editable)
+                (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).updateSelection(
+                    this@TerminalView, Selection.getSelectionStart(buffer), Selection.getSelectionEnd(buffer),
+                    getComposingSpanStart(buffer), getComposingSpanEnd(buffer))
             }
-            override fun deleteSurroundingTextInCodePoints(beforeLength: Int, afterLength: Int) = deleteSurroundingText(beforeLength, afterLength)
-            override fun sendKeyEvent(event: KeyEvent): Boolean = if (event.action == KeyEvent.ACTION_DOWN) key(event) else true
-            override fun performEditorAction(actionCode: Int): Boolean { emit("\r"); return true }
+            override fun getCursorCapsMode(reqModes: Int) = 0
+            override fun setComposingText(text: CharSequence?, newCursorPosition: Int): Boolean {
+                super.setComposingText(text, newCursorPosition)
+                updateSelection()
+                return true
+            }
+            override fun setComposingRegion(start: Int, end: Int): Boolean {
+                super.setComposingRegion(start, end)
+                updateSelection()
+                return true
+            }
+            override fun setSelection(start: Int, end: Int): Boolean {
+                val result = super.setSelection(start, end)
+                updateSelection()
+                return result
+            }
+            private fun flush() {
+                val buffer = requireNotNull(editable)
+                val text = buffer.toString()
+                removeComposingSpans(buffer)
+                buffer.clear()
+                Selection.setSelection(buffer, 0)
+                updateSelection()
+                emit(text.replace("\r\n", "\n").replace("\n", "\r"))
+            }
+            override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean {
+                super.commitText(text, newCursorPosition)
+                flush()
+                return true
+            }
+            override fun finishComposingText(): Boolean {
+                super.finishComposingText()
+                flush()
+                return true
+            }
+            override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
+                val buffer = requireNotNull(editable)
+                val cursor = Selection.getSelectionStart(buffer).coerceAtLeast(0)
+                val before = beforeLength.coerceAtLeast(0)
+                val after = afterLength.coerceAtLeast(0)
+                val localBefore = before.coerceAtMost(cursor)
+                val localAfter = after.coerceAtMost(buffer.length - cursor)
+                buffer.delete(cursor, cursor + localAfter)
+                buffer.delete(cursor - localBefore, cursor)
+                updateSelection()
+                emit("\u007f".repeat((before - localBefore).coerceAtMost(1000)) +
+                    "\u001b[3~".repeat((after - localAfter).coerceAtMost(1000)))
+                return true
+            }
+            override fun deleteSurroundingTextInCodePoints(beforeLength: Int, afterLength: Int): Boolean {
+                val buffer = requireNotNull(editable)
+                val cursor = Selection.getSelectionStart(buffer).coerceAtLeast(0)
+                val before = beforeLength.coerceAtLeast(0)
+                val after = afterLength.coerceAtLeast(0)
+                val localBefore = before.coerceAtMost(Character.codePointCount(buffer, 0, cursor))
+                val localAfter = after.coerceAtMost(Character.codePointCount(buffer, cursor, buffer.length))
+                val end = Character.offsetByCodePoints(buffer, cursor, localAfter)
+                val start = Character.offsetByCodePoints(buffer, cursor, -localBefore)
+                buffer.delete(cursor, end)
+                buffer.delete(start, cursor)
+                updateSelection()
+                emit("\u007f".repeat((before - localBefore).coerceAtMost(1000)) +
+                    "\u001b[3~".repeat((after - localAfter).coerceAtMost(1000)))
+                return true
+            }
+            override fun sendKeyEvent(event: KeyEvent): Boolean = if (event.action == KeyEvent.ACTION_DOWN) { finishComposingText(); key(event) } else true
+            override fun performEditorAction(actionCode: Int): Boolean { finishComposingText(); emit("\r"); return true }
         }
     }
     private fun emit(text: String) { if (writable && text.isNotEmpty()) { scroll = 0; send(text); invalidate() } }
@@ -140,5 +215,16 @@ internal class TerminalView(context: Context) : View(context) {
             }
         }; emit(text); return true
     }
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean = if (writable) key(event) else super.onKeyDown(keyCode, event)
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean = if (writable) {
+        finishInput()
+        key(event)
+    } else super.onKeyDown(keyCode, event)
+    override fun onKeyMultiple(keyCode: Int, repeatCount: Int, event: KeyEvent): Boolean {
+        if (writable && keyCode == KeyEvent.KEYCODE_UNKNOWN && event.characters != null) {
+            finishInput()
+            emit(event.characters.replace("\r\n", "\n").replace("\n", "\r"))
+            return true
+        }
+        return super.onKeyMultiple(keyCode, repeatCount, event)
+    }
 }

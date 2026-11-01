@@ -20,6 +20,10 @@ object TerminalBindings {
     /** All writes go through Rust's validated typed API, once. No retry after unknown delivery. */
     suspend fun write(transport: T3Transport, threadId: String, terminalId: String, data: String) {
         check(canOperate(transport.authSession())) { "terminal_permission_required" }
+        writeAuthenticated(transport, threadId, terminalId, data)
+    }
+
+    internal suspend fun writeAuthenticated(transport: T3Transport, threadId: String, terminalId: String, data: String) {
         transport.call("terminal.write", JSONObject().put("threadId", threadId)
             .put("terminalId", terminalId).put("data", data))
     }

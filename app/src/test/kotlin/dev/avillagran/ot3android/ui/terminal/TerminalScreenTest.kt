@@ -27,7 +27,7 @@ class TerminalScreenTest {
     }
     @Test fun readOnlyHasOutputButNoInputOrExecution() {
         surface(false)
-        rule.onNodeWithText("host-a · thread-a").assertExists()
+        rule.onNodeWithTag("terminal_destination").assertTextEquals("host-a · /remote/worktree")
         rule.onNodeWithText("Read-only terminal").assertExists()
         rule.onNodeWithTag("terminal_run").assertIsNotEnabled()
         rule.onNodeWithTag("terminal_paste").assertIsNotEnabled()
@@ -37,7 +37,7 @@ class TerminalScreenTest {
     @Test fun runCodeRequiresExplicitConfirmationAndConsumesItOnce() {
         surface(command = "printf 東京")
         assertTrue(sent.isEmpty())
-        rule.onNodeWithText("host-a · thread-a\n/remote/worktree").assertExists()
+        rule.onAllNodesWithText("host-a · /remote/worktree").assertCountEquals(2)
         rule.onNodeWithTag("terminal_confirm").performClick()
         rule.runOnIdle { assertEquals(listOf("printf 東京\r"), sent) }
         rule.onNodeWithTag("terminal_confirm").assertDoesNotExist()
@@ -60,15 +60,125 @@ class TerminalScreenTest {
         assertNull(view.onCreateInputConnection(EditorInfo()))
         input.commitText("blocked", 1); assertEquals(2, sent.size)
     }
+    private fun fakeIme(): android.view.inputmethod.InputConnection {
+        val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
+        view.writable = true
+        view.send = sent::add
+        return view.onCreateInputConnection(EditorInfo())!!
+    }
+    @Test fun rawEditorDisablesPredictionAndCapitalization() {
+        val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
+        view.writable = true
+        val info = EditorInfo().apply { initialCapsMode = android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES }
+        val ime = view.onCreateInputConnection(info)!!
+        assertEquals(0, info.initialCapsMode)
+        assertEquals(0, ime.getCursorCapsMode(-1))
+        assertEquals(android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+            info.inputType and android.text.InputType.TYPE_MASK_VARIATION)
+        assertEquals(0, info.inputType and (android.text.InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
+            android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS or
+            android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS))
+        assertTrue(info.inputType and android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0)
+    }
+    @Test fun fakeImeRecomposesAndCommitsEachCharacterExactlyOnce() {
+        val ime = fakeIme()
+        ime.beginBatchEdit()
+        ime.setComposingText("e", 1)
+        ime.setComposingText("ech", 1)
+        ime.setComposingRegion(0, 3)
+        ime.setComposingText("echo", 1)
+        assertEquals("echo", ime.getTextBeforeCursor(100, 0).toString())
+        assertTrue(sent.isEmpty())
+        ime.commitText("echo", 1)
+        ime.finishComposingText()
+        ime.endBatchEdit()
+        ime.commitText(" o3-terminal-ok", 1)
+        ime.performEditorAction(EditorInfo.IME_ACTION_UNSPECIFIED)
+        assertEquals("echo o3-terminal-ok\r", sent.joinToString(""))
+    }
+    @Test fun fakeImeDeletesAndReplacesDraftWithoutSendingItTwice() {
+        val ime = fakeIme()
+        ime.setComposingText("o3-o3", 1)
+        ime.deleteSurroundingText(3, 0)
+        assertEquals("o3", ime.getTextBeforeCursor(100, 0).toString())
+        ime.setComposingText("o3-terminal-ok", 1)
+        ime.finishComposingText()
+        ime.finishComposingText()
+        ime.deleteSurroundingText(1, 1)
+        assertEquals(listOf("o3-terminal-ok", "\u007f\u001b[3~"), sent)
+    }
+    @Test fun fakeImeCodePointDeleteKeepsSurrogatesIntact() {
+        val ime = fakeIme()
+        ime.setComposingText("a😀", 1)
+        ime.deleteSurroundingTextInCodePoints(1, 0)
+        ime.commitText("a", 1)
+        assertEquals(listOf("a"), sent)
+    }
+    @Test fun fakeImePasteNormalizesNewlinesAndAdbStyleKeysPreserveCase() {
+        val ime = fakeIme()
+        ime.commitText("printf a\r\nprintf b\n", 1)
+        val events = android.view.KeyCharacterMap.load(android.view.KeyCharacterMap.VIRTUAL_KEYBOARD)
+            .getEvents("echo o3-terminal-ok".toCharArray())!!
+        events.forEach { ime.sendKeyEvent(it) }
+        ime.sendKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_ENTER))
+        ime.sendKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_ENTER))
+        assertEquals("printf a\rprintf b\recho o3-terminal-ok\r", sent.joinToString(""))
+    }
+    @Test fun hardwareEnterFinishesPendingCompositionBeforeNewline() {
+        val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
+        view.writable = true; view.send = sent::add
+        val ime = view.onCreateInputConnection(EditorInfo())!!
+        ime.setComposingText("echo ok", 1)
+        view.onKeyDown(android.view.KeyEvent.KEYCODE_ENTER,
+            android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_ENTER))
+        ime.finishComposingText()
+        assertEquals("echo ok\r", sent.joinToString(""))
+    }
+    @Test fun mixedCommitHardwareAndEditorActionKeepOneOrderedStreamAndExplicitCase() {
+        val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
+        view.writable = true; view.send = sent::add
+        val ime = view.onCreateInputConnection(EditorInfo())!!
+        ime.commitText("e", 1)
+        view.onKeyDown(android.view.KeyEvent.KEYCODE_C,
+            android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_C))
+        ime.setComposingText("ho", 1)
+        ime.sendKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_SPACE))
+        ime.commitText("OK", 1) // Explicit uppercase must survive; only automatic caps are disabled.
+        ime.performEditorAction(EditorInfo.IME_ACTION_DONE)
+        assertEquals("echo OK\r", sent.joinToString(""))
+    }
+
+    @Test fun uncertainWriteDisablesEveryInteractiveInputPathAndShowsWarning() {
+        rule.setContent { Ot3Theme { TerminalSurface("host", "thread",
+            TerminalSession.View(TerminalEmulator().frame(), "/worktree", true, true, uncertainWrite = true),
+            onSend = { error("stopped writer") }, onPaste = { error("stopped writer") },
+            onArrow = { error("stopped writer") }, onSize = { _, _ -> }, onClose = {}) } }
+        rule.onNodeWithTag("terminal_run").assertIsNotEnabled()
+        rule.onNodeWithTag("terminal_paste").assertIsNotEnabled()
+        rule.onNodeWithText("Esc").assertIsNotEnabled()
+        rule.onNodeWithText("↵").assertIsNotEnabled()
+        rule.onNodeWithText(ApplicationProvider.getApplicationContext<Context>()
+            .getString(dev.avillagran.ot3android.R.string.terminal_uncertain)).assertExists()
+    }
+
+    @Test fun fallbackContainsPowerlineAndCommonPromptGlyphs() {
+        val font = androidx.core.content.res.ResourcesCompat.getFont(
+            ApplicationProvider.getApplicationContext(), dev.avillagran.ot3android.R.font.nerd_terminal)!!
+        val paint = android.graphics.Paint().apply { typeface = font }
+        listOf("\ue0b0", "\ue0a0", "\uf07c", "\uf120", "\uf303", "\uf418").forEach {
+            assertTrue("Missing prompt glyph $it", paint.hasGlyph(it))
+        }
+    }
     @Test fun layoutReportsImeAndRotationDimensions() {
         val view = TerminalView(ApplicationProvider.getApplicationContext<Context>())
         val sizes = mutableListOf<Pair<Int, Int>>()
         view.dimensions = { c, r -> sizes += c to r }
-        view.layout(0, 0, 800, 1200); view.layout(0, 0, 800, 500); view.layout(0, 0, 1200, 400)
-        assertEquals(3, sizes.size)
+        view.layout(0, 0, 800, 1200); view.layout(0, 0, 800, 500); view.layout(0, 0, 800, 1200); view.layout(0, 0, 1200, 400)
+        assertEquals(4, sizes.size)
         assertEquals(sizes[0].first, sizes[1].first)
         assertTrue(sizes[1].second < sizes[0].second)
-        assertTrue(sizes[2].first > sizes[1].first)
+        assertEquals(sizes[0], sizes[2])
+        assertTrue(sizes[3].first > sizes[1].first)
     }
     @Test fun pasteConfirmationShowsAndSendsTheWholeBoundedTextOnce() {
         surface()

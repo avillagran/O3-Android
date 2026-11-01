@@ -15,7 +15,7 @@ class TerminalScreenDeviceTest {
         var closed = 0
         rule.setContent { Ot3Theme { TerminalSurface("remote-host", "remote-thread", TerminalSession.View(TerminalEmulator().frame()),
             onSend = { error("read-only write") }, onPaste = { error("read-only paste") }, onArrow = {}, onSize = { _, _ -> }, onClose = { closed++ }) } }
-        rule.onNodeWithText("remote-host · remote-thread").assertIsDisplayed()
+        rule.onNodeWithTag("terminal_destination").assertIsDisplayed()
         rule.onAllNodes(hasSetTextAction()).assertCountEquals(0)
         rule.onNodeWithTag("terminal_run").assertIsNotEnabled()
         rule.onNodeWithTag("terminal_close").performClick()
@@ -36,6 +36,21 @@ class TerminalScreenDeviceTest {
         rule.onNodeWithTag("terminal_run").assertIsNotEnabled()
         rule.onNodeWithTag("terminal_close").performClick()
         rule.runOnIdle { assertEquals(1, closed) }
+    }
+    @Test fun adbInputTextPreservesExactShellCommand() {
+        val sent = java.util.Collections.synchronizedList(mutableListOf<String>())
+        rule.setContent { Ot3Theme { TerminalSurface("host", "thread",
+            TerminalSession.View(TerminalEmulator().frame(), "/worktree", true, true),
+            onSend = sent::add, onPaste = sent::add, onArrow = {}, onSize = { _, _ -> }, onClose = {}) } }
+        rule.onNodeWithTag("terminal_output").performTouchInput { click() }
+        val automation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
+        fun shell(command: String) {
+            android.os.ParcelFileDescriptor.AutoCloseInputStream(automation.executeShellCommand(command)).use { it.readBytes() }
+        }
+        shell("input text echo%so3-terminal-ok")
+        shell("input keyevent KEYCODE_ENTER")
+        rule.waitUntil(5_000) { synchronized(sent) { sent.joinToString("").endsWith("\r") } }
+        rule.runOnIdle { assertEquals("echo o3-terminal-ok\r", sent.joinToString("")) }
     }
     @Test fun androidInputConnectionBuffersCompositionAndHonorsReadOnly() {
         val sent = mutableListOf<String>()

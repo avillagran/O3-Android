@@ -121,6 +121,7 @@ object Ot3Icons {
         "clock" to Clock,
         "cloud" to Cloud,
         "copy" to Copy,
+        "clipboard-paste" to R.drawable.ic_clipboard_paste,
         "corner-up-right" to CornerUpRight,
         "ellipsis-vertical" to EllipsisVertical,
         "external-link" to ExternalLink,
