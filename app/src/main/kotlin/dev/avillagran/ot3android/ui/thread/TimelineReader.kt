@@ -287,6 +287,7 @@ internal fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Trans
                                 Text(stringResource(R.string.transcript_plan), color = colors.accent, style = MaterialTheme.typography.labelSmall)
                                 Text(plan.readerText("title"), Modifier.weight(1f).padding(horizontal = 6.dp), style = MaterialTheme.typography.bodyMedium)
                                 CopyText(plan.readerText("markdown"), "plan_$id")
+                                SharePlan(plan)
                             }
                             Surface(color = colors.surface, shape = RoundedCornerShape(8.dp)) {
                                 Column(Modifier.fillMaxWidth().heightIn(max = 400.dp).verticalScroll(rememberScrollState()).padding(9.dp)) {
