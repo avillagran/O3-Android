@@ -25,7 +25,7 @@ class SidebarCollapseTest {
         val roots = (1..6).map { fixtureRow("node", "root-$it").copy(title = "Root $it") }
         val child = fixtureRow("node", "last-visible-child").copy(parentKey = roots[4].key, subagent = true)
         val rows = roots + child
-        val state = HomeUiState(content = HomeContent.List, rows = rows.associateBy { it.key }, items = rows.map { HomeItem.Row(it) })
+        val state = HomeUiState(content = HomeContent.List, shelves = ShelfState(grouped = true), rows = rows.associateBy { it.key }, items = rows.map { HomeItem.Row(it) })
         rule.setContent { Ot3Theme { HomeScreen(state, true, {}, appearance = AppearanceSettings(local = mapOf(LocalAppearancePreference.INTERFACE_LAYOUT to "projects"))) } }
         rule.onNodeWithTag("home_list").performScrollToNode(hasTestTag("home_row_${child.key}"))
         rule.onNodeWithTag("home_row_${child.key}").assertIsDisplayed()

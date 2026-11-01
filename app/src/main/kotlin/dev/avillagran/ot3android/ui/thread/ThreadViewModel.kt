@@ -173,6 +173,13 @@ class ThreadViewModel(
             attachmentFile?.baseFile?.takeIf { it.exists() }?.let { source ->
                 source.copyTo(java.io.File(source.parentFile, source.name + ".recovery-" + System.currentTimeMillis()))
             }
+            // A malformed cached command must not survive as an invisible private send lock.
+            // Its original bytes are in the backup; Room receipts are retained for decisions.
+            if (attachmentCommand != null && runCatching {
+                    org.json.JSONObject(attachmentCommand!!).getString("commandId").isNotBlank()
+                }.getOrDefault(false).not()) {
+                attachmentCommand = null; attachmentPending.value = null; sharedClear = null
+            }
             persistAttachments()
         }
     }
