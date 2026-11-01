@@ -74,6 +74,8 @@ internal class ComposerEditorState(text: String = "", private var restored: Text
 }
 
 /** Normal selection survives a temporary queued edit; at most those two UI editors are retained. */
+internal val LocalComposerEditors = staticCompositionLocalOf<ComposerEditors?> { null }
+
 internal class ComposerEditors {
     private var normal: ComposerEditorState? = null
     private var queued: ComposerEditorState? = null

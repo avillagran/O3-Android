@@ -66,6 +66,35 @@ class ComposerScopeTest {
         rule.onNodeWithText("Cancel edit").performClick()
         field().assertTextContains(original); assertSelection(1, 6)
     }
+    @Test fun durableComposerSelectionSurvivesExpandedQueueCancellationAndRecreation() {
+        var queue by mutableStateOf<String?>(null)
+        val original = "Original normal draft"
+        val scope = dev.avillagran.ot3android.core.composer.ComposerScope("node", "project", "chat")
+        var snapshot by mutableStateOf(dev.avillagran.ot3android.core.composer.ComposerSnapshot(
+            scope, text = original,
+            selection = dev.avillagran.ot3android.core.composer.ComposerSelection(original.length, original.length)))
+        val restoration = StateRestorationTester(rule)
+        restoration.setContent { Ot3Theme {
+            ThreadContent(ThreadUiState(ThreadView("chat", loaded = true), composer = ComposerState(draft = original), queueEdit = queue),
+                { text -> queue = queue?.let { JSONObject(it).put("text", text).toString() } },
+                {}, {}, {}, {}, {}, {}, {}, onCancelQueueEdit = { queue = null },
+                composerSlot = { controls ->
+                    dev.avillagran.ot3android.ui.thread.composer.ComposerParity(snapshot, emptySet(),
+                        onEdit = { _, text, selection, composing -> snapshot = snapshot.copy(text = text, selection = selection, composing = composing) },
+                        onRequest = {}, toolbar = controls)
+                })
+        } }
+        field().performTextInputSelection(TextRange(3, 9))
+        rule.runOnIdle { queue = JSONObject().put("runId", "q1").put("text", "Queue text").toString() }
+        rule.onNodeWithTag("composer_expand").performClick()
+        field().performTextReplacement("Revised queue")
+        restoration.emulateSavedInstanceStateRestore()
+        field().assertTextContains("Revised queue")
+        rule.onNodeWithText("Cancel edit").performClick()
+        field().assertTextContains(original); assertSelection(3, 9)
+        rule.onNodeWithTag("composer_back").performClick()
+        field().assertTextContains(original); assertSelection(3, 9)
+    }
     private fun field() = rule.onNodeWithTag(ThreadScreenTags.COMPOSER)
     private fun assertSelection(start: Int, end: Int) { assertEquals(TextRange(start, end), field().fetchSemanticsNode().config[SemanticsProperties.TextSelectionRange]) }
 }

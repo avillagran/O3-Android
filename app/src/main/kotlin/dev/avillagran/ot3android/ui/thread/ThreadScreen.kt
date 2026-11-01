@@ -423,7 +423,9 @@ fun ThreadContent(
                     state.respondingRequest, state.answeredRequests, onResponse = onQuestionResponse)
                 }
                 if (!hasQuestion) {
-                    if (composerSlot != null && state.queueEdit == null) { composerSlot(toolbar) }
+                    if (composerSlot != null && state.queueEdit == null) {
+                        androidx.compose.runtime.CompositionLocalProvider(LocalComposerEditors provides editors) { composerSlot(toolbar) }
+                    }
                     else ComposerEditor(editor, false, state.canSend, state.sending, edit, ::submit, ::toggleEditor, toolbar = toolbar, compact = compactComposer)
                 }
             }
