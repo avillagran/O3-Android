@@ -56,6 +56,8 @@ object Ot3Icons {
     @DrawableRes val File: Int = R.drawable.ic_file
     @DrawableRes val FolderGit2: Int = R.drawable.ic_folder_git_2
     @DrawableRes val FolderPlus: Int = R.drawable.ic_folder_plus
+    @DrawableRes val GitFork: Int = R.drawable.ic_git_fork
+    @DrawableRes val Share2: Int = R.drawable.ic_share_2
     @DrawableRes val GitBranch: Int = R.drawable.ic_git_branch
     @DrawableRes val GitMerge: Int = R.drawable.ic_git_merge
     @DrawableRes val GitPullRequest: Int = R.drawable.ic_git_pull_request
@@ -129,6 +131,8 @@ object Ot3Icons {
         "folder-git-2" to FolderGit2,
         "folder-plus" to FolderPlus,
         "git-branch" to GitBranch,
+        "git-fork" to GitFork,
+        "share-2" to Share2,
         "git-merge" to GitMerge,
         "git-pull-request" to GitPullRequest,
         "git-pull-request-closed" to GitPullRequestClosed,

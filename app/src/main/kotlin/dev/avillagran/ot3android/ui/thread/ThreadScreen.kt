@@ -119,6 +119,8 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
     val state by viewModel.state.collectAsStateWithLifecycle()
     val planControls by viewModel.planControls.collectAsStateWithLifecycle()
     val planAttachments by viewModel.attachmentDraft.collectAsStateWithLifecycle()
+    val planPending by viewModel.attachmentPending.collectAsStateWithLifecycle()
+    val planStorageError by viewModel.attachmentStorageError.collectAsStateWithLifecycle()
     val chosenInteraction by viewModel.chosenInteraction.collectAsStateWithLifecycle()
     val navigation by viewModel.chatNavigation.collectAsStateWithLifecycle()
     val modelOptionsRequest by viewModel.modelOptionsRequest.collectAsStateWithLifecycle()
@@ -187,8 +189,8 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
             modelOptionsRequest = modelOptionsRequest,
             onThreadMenu = onThreadActions,
             onFork = if (planControls.optBoolean("canOperate") && state.connected && !state.view.stale && !state.sending && state.unconfirmed.isEmpty()) viewModel::forkFromResponse else null,
-            onMergeBack = if (state.view.timeline?.optJSONObject("threadState")?.optString("mergeBackTargetThreadId")?.let { it.isNotBlank() && it != "null" } == true) viewModel::mergeBack else null,
-            onPlanFollowUp = if (planAttachments.isEmpty() && !state.view.working && planControls.optBoolean("enabled") && planControls.optBoolean("canOperate") &&
+            onMergeBack = if (planControls.optBoolean("canOperate") && state.view.timeline?.optJSONObject("threadState")?.optString("mergeBackTargetThreadId")?.let { it.isNotBlank() && it != "null" } == true) viewModel::mergeBack else null,
+            onPlanFollowUp = if (planPending == null && !planStorageError && planAttachments.isEmpty() && !state.view.working && planControls.optBoolean("enabled") && planControls.optBoolean("canOperate") &&
                 planControls.optString("interactionMode") == "plan" && state.queueEdit == null && !state.sending && state.unconfirmed.isEmpty())
                 ({ plan, _, newThread -> viewModel.followUpPlan(plan, newThread) }) else null,
         )
@@ -758,8 +760,8 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
         capabilities = buildSet {
             add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.Attach)
             if (state.view.working) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.OppositeOnce)
-            if (scope.queueMessage == null) {
-                add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.SendAndNew)
+            if (scope.queueMessage == null && planControls.optBoolean("canOperate")) {
+                if (!state.modelSelection.isNullOrBlank()) add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.SendAndNew)
                 if (model.planControls.value.optBoolean("enabled") && model.planControls.value.optBoolean("canOperate"))
                     add(dev.avillagran.ot3android.ui.thread.composer.ComposerAction.PlanBuild)
             }

@@ -436,6 +436,8 @@ class ThreadViewModel(
 
     private suspend fun prepareChatCommand(message: org.json.JSONObject, newThread: Boolean, plan: org.json.JSONObject?): org.json.JSONObject {
         val live = transport() ?: error("not_connected")
+        if (plan == null && !newThread && chosenInteraction.value == null &&
+            session.projectionSnapshot()?.optJSONObject("thread")?.optString("interactionMode") != "plan") return message
         val gate = refreshPlanControls()
         check(gate.optBoolean("canOperate")) { "permission_denied" }
         val projection = if (plan != null) live.boundedThread(threadId).getJSONObject("projection") else session.projectionSnapshot() ?: error("thread_unavailable")

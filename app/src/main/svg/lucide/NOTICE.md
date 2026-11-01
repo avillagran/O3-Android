@@ -41,6 +41,8 @@ Sources, in order of preference (UI_SPEC 3.8):
 | `file.svg` | ot3 folder | Lucide ISC |
 | `folder-git-2.svg` | ot3 folder | Lucide ISC |
 | `folder-plus.svg` | ot3 folder | Lucide ISC |
+| `git-fork.svg` | ot3 `IconAssets.js` | Lucide ISC |
+| `share-2.svg` | Lucide 0.564.0 npm tarball | Lucide ISC |
 | `git-branch.svg` | ot3 folder | Lucide ISC |
 | `git-merge.svg` | ot3 folder | Lucide ISC |
 | `git-pull-request-closed.svg` | ot3 folder | Lucide ISC |
