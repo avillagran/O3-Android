@@ -19,6 +19,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -149,15 +150,70 @@ class ConnectionRouteFallbackTest {
     }
 
     @Test
-    fun aTokenRefusedAtTheFallbackIsNotTheRowsFailure() = runTest {
+    fun aTokenRefusedAtTheFallbackIsNotTheRowsFailureButIsReported() = runTest {
         shellAnswer = { throw T3Exception("unauthorized") }
         val supervisor = supervisor()
         supervisor.start()
         runCurrent()
 
         assertEquals("unreachable", (supervisor.state.value as ConnectionState.Unreachable).error)
+        assertEquals(FallbackRefusal(gateway, "unauthorized"), supervisor.fallback.value.refused)
         advanceTimeBy(10 * 60_000L)
         assertEquals("the token is not offered again", 1, run.routes.size)
+        assertEquals("through every retry", FallbackRefusal(gateway, "unauthorized"), supervisor.fallback.value.refused)
+    }
+
+    @Test
+    fun aRouteTheUserApprovesAgainAfterARefusalGetsANewTry() = runTest {
+        shellAnswer = { throw T3Exception("unauthorized") }
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+
+        fallbacks.value = emptyMap()
+        runCurrent()
+        advanceTimeBy(1_100)
+        runCurrent()
+        assertNull(supervisor.fallback.value.refused)
+
+        shellAnswer = { shellRequests.incrementAndGet(); body(5, listOf(project("p1")), listOf(thread("t1"))) }
+        fallbacks.value = mapOf("local-1" to gateway)
+        runCurrent()
+        connectedVia(supervisor.state.value, fallback = true)
+    }
+
+    @Test
+    fun theRowReportsItsOwnRouteAndTheFallbackInUse() = runTest {
+        fallbacks.value = emptyMap()
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        assertEquals(FallbackStatus(ownRouteDown = true), supervisor.fallback.value)
+
+        fallbacks.value = mapOf("local-1" to gateway)
+        runCurrent()
+        assertEquals(FallbackStatus(ownRouteDown = true, inUse = gateway), supervisor.fallback.value)
+
+        run.emitError(T3Exception("stream_timeout"))
+        runCurrent()
+        assertEquals("still its route while it reconnects", gateway, supervisor.fallback.value.inUse)
+
+        lanAnswer = { descriptor }
+        advanceTimeBy(ConnectionSupervisor.PROBE_MAX_MS + 2_000)
+        runCurrent()
+        assertEquals(FallbackStatus(), supervisor.fallback.value)
+    }
+
+    @Test
+    fun aFallbackNotApprovedIsNeverContacted() = runTest {
+        fallbacks.value = emptyMap()
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        advanceTimeBy(10 * 60_000L)
+
+        assertEquals(0, descriptorReads(gateway))
+        assertTrue(run.routes.isEmpty())
     }
 
     @Test
@@ -203,6 +259,46 @@ class ConnectionRouteFallbackTest {
 
         assertEquals("unreachable", (supervisor.state.value as ConnectionState.Unreachable).error)
         assertEquals(1, descriptorReads(gateway))
+    }
+
+    /** The stream dropped, so the run is pausing to retry the fallback it still holds. */
+    @Test
+    fun aFallbackWithdrawnDuringARetryPauseIsNeverSentTheTokenAgain() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+        assertEquals(1, run.routes.size)
+
+        run.emitError(T3Exception("stream_timeout"))
+        runCurrent()
+        assertTrue(supervisor.state.value is ConnectionState.Unreachable)
+
+        fallbacks.value = emptyMap()
+        advanceTimeBy(10 * 60_000L)
+        runCurrent()
+
+        assertEquals("no second attempt at the bearer", 1, run.routes.size)
+        assertEquals("nor at its descriptor", 1, descriptorReads(gateway))
+        assertNull(supervisor.fallback.value.inUse)
+        assertEquals("unreachable", (supervisor.state.value as ConnectionState.Unreachable).error)
+    }
+
+    /** Pausing on another code path: a fallback whose reconnect failed before it connected. */
+    @Test
+    fun aFallbackWithdrawnWhileReconnectingIsDroppedBeforeTheToken() = runTest {
+        val supervisor = supervisor()
+        supervisor.start()
+        runCurrent()
+
+        gatewayAnswer = {
+            fallbacks.value = emptyMap()
+            descriptor
+        }
+        run.emitError(T3Exception("stream_timeout"))
+        advanceTimeBy(1_100)
+        runCurrent()
+
+        assertEquals("withdrawn after its descriptor, before the token", 1, run.routes.size)
     }
 
     @Test

@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">Ei hallintaoikeutta</string>
     <string name="bridge_peer_selected">Valittu luonnosten auktoriteetti</string>
     <string name="environments_via_gateway">yhdyskäytävän kautta</string>
+    <string name="environments_gateway_offered">Oma URL ei ole tavoitettavissa. Silta tarjoaa kohdetta %1$s</string>
+    <string name="environments_gateway_review">Tarkista</string>
+    <string name="environments_gateway_approve_title">Lähetetäänkö tämä tunnus kohteeseen %1$s?</string>
+    <string name="environments_gateway_approve_body">Tälle riville tallennettu tunnus lähetetään tähän yhdyskäytävään niin kauan kuin rivin oma URL ei ole tavoitettavissa. Yhdyskäytävän ylläpitäjä, joka voi olla silta itse, voi lukea tunnuksen ja käyttää sillä tätä palvelinta. Hyväksy vain, jos luotat ylläpitäjään.</string>
+    <string name="environments_gateway_approve">Käytä tätä yhdyskäytävää</string>
+    <string name="environments_gateway_stop">Lopeta yhdyskäytävän käyttö</string>
+    <string name="environments_gateway_refused">%1$s hylkäsi tämän tunnuksen</string>
+    <string name="environments_gateway_unusable">Kohdetta %1$s ei voi käyttää tälle riville</string>
 </resources>

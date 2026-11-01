@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">Yönetim izni yok</string>
     <string name="bridge_peer_selected">Seçili taslak yetkilisi</string>
     <string name="environments_via_gateway">ağ geçidi üzerinden</string>
+    <string name="environments_gateway_offered">Kendi URL\'sine ulaşılamıyor. Köprü %1$s sunuyor</string>
+    <string name="environments_gateway_review">İncele</string>
+    <string name="environments_gateway_approve_title">Bu belirteç %1$s adresine gönderilsin mi?</string>
+    <string name="environments_gateway_approve_body">Bu satır için kayıtlı belirteç, satırın kendi URL\'sine ulaşılamadığı sürece bu ağ geçidine gönderilir. Ağ geçidini işleten kişi, ki bu köprünün kendisi olabilir, belirteci okuyabilir ve onunla bu sunucuyu kullanabilir. Yalnızca güveniyorsanız onaylayın.</string>
+    <string name="environments_gateway_approve">Bu ağ geçidini kullan</string>
+    <string name="environments_gateway_stop">Ağ geçidini kullanmayı bırak</string>
+    <string name="environments_gateway_refused">%1$s bu belirteci reddetti</string>
+    <string name="environments_gateway_unusable">%1$s bu satır için kullanılamıyor</string>
 </resources>

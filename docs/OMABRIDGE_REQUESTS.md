@@ -181,32 +181,52 @@ Both are additive to the C ABI v1. Check `capabilities.features` for each.
 | Feature | Request | Response |
 |---|---|---|
 | `host-refresh-v1` | `{"op":"hostRefresh","handle":H}`, optional `"peer":"<id>"` (default: the selected bridge) | `{"reachable":bool,"changed":bool}`, never an address |
-| `route-fallback-v1` | `projection` plan | adds `routeFallbacks: [{"id":"<local row>","baseUrl":"https://…"}]` |
+| `route-fallback-v1` | `projection` plan | adds `routeFallbacks: [{"id":"<local row>","baseUrl":"https://…"}]`, offers only, none past seven days after the catalog's expiry |
 
 `hostRefresh` is one authenticated `Hello`, 8 s at most, with no retry. Identity stays the
 paired key: the answer counts only from the authenticated peer and for that id, addresses are
 hints and no grant changes. An empty answer changes nothing, and one with no relay keeps the
 known relay. The running catalog manager follows the result. `reachable:false` covers out of
-reach, refused and rejected alike, and leaves what is stored as it was. Bridges need no update:
-they already answer `Hello` with a live address. Contract:
+reach, refused and rejected alike, and leaves what is stored as it was: every part of an answer
+is checked before any is applied, in one update. An answer with nothing new is not written.
+Bridges need no update: they already answer `Hello` with a live address. Contract:
 [omabridge `docs/mobile-administration.md`](https://github.com/avillagran/omabridge/blob/main/docs/mobile-administration.md#bridge-address-refresh-host-refresh-v1).
 
 The app:
 
 - `BridgeCatalogController` asks after the catalog poll: when the bridge comes back, every
   2.5–5 minutes while it is reachable, on a 30 s–5 min jittered backoff while it is not, and on
-  a network change or the Refresh icon (`BridgeAddressSchedule`). A failure there does not touch
-  the catalog status, and a withdrawn bridge is not asked.
-- `ConnectionSupervisor` uses a row's `routeFallbacks` entry when the row's own URL fails with
-  a route error, within the same backoff step. The descriptor must match the known environment
-  UUID before the token is sent. The own URL is probed with no credential every 15 s–2 min with
-  jitter, and on a network change, and the stream goes back as soon as it answers, resuming from
-  the held cursor. The row keeps its URL, credential and independence, and shows "via gateway".
+  a network change, but never within 15 s of the last ask (`BridgeAddressSchedule`). Only the
+  Refresh icon skips that minimum. A failure there does not touch the catalog status, and a
+  withdrawn bridge is not asked.
+- A manual row's fallback is opt-in per row and per exact origin (scheme, host and port), off by
+  default. While the row's own URL fails with a route error and the catalog offers a route for
+  the same environment UUID, the row shows the offered host and asks. Nothing reaches that host
+  before the user approves, not even a descriptor read. `ConnectionManager` stores the approval
+  locally (`RouteApprovalPreferences`, excluded from backup) and gives a supervisor only routes
+  whose origin matches it, so any other origin asks again. Editing or deleting the row, or
+  "Stop using gateway", removes the approval.
+- `ConnectionSupervisor` then uses the approved route when the row's own URL fails with a route
+  error, within the same backoff step. The descriptor must match the known environment UUID
+  before the token is sent, and the route must still be offered at that moment and at every
+  retry. The own URL is probed with no credential every 15 s–2 min with jitter, and on a network
+  change, and the stream goes back as soon as it answers, resuming from the held cursor. The row
+  keeps its URL, credential and independence, and shows "via gateway" for as long as the fallback
+  is in use, connecting included. A token refused there, or a server that does not match, is
+  shown on the row with its host, not hidden behind the row's own `unreachable`.
+- A catalog the SDK refuses, for example a rolled-back revision, clears the offers at once. Only
+  a catalog that validates brings them back, in memory: a process restart reads the cached
+  catalog again, within its seven days.
 
-**Trust note.** The bearer of an independent row can reach a URL the bridge named. The bridge
-never receives the bearer, but HTTPS plus a matching UUID proves only that the name serves that
-UUID, and a descriptor is public. This extends to independent rows the trust already given to
-the routes of bridge rows.
+**Trust note.** Approving sends the bearer of an independent row to a URL the bridge named.
+Gateways terminate TLS on the device that runs them, which can be the bridge itself, so that
+device can read the bearer in clear and use it from anywhere until it ends. HTTPS plus a matching
+UUID proves only that the name serves that UUID, because a descriptor is public. Bridge-managed
+rows carry credentials issued for that purpose; a manual row's token may be write access to a host
+that never consented to the bridge. This is why the fallback is opt-in and the prompt says so.
+
+Future work: at the fallback, use a bounded credential the bridge issues for that purpose
+instead of the row's own bearer. Not implemented; needs an OmaBridge request.
 
 Limit: `hostRefresh` needs a route that still works, so a moved bridge must stay reachable
 until the phone has asked once. The first dead attempt on a cold start still costs about 12 s

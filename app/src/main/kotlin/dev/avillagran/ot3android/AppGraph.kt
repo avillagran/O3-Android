@@ -162,7 +162,10 @@ class AppGraph(
     }
 
     val connectionManager: ConnectionManager by lazy {
-        ConnectionManager(environmentRepository, shellCursors, transportFactory, appScope, cache = threadCache)
+        ConnectionManager(
+            environmentRepository, shellCursors, transportFactory, appScope, cache = threadCache,
+            routeApprovals = dev.avillagran.ot3android.core.data.prefs.RouteApprovalPreferences(appContext),
+        )
     }
 
     /**
@@ -238,6 +241,7 @@ class AppGraph(
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }
         appScope.launch { themeCatalog() }
+        appScope.launch(Dispatchers.IO) { connectionManager.restoreRouteApprovals() }
         appScope.launch {
             while (kotlinx.coroutines.currentCoroutineContext().isActive) {
                 threadCache.trim()

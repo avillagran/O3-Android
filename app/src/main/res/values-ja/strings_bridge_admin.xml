@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">管理権限なし</string>
     <string name="bridge_peer_selected">選択中の下書き管理元</string>
     <string name="environments_via_gateway">ゲートウェイ経由</string>
+    <string name="environments_gateway_offered">自身の URL に到達できません。ブリッジが %1$s を提示しています</string>
+    <string name="environments_gateway_review">確認</string>
+    <string name="environments_gateway_approve_title">このトークンを %1$s に送信しますか？</string>
+    <string name="environments_gateway_approve_body">この行に保存されたトークンは、行自身の URL に到達できない間、このゲートウェイに送られます。ゲートウェイの運用者（ブリッジ自身の場合もあります）はトークンを読み取り、それを使ってこのサーバーを利用できます。信頼できる場合にのみ承認してください。</string>
+    <string name="environments_gateway_approve">このゲートウェイを使用</string>
+    <string name="environments_gateway_stop">ゲートウェイの使用を停止</string>
+    <string name="environments_gateway_refused">%1$s がこのトークンを拒否しました</string>
+    <string name="environments_gateway_unusable">%1$s はこの行に使用できません</string>
 </resources>

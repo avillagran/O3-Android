@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
 import dev.avillagran.ot3android.core.connection.ConnectionState
+import dev.avillagran.ot3android.core.connection.ConnectionSupervisor
+import dev.avillagran.ot3android.core.connection.RouteFallbackView
+import dev.avillagran.ot3android.core.connection.routeOriginLabel
 import dev.avillagran.ot3android.ui.common.ConnectionChip
 import dev.avillagran.ot3android.ui.icons.Ot3Icons
 
@@ -51,6 +54,9 @@ object EnvironmentsScreenTags {
     fun row(id: String) = "environment_row_$id"
     fun edit(id: String) = "environment_edit_$id"
     fun delete(id: String) = "environment_delete_$id"
+    fun routeReview(id: String) = "environment_route_review_$id"
+    fun routeStop(id: String) = "environment_route_stop_$id"
+    const val ROUTE_APPROVE = "environments_route_approve"
     const val CONFIRM_DELETE = "environments_confirm_delete"
 }
 
@@ -91,7 +97,7 @@ fun EnvironmentsScreen(
     val items by viewModel.items.collectAsStateWithLifecycle()
     EnvironmentsContent(
         items, onOpen, onAdd, onEdit, viewModel::delete, modifier, onAppearance, bridgeStatus,
-        onRefreshBridge, onBack, onPairBridge, onAdministerBridge,
+        onRefreshBridge, onBack, onPairBridge, onAdministerBridge, viewModel::approveRoute, viewModel::stopRoute,
     )
 }
 
@@ -114,7 +120,11 @@ internal fun EnvironmentsContent(
     onBack: () -> Unit = {},
     onPairBridge: (() -> Unit)? = null,
     onAdministerBridge: (() -> Unit)? = null,
+    onApproveRoute: (environmentId: String, origin: String) -> Unit = { _, _ -> },
+    onStopRoute: (environmentId: String) -> Unit = {},
 ) {
+    var reviewing by rememberSaveable { mutableStateOf<String?>(null) }
+    var reviewedOrigin by rememberSaveable { mutableStateOf<String?>(null) }
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
     var menu by rememberSaveable { mutableStateOf(false) }
 
@@ -177,12 +187,14 @@ internal fun EnvironmentsContent(
             else -> LazyColumn(Modifier.fillMaxSize().testTag(EnvironmentsScreenTags.LIST)) {
                 items(list, key = { it.environment.id }) { item ->
                     val id = item.environment.id
+                    androidx.compose.foundation.layout.Column {
                     ListItem(
                         headlineContent = { Text(item.environment.label) },
                         supportingContent = {
                             androidx.compose.foundation.layout.Column {
                                 Text(item.environment.baseUrl)
-                                if ((item.state as? ConnectionState.Connected)?.viaFallback == true) {
+                                val fallback = (item.state as? ConnectionState.Connected)?.viaFallback == true
+                                if (fallback || item.route is RouteFallbackView.InUse) {
                                     Text(stringResource(R.string.environments_via_gateway))
                                 }
                                 item.bridgeStatus?.let { status -> Text(stringResource(bridgeRowLabel(status))) }
@@ -201,11 +213,38 @@ internal fun EnvironmentsContent(
                         },
                         modifier = Modifier.clickable { onOpen(id) }.testTag(EnvironmentsScreenTags.row(id)),
                     )
+                    item.route?.let { route ->
+                        RouteActions(id, route, onReview = { origin -> reviewing = id; reviewedOrigin = origin }, onStop = { onStopRoute(id) })
+                    }
+                    }
                 }
             }
         }
     }
 
+    }
+
+    // The dialog names one origin. An offer that changes under it closes it, so a tap can never
+    // approve a host the user did not read.
+    val review = items?.firstOrNull { it.environment.id == reviewing }
+        ?.route?.takeIf { it == RouteFallbackView.NeedsApproval(reviewedOrigin.orEmpty()) }
+    if (review is RouteFallbackView.NeedsApproval) {
+        val close = { reviewing = null; reviewedOrigin = null }
+        AlertDialog(
+            onDismissRequest = close,
+            title = { Text(stringResource(R.string.environments_gateway_approve_title, routeOriginLabel(review.origin))) },
+            text = { Text(stringResource(R.string.environments_gateway_approve_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        reviewing?.let { onApproveRoute(it, review.origin) }
+                        close()
+                    },
+                    modifier = Modifier.testTag(EnvironmentsScreenTags.ROUTE_APPROVE),
+                ) { Text(stringResource(R.string.environments_gateway_approve)) }
+            },
+            dismissButton = { TextButton(onClick = close) { Text(stringResource(R.string.action_cancel)) } },
+        )
     }
 
     val target = deleting?.let { id -> items?.firstOrNull { it.environment.id == id } }
@@ -225,5 +264,38 @@ internal fun EnvironmentsContent(
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.action_cancel)) } },
         )
+    }
+}
+
+/**
+ * Under the row, at full width: a hostname the user is asked to trust must never wrap mid-word
+ * in the narrow column beside the status chip.
+ */
+@Composable
+private fun RouteActions(id: String, route: RouteFallbackView, onReview: (origin: String) -> Unit, onStop: () -> Unit) {
+    androidx.compose.foundation.layout.Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+        when (route) {
+            is RouteFallbackView.NeedsApproval -> {
+                Text(stringResource(R.string.environments_gateway_offered, routeOriginLabel(route.origin)), style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = { onReview(route.origin) }, modifier = Modifier.testTag(EnvironmentsScreenTags.routeReview(id))) {
+                    Text(stringResource(R.string.environments_gateway_review))
+                }
+            }
+            is RouteFallbackView.InUse -> Unit
+            is RouteFallbackView.Refused -> {
+                val host = routeOriginLabel(route.origin)
+                Text(
+                    if (route.error == ConnectionSupervisor.UNAUTHORIZED) stringResource(R.string.environments_gateway_refused, host)
+                    else stringResource(R.string.environments_gateway_unusable, host),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+        if (route !is RouteFallbackView.NeedsApproval) {
+            TextButton(onClick = onStop, modifier = Modifier.testTag(EnvironmentsScreenTags.routeStop(id))) {
+                Text(stringResource(R.string.environments_gateway_stop))
+            }
+        }
     }
 }

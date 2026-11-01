@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">Keine Verwaltungsberechtigung</string>
     <string name="bridge_peer_selected">Ausgewählte Entwurfsautorität</string>
     <string name="environments_via_gateway">über Gateway</string>
+    <string name="environments_gateway_offered">Eigene URL nicht erreichbar. Die Bridge bietet %1$s an</string>
+    <string name="environments_gateway_review">Prüfen</string>
+    <string name="environments_gateway_approve_title">Dieses Token an %1$s senden?</string>
+    <string name="environments_gateway_approve_body">Das für diese Zeile gespeicherte Token geht an dieses Gateway, solange die eigene URL der Zeile nicht erreichbar ist. Wer das Gateway betreibt, und das kann die Bridge selbst sein, kann das Token lesen und damit diesen Server nutzen. Stimme nur zu, wenn du dieser Person vertraust.</string>
+    <string name="environments_gateway_approve">Dieses Gateway verwenden</string>
+    <string name="environments_gateway_stop">Gateway nicht mehr verwenden</string>
+    <string name="environments_gateway_refused">%1$s hat dieses Token abgelehnt</string>
+    <string name="environments_gateway_unusable">%1$s kann für diese Zeile nicht verwendet werden</string>
 </resources>

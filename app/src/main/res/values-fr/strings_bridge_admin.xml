@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">Aucun droit de gestion</string>
     <string name="bridge_peer_selected">Autorité des brouillons sélectionnée</string>
     <string name="environments_via_gateway">via la passerelle</string>
+    <string name="environments_gateway_offered">URL propre injoignable. Le pont propose %1$s</string>
+    <string name="environments_gateway_review">Examiner</string>
+    <string name="environments_gateway_approve_title">Envoyer ce jeton à %1$s ?</string>
+    <string name="environments_gateway_approve_body">Le jeton enregistré pour cette ligne ira à cette passerelle tant que l\'URL propre de la ligne est injoignable. Quiconque exploite la passerelle, y compris le pont lui-même, peut lire le jeton et utiliser ce serveur avec lui. N\'approuvez que si vous lui faites confiance.</string>
+    <string name="environments_gateway_approve">Utiliser cette passerelle</string>
+    <string name="environments_gateway_stop">Ne plus utiliser la passerelle</string>
+    <string name="environments_gateway_refused">%1$s a refusé ce jeton</string>
+    <string name="environments_gateway_unusable">%1$s ne peut pas être utilisé pour cette ligne</string>
 </resources>

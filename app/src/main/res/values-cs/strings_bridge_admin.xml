@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">Bez oprávnění ke správě</string>
     <string name="bridge_peer_selected">Vybraná autorita konceptů</string>
     <string name="environments_via_gateway">přes bránu</string>
+    <string name="environments_gateway_offered">Vlastní URL je nedostupná. Most nabízí %1$s</string>
+    <string name="environments_gateway_review">Zkontrolovat</string>
+    <string name="environments_gateway_approve_title">Odeslat tento token na %1$s?</string>
+    <string name="environments_gateway_approve_body">Token uložený pro tento řádek půjde přes tuto bránu, dokud bude jeho vlastní URL nedostupná. Kdo bránu provozuje, a může to být i samotný most, dokáže token přečíst a používat s ním tento server. Schvalte jen tehdy, když mu důvěřujete.</string>
+    <string name="environments_gateway_approve">Použít tuto bránu</string>
+    <string name="environments_gateway_stop">Přestat používat bránu</string>
+    <string name="environments_gateway_refused">%1$s odmítl tento token</string>
+    <string name="environments_gateway_unusable">%1$s nelze pro tento řádek použít</string>
 </resources>

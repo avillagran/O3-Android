@@ -41,11 +41,22 @@ class ConnectionManager(
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val computation: CoroutineDispatcher = Dispatchers.Default,
     private val cache: dev.avillagran.ot3android.core.thread.ThreadCache? = null,
+    private val routeApprovals: RouteApprovalStore = InMemoryRouteApprovals(),
 ) {
     private val _supervisors = MutableStateFlow<Map<String, ConnectionSupervisor>>(emptyMap())
     val supervisors: StateFlow<Map<String, ConnectionSupervisor>> = _supervisors.asStateFlow()
 
+    /** What the catalog offers, by local id. Offers alone send nothing anywhere. */
+    private val offeredRoutes = MutableStateFlow<Map<String, String>>(emptyMap())
+    private val approvedOrigins = MutableStateFlow<Map<String, String>>(emptyMap())
+
+    /** The only routes a supervisor sees: offers whose exact origin the user approved for that row. */
     private val routeFallbacks = MutableStateFlow<Map<String, String>>(emptyMap())
+    val approvedRouteFallbacks: StateFlow<Map<String, String>> = routeFallbacks.asStateFlow()
+    private val routeLock = Any()
+
+    /** Serializes [routeApprovals] with what is in memory. */
+    private val approvalLock = Mutex()
 
     /** Supervisors that were running when the app went to the background. */
     private val paused = mutableSetOf<String>()
@@ -105,11 +116,59 @@ class ConnectionManager(
     }
 
     /**
-     * The route each independent environment may use while its own URL is out of reach, by
-     * local id. Replaces the previous set: a row left out stops using its fallback.
+     * The route the catalog offers each independent environment while its own URL is out of
+     * reach, by local id. Replaces the previous set: a row left out stops using its fallback. An
+     * offer is used only once [approveRoute] approved its exact origin for that row.
      */
     fun setRouteFallbacks(routes: Map<String, String>) {
-        routeFallbacks.value = routes
+        synchronized(routeLock) {
+            offeredRoutes.value = routes
+            publishRouteFallbacks()
+        }
+    }
+
+    /** Call with [routeLock] held. */
+    private fun publishRouteFallbacks() {
+        val approved = approvedOrigins.value
+        routeFallbacks.value = offeredRoutes.value.filter { (id, url) ->
+            approved[id].let { it != null && it == routeOrigin(url) }
+        }
+    }
+
+    private fun setApprovals(update: (Map<String, String>) -> Map<String, String>) = synchronized(routeLock) {
+        approvedOrigins.value = update(approvedOrigins.value)
+        publishRouteFallbacks()
+    }
+
+    /** Loads the stored approvals. Until it has, and if it fails, no row has any. */
+    suspend fun restoreRouteApprovals() = approvalLock.withLock {
+        val stored = try { routeApprovals.all() } catch (_: java.io.IOException) { return@withLock }
+        setApprovals { stored }
+    }
+
+    /** The user approved sending [environmentId]'s token to exactly [origin]. */
+    suspend fun approveRoute(environmentId: String, origin: String) = approvalLock.withLock {
+        routeApprovals.set(environmentId, origin)
+        setApprovals { it + (environmentId to origin) }
+    }
+
+    /** Takes back a row's approval, on request, or because its URL or credential changed or it was removed. */
+    suspend fun revokeRoute(environmentId: String) = approvalLock.withLock {
+        // The live set goes first: a store that fails must not keep the route in use.
+        setApprovals { it - environmentId }
+        routeApprovals.set(environmentId, null)
+    }
+
+    /** Each row's fallback for the UI; rows with nothing to show are left out. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val routeFallbackViews: Flow<Map<String, RouteFallbackView>> = _supervisors.flatMapLatest { map ->
+        val statuses = if (map.isEmpty()) flowOf(emptyMap()) else
+            combine(map.values.map { it.fallback }) { all -> map.keys.zip(all).toMap() }
+        combine(statuses, offeredRoutes, approvedOrigins) { byRow, offers, approved ->
+            byRow.mapNotNull { (id, status) ->
+                routeFallbackView(offers[id], approved[id], status)?.let { id to it }
+            }.toMap()
+        }
     }
 
     /** Foreground consumers follow replacement transports after pairing/route refresh. */
@@ -157,9 +216,11 @@ class ConnectionManager(
     /**
      * Stops and forgets [environmentId]'s supervisor, e.g. after its URL or token changed or
      * before it is removed. Returns once its run has ended (transport closed, cursor
-     * written), so deleting the environment afterwards leaves nothing behind.
+     * written), so deleting the environment afterwards leaves nothing behind. Any route
+     * approval goes too: it was given for what the row was.
      */
     suspend fun forget(environmentId: String) {
+        try { revokeRoute(environmentId) } catch (_: java.io.IOException) { /* Already off in memory. */ }
         val removed = createLock.withLock {
             cacheWriters.remove(environmentId)?.cancelAndJoin()
             synchronized(this) {

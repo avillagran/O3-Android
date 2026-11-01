@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">Sin permiso de administración</string>
     <string name="bridge_peer_selected">Autoridad de borradores seleccionada</string>
     <string name="environments_via_gateway">vía gateway</string>
+    <string name="environments_gateway_offered">URL propia fuera de alcance. El bridge ofrece %1$s</string>
+    <string name="environments_gateway_review">Revisar</string>
+    <string name="environments_gateway_approve_title">¿Enviar este token a %1$s?</string>
+    <string name="environments_gateway_approve_body">El token guardado en esta fila irá a este gateway mientras su URL propia esté fuera de alcance. Quien opere el gateway, que puede ser el propio bridge, puede leer el token y usar este servidor con él. Aprueba solo si confías en esa persona.</string>
+    <string name="environments_gateway_approve">Usar este gateway</string>
+    <string name="environments_gateway_stop">Dejar de usar el gateway</string>
+    <string name="environments_gateway_refused">%1$s rechazó este token</string>
+    <string name="environments_gateway_unusable">%1$s no se puede usar para esta fila</string>
 </resources>

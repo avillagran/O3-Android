@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">Ingen administrasjonstillatelse</string>
     <string name="bridge_peer_selected">Valgt utkastautoritet</string>
     <string name="environments_via_gateway">via gateway</string>
+    <string name="environments_gateway_offered">Egen URL er utilgjengelig. Broen tilbyr %1$s</string>
+    <string name="environments_gateway_review">Se gjennom</string>
+    <string name="environments_gateway_approve_title">Sende dette tokenet til %1$s?</string>
+    <string name="environments_gateway_approve_body">Tokenet som er lagret for denne raden, går til denne gatewayen så lenge radens egen URL er utilgjengelig. Den som driver gatewayen, og det kan være broen selv, kan lese tokenet og bruke denne serveren med det. Godkjenn bare hvis du stoler på vedkommende.</string>
+    <string name="environments_gateway_approve">Bruk denne gatewayen</string>
+    <string name="environments_gateway_stop">Slutt å bruke gateway</string>
+    <string name="environments_gateway_refused">%1$s avviste dette tokenet</string>
+    <string name="environments_gateway_unusable">%1$s kan ikke brukes for denne raden</string>
 </resources>

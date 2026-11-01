@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">بدون إذن إدارة</string>
     <string name="bridge_peer_selected">جهة المسودات المحددة</string>
     <string name="environments_via_gateway">عبر البوابة</string>
+    <string name="environments_gateway_offered">عنوان URL الخاص بها غير متاح. يعرض الجسر %1$s</string>
+    <string name="environments_gateway_review">مراجعة</string>
+    <string name="environments_gateway_approve_title">هل تريد إرسال هذا الرمز إلى %1$s؟</string>
+    <string name="environments_gateway_approve_body">سيُرسَل الرمز المحفوظ لهذا الصف إلى هذه البوابة ما دام عنوان URL الخاص به غير متاح. يمكن لمن يدير البوابة، وقد يكون الجسر نفسه، قراءة الرمز واستخدام هذا الخادم به. وافق فقط إذا كنت تثق به.</string>
+    <string name="environments_gateway_approve">استخدام هذه البوابة</string>
+    <string name="environments_gateway_stop">إيقاف استخدام البوابة</string>
+    <string name="environments_gateway_refused">رفض %1$s هذا الرمز</string>
+    <string name="environments_gateway_unusable">لا يمكن استخدام %1$s لهذا الصف</string>
 </resources>

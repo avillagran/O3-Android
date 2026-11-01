@@ -31,4 +31,12 @@
     <string name="bridge_peer_unmanaged">No management grant</string>
     <string name="bridge_peer_selected">Selected draft authority</string>
     <string name="environments_via_gateway">via gateway</string>
+    <string name="environments_gateway_offered">Own URL out of reach. The bridge offers %1$s</string>
+    <string name="environments_gateway_review">Review</string>
+    <string name="environments_gateway_approve_title">Send this token to %1$s?</string>
+    <string name="environments_gateway_approve_body">The token saved for this row will go to this gateway while the row\'s own URL is out of reach. Whoever runs the gateway, which can be the bridge itself, can read the token and use this server with it. Approve only if you trust them.</string>
+    <string name="environments_gateway_approve">Use this gateway</string>
+    <string name="environments_gateway_stop">Stop using gateway</string>
+    <string name="environments_gateway_refused">%1$s refused this token</string>
+    <string name="environments_gateway_unusable">%1$s can\'t be used for this row</string>
 </resources>

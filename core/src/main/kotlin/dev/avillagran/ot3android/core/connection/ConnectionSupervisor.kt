@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
@@ -59,6 +60,23 @@ sealed interface ConnectionState {
      */
     data class Unreachable(val error: String, val nextRetryAt: Long?) : ConnectionState
 }
+
+/** A route that did not take this row: [error] is the code it failed with. */
+data class FallbackRefusal(val url: String, val error: String)
+
+/**
+ * The fallback side of one row, for the UI. It outlives a single attempt, so a row does not
+ * flicker through each retry.
+ *
+ * @property ownRouteDown the row's own URL last failed with a route error
+ * @property inUse the fallback this run is connected to or connecting through
+ * @property refused why this run stopped offering the token to its fallback
+ */
+data class FallbackStatus(
+    val ownRouteDown: Boolean = false,
+    val inUse: String? = null,
+    val refused: FallbackRefusal? = null,
+)
 
 /**
  * The supervisor's live connection, for code that opens its own streams on it (the thread
@@ -94,14 +112,16 @@ data class Connection(val transport: T3Transport, val epoch: Int)
  * resumes after its sequence (docs/DECISIONS.md).
  *
  * An environment may have a fallback in [routeFallbacks]: the bridge catalog's route to the
- * same server, for a row saved with a URL that only works at home. When the row's own URL is
- * out of reach ([ROUTE_ERRORS]) the next attempt, in the same backoff step, uses the fallback.
- * Its descriptor is checked against the known environment id before the token is sent; the
- * row itself never changes. While the fallback holds, the own URL is probed with no
- * credential on a jittered backoff, and on [wake]. When it answers, the run goes back,
- * resuming from the held cursor: both URLs reach one server. A fallback whose server refuses
- * it is not tried again in that run, and its refusal is not the row's: the row reports its
- * own error and keeps retrying.
+ * same server, for a row saved with a URL that only works at home. [routeFallbacks] holds only
+ * routes the user approved for this row and this exact origin; see [ConnectionManager]. When the
+ * row's own URL is out of reach ([ROUTE_ERRORS]) the next attempt, in the same backoff step, uses
+ * the fallback. Its descriptor is checked against the known environment id before the token is
+ * sent, and the fallback must still be in [routeFallbacks] at that moment: a withdrawn route is
+ * never sent the token. The row itself never changes. While the fallback holds, the own URL is
+ * probed with no credential on a jittered backoff, and on [wake]. When it answers, the run goes
+ * back, resuming from the held cursor: both URLs reach one server. A fallback whose server
+ * refuses it is not tried again in that run. That refusal is not the row's failure: the row
+ * keeps its own error and keeps retrying, and [fallback] reports the refusal.
  *
  * Pure Kotlin (no Android types); runs in [scope]. The token is read through [token] at each
  * run and never logged.
@@ -141,6 +161,11 @@ class ConnectionSupervisor(
 
     /** Successful `connect` calls so far, across runs; see [Connection.epoch]. */
     private var epoch = 0
+
+    private val _fallback = MutableStateFlow(FallbackStatus())
+
+    /** What this row is doing with its fallback; see [FallbackStatus]. */
+    val fallback: StateFlow<FallbackStatus> = _fallback.asStateFlow()
 
     private val _shell = MutableStateFlow<ShellState?>(null)
 
@@ -295,6 +320,9 @@ class ConnectionSupervisor(
                 if (run == generation && live) _state.value = ConnectionState.Disconnected
                 if (run == generation) _connection.value = null
             }
+            synchronized(lock) {
+                if (run == generation || job == null) _fallback.value = _fallback.value.copy(inUse = null)
+            }
             withContext(NonCancellable + io) {
                 client.close()
                 persistCursor()
@@ -308,7 +336,7 @@ class ConnectionSupervisor(
         var fallback: String? = null
 
         /** A fallback whose server refused it: not tried again in this run. */
-        var refused: String? = null
+        var refused: FallbackRefusal? = null
 
         /** What the own URL last failed with, the error to show while a fallback fails too. */
         var ownError: String? = null
@@ -317,7 +345,7 @@ class ConnectionSupervisor(
         var connected = false
 
         fun fallbackFor(error: String, candidate: String?): String? =
-            candidate.takeIf { error in ROUTE_ERRORS && it != refused }
+            candidate.takeIf { error in ROUTE_ERRORS && it != refused?.url }
     }
 
     /** Connects and follows the stream until `unauthorized` or a fatal error. */
@@ -326,6 +354,12 @@ class ConnectionSupervisor(
         val probes = Backoff(random, PROBE_FIRST_MS, PROBE_MAX_MS)
         while (true) {
             routes.connected = false
+            // A route withdrawn during a pause or a retry is never tried again with the token,
+            // and one approved again after a refusal gets a new try.
+            val current = routeFallbacks.value[environmentId]
+            if (routes.fallback != current) routes.fallback = null
+            if (routes.refused?.url != current) routes.refused = null
+            _fallback.update { it.copy(inUse = routes.fallback, refused = routes.refused) }
             val fallback = routes.fallback
             val error = attempt(run, client, backoff, routes, probes)
             currentCoroutineContext().ensureActive()
@@ -341,6 +375,7 @@ class ConnectionSupervisor(
             }
             if (fallback == null) {
                 routes.ownError = error
+                _fallback.update { it.copy(ownRouteDown = error in ROUTE_ERRORS) }
                 val next = routes.fallbackFor(error, routeFallbacks.value[environmentId])
                 if (next != null && serverEnvironmentId != null) {
                     // Same backoff step: it is paid only if this route fails as well.
@@ -348,12 +383,14 @@ class ConnectionSupervisor(
                     continue
                 }
             } else if (error != MISSING_TOKEN && (error == UNAUTHORIZED || error in FATAL)) {
-                routes.refused = fallback
+                routes.refused = FallbackRefusal(fallback, error)
                 routes.fallback = null
+                _fallback.update { it.copy(inUse = null, refused = routes.refused) }
                 pause(run, backoff, routes.ownError ?: error)
                 continue
             } else if (!routes.connected) {
                 routes.fallback = null
+                _fallback.update { it.copy(inUse = null) }
                 pause(run, backoff, routes.ownError ?: error)
                 continue
             }
@@ -424,6 +461,8 @@ class ConnectionSupervisor(
             if (_state.value !is ConnectionState.Connected) setState(run, ConnectionState.Connecting)
             val descriptor = ServerDescriptor.from(client.fetchDescriptor(url, serverEnvironmentId))
             val secret = token() ?: return MISSING_TOKEN
+            // The checks above can take seconds, and the route can be withdrawn meanwhile.
+            if (fallback != null && routeFallbacks.value[environmentId] != fallback) return ROUTE_CHANGED
             client.connect(ConnectRoute.Bearer(url, secret))
             val connected = synchronized(lock) { ++epoch }
             if (shellLock.withLock { held } == null) {
@@ -433,6 +472,7 @@ class ConnectionSupervisor(
             if (serverEnvironmentId == null) serverEnvironmentId = descriptor.environmentId
             setConnected(run, descriptor, client, connected, viaFallback = fallback != null)
             routes.connected = true
+            if (fallback == null) _fallback.update { it.copy(ownRouteDown = false) }
             try {
                 onConnected(descriptor)
             } catch (error: Exception) {

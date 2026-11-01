@@ -25,7 +25,10 @@ import org.json.JSONObject
 
 data class BridgeDeviceIdentity(val clientId: String, val bridgeId: String?)
 
-/** Local environment id to its fallback route; SDKs older than `route-fallback-v1` have none. */
+/**
+ * Local environment id to the route the catalog offers it, which is not yet leave to use it (see
+ * [ConnectionManager.approveRoute]); SDKs older than `route-fallback-v1` have none.
+ */
 internal fun routeFallbacks(plan: JSONObject): Map<String, String> {
     val rows = plan.optJSONArray("routeFallbacks") ?: return emptyMap()
     return (0 until rows.length()).map(rows::getJSONObject).associate { it.getString("id") to it.getString("baseUrl") }
@@ -48,6 +51,9 @@ class BridgeCatalogController(
     @Volatile private var handle: Long? = null
     @Volatile private var selected = false
     @Volatile private var foreground = false
+
+    /** Set when the SDK refused a catalog; only one that validates brings route offers back. */
+    private var catalogRejected = false
     private var clientId: String? = null
     private var stateDirectory: String? = null
     private var polling: Job? = null
@@ -125,7 +131,19 @@ class BridgeCatalogController(
     }
 
     suspend fun refresh() = mutex.withLock {
-        mutableStatus.value = invoke("refresh").getString("status")
+        val refreshed = try {
+            invoke("refresh").getString("status")
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            // An unreachable bridge answers "offline". This is an invalid or rolled-back catalog,
+            // and what it left in memory must not keep routes alive.
+            catalogRejected = true
+            connections.setRouteFallbacks(emptyMap())
+            throw failure
+        }
+        if (refreshed.startsWith("available")) catalogRejected = false
+        mutableStatus.value = refreshed
         val dao = database.environmentDao()
         val managed = database.bridgeManagedDao()
         val (origins, previous) = mutations.withLock {
@@ -139,7 +157,7 @@ class BridgeCatalogController(
                 .put("authorizationExpiresAt", origin?.takeIf { it.status in SESSION_STATUSES }?.authorizationExpiresAt))
         }
         val plan = invoke("projection", JSONObject().put("local", local))
-        connections.setRouteFallbacks(routeFallbacks(plan))
+        connections.setRouteFallbacks(if (catalogRejected) emptyMap() else routeFallbacks(plan))
         val stops = plan.getJSONArray("stop")
         // Await stream termination outside Room's transaction: shutdown may write cursors.
         val stopped = (0 until stops.length()).map { stops.getString(it) }
@@ -292,8 +310,15 @@ class BridgeCatalogController(
         addressSchedule.answered(reachable)
     }
 
+    /** The network changed: polls again, and asks for the address within its minimum interval. */
     fun reconnect() {
         addressSchedule.wake()
+        if (polling != null) setForeground(true)
+    }
+
+    /** The user asked for it: polls again, and asks for the address whenever the last ask was. */
+    fun refreshNow() {
+        addressSchedule.force()
         if (polling != null) setForeground(true)
     }
 
@@ -301,6 +326,7 @@ class BridgeCatalogController(
         polling?.cancelAndJoin()
         polling = null
         connections.setRouteFallbacks(emptyMap())
+        catalogRejected = false
         mutex.withLock {
             if (handle != null) invoke("close")
             handle = null
