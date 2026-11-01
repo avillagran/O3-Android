@@ -69,3 +69,10 @@ preservation, all three row layouts and reading-anchor restoration.
 `connectedDebugAndroidTest` was not run: T3 `device_list` returns "Agent device
 access is turned off for this environment." No emulator was started, and no
 phone was accessed. Device/OEM behavior remains unverified.
+
+Final result: full Gradle invocation succeeded. Core debug/release each have
+528 passed and 5 skipped; app debug has 555 passed and 1 skipped. All 152
+Roborazzi goldens verify (4 new). Lint: zero errors, 110 app warnings/1 hint and
+2 core warnings. String import check: 261 strings × 20 locales. Required-bridge
+APK assembled successfully. Artifact and full log:
+`/home/node/.cache/o3-android-artifacts/inline-expander-local-cache/`.
