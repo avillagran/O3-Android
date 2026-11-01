@@ -382,10 +382,10 @@ internal fun ActivityBlock(activity: JSONObject, id: String, onOpenInspector: (J
 
 @Composable
 private fun ChangesBlock(changes: JSONObject, id: String, onOpenDiff: (JSONObject) -> Unit) {
-    Fold("Changes +${changes.optInt("additions")} −${changes.optInt("deletions")}", id) {
+    Fold("${stringResource(R.string.ot3_inspector_label_changes)} +${changes.optInt("additions")} −${changes.optInt("deletions")}", id) {
         TextButton(onClick = { onOpenDiff(changes) }, modifier = Modifier.testTag("thread_diff_$id")) { Text(stringResource(R.string.ot3_open_diff)) }
         changes.optJSONArray("files").objects().forEach { file ->
-            SelectionContainer { Text("${file.optString("path")} · ${file.optString("kind")} +${file.optInt("additions")} −${file.optInt("deletions")}", fontFamily = FiraCode, style = MaterialTheme.typography.bodySmall) }
+            SelectionContainer { Text("${file.optString("path")} +${file.optInt("additions")} −${file.optInt("deletions")}", fontFamily = FiraCode, style = MaterialTheme.typography.bodySmall) }
         }
     }
 }

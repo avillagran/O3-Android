@@ -3,6 +3,7 @@ package dev.avillagran.ot3android.ui.thread
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.role
@@ -117,8 +118,10 @@ internal fun QuestionCard(
                         .background(if (selected) colors.accent.copy(alpha = .08f) else androidx.compose.ui.graphics.Color.Transparent, RoundedCornerShape(6.dp))
                         .semantics { this.selected = selected; role = if (question.optBoolean("multiSelect")) Role.Checkbox else Role.RadioButton }
                         .clickable(enabled = !locked && optionValue != null, onClick = choose).padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (question.optBoolean("multiSelect")) Checkbox(selected, { choose() }, enabled = !locked)
-                        else RadioButton(selected, choose, enabled = !locked)
+                        if (question.optBoolean("multiSelect")) {
+                            if (selected) dev.avillagran.ot3android.ui.kit.Ot3Icon("check", null, Modifier.padding(end = 8.dp), size = 14.dp)
+                            else Box(Modifier.padding(end = 8.dp).size(14.dp).border(1.dp, colors.dim, RoundedCornerShape(2.dp)))
+                        }
                         Column(Modifier.weight(1f)) {
                             Text(option.optString("label"), color = colors.foreground, style = MaterialTheme.typography.bodyMedium)
                             option.optString("description").takeIf { it.isNotBlank() }?.let { Text(it, color = colors.dim, style = MaterialTheme.typography.bodySmall) }

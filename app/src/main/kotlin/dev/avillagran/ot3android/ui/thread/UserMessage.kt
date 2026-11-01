@@ -40,14 +40,16 @@ internal fun UserMessage(row: JSONObject, onQuote: ((String) -> Unit)? = null) {
                 color = Ot3Theme.colors.surface,
                 contentColor = Ot3Theme.colors.foreground,
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.widthIn(min = 80.dp, max = bubbleMaxWidth)
+                modifier = Modifier.widthIn(min = if (row.optJSONArray("attachments").objects().isNotEmpty()) 240.dp else 80.dp, max = bubbleMaxWidth)
                     .testTag("thread_bubble_$id").semantics { contentDescription = author },
             ) {
-                SelectionContainer {
-                    Text(row.optString("text"), modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium)
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SelectionContainer {
+                        Text(row.optString("text"), style = MaterialTheme.typography.bodyMedium)
+                    }
+                    MessageAttachments(row)
                 }
             }
-            MessageAttachments(row)
             if (!row.optBoolean("streaming")) {
                 Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     MessageDate(row.optLong("createdAt"))

@@ -29,6 +29,9 @@ class ChatParityScreenshotTest : ScreenshotTest() {
         snapshot("fixture", themes = listOf("tokyo-night"), beforeCapture = {
             for (w in listOf(360, 444)) for (key in fixtures.keys().asSequence().toList()) {
                 composeRule.runOnIdle { width = w; name = key }; composeRule.waitForIdle()
+                if (key == "image") composeRule.waitUntil(5_000) {
+                    composeRule.onAllNodesWithContentDescription("chat-parity-image.png").fetchSemanticsNodes().isNotEmpty()
+                }
                 if (key == "composer") {
                     val frame = composeRule.onNodeWithTag("chat_fixture").fetchSemanticsNode().boundsInRoot
                     val send = composeRule.onNodeWithTag(ThreadScreenTags.SEND).fetchSemanticsNode().boundsInRoot
@@ -40,6 +43,9 @@ class ChatParityScreenshotTest : ScreenshotTest() {
         }) {
             ChatStyle {
             Box(Modifier.fillMaxSize()) {
+            CompositionLocalProvider(LocalReaderImages provides ReaderImages("parity") {
+                checkNotNull(javaClass.classLoader!!.getResourceAsStream("chat-parity-image.png")).use { it.readBytes() }
+            }) {
             Surface(Modifier.requiredWidth(width.dp).wrapContentHeight().testTag("chat_fixture")) {
                 Column {
                     val fixture = fixtures.getJSONObject(name)
@@ -52,9 +58,11 @@ class ChatParityScreenshotTest : ScreenshotTest() {
                         "approval" -> ApprovalCard(JSONArray().put(fixture), true, null, emptySet()) { _, _ -> }
                         "question" -> QuestionCard(JSONArray().put(fixture), true, null, emptySet(), renderMarkdown = { text -> JSONArray().put(JSONObject().put("type", "paragraph").put("spans", JSONArray().put(JSONObject().put("type", "text").put("text", text)))) }) { _, _, _ -> }
                         "queue" -> ThreadQueue(fixture, true, {}, {})
+                        "inspector" -> ToolInspectorContent(fixture, false, false, "details", {}, {})
                         else -> TimelineRow(fixture, null, TranscriptActions(), {}, {})
                     }
                 }
+            }
             }
             }
             }

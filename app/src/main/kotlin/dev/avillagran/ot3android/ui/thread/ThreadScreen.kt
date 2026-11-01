@@ -84,6 +84,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.R
+import dev.avillagran.ot3android.core.connection.ConnectionState
 import dev.avillagran.ot3android.core.thread.PendingCommand
 import dev.avillagran.ot3android.core.thread.RuntimeRequest
 import dev.avillagran.ot3android.core.thread.ThreadConnection
@@ -290,6 +291,10 @@ fun ThreadContent(
                             modifier = Modifier.testTag(ThreadScreenTags.TITLE),
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            (state.connection as? ConnectionState.Connected)?.descriptor?.label?.takeIf { it.isNotBlank() }?.let { host ->
+                                Text(host, Modifier.padding(end = 6.dp).widthIn(max = 72.dp), maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim)
+                            }
                             ConnectionChip(state.connection)
                             if (state.view.working) {
                                 Spacer(Modifier.width(8.dp))

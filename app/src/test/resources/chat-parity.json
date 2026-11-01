@@ -113,7 +113,8 @@
         ],
         "allowCustomAnswer": true
       }
-    ]
+    ],
+    "dismissible": true
   },
   "working": {
     "id": "w",
@@ -176,5 +177,36 @@
   },
   "composer": {
     "text": "Review the result before sending."
+  },
+  "image": {
+    "id": "image",
+    "role": "user",
+    "text": "Review this capture.",
+    "createdAt": 1760000000000,
+    "attachments": [
+      {
+        "id": "fixture-image",
+        "type": "image",
+        "name": "chat-parity-image.png",
+        "source": "/fixture/chat-parity-image.png",
+        "mimeType": "image/png"
+      }
+    ]
+  },
+  "inspector": {
+    "available": true,
+    "title": "cargo test --locked",
+    "status": "completed",
+    "failed": false,
+    "exitCode": 0,
+    "sections": [
+      {
+        "key": "output",
+        "label": "Output",
+        "text": "All checks passed.\nNo failures."
+      }
+    ],
+    "metadata": "{}",
+    "raw": "{\"type\":\"command_execution\"}"
   }
 }
