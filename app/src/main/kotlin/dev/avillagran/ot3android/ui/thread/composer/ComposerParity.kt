@@ -47,6 +47,7 @@ sealed interface ComposerRequest {
  * VM or graph dependency. [capabilities] must omit unbound native/host operations.
  * The owner must revalidate each request against its current session, not just trust UI gates.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ComposerParity(
     snapshot: ComposerSnapshot,
@@ -94,7 +95,9 @@ fun ComposerParity(
             onRequest(ComposerRequest.ImportUri(origin, it.toString()))
         }
     }
-    val compact = LocalConfiguration.current.screenHeightDp < 420
+    val configuration = LocalConfiguration.current
+    val compact = configuration.screenHeightDp < 420 ||
+        (WindowInsets.isImeVisible && configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
     var overflow by remember { mutableStateOf(false) }
     var captureOpen by remember { mutableStateOf(false) }
     fun request(action: ComposerAction) {
