@@ -94,7 +94,12 @@ class SharedDraftSynchronizer(
                     }
                     mutableFailed.value = false
                 } catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { mutableFailed.value = true }
+                catch (_: Exception) {
+                    mutableFailed.value = true
+                    // A failed edit stays in `waiting`: pace its retry and let a newer edit replace it.
+                    delay(RETRY_MS)
+                    edits.tryReceive().getOrNull()?.let { waiting = it }
+                }
             }
         }
     }
@@ -118,4 +123,8 @@ class SharedDraftSynchronizer(
     }
 
     fun isCurrent(update: Update) = update.generation == generation
+
+    private companion object {
+        const val RETRY_MS = 2_000L
+    }
 }

@@ -46,6 +46,10 @@ import androidx.compose.ui.window.DialogProperties
 import dev.avillagran.ot3android.ui.kit.Ot3Spinner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -54,6 +58,18 @@ import org.json.JSONObject
 internal data class ReaderImages(val generation: Any?, val isCurrent: () -> Boolean = { true }, val owner: String? = null, val read: suspend (JSONObject) -> ByteArray?)
 private val imageReads = Semaphore(2)
 internal val LocalReaderImages = compositionLocalOf { ReaderImages(null) { null } }
+
+/** Off-main work of one image attempt. The attempt resumes through the composition's dispatcher,
+ * which a destroyed host may never run again, so once it is cancelled this worker frees what it
+ * holds. NonCancellable guarantees the body starts even if cancellation wins the dispatch. */
+internal suspend fun <T> readerImageWorker(release: () -> Unit, block: suspend () -> T): T {
+    val attempt = currentCoroutineContext().job
+    imageReads.acquire()
+    return withContext(Dispatchers.Default + NonCancellable) {
+        try { attempt.ensureActive(); block() }
+        finally { imageReads.release(); if (!attempt.isActive) release() }
+    }
+}
 
 /** Attachments and Markdown share the bounded reader, viewer and clipboard. */
 @Composable
@@ -228,6 +244,7 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
         complete = false
         var lease: ReaderBitmapBudget.Lease? = null
         var thumbnailLease: ReaderBitmapBudget.Lease? = null
+        val release = { lease?.close(); thumbnailLease?.close(); Unit }
         try {
             var naturalWidth = 0
             val decoded = if (source.generation == null) null else {
@@ -237,7 +254,7 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
                 lease = ReaderBitmapBudget.shared.acquire(640 * 640 * 4)
                 val bytes = cachedBytes[0] ?: imageReads.withPermit { source.read(attachment) }?.also { cachedBytes[0] = it }
                 if (bytes == null) null else {
-                    val bounds = withContext(Dispatchers.Default) { readerImageBounds(bytes, 40_000_000) }
+                    val bounds = readerImageWorker(release) { readerImageBounds(bytes, 40_000_000) }
                     onDimensions(bounds.outWidth, bounds.outHeight)
                     onNaturalWidth(bounds.outWidth)
                     val sample = if (zoom == null) readerInlineImageSample(bounds.outWidth, bounds.outHeight, maxEdge)
@@ -249,13 +266,13 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
                     thumbnailLease?.close(); thumbnailLease = null
                     if (zoom == null) thumbnailLease = ReaderBitmapBudget.thumbnails.acquire(reservation)
                     lease = ReaderBitmapBudget.shared.acquire(reservation)
-                    imageReads.withPermit {
+                    readerImageWorker(release) {
                         // API 24–27 needs a sampled intermediate before exact scaling.
                         // Its independent scratch budget cannot block behind displayed leases.
                         val scratch = if (zoom == null && android.os.Build.VERSION.SDK_INT < 28)
                             ReaderBitmapBudget.scratch.acquire(readerImageAllocation(bounds.outWidth, bounds.outHeight, sample).toInt()) else null
                         try {
-                            withContext(Dispatchers.Default) { decodeReaderImage(bytes, maxEdge, inline = zoom == null) { naturalWidth = it } }
+                            decodeReaderImage(bytes, maxEdge, inline = zoom == null) { naturalWidth = it }
                         } finally { scratch?.close() }
                     }
                 }
@@ -265,7 +282,7 @@ private fun ActiveImageRead(attachment: JSONObject, identity: String, source: Re
             if (value != null) kotlinx.coroutines.awaitCancellation()
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { complete = true }
-        finally { lease?.close(); thumbnailLease?.close(); value = null }
+        finally { release(); value = null }
     }
     val loadingHeight = with(LocalDensity.current) { loadingHeightPx.toDp() }
     val stableModifier = if (bitmap != null) modifier else if (square) modifier.height(loadingHeight) else modifier.heightIn(min = loadingHeight)

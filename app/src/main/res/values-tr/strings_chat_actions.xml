@@ -4,4 +4,14 @@
     <string name="chat_fork">Bu yanıttan dallandır</string>
     <string name="chat_merge_back">Kaynak konuya geri birleştir</string>
     <string name="chat_thread_actions">Konu işlemleri</string>
+    <string name="chat_error_action_failed">Bu işlem tamamlanamadı (%1$s).</string>
+    <string name="chat_error_connection_changed">Bağlantı değişti. Yeniden dene.</string>
+    <string name="chat_error_thread_unavailable">Bu konu henüz hazır değil. Yeniden dene.</string>
+    <string name="chat_error_run_unavailable">Bu yanıt artık kullanılamıyor.</string>
+    <string name="chat_error_plan_unavailable">Bu plan artık hazır değil.</string>
+    <string name="chat_error_new_thread_unavailable">Yeni konu başlatılamadı.</string>
+    <string name="chat_error_composer_changed">Mesaj gönderilirken değişti. Kontrol edip yeniden gönder.</string>
+    <string name="chat_error_thread_working">Konunun bitmesini bekle, sonra yeniden dene.</string>
+    <string name="chat_error_attachment_access">Bu ekler bu bağlantı üzerinden gönderilemiyor. Kaldırıp yeniden dene.</string>
+    <string name="chat_error_storage">Mesaj bu cihaza kaydedilemedi.</string>
 </resources>

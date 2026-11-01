@@ -4,4 +4,14 @@
     <string name="chat_fork">Fork from this response</string>
     <string name="chat_merge_back">Merge back into source thread</string>
     <string name="chat_thread_actions">Thread actions</string>
+    <string name="chat_error_action_failed">Could not complete that action (%1$s).</string>
+    <string name="chat_error_connection_changed">The connection changed. Try again.</string>
+    <string name="chat_error_thread_unavailable">This thread is not ready yet. Try again.</string>
+    <string name="chat_error_run_unavailable">That response is no longer available.</string>
+    <string name="chat_error_plan_unavailable">This plan is no longer ready.</string>
+    <string name="chat_error_new_thread_unavailable">Could not start the new thread.</string>
+    <string name="chat_error_composer_changed">The message changed while sending. Check it and send again.</string>
+    <string name="chat_error_thread_working">Wait for the thread to finish, then try again.</string>
+    <string name="chat_error_attachment_access">These attachments cannot be sent over this connection. Remove them and try again.</string>
+    <string name="chat_error_storage">Could not save the message on this device.</string>
 </resources>

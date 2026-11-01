@@ -4,4 +4,14 @@
     <string name="chat_fork">Odbočit z této odpovědi</string>
     <string name="chat_merge_back">Sloučit do původního vlákna</string>
     <string name="chat_thread_actions">Akce vlákna</string>
+    <string name="chat_error_action_failed">Akci se nepodařilo dokončit (%1$s).</string>
+    <string name="chat_error_connection_changed">Připojení se změnilo. Zkus to znovu.</string>
+    <string name="chat_error_thread_unavailable">Toto vlákno ještě není připravené. Zkus to znovu.</string>
+    <string name="chat_error_run_unavailable">Tato odpověď už není dostupná.</string>
+    <string name="chat_error_plan_unavailable">Tento plán už není připravený.</string>
+    <string name="chat_error_new_thread_unavailable">Nové vlákno se nepodařilo spustit.</string>
+    <string name="chat_error_composer_changed">Zpráva se při odesílání změnila. Zkontroluj ji a odešli znovu.</string>
+    <string name="chat_error_thread_working">Počkej na dokončení vlákna a zkus to znovu.</string>
+    <string name="chat_error_attachment_access">Tyto přílohy nelze tímto připojením odeslat. Odeber je a zkus to znovu.</string>
+    <string name="chat_error_storage">Zprávu se nepodařilo uložit do tohoto zařízení.</string>
 </resources>

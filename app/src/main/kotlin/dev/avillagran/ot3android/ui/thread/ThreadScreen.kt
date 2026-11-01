@@ -604,10 +604,10 @@ private fun noticeText(notice: ThreadNotice): String = when (notice) {
         "rpc_outcome_unknown" -> stringResource(R.string.thread_notice_unknown)
         "rpc_rejected" -> notice.reason?.let { stringResource(R.string.thread_notice_rejected, it.truncated(REASON_MAX)) }
             ?: stringResource(R.string.thread_notice_rejected_plain)
-        "write_not_authorized" -> stringResource(R.string.thread_notice_scope, notice.requiredScope ?: "orchestration:operate")
+        "write_not_authorized", "permission_denied" -> stringResource(R.string.thread_notice_scope, notice.requiredScope ?: "orchestration:operate")
         "not_connected" -> stringResource(R.string.thread_notice_not_connected)
         "command_pending" -> stringResource(R.string.queue_command_pending)
-        else -> errorText(notice.code)
+        else -> chatErrorText(notice)
     }
 }
 

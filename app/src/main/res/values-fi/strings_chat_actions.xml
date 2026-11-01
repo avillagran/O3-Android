@@ -4,4 +4,14 @@
     <string name="chat_fork">Haaroita tästä vastauksesta</string>
     <string name="chat_merge_back">Yhdistä alkuperäiseen ketjuun</string>
     <string name="chat_thread_actions">Ketjun toiminnot</string>
+    <string name="chat_error_action_failed">Toimintoa ei voitu suorittaa (%1$s).</string>
+    <string name="chat_error_connection_changed">Yhteys muuttui. Yritä uudelleen.</string>
+    <string name="chat_error_thread_unavailable">Tämä ketju ei ole vielä valmis. Yritä uudelleen.</string>
+    <string name="chat_error_run_unavailable">Vastaus ei ole enää saatavilla.</string>
+    <string name="chat_error_plan_unavailable">Tämä suunnitelma ei ole enää valmis.</string>
+    <string name="chat_error_new_thread_unavailable">Uutta ketjua ei voitu aloittaa.</string>
+    <string name="chat_error_composer_changed">Viesti muuttui lähetyksen aikana. Tarkista se ja lähetä uudelleen.</string>
+    <string name="chat_error_thread_working">Odota, että ketju valmistuu, ja yritä sitten uudelleen.</string>
+    <string name="chat_error_attachment_access">Näitä liitteitä ei voi lähettää tämän yhteyden kautta. Poista ne ja yritä uudelleen.</string>
+    <string name="chat_error_storage">Viestiä ei voitu tallentaa tälle laitteelle.</string>
 </resources>

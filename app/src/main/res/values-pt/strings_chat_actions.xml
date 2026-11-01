@@ -4,4 +4,14 @@
     <string name="chat_fork">Ramificar a partir desta resposta</string>
     <string name="chat_merge_back">Mesclar com a conversa de origem</string>
     <string name="chat_thread_actions">Ações da conversa</string>
+    <string name="chat_error_action_failed">Não foi possível concluir esta ação (%1$s).</string>
+    <string name="chat_error_connection_changed">A conexão mudou. Tente novamente.</string>
+    <string name="chat_error_thread_unavailable">Esta conversa ainda não está pronta. Tente novamente.</string>
+    <string name="chat_error_run_unavailable">Essa resposta não está mais disponível.</string>
+    <string name="chat_error_plan_unavailable">Este plano não está mais pronto.</string>
+    <string name="chat_error_new_thread_unavailable">Não foi possível iniciar a nova conversa.</string>
+    <string name="chat_error_composer_changed">A mensagem mudou durante o envio. Revise e envie novamente.</string>
+    <string name="chat_error_thread_working">Aguarde a conversa terminar e tente novamente.</string>
+    <string name="chat_error_attachment_access">Estes anexos não podem ser enviados por esta conexão. Remova-os e tente novamente.</string>
+    <string name="chat_error_storage">Não foi possível salvar a mensagem neste dispositivo.</string>
 </resources>

@@ -4,4 +4,14 @@
     <string name="chat_fork">Forgren fra dette svar</string>
     <string name="chat_merge_back">Flet tilbage til kildetråden</string>
     <string name="chat_thread_actions">Trådhandlinger</string>
+    <string name="chat_error_action_failed">Handlingen kunne ikke fuldføres (%1$s).</string>
+    <string name="chat_error_connection_changed">Forbindelsen blev ændret. Prøv igen.</string>
+    <string name="chat_error_thread_unavailable">Denne tråd er ikke klar endnu. Prøv igen.</string>
+    <string name="chat_error_run_unavailable">Det svar er ikke længere tilgængeligt.</string>
+    <string name="chat_error_plan_unavailable">Denne plan er ikke længere klar.</string>
+    <string name="chat_error_new_thread_unavailable">Den nye tråd kunne ikke startes.</string>
+    <string name="chat_error_composer_changed">Beskeden blev ændret under afsendelsen. Tjek den, og send igen.</string>
+    <string name="chat_error_thread_working">Vent, til tråden er færdig, og prøv så igen.</string>
+    <string name="chat_error_attachment_access">Disse vedhæftede filer kan ikke sendes via denne forbindelse. Fjern dem, og prøv igen.</string>
+    <string name="chat_error_storage">Beskeden kunne ikke gemmes på denne enhed.</string>
 </resources>
