@@ -4,4 +4,14 @@
     <string name="chat_fork">Créer une branche depuis cette réponse</string>
     <string name="chat_merge_back">Fusionner dans le fil source</string>
     <string name="chat_thread_actions">Actions du fil</string>
+    <string name="chat_error_action_failed">Impossible de terminer cette action (%1$s).</string>
+    <string name="chat_error_connection_changed">La connexion a changé. Réessaie.</string>
+    <string name="chat_error_thread_unavailable">Ce fil n\'est pas encore prêt. Réessaie.</string>
+    <string name="chat_error_run_unavailable">Cette réponse n\'est plus disponible.</string>
+    <string name="chat_error_plan_unavailable">Ce plan n\'est plus prêt.</string>
+    <string name="chat_error_new_thread_unavailable">Impossible de démarrer le nouveau fil.</string>
+    <string name="chat_error_composer_changed">Le message a changé pendant l\'envoi. Vérifie-le et renvoie-le.</string>
+    <string name="chat_error_thread_working">Attends la fin du fil, puis réessaie.</string>
+    <string name="chat_error_attachment_access">Ces pièces jointes ne peuvent pas être envoyées par cette connexion. Retire-les et réessaie.</string>
+    <string name="chat_error_storage">Impossible d\'enregistrer le message sur cet appareil.</string>
 </resources>

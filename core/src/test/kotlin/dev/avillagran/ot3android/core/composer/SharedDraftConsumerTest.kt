@@ -178,4 +178,28 @@ class SharedDraftConsumerTest {
         assertEquals("original stash", conflict.getJSONObject("local").getJSONObject("_ot3aSource").getJSONObject("payload").getString("text"))
     }
 
+    @Test fun oversizedEditIsReplacedByTheNextEdit() = runTest {
+        var disk: String? = null
+        val repository = SharedDraftRepository("oversized", { disk }, { disk = it }) { JSONObject() }
+        val worker = SharedDraftSynchronizer(repository, scope, backgroundScope, syncRemotely = false)
+        worker.edit(payload("x".repeat(9 * 1024)))
+        runCurrent()
+        assertTrue(worker.failed.value)
+        worker.edit(payload("short"))
+        advanceTimeBy(2_001); runCurrent()
+        val editors = repository.cached().getJSONObject("editors")
+        assertEquals("short", editors.getJSONObject(editors.keys().next()).getJSONObject("payload").getString("text"))
+    }
+
+    @Test fun failedLocalEditBacksOffInsteadOfSpinning() = runBlocking {
+        val reads = java.util.concurrent.atomic.AtomicInteger()
+        val repository = SharedDraftRepository("backoff", { reads.incrementAndGet(); error("disk") }, {}) { JSONObject() }
+        val worker = CoroutineScope(Dispatchers.Default)
+        try {
+            SharedDraftSynchronizer(repository, scope, worker, syncRemotely = false).edit(payload("text"))
+            delay(300)
+            assertTrue("edit retried ${reads.get()} times", reads.get() in 1..2)
+        } finally { worker.cancel() }
+    }
+
 }

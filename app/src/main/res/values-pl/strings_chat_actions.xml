@@ -4,4 +4,14 @@
     <string name="chat_fork">Utwórz odgałęzienie od tej odpowiedzi</string>
     <string name="chat_merge_back">Scal z wątkiem źródłowym</string>
     <string name="chat_thread_actions">Działania wątku</string>
+    <string name="chat_error_action_failed">Nie udało się ukończyć tej akcji (%1$s).</string>
+    <string name="chat_error_connection_changed">Połączenie się zmieniło. Spróbuj ponownie.</string>
+    <string name="chat_error_thread_unavailable">Ten wątek nie jest jeszcze gotowy. Spróbuj ponownie.</string>
+    <string name="chat_error_run_unavailable">Ta odpowiedź nie jest już dostępna.</string>
+    <string name="chat_error_plan_unavailable">Ten plan nie jest już gotowy.</string>
+    <string name="chat_error_new_thread_unavailable">Nie udało się uruchomić nowego wątku.</string>
+    <string name="chat_error_composer_changed">Wiadomość zmieniła się podczas wysyłania. Sprawdź ją i wyślij ponownie.</string>
+    <string name="chat_error_thread_working">Poczekaj na zakończenie wątku i spróbuj ponownie.</string>
+    <string name="chat_error_attachment_access">Tych załączników nie można wysłać przez to połączenie. Usuń je i spróbuj ponownie.</string>
+    <string name="chat_error_storage">Nie udało się zapisać wiadomości na tym urządzeniu.</string>
 </resources>

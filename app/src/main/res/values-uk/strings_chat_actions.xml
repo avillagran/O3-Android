@@ -4,4 +4,14 @@
     <string name="chat_fork">Створити гілку з цієї відповіді</string>
     <string name="chat_merge_back">Об’єднати з початковою розмовою</string>
     <string name="chat_thread_actions">Дії розмови</string>
+    <string name="chat_error_action_failed">Не вдалося виконати дію (%1$s).</string>
+    <string name="chat_error_connection_changed">Підключення змінилося. Спробуйте ще раз.</string>
+    <string name="chat_error_thread_unavailable">Ця розмова ще не готова. Спробуйте ще раз.</string>
+    <string name="chat_error_run_unavailable">Ця відповідь більше недоступна.</string>
+    <string name="chat_error_plan_unavailable">Цей план більше не готовий.</string>
+    <string name="chat_error_new_thread_unavailable">Не вдалося запустити нову розмову.</string>
+    <string name="chat_error_composer_changed">Повідомлення змінилося під час надсилання. Перевірте його та надішліть знову.</string>
+    <string name="chat_error_thread_working">Дочекайтеся завершення розмови й спробуйте ще раз.</string>
+    <string name="chat_error_attachment_access">Ці вкладення не можна надіслати через це підключення. Видаліть їх і спробуйте ще раз.</string>
+    <string name="chat_error_storage">Не вдалося зберегти повідомлення на цьому пристрої.</string>
 </resources>

@@ -4,4 +4,14 @@
     <string name="chat_fork">التفرع من هذا الرد</string>
     <string name="chat_merge_back">الدمج في المحادثة الأصلية</string>
     <string name="chat_thread_actions">إجراءات المحادثة</string>
+    <string name="chat_error_action_failed">تعذر إكمال هذا الإجراء (%1$s).</string>
+    <string name="chat_error_connection_changed">تغير الاتصال. حاول مرة أخرى.</string>
+    <string name="chat_error_thread_unavailable">هذه المحادثة غير جاهزة بعد. حاول مرة أخرى.</string>
+    <string name="chat_error_run_unavailable">لم تعد هذه الاستجابة متاحة.</string>
+    <string name="chat_error_plan_unavailable">لم تعد هذه الخطة جاهزة.</string>
+    <string name="chat_error_new_thread_unavailable">تعذر بدء المحادثة الجديدة.</string>
+    <string name="chat_error_composer_changed">تغيرت الرسالة أثناء الإرسال. راجعها وأرسلها مرة أخرى.</string>
+    <string name="chat_error_thread_working">انتظر حتى تنتهي المحادثة، ثم حاول مرة أخرى.</string>
+    <string name="chat_error_attachment_access">لا يمكن إرسال هذه المرفقات عبر هذا الاتصال. أزلها وحاول مرة أخرى.</string>
+    <string name="chat_error_storage">تعذر حفظ الرسالة على هذا الجهاز.</string>
 </resources>

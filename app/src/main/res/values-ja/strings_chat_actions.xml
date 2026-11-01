@@ -4,4 +4,14 @@
     <string name="chat_fork">この応答から分岐</string>
     <string name="chat_merge_back">元のスレッドに統合</string>
     <string name="chat_thread_actions">スレッドの操作</string>
+    <string name="chat_error_action_failed">この操作を完了できませんでした（%1$s）。</string>
+    <string name="chat_error_connection_changed">接続が変わりました。もう一度お試しください。</string>
+    <string name="chat_error_thread_unavailable">このスレッドはまだ準備できていません。もう一度お試しください。</string>
+    <string name="chat_error_run_unavailable">その応答は利用できなくなりました。</string>
+    <string name="chat_error_plan_unavailable">このプランは利用できなくなりました。</string>
+    <string name="chat_error_new_thread_unavailable">新しいスレッドを開始できませんでした。</string>
+    <string name="chat_error_composer_changed">送信中にメッセージが変更されました。確認してもう一度送信してください。</string>
+    <string name="chat_error_thread_working">スレッドの完了を待ってから、もう一度お試しください。</string>
+    <string name="chat_error_attachment_access">これらの添付ファイルはこの接続では送信できません。削除してもう一度お試しください。</string>
+    <string name="chat_error_storage">メッセージをこのデバイスに保存できませんでした。</string>
 </resources>

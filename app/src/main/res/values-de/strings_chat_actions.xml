@@ -4,4 +4,14 @@
     <string name="chat_fork">Von dieser Antwort abzweigen</string>
     <string name="chat_merge_back">In den Ursprungsthread zurückführen</string>
     <string name="chat_thread_actions">Thread-Aktionen</string>
+    <string name="chat_error_action_failed">Diese Aktion konnte nicht abgeschlossen werden (%1$s).</string>
+    <string name="chat_error_connection_changed">Die Verbindung hat sich geändert. Versuche es erneut.</string>
+    <string name="chat_error_thread_unavailable">Dieser Thread ist noch nicht bereit. Versuche es erneut.</string>
+    <string name="chat_error_run_unavailable">Diese Antwort ist nicht mehr verfügbar.</string>
+    <string name="chat_error_plan_unavailable">Dieser Plan ist nicht mehr bereit.</string>
+    <string name="chat_error_new_thread_unavailable">Der neue Thread konnte nicht gestartet werden.</string>
+    <string name="chat_error_composer_changed">Die Nachricht wurde beim Senden geändert. Prüfe sie und sende sie erneut.</string>
+    <string name="chat_error_thread_working">Warte, bis der Thread fertig ist, und versuche es dann erneut.</string>
+    <string name="chat_error_attachment_access">Diese Anhänge können über diese Verbindung nicht gesendet werden. Entferne sie und versuche es erneut.</string>
+    <string name="chat_error_storage">Die Nachricht konnte nicht auf diesem Gerät gespeichert werden.</string>
 </resources>

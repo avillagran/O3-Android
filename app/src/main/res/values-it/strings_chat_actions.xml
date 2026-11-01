@@ -4,4 +4,14 @@
     <string name="chat_fork">Crea diramazione da questa risposta</string>
     <string name="chat_merge_back">Unisci al thread di origine</string>
     <string name="chat_thread_actions">Azioni del thread</string>
+    <string name="chat_error_action_failed">Impossibile completare l\'azione (%1$s).</string>
+    <string name="chat_error_connection_changed">La connessione è cambiata. Riprova.</string>
+    <string name="chat_error_thread_unavailable">Questo thread non è ancora pronto. Riprova.</string>
+    <string name="chat_error_run_unavailable">Questa risposta non è più disponibile.</string>
+    <string name="chat_error_plan_unavailable">Questo piano non è più pronto.</string>
+    <string name="chat_error_new_thread_unavailable">Impossibile avviare il nuovo thread.</string>
+    <string name="chat_error_composer_changed">Il messaggio è cambiato durante l\'invio. Controllalo e invialo di nuovo.</string>
+    <string name="chat_error_thread_working">Attendi la fine del thread, poi riprova.</string>
+    <string name="chat_error_attachment_access">Questi allegati non possono essere inviati con questa connessione. Rimuovili e riprova.</string>
+    <string name="chat_error_storage">Impossibile salvare il messaggio su questo dispositivo.</string>
 </resources>

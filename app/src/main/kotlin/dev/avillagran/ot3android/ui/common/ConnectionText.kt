@@ -25,7 +25,11 @@ import kotlinx.coroutines.delay
  * and never carry credentials, so the generic case may show one.
  */
 @Composable
-fun errorText(code: String): String = when {
+fun errorText(code: String): String = connectionErrorText(code) ?: stringResource(R.string.connect_error_generic, code)
+
+/** The message of a connection error code; null for a code that is not about connecting. */
+@Composable
+fun connectionErrorText(code: String): String? = when {
     code == "invalid_endpoint" -> stringResource(R.string.connect_error_invalid_endpoint)
     code == "unreachable" || code == "rpc_connection_failed" -> stringResource(R.string.connect_error_unreachable)
     code == "unauthorized" -> stringResource(R.string.connect_error_unauthorized)
@@ -37,7 +41,7 @@ fun errorText(code: String): String = when {
     code == "subscription_limit" -> stringResource(R.string.connect_error_subscription_limit)
     code == ConnectionSupervisor.INTERNAL_ERROR -> stringResource(R.string.connect_error_internal)
     code.startsWith("http_") -> stringResource(R.string.connect_error_http, code.removePrefix("http_"))
-    else -> stringResource(R.string.connect_error_generic, code)
+    else -> null
 }
 
 /**

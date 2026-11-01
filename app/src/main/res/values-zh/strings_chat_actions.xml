@@ -4,4 +4,14 @@
     <string name="chat_fork">从此回复分叉</string>
     <string name="chat_merge_back">合并回源会话</string>
     <string name="chat_thread_actions">会话操作</string>
+    <string name="chat_error_action_failed">无法完成此操作（%1$s）。</string>
+    <string name="chat_error_connection_changed">连接已更改。请重试。</string>
+    <string name="chat_error_thread_unavailable">此会话尚未就绪。请重试。</string>
+    <string name="chat_error_run_unavailable">该回复已不可用。</string>
+    <string name="chat_error_plan_unavailable">此计划已不再就绪。</string>
+    <string name="chat_error_new_thread_unavailable">无法启动新会话。</string>
+    <string name="chat_error_composer_changed">消息在发送时发生了更改。请检查后重新发送。</string>
+    <string name="chat_error_thread_working">请等待会话完成后重试。</string>
+    <string name="chat_error_attachment_access">无法通过此连接发送这些附件。请移除后重试。</string>
+    <string name="chat_error_storage">无法将消息保存到此设备。</string>
 </resources>

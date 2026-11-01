@@ -20,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** A message for the snackbar. */
 sealed interface ThreadNotice {
@@ -189,8 +191,8 @@ class ThreadViewModel(
         }
     }
 
-    private suspend fun verifyAttachmentAuthority() {
-        val authority = cacheAuthority() ?: error("attachment_authority_unavailable")
+    private suspend fun verifyAttachmentAuthority(required: Boolean = true) {
+        val authority = cacheAuthority() ?: if (required) error("attachment_authority_unavailable") else return
         val previous = attachmentAuthority
         check(previous == authority || (attachmentCommand == null && attachmentDraft.value.none { it.descriptor != null })) { "attachment_authority_changed" }
         attachmentAuthority = authority
@@ -334,19 +336,13 @@ class ThreadViewModel(
         local.update { it.copy(queueBusy = true) }
         appScope.launch(kotlinx.coroutines.Dispatchers.Main.immediate) {
             try {
-                verifyAttachmentAuthority()
+                // Only uploaded descriptors and a resumed command need this credential to be readable.
+                verifyAttachmentAuthority(required = pending != null || attachmentDraft.value.isNotEmpty())
                 var args = pending?.let { org.json.JSONObject(it) } ?: MessageSender.messageCommand("ot3a-" + java.util.UUID.randomUUID(),
                     "ot3a-" + java.util.UUID.randomUUID(), threadId, state.value.draft, state.value.modelSelection)
                     .put("attachments", org.json.JSONArray(attachmentDraft.value.map { org.json.JSONObject(it.descriptor!!) }))
                 if (pending == null) {
-                    sharedClear = sharedDraftSynchronizer?.let { sync ->
-                        val source = state.value.composerScope ?: error("draft_scope_unavailable")
-                        val metadata = org.json.JSONArray(attachmentDraft.value.map { attachment ->
-                            val descriptor = org.json.JSONObject(attachment.descriptor!!)
-                            org.json.JSONObject().put("id", descriptor.getString("id")).put("name", descriptor.getString("name")).put("sourceEnvironment", source.environment)
-                        })
-                        checkNotNull(sync.submitted(args.optString("text"), metadata)) { "draft_conflict" }.put("authority", sync.repository.authority)
-                    }
+                    sharedClear = captureSharedClear(args.optString("text"))
                     val preferences = clientPreferences?.settings?.first()
                     var delivery = if (state.value.view.activeRunId == null) "auto" else if ((state.value.view.timeline?.optJSONArray("approvals")?.length() ?: 0) > 0) "steer" else sharedDeliveryMode ?: preferences?.optString("followUpBehavior", "queue") ?: "queue"
                     if (oppositeOnce && delivery != "auto") delivery = if (delivery == "queue") "steer" else "queue"
@@ -360,14 +356,7 @@ class ThreadViewModel(
                 if (outbox.find(id) == null) outbox.add(environmentId, threadId, id, args.toString())
                 val result = sender.retry(transport(), id)
                 if (result is SendResult.Accepted) {
-                    sharedClear?.let { saved ->
-                        val repository = sharedDraftRepository
-                        if (repository != null && saved.optString("authority") == repository.authority) {
-                            val command = org.json.JSONObject(saved.toString()).apply { remove("authority") }
-                            repository.stage(command, command.getString("baseCursor"), identity = "send-" + args.getString("commandId"))
-                            sharedClear = null
-                        }
-                    }
+                    stageSharedClear(args.getString("commandId"))
                     args.optString("acceptedInteractionMode").takeIf { it in setOf("plan", "default") }?.let { chosenInteraction.value = it }
                     attachmentDraft.value = emptyList(); attachmentCommand = null; attachmentPending.value = null
                     persistAttachments()
@@ -376,10 +365,45 @@ class ThreadViewModel(
                 }
                 onResult(result)
             } catch (error: Exception) {
+                if (error is CancellationException) throw error
                 onChatError(error)
-                if (error is kotlinx.coroutines.CancellationException) throw error
             } finally { local.update { it.copy(queueBusy = false) } }
         }
+    }
+
+    /**
+     * The clear command for the authority's copy of this draft, or null. The authority is an
+     * optional peer, unrelated to this thread's host: a send never waits for it or fails with
+     * it. Without a capture the emptied editor still clears the draft as an ordinary edit.
+     * A blocked native call cannot be cancelled, so the capture runs apart from the send.
+     */
+    private suspend fun captureSharedClear(text: String): org.json.JSONObject? {
+        val sync = sharedDraftSynchronizer ?: return null
+        val source = state.value.composerScope ?: return null
+        val capture = appScope.async {
+            try {
+                val metadata = org.json.JSONArray(attachmentDraft.value.map { attachment ->
+                    val descriptor = org.json.JSONObject(attachment.descriptor!!)
+                    org.json.JSONObject().put("id", descriptor.getString("id")).put("name", descriptor.getString("name")).put("sourceEnvironment", source.environment)
+                })
+                sync.submitted(text, metadata)?.put("authority", sync.repository.authority)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { null }
+        }
+        return withTimeoutOrNull(SHARED_CLEAR_WINDOW_MS) { capture.await() } ?: run { capture.cancel(); null }
+    }
+
+    /** The message is already accepted, so bookkeeping for the optional authority cannot fail it. */
+    private suspend fun stageSharedClear(commandId: String) {
+        val saved = sharedClear ?: return
+        val repository = sharedDraftRepository ?: return
+        if (saved.optString("authority") != repository.authority) return
+        try {
+            val command = org.json.JSONObject(saved.toString()).apply { remove("authority") }
+            repository.stage(command, command.getString("baseCursor"), identity = "send-$commandId")
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { }
+        sharedClear = null
     }
 
     /** Read fresh provider policy; a cached UI gate never authorizes a command. */
@@ -395,11 +419,12 @@ class ThreadViewModel(
         val thread = projection?.optJSONObject("thread")
         val mode = dev.avillagran.ot3android.core.composer.ChatCommands(live).mode(
             clientPreferences?.settings?.first()?.optBoolean("planModeEnabled") == true,
-            provider, chosenInteraction.value ?: thread?.optString("interactionMode", "default") ?: "default")
+            provider, chosenInteraction.value ?: thread?.optString("interactionMode")?.takeIf { it == "plan" } ?: "default")
         val access = dev.avillagran.ot3android.core.home.ThreadManagement.access(catalog, live.authSession())
         mode.put("canOperate", access.canWrite && thread?.optBoolean("providerSubagent") != true &&
             thread?.optString("relationshipToParent") != "subagent" &&
             state.value.view.timeline?.optJSONObject("threadState")?.optBoolean("providerSubagent") != true)
+        mode.put("providerKnown", provider != null)
         check(transport() === live) { "connection_changed" }
         planControls.value = mode
         return mode
@@ -426,7 +451,7 @@ class ThreadViewModel(
     }
 
     private fun onChatError(error: Exception) {
-        local.update { it.copy(notice = ThreadNotice.Failed((error as? dev.avillagran.t3.T3Exception)?.code ?: "chat_action_unavailable")) }
+        local.update { it.copy(notice = chatFailure(error)) }
     }
 
     fun followUpPlan(plan: org.json.JSONObject, newThread: Boolean) {
@@ -434,11 +459,22 @@ class ThreadViewModel(
         dispatchAttachments(newThread = newThread, plan = org.json.JSONObject(plan.toString()))
     }
 
+    /** Plan policy is optional metadata for an ordinary message: the host still authorizes it. */
     private suspend fun prepareChatCommand(message: org.json.JSONObject, newThread: Boolean, plan: org.json.JSONObject?): org.json.JSONObject {
-        val live = transport() ?: error("not_connected")
-        if (plan == null && !newThread && chosenInteraction.value == null &&
+        if (plan != null || newThread) return chatSteps(message, newThread, plan)
+        if (chosenInteraction.value == null &&
             session.projectionSnapshot()?.optJSONObject("thread")?.optString("interactionMode") != "plan") return message
-        val gate = refreshPlanControls()
+        return try {
+            val gate = refreshPlanControls()
+            if (gate.optBoolean("providerKnown") && gate.optBoolean("canOperate")) chatSteps(message, false, null, gate) else message
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { message }
+    }
+
+    private suspend fun chatSteps(message: org.json.JSONObject, newThread: Boolean, plan: org.json.JSONObject?,
+        policy: org.json.JSONObject? = null): org.json.JSONObject {
+        val live = transport() ?: error("not_connected")
+        val gate = policy ?: refreshPlanControls()
         check(gate.optBoolean("canOperate")) { "permission_denied" }
         val projection = if (plan != null) live.boundedThread(threadId).getJSONObject("projection") else session.projectionSnapshot() ?: error("thread_unavailable")
         val source = projection.getJSONObject("thread")
@@ -1247,5 +1283,8 @@ internal fun queueEditArguments(row: org.json.JSONObject): org.json.JSONObject =
     .apply { row.optJSONObject("context")?.let { put("context", it) } }
 
 private val attachmentImportLock = kotlinx.coroutines.sync.Mutex()
+
+/** A slow authority must not delay the send by more than this. */
+private const val SHARED_CLEAR_WINDOW_MS = 3_000L
 
  data class CheckpointUi(val canRestoreFiles: Boolean = false, val open: Boolean = false, val busy: Boolean = false, val failed: Boolean = false, val preview: String? = null, val record: String? = null)
