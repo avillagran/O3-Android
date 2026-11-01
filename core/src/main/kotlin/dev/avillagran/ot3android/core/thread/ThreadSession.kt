@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
@@ -164,7 +166,8 @@ class ThreadSession(
             var blockedConnection: Connection? = null
             try {
                 // Credential withdrawal must be observed even while the connection stays null.
-                combine(connection, cacheAuthorityUpdates ?: flowOf(null)) { current, _ -> current }
+                combine(connection.onStart { emit(null) }.distinctUntilChanged(),
+                    (cacheAuthorityUpdates ?: flowOf(null)).onStart { emit(null) }.distinctUntilChanged()) { current, _ -> current }
                     .collectLatest { current ->
                     if (cacheEnabled) {
                         val authority = cacheAuthority()
@@ -176,11 +179,13 @@ class ThreadSession(
                                 clearCachedProjection()
                             }
                             projectionAuthority = authority
-                            initialized = true
                             try { restoreCache(authority) } catch (_: java.io.IOException) {
                                 cacheLease?.let { cache?.close(it) }
                                 cacheLease = null
                             }
+                            // collectLatest may cancel disk restoration on a connection update.
+                            // Retry it until restoration actually completed.
+                            initialized = true
                         }
                         if (current != null) lastConnection = current
                         if (authority == null || (current != null && current == blockedConnection)) {

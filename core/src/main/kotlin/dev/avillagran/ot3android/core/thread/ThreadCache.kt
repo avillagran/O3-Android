@@ -22,6 +22,7 @@ class ThreadCache(
     private val mutex = Mutex()
     private val pinned = mutableMapOf<String, Set<String>>()
     private var environments: Set<String>? = null
+    private val sidebarKeys = mutableSetOf<String>()
     data class Usage(val bytes: Long, val limit: Long, val entries: Int)
     suspend fun usage(): Usage = locked {
         val files = directory.listFiles()?.filter { it.extension == "json" }.orEmpty()
@@ -39,6 +40,8 @@ class ThreadCache(
     suspend fun retainEnvironments(ids: Set<String>) = locked {
         val removed = environments.orEmpty() - ids
         environments = ids
+        sidebarKeys.clear()
+        sidebarKeys.addAll(ids.map { key(it, SIDEBAR) })
         if (removed.isNotEmpty()) owners.clear() // Invalidate in-flight writes when the environment set changes.
         directory.listFiles()?.filter { it.extension == "json" }?.forEach { file ->
             val record = readRecord(file)
@@ -57,6 +60,7 @@ class ThreadCache(
     }
 
     suspend fun open(environment: String, thread: String, authority: String): Lease? = locked {
+        sidebarKeys.add(key(environment, SIDEBAR))
         prune()
         if (environments?.contains(environment) == false) return@locked null
         if (thread != SIDEBAR && allowed[environment]?.contains(thread) == false) return@locked null
@@ -155,9 +159,10 @@ class ThreadCache(
         var total = 0L
         var count = 0
         val pinnedKeys = pinned.values.flatten().toSet()
+        // Startup indexes precede pinned transcripts within the same byte/entry/age limits.
         directory.listFiles()?.filter { it.extension == "json" }?.sortedWith(compareByDescending<File> {
-            it.nameWithoutExtension in pinnedKeys
-        }.thenByDescending { it.lastModified() })?.forEach { file ->
+            it.nameWithoutExtension in sidebarKeys
+        }.thenByDescending { it.nameWithoutExtension in pinnedKeys }.thenByDescending { it.lastModified() })?.forEach { file ->
             val size = file.length()
             if (clock() - file.lastModified() > maxAgeMs || size > maxEntryBytes || total + size > maxBytes || count >= maxEntries) file.delete()
             else { total += size; count++ }

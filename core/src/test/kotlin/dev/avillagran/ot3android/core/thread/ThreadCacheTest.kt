@@ -12,6 +12,29 @@ class ThreadCacheTest {
     private fun snapshot(value: String = "hello") = JSONObject().put("snapshotSequence", 10)
         .put("projection", JSONObject().put("value", value))
 
+    @Test fun sidebarSurvivesPinnedTranscriptPressureAcrossRestartWithinTheSameBudget() = runBlocking {
+        var now = 1_000L
+        val directory = root.newFolder()
+        val cache = ThreadCache(directory, maxEntries = 3, clock = { now++ })
+        for (env in listOf("a", "b")) {
+            cache.writeSidebar(env, "scope", JSONObject().put("threads", org.json.JSONArray()))
+            cache.pin(env, setOf("pinned"))
+        }
+        for (env in listOf("a", "b")) {
+            val lease = cache.open(env, "pinned", "scope")!!
+            cache.write(lease, snapshot())
+        }
+        assertEquals(3, cache.usage().entries)
+        val restarted = ThreadCache(directory, maxEntries = 3, clock = { now++ })
+        restarted.retainEnvironments(setOf("a", "b"))
+        restarted.pin("a", setOf("pinned")); restarted.pin("b", setOf("pinned"))
+        restarted.write(restarted.open("a", "new", "scope")!!, snapshot())
+        assertNotNull(restarted.readSidebar("a", "scope"))
+        assertNotNull(restarted.readSidebar("b", "scope"))
+        assertEquals(3, restarted.usage().entries)
+        assertTrue(restarted.usage().bytes <= restarted.usage().limit)
+    }
+
     @Test fun restartScopeAndAuthorityAreIsolated() = runBlocking {
         val directory = root.newFolder()
         val first = ThreadCache(directory)

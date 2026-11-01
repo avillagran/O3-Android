@@ -163,7 +163,9 @@ object HomeStateBuilder {
             swipe = SwipeActions.None,
             pullRequestBadge = row.raw.optJSONObject("pullRequestBadge"),
         )
-        return homeRow.copy(swipe = ThreadActions.swipe(homeRow, input.actions(row.environmentId)))
+        val live = input.environments.any { it.id == row.environmentId && it.connection is ConnectionState.Connected }
+        return homeRow.copy(swipe = ThreadActions.swipe(homeRow,
+            if (live) input.actions(row.environmentId) else ActionContext.Interim))
     }
 
     /**

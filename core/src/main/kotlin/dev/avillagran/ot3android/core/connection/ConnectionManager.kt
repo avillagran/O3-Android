@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -50,6 +52,7 @@ class ConnectionManager(
 
     /** Serializes creating and forgetting supervisors, which both read the repository. */
     private val createLock = Mutex()
+    private val cacheWriters = mutableMapOf<String, Job>()
 
     /** Connection state per local environment id, for supervisors created so far. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -69,8 +72,8 @@ class ConnectionManager(
                 // Read under the lock, so a forget() running now cannot leave a supervisor behind.
                 val environment = repository.find(environmentId) ?: return@withLock null
                 val created = create(environment)
+                val authority = try { repository.cacheAuthority(environmentId) } catch (_: java.io.IOException) { null }
                 try {
-                    val authority = repository.cacheAuthority(environmentId)
                     if (authority != null) {
                         val saved = cache?.readSidebar(environmentId, authority)
                         if (saved != null && repository.cacheAuthority(environmentId) == authority)
@@ -79,6 +82,21 @@ class ConnectionManager(
                 } catch (_: java.io.IOException) { /* Disposable cache; connection proceeds. */ }
                 created.also { created ->
                     synchronized(this) { _supervisors.update { it + (environmentId to created) } }
+                    // Persist each host independently of UI subscriptions, other hosts and
+                    // sidebar.view. A failed presentation must not prevent the next cold start.
+                    if (cache != null && authority != null) cacheWriters[environmentId] = scope.launch {
+                        combine(created.shell, created.connection) { shell, live -> shell to live }
+                            .collect { (shell, live) ->
+                                if (shell == null || live == null) return@collect
+                                try {
+                                    if (repository.cacheAuthority(environmentId) != authority) return@collect
+                                    val body = org.json.JSONObject().put("snapshotSequence", shell.sequence)
+                                        .put("projects", org.json.JSONArray(shell.projects.map { it.raw }))
+                                        .put("threads", org.json.JSONArray(shell.threads.take(2000).map { it.raw }))
+                                    cache.writeSidebar(environmentId, authority, body)
+                                } catch (_: java.io.IOException) { /* Disposable cache. */ }
+                            }
+                    }
                 }
             }
         }
@@ -133,6 +151,7 @@ class ConnectionManager(
      */
     suspend fun forget(environmentId: String) {
         val removed = createLock.withLock {
+            cacheWriters.remove(environmentId)?.cancelAndJoin()
             synchronized(this) {
                 paused.remove(environmentId)
                 _supervisors.value[environmentId]?.also { _supervisors.update { it - environmentId } }
