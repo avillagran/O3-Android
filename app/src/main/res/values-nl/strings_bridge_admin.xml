@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Gateway uitschakelen</string>
     <string name="bridge_admin_revoke">Toegang intrekken</string>
     <string name="bridge_admin_share">Uitnodiging delen</string>
+    <string name="bridge_peer_drafts">Conceptautoriteit (drafts-toestemming)</string>
+    <string name="bridge_peer_no_drafts">Geen drafts-toestemming</string>
+    <string name="bridge_peer_managed">Beheer toegestaan</string>
+    <string name="bridge_peer_unmanaged">Geen beheertoestemming</string>
+    <string name="bridge_peer_selected">Geselecteerde conceptautoriteit</string>
 </resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Dyktuj</string>
+    <string name="capture_image">Wybierz zrzut ekranu</string>
+    <string name="capture_photo">Zrób zdjęcie</string>
+    <string name="capture_failed">Przechwytywanie nie powiodło się lub szkic się zmienił. Spróbuj ponownie.</string>
+    <string name="capture_speech_consent">Usługa mowy Androida przetwarza dźwięk z mikrofonu. Preferowane jest rozpoznawanie na urządzeniu; inne usługi mogą używać sieci. Sprawdź tekst przed wstawieniem.</string>
+    <string name="capture_listening">Słuchanie…</string>
+    <string name="capture_review">Sprawdź tekst</string>
+    <string name="capture_start">Rozpocznij dyktowanie</string>
+    <string name="capture_insert">Wstaw do szkicu</string>
+    <string name="capture_diagram_zoom">Powiększ diagram</string>
+    <string name="capture_diagram_failed">Nie udało się wyrenderować diagramu w granicach limitów. Wyświetlono kod.</string>
+    <string name="capture_title">Przechwytywanie na telefonie</string>
+</resources>

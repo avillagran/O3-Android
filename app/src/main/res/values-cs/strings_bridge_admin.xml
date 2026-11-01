@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Vypnout bránu</string>
     <string name="bridge_admin_revoke">Odvolat přístup</string>
     <string name="bridge_admin_share">Sdílet pozvánku</string>
+    <string name="bridge_peer_drafts">Autorita konceptů (oprávnění drafts)</string>
+    <string name="bridge_peer_no_drafts">Bez oprávnění drafts</string>
+    <string name="bridge_peer_managed">Správa povolena</string>
+    <string name="bridge_peer_unmanaged">Bez oprávnění ke správě</string>
+    <string name="bridge_peer_selected">Vybraná autorita konceptů</string>
 </resources>

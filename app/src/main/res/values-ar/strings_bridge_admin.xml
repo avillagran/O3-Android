@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">تعطيل البوابة</string>
     <string name="bridge_admin_revoke">إلغاء الوصول</string>
     <string name="bridge_admin_share">مشاركة الدعوة</string>
+    <string name="bridge_peer_drafts">جهة المسودات (إذن drafts)</string>
+    <string name="bridge_peer_no_drafts">بدون إذن drafts</string>
+    <string name="bridge_peer_managed">الإدارة مسموحة</string>
+    <string name="bridge_peer_unmanaged">بدون إذن إدارة</string>
+    <string name="bridge_peer_selected">جهة المسودات المحددة</string>
 </resources>

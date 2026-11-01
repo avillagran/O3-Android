@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Disable gateway</string>
     <string name="bridge_admin_revoke">Revoke access</string>
     <string name="bridge_admin_share">Share invitation</string>
+    <string name="bridge_peer_drafts">Draft authority (drafts grant)</string>
+    <string name="bridge_peer_no_drafts">No drafts grant</string>
+    <string name="bridge_peer_managed">Management granted</string>
+    <string name="bridge_peer_unmanaged">No management grant</string>
+    <string name="bridge_peer_selected">Selected draft authority</string>
 </resources>

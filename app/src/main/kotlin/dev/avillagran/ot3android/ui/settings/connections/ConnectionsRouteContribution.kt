@@ -29,6 +29,7 @@ object ConnectionsRouteContribution {
         onEnvironments: () -> Unit,
         onPair: () -> Unit,
         identity: dev.avillagran.ot3android.core.bridge.BridgeDeviceIdentity? = null,
+        onAdminister: () -> Unit = {},
     ) {
         Scaffold(topBar = {
             TopAppBar(title = { Text(stringResource(R.string.connections_title)) }, navigationIcon = {
@@ -48,6 +49,7 @@ object ConnectionsRouteContribution {
                     }
                 }
                 Text(stringResource(R.string.connections_host_authority))
+                TextButton(onClick = onAdminister, modifier = Modifier.testTag("connections_administration")) { Text(stringResource(R.string.bridge_admin_title)) }
             }
         }
     }

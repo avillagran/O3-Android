@@ -272,8 +272,12 @@ class ThreadViewModel(
         persistAttachments()
     }
     fun importAttachment(context: android.content.Context, uri: String) {
-        if (attachmentStorageError.value || local.value.queueBusy || !state.value.connected || state.value.sending || attachmentPending.value != null || attachmentDraft.value.size >= 100) return
-        if (checkpoint.value.busy || checkpoint.value.record?.let { org.json.JSONObject(it).optString("state") !in setOf("complete", "failed", "reviewed") } == true) return
+        fun clearCapture() {
+            val capture = android.net.Uri.parse(uri)
+            if (capture.authority == "${context.packageName}.phone-capture") runCatching { context.contentResolver.delete(capture, null, null) }
+        }
+        if (attachmentStorageError.value || local.value.queueBusy || !state.value.connected || state.value.sending || attachmentPending.value != null || attachmentDraft.value.size >= 100) { clearCapture(); return }
+        if (checkpoint.value.busy || checkpoint.value.record?.let { org.json.JSONObject(it).optString("state") !in setOf("complete", "failed", "reviewed") } == true) { clearCapture(); return }
         val id = java.util.UUID.randomUUID().toString()
         attachmentDraft.value += dev.avillagran.ot3android.core.composer.ComposerAttachment(id, "attachment", dev.avillagran.ot3android.core.composer.UploadStatus.Uploading)
         persistAttachments()
@@ -287,13 +291,16 @@ class ThreadViewModel(
             } catch (error: Exception) {
                 attachmentDraft.value = attachmentDraft.value.map { if (it.id == id) it.copy(status = dev.avillagran.ot3android.core.composer.UploadStatus.Failed) else it }
                 if (error is kotlinx.coroutines.CancellationException) throw error
-            } finally { persistAttachments() }
+            } finally {
+                clearCapture()
+                persistAttachments()
+            }
         }
     }
     fun dispatchAttachments(oppositeOnce: Boolean = false) {
         if (attachmentStorageError.value || local.value.queueBusy || state.value.composer.sending || local.value.respondingRequest != null || !state.value.connected || state.value.view.stale || state.value.queueEdit != null) return
         val pending = attachmentCommand
-        if (pending == null && (!state.value.unconfirmed.isEmpty() || (attachmentDraft.value.isEmpty() && state.value.draft.isBlank()) || attachmentDraft.value.any { it.descriptor == null })) return
+        if (pending == null && (!state.value.unconfirmed.isEmpty() || (attachmentDraft.value.isEmpty() && state.value.draft.isBlank()) || attachmentDraft.value.any { it.status != dev.avillagran.ot3android.core.composer.UploadStatus.Ready || it.descriptor.isNullOrBlank() })) return
         local.update { it.copy(queueBusy = true) }
         appScope.launch(kotlinx.coroutines.Dispatchers.Main.immediate) {
             try {
@@ -715,6 +722,7 @@ class ThreadViewModel(
     fun send() {
         val current = state.value
         if (!current.connected || current.view.stale || local.value.queueBusy || local.value.respondingRequest != null) return
+        if (attachmentDraft.value.isNotEmpty() || attachmentPending.value != null) { dispatchAttachments(); return }
         val queuedEdit = local.value.queueEdit
         if (queuedEdit != null) {
             queueCommand(queueEditArguments(org.json.JSONObject(queuedEdit)))

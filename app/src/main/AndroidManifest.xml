@@ -8,9 +8,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- QR scanning only; asked for when the scanner opens. -->
+    <!-- QR scanning and requested photos; permission is asked for when either action opens. -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <queries><intent><action android:name="android.speech.RecognitionService" /></intent></queries>
+
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- Arbitrary public HTTP image hosts require cleartext opt-in for Desktop parity.
@@ -34,6 +38,10 @@
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/clipboard_image_paths" />
+        </provider>
+        <provider android:name=".ui.thread.composer.CapturePhotoProvider"
+            android:authorities="${applicationId}.phone-capture" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/phone_capture_paths" />
         </provider>
         <!-- User-enabled local agent following is continuous monitoring, not a bounded data transfer. -->
         <service android:name=".notifications.ThreadFollowService" android:exported="false" android:foregroundServiceType="specialUse">

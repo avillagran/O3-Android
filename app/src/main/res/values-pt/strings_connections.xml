@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Este convite pode permitir acesso a todos os hosts. Confira o escopo com o emissor antes de continuar.</string>
     <string name="connections_peer_confirm">Verifiquei este ID exato e aceito o escopo de acesso.</string>
     <string name="connections_pair_pending">A aprovação ocorre no host autorizado. Após a aprovação, importe o convite novamente.</string>
-    <string name="connections_host_authority">Este SDK móvel não oferece administração. Gerencie rotas, compartilhamento, clientes, nuvem, rede, publicação, consentimento, gateways, relay e instalação no host autorizado.</string>
+    <string name="connections_host_authority">Gerencie conexões na administração OmaBridge, também disponível em Ambientes. Ações remotas exigem a permissão correspondente.</string>
     <string name="connections_local_id">ID deste dispositivo</string>
     <string name="connections_bridge_id">ID da ponte selecionada</string>
 </resources>

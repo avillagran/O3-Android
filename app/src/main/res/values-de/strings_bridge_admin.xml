@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Gateway deaktivieren</string>
     <string name="bridge_admin_revoke">Zugriff widerrufen</string>
     <string name="bridge_admin_share">Einladung teilen</string>
+    <string name="bridge_peer_drafts">Entwurfsautorität (drafts-Berechtigung)</string>
+    <string name="bridge_peer_no_drafts">Keine drafts-Berechtigung</string>
+    <string name="bridge_peer_managed">Verwaltung erlaubt</string>
+    <string name="bridge_peer_unmanaged">Keine Verwaltungsberechtigung</string>
+    <string name="bridge_peer_selected">Ausgewählte Entwurfsautorität</string>
 </resources>

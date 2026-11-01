@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Вимкнути шлюз</string>
     <string name="bridge_admin_revoke">Відкликати доступ</string>
     <string name="bridge_admin_share">Поділитися запрошенням</string>
+    <string name="bridge_peer_drafts">Центр чернеток (дозвіл drafts)</string>
+    <string name="bridge_peer_no_drafts">Немає дозволу drafts</string>
+    <string name="bridge_peer_managed">Керування дозволено</string>
+    <string name="bridge_peer_unmanaged">Немає дозволу на керування</string>
+    <string name="bridge_peer_selected">Вибраний центр чернеток</string>
 </resources>

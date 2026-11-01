@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Diktieren</string>
+    <string name="capture_image">Screenshot auswählen</string>
+    <string name="capture_photo">Foto aufnehmen</string>
+    <string name="capture_failed">Aufnahme fehlgeschlagen oder Entwurf geändert. Erneut versuchen.</string>
+    <string name="capture_speech_consent">Der Android-Sprachdienst verarbeitet das Mikrofon-Audio. Lokale Erkennung wird bevorzugt; andere Dienste können das Netzwerk nutzen. Prüfen Sie den Text vor dem Einfügen.</string>
+    <string name="capture_listening">Aufnahme läuft…</string>
+    <string name="capture_review">Text prüfen</string>
+    <string name="capture_start">Diktat starten</string>
+    <string name="capture_insert">In Entwurf einfügen</string>
+    <string name="capture_diagram_zoom">Diagramm vergrößern</string>
+    <string name="capture_diagram_failed">Das Diagramm konnte innerhalb der Grenzen nicht gerendert werden. Quelltext wird angezeigt.</string>
+    <string name="capture_title">Telefonaufnahme</string>
+</resources>

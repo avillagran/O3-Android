@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">禁用网关</string>
     <string name="bridge_admin_revoke">撤销访问</string>
     <string name="bridge_admin_share">分享邀请</string>
+    <string name="bridge_peer_drafts">草稿授权方（drafts 授权）</string>
+    <string name="bridge_peer_no_drafts">无 drafts 授权</string>
+    <string name="bridge_peer_managed">已获管理授权</string>
+    <string name="bridge_peer_unmanaged">无管理授权</string>
+    <string name="bridge_peer_selected">已选择的草稿授权方</string>
 </resources>

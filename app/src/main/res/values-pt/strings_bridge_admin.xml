@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Desativar gateway</string>
     <string name="bridge_admin_revoke">Revogar acesso</string>
     <string name="bridge_admin_share">Compartilhar convite</string>
+    <string name="bridge_peer_drafts">Autoridade de rascunhos (permissão drafts)</string>
+    <string name="bridge_peer_no_drafts">Sem permissão drafts</string>
+    <string name="bridge_peer_managed">Administração permitida</string>
+    <string name="bridge_peer_unmanaged">Sem permissão de administração</string>
+    <string name="bridge_peer_selected">Autoridade de rascunhos selecionada</string>
 </resources>

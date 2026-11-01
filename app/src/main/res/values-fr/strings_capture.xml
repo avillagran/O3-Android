@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Dicter</string>
+    <string name="capture_image">Choisir une capture</string>
+    <string name="capture_photo">Prendre une photo</string>
+    <string name="capture_failed">La capture a échoué ou le brouillon a changé. Réessayez.</string>
+    <string name="capture_speech_consent">Le service vocal Android traite le son du microphone. La reconnaissance locale est privilégiée ; les autres services peuvent utiliser le réseau. Vérifiez le texte avant de l’insérer.</string>
+    <string name="capture_listening">Écoute…</string>
+    <string name="capture_review">Vérifier le texte</string>
+    <string name="capture_start">Démarrer la dictée</string>
+    <string name="capture_insert">Insérer dans le brouillon</string>
+    <string name="capture_diagram_zoom">Agrandir le diagramme</string>
+    <string name="capture_diagram_failed">Le diagramme dépasse les limites de rendu. Le code source est affiché.</string>
+    <string name="capture_title">Capture sur le téléphone</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Dikte et</string>
+    <string name="capture_image">Ekran görüntüsü seç</string>
+    <string name="capture_photo">Fotoğraf çek</string>
+    <string name="capture_failed">Yakalama başarısız oldu veya taslak değişti. Yeniden deneyin.</string>
+    <string name="capture_speech_consent">Android konuşma hizmeti mikrofon sesini işler. Cihazda tanıma tercih edilir; diğer hizmetler ağı kullanabilir. Eklemeden önce metni inceleyin.</string>
+    <string name="capture_listening">Dinleniyor…</string>
+    <string name="capture_review">Metni incele</string>
+    <string name="capture_start">Dikteyi başlat</string>
+    <string name="capture_insert">Taslağa ekle</string>
+    <string name="capture_diagram_zoom">Diyagramı yakınlaştır</string>
+    <string name="capture_diagram_failed">Diyagram sınırlar içinde işlenemedi. Kaynak gösteriliyor.</string>
+    <string name="capture_title">Telefonda yakalama</string>
+</resources>

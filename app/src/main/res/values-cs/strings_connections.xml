@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Tato pozvánka může umožnit přístup ke všem hostitelům. Před pokračováním ověř rozsah u vydavatele.</string>
     <string name="connections_peer_confirm">Ověřil jsem toto přesné ID a přijímám rozsah přístupu.</string>
     <string name="connections_pair_pending">Schválení probíhá na oprávněném hostiteli. Po schválení znovu importuj pozvánku.</string>
-    <string name="connections_host_authority">Toto mobilní SDK nenabízí správu. Spravuj trasy, sdílení, klienty, cloud, síť, publikování, souhlas, brány, přenos a instalaci na oprávněném hostiteli.</string>
+    <string name="connections_host_authority">Spravujte připojení ve správě OmaBridge, dostupné také v prostředích. Vzdálené akce vyžadují příslušné oprávnění.</string>
     <string name="connections_local_id">ID tohoto zařízení</string>
     <string name="connections_bridge_id">ID vybraného mostu</string>
 </resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Dikter</string>
+    <string name="capture_image">Velg skjermbilde</string>
+    <string name="capture_photo">Ta bilde</string>
+    <string name="capture_failed">Opptaket mislyktes eller utkastet ble endret. Prøv igjen.</string>
+    <string name="capture_speech_consent">Androids taletjeneste behandler mikrofonlyden. Gjenkjenning på enheten foretrekkes; andre tjenester kan bruke nettverket. Se gjennom teksten før innsetting.</string>
+    <string name="capture_listening">Lytter…</string>
+    <string name="capture_review">Se gjennom tekst</string>
+    <string name="capture_start">Start diktering</string>
+    <string name="capture_insert">Sett inn i utkast</string>
+    <string name="capture_diagram_zoom">Forstørr diagram</string>
+    <string name="capture_diagram_failed">Diagrammet kunne ikke gjengis innenfor grensene. Kildekoden vises.</string>
+    <string name="capture_title">Opptak på telefonen</string>
+</resources>

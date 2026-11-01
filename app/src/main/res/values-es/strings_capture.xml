@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Dictar</string>
+    <string name="capture_image">Elegir captura</string>
+    <string name="capture_photo">Tomar foto</string>
+    <string name="capture_failed">La captura falló o cambió el borrador. Inténtalo de nuevo.</string>
+    <string name="capture_speech_consent">El servicio de voz de Android procesa el audio del micrófono. Se prefiere el reconocimiento en el dispositivo; otros servicios pueden usar la red. Revisa el texto antes de insertarlo.</string>
+    <string name="capture_listening">Escuchando…</string>
+    <string name="capture_review">Revisar texto</string>
+    <string name="capture_start">Iniciar dictado</string>
+    <string name="capture_insert">Insertar en borrador</string>
+    <string name="capture_diagram_zoom">Ampliar diagrama</string>
+    <string name="capture_diagram_failed">No se pudo renderizar el diagrama dentro de sus límites. Se muestra el código.</string>
+    <string name="capture_title">Captura del teléfono</string>
+</resources>

@@ -31,9 +31,10 @@ internal fun VisualCodeBlock(block: JSONObject, index: Int, streaming: Boolean =
     val code = block.optString("code")
     val language = block.optString("language")
     val kind = when (language.lowercase()) { "mermaid" -> VisualKind.Mermaid; "qml" -> VisualKind.Qml; else -> null }
+    var failed by remember(code, language) { mutableStateOf(false) }
     var preview by remember(code, language) { mutableStateOf(false) }
     val actions = LocalCodeActions.current
-    val supported = LocalVisualRenderer.current.availability != VisualAvailability.Unsupported
+    val supported = kind == VisualKind.Mermaid || LocalVisualRenderer.current.availability != VisualAvailability.Unsupported
     Surface(color = Ot3Theme.colors.surface, shape = RoundedCornerShape(10.dp)) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -41,14 +42,16 @@ internal fun VisualCodeBlock(block: JSONObject, index: Int, streaming: Boolean =
                 CopyText(code, "code_$index")
             }
             Row {
-                if (kind != null && !streaming && supported) TextButton(onClick = { preview = !preview }, modifier = Modifier.testTag("visual_toggle_$index")) {
+                if (kind != null && !streaming && supported) TextButton(onClick = { failed = false; preview = !preview }, modifier = Modifier.testTag("visual_toggle_$index")) {
                     Text(stringResource(if (preview) R.string.ot3_render_show_code else R.string.ot3_render_show_preview))
                 }
                 if (actions.run != null && block.opt("command") is String && !streaming) TextButton(onClick = { actions.run.invoke(block) }) {
                     Text(stringResource(R.string.ot3_render_run))
                 }
             }
-            if (preview && kind != null) VisualPreview(VisualRequest(kind, code, language), "code_$index")
+            if (failed) Text(stringResource(R.string.capture_diagram_failed), color = MaterialTheme.colorScheme.error)
+            if (preview && kind == VisualKind.Mermaid) OfflineMermaid(code) { failed = true; preview = false }
+            else if (preview && kind != null) VisualPreview(VisualRequest(kind, code, language), "code_$index")
             else SelectionContainer {
                 val colors = Ot3Theme.colors
                 val highlighted = remember(code, language, colors) { highlightedCode(code, language, colors.accent, colors.dim, colors.done) }

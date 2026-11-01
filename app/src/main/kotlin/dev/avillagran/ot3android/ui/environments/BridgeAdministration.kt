@@ -78,18 +78,23 @@ fun BridgeAdministration(bridge: BridgeCatalogController, onClose: () -> Unit) {
     }
     AlertDialog(onDismissRequest = onClose, title = { Text(stringResource(R.string.bridge_admin_title)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(authority, { authority = it }, label = { Text(stringResource(R.string.shared_draft_authority)) })
-            TextButton(enabled = authority.isBlank() || (authority.trim().length == 64 && authority.trim().all { it in '0'..'9' || it in 'a'..'f' }), onClick = { context.getSharedPreferences("shared-drafts", android.content.Context.MODE_PRIVATE).edit().putString("authority", authority.trim()).apply() }) { Text(stringResource(R.string.shared_draft_select)) }
             Text(stringResource(R.string.bridge_admin_local_note))
             peers.forEach { row ->
-                val id = row.optString("id", row.optString("clientId"))
-                TextButton(enabled = !busy && id.isNotBlank(), onClick = { peer = id; snapshot = null; invitation = null; invitationServices.clear(); endpoints = emptyList(); request(JSONObject().put("action", "read")) }) {
-                    Text(row.optString("name").ifBlank { id })
+                val entry = bridgePeerPresentation(row)
+                val id = entry.id
+                Column {
+                    Text(entry.name)
+                    androidx.compose.foundation.text.selection.SelectionContainer { Text(id) }
+                    Text(stringResource(if (entry.drafts) R.string.bridge_peer_drafts else R.string.bridge_peer_no_drafts))
+                    Text(stringResource(if (entry.managed) R.string.bridge_peer_managed else R.string.bridge_peer_unmanaged))
+                    TextButton(enabled = !busy && entry.managed && entry.validId, onClick = { peer = id; snapshot = null; invitation = null; invitationServices.clear(); endpoints = emptyList(); request(JSONObject().put("action", "read")) }) {
+                        Text(stringResource(R.string.bridge_admin_title))
+                    }
+                    if (entry.drafts) TextButton(enabled = !busy && entry.validId, onClick = {
+                        authority = id
+                        context.getSharedPreferences("shared-drafts", android.content.Context.MODE_PRIVATE).edit().putString("authority", id).apply()
+                    }) { Text(stringResource(if (authority == id) R.string.bridge_peer_selected else R.string.shared_draft_select)) }
                 }
-                TextButton(enabled = !busy && id.length == 64 && id.all { it in '0'..'9' || it in 'a'..'f' }, onClick = {
-                    authority = id
-                    context.getSharedPreferences("shared-drafts", android.content.Context.MODE_PRIVATE).edit().putString("authority", id).apply()
-                }) { Text(stringResource(R.string.shared_draft_select)) }
             }
             if (peer != null) {
                 Text(peer!!)
@@ -201,4 +206,16 @@ fun BridgeAdministration(bridge: BridgeCatalogController, onClose: () -> Unit) {
             }
         }, confirmButton = { TextButton(onClick = { invitation = null }) { Text(stringResource(R.string.ot3_dialog_close)) } })
     }
+}
+
+/** remote_services is the peer-advertised grant; local services grant the opposite direction.
+ * These hints only guide selection. The remote authority still authorizes every request.
+ */
+internal data class BridgePeerPresentation(val id: String, val name: String, val drafts: Boolean, val managed: Boolean) {
+    val validId: Boolean get() = id.length == 64 && id.all { it in '0'..'9' || it in 'a'..'f' }
+}
+internal fun bridgePeerPresentation(row: JSONObject): BridgePeerPresentation {
+    val grants = row.optJSONArray("remote_services")
+    return BridgePeerPresentation(row.optString("id"), row.optString("name"),
+        (0 until (grants?.length() ?: 0)).any { grants!!.optString(it) == "drafts" }, row.optBoolean("managed"))
 }

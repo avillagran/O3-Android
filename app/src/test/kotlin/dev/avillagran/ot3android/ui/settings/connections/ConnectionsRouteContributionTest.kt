@@ -20,10 +20,11 @@ class ConnectionsRouteContributionTest {
     @Test fun contributionShowsSdkIdentityAndOpensExistingDestinations() {
         var environments = 0
         var pairing = 0
+        var administration = 0
         val clientId = "a".repeat(64)
         val bridgeId = "b".repeat(64)
         rule.setContent { Ot3Theme {
-            ConnectionsRouteContribution.Content({}, { environments++ }, { pairing++ }, BridgeDeviceIdentity(clientId, bridgeId))
+            ConnectionsRouteContribution.Content({}, { environments++ }, { pairing++ }, BridgeDeviceIdentity(clientId, bridgeId), onAdminister = { administration++ })
         } }
         rule.onNodeWithTag("connections_client_id").assertTextEquals(clientId)
         rule.onNodeWithTag("connections_bridge_id").assertTextEquals(bridgeId)
@@ -31,5 +32,7 @@ class ConnectionsRouteContributionTest {
         rule.onNodeWithTag("connections_pair").performClick()
         assertEquals(1, environments)
         assertEquals(1, pairing)
+        rule.onNodeWithTag("connections_administration").performScrollTo().performClick()
+        assertEquals(1, administration)
     }
 }

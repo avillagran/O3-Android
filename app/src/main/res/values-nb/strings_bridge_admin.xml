@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Deaktiver gateway</string>
     <string name="bridge_admin_revoke">Trekk tilbake tilgang</string>
     <string name="bridge_admin_share">Del invitasjon</string>
+    <string name="bridge_peer_drafts">Utkastautoritet (drafts-tillatelse)</string>
+    <string name="bridge_peer_no_drafts">Ingen drafts-tillatelse</string>
+    <string name="bridge_peer_managed">Administrasjon tillatt</string>
+    <string name="bridge_peer_unmanaged">Ingen administrasjonstillatelse</string>
+    <string name="bridge_peer_selected">Valgt utkastautoritet</string>
 </resources>

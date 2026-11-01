@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Disattiva gateway</string>
     <string name="bridge_admin_revoke">Revoca accesso</string>
     <string name="bridge_admin_share">Condividi invito</string>
+    <string name="bridge_peer_drafts">Autorità bozze (permesso drafts)</string>
+    <string name="bridge_peer_no_drafts">Nessun permesso drafts</string>
+    <string name="bridge_peer_managed">Gestione consentita</string>
+    <string name="bridge_peer_unmanaged">Nessun permesso di gestione</string>
+    <string name="bridge_peer_selected">Autorità bozze selezionata</string>
 </resources>

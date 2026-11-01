@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Dictate</string>
+    <string name="capture_image">Choose screenshot</string>
+    <string name="capture_photo">Take photo</string>
+    <string name="capture_failed">Capture failed or the draft changed. Try again.</string>
+    <string name="capture_speech_consent">Your Android speech service processes the microphone audio. On-device recognition is preferred; other services may use the network. Review the text before inserting it.</string>
+    <string name="capture_listening">Listening…</string>
+    <string name="capture_review">Review text</string>
+    <string name="capture_start">Start dictation</string>
+    <string name="capture_insert">Insert into draft</string>
+    <string name="capture_diagram_zoom">Zoom diagram</string>
+    <string name="capture_diagram_failed">Diagram could not be rendered within its limits. Source shown.</string>
+    <string name="capture_title">Phone capture</string>
+</resources>

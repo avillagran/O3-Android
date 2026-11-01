@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Sanele</string>
+    <string name="capture_image">Valitse kuvakaappaus</string>
+    <string name="capture_photo">Ota valokuva</string>
+    <string name="capture_failed">Tallennus epäonnistui tai luonnos muuttui. Yritä uudelleen.</string>
+    <string name="capture_speech_consent">Androidin puhepalvelu käsittelee mikrofonin ääntä. Laitteen puheentunnistusta suositaan; muut palvelut voivat käyttää verkkoa. Tarkista teksti ennen lisäämistä.</string>
+    <string name="capture_listening">Kuunnellaan…</string>
+    <string name="capture_review">Tarkista teksti</string>
+    <string name="capture_start">Aloita sanelu</string>
+    <string name="capture_insert">Lisää luonnokseen</string>
+    <string name="capture_diagram_zoom">Suurenna kaaviota</string>
+    <string name="capture_diagram_failed">Kaaviota ei voitu piirtää rajojen puitteissa. Lähdekoodi näytetään.</string>
+    <string name="capture_title">Puhelimen tallennus</string>
+</resources>

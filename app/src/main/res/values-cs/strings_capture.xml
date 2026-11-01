@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Diktovat</string>
+    <string name="capture_image">Vybrat snímek obrazovky</string>
+    <string name="capture_photo">Pořídit fotografii</string>
+    <string name="capture_failed">Záznam selhal nebo se koncept změnil. Zkuste to znovu.</string>
+    <string name="capture_speech_consent">Hlasová služba Androidu zpracovává zvuk mikrofonu. Upřednostňuje se rozpoznávání v zařízení; jiné služby mohou používat síť. Před vložením text zkontrolujte.</string>
+    <string name="capture_listening">Poslouchání…</string>
+    <string name="capture_review">Zkontrolovat text</string>
+    <string name="capture_start">Spustit diktování</string>
+    <string name="capture_insert">Vložit do konceptu</string>
+    <string name="capture_diagram_zoom">Zvětšit diagram</string>
+    <string name="capture_diagram_failed">Diagram se nepodařilo vykreslit v rámci limitů. Zobrazuje se zdrojový kód.</string>
+    <string name="capture_title">Záznam na telefonu</string>
+</resources>

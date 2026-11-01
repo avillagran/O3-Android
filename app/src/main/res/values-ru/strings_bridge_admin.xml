@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Выключить шлюз</string>
     <string name="bridge_admin_revoke">Отозвать доступ</string>
     <string name="bridge_admin_share">Поделиться приглашением</string>
+    <string name="bridge_peer_drafts">Центр черновиков (разрешение drafts)</string>
+    <string name="bridge_peer_no_drafts">Нет разрешения drafts</string>
+    <string name="bridge_peer_managed">Управление разрешено</string>
+    <string name="bridge_peer_unmanaged">Нет разрешения на управление</string>
+    <string name="bridge_peer_selected">Выбранный центр черновиков</string>
 </resources>

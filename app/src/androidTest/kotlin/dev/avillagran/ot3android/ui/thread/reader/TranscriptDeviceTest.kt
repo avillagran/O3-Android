@@ -67,12 +67,27 @@ class TranscriptDeviceTest {
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(dev.avillagran.ot3android.ui.home.HomeTags.row("node/chat")).fetchSemanticsNodes().isNotEmpty() }
             rule.onNodeWithTag(dev.avillagran.ot3android.ui.home.HomeTags.row("node/chat")).performClick()
             rule.waitUntil(15_000) { rule.onAllNodesWithTag(ThreadScreenTags.COMPOSER).fetchSemanticsNodes().isNotEmpty() }
-            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performTextReplacement(draft)
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performClick().performTextReplacement(draft)
             scenario.onActivity { it.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
             rule.waitUntil(10_000) {
                 var ready = false
-                scenario.onActivity { ready = it.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
-                    androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true }
+                scenario.onActivity { ready = it.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE && it.hasWindowFocus() }
+                ready
+            }
+            // SetText alone does not request a real keyboard. Serve the focused editor
+            // in the recreated window before requesting the platform IME.
+            rule.onNodeWithTag(ThreadScreenTags.COMPOSER).performClick().assertIsFocused()
+            scenario.onActivity {
+                androidx.core.view.WindowCompat.getInsetsController(it.window, it.window.decorView)
+                    .show(androidx.core.view.WindowInsetsCompat.Type.ime())
+            }
+            rule.waitUntil(10_000) {
+                var ready = false
+                scenario.onActivity {
+                    val insets = androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)
+                    ready = insets?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true &&
+                        insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom > 0
+                }
                 ready
             }
             assertTrue("The reader must retain a viewport above the landscape IME: " + rule.onRoot().printToString(maxDepth = 6),

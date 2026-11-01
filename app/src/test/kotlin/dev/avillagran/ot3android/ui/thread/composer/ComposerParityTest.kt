@@ -25,6 +25,23 @@ class ComposerParityTest {
     private val scope = ComposerScope("host", "project", "thread")
     private fun initial() = ComposerSnapshot(scope, text = "Look at the file", selection = ComposerSelection(16, 16),
         attachments = listOf(ComposerAttachment("file", "notes.md", UploadStatus.Ready, "descriptor")))
+    @Test fun compactCaptureUsesOverflowAndKeepsConsentAfterMenuCloses() {
+        val requests = mutableListOf<ComposerRequest>()
+        rule.setContent { Ot3Theme {
+            val compact = android.content.res.Configuration(androidx.compose.ui.platform.LocalConfiguration.current).apply { screenHeightDp = 360 }
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalConfiguration provides compact) {
+                ComposerParity(ComposerSnapshot(scope), setOf(ComposerAction.Attach), { _, _, _, _ -> }, requests::add)
+            }
+        } }
+        rule.onNodeWithTag("capture_dictate").assertDoesNotExist()
+        rule.onNodeWithTag("composer_actions").performClick()
+        rule.onNodeWithTag("capture_menu").performClick()
+        rule.onNodeWithTag("capture_dictate").performClick()
+        rule.onNodeWithText("Start dictation").assertIsDisplayed()
+        rule.onNodeWithText("Insert into draft").assertIsNotEnabled()
+        rule.runOnIdle { assertTrue(requests.isEmpty()) }
+    }
+
     @Test fun blockedEmptyDraftDoesNotPretendToBeSendingAndBusyIsExplicit() {
         var state by mutableStateOf(ComposerSnapshot(scope, loading = true))
         rule.setContent { Ot3Theme { ComposerParity(state, emptySet(), { _, _, _, _ -> }, {}) } }

@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Это приглашение может дать доступ ко всем хостам. Перед продолжением уточните область доступа у отправителя.</string>
     <string name="connections_peer_confirm">Я проверил этот точный ID и принимаю область доступа.</string>
     <string name="connections_pair_pending">Одобрение выполняется на уполномоченном хосте. Затем импортируйте приглашение снова.</string>
-    <string name="connections_host_authority">Этот мобильный SDK не поддерживает администрирование. Управляйте маршрутами, общим доступом, клиентами, облаком, сетью, публикацией, согласием, шлюзами, ретранслятором и установкой на уполномоченном хосте.</string>
+    <string name="connections_host_authority">Управляйте подключениями в администрировании OmaBridge, также доступном в окружениях. Удалённые действия требуют соответствующего разрешения.</string>
     <string name="connections_local_id">ID этого устройства</string>
     <string name="connections_bridge_id">ID выбранного моста</string>
 </resources>

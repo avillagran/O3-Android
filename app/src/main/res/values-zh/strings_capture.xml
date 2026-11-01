@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">语音输入</string>
+    <string name="capture_image">选择截图</string>
+    <string name="capture_photo">拍照</string>
+    <string name="capture_failed">采集失败或草稿已更改。请重试。</string>
+    <string name="capture_speech_consent">Android 语音服务会处理麦克风音频。优先使用设备端识别；其他服务可能使用网络。插入前请检查文字。</string>
+    <string name="capture_listening">正在聆听…</string>
+    <string name="capture_review">检查文字</string>
+    <string name="capture_start">开始语音输入</string>
+    <string name="capture_insert">插入草稿</string>
+    <string name="capture_diagram_zoom">缩放图表</string>
+    <string name="capture_diagram_failed">无法在限制范围内渲染图表。显示源代码。</string>
+    <string name="capture_title">手机采集</string>
+</resources>

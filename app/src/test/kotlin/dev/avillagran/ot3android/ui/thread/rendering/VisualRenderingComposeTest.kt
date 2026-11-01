@@ -27,7 +27,7 @@ import java.io.ByteArrayOutputStream
 class VisualRenderingComposeTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
-    @Test fun codeCopyIsExactAndUnsupportedPreviewIsHidden() {
+    @Test fun codeCopyIsExactAndOfflineMermaidPreviewIsAvailable() {
         var copied: (() -> String?)? = null
         val code = "graph TD; A[\"<literal>\"]-->B\n"
         rule.setContent { Ot3Theme {
@@ -37,8 +37,22 @@ class VisualRenderingComposeTest {
         } }
         rule.onNodeWithTag("thread_copy_code_3").performClick()
         rule.runOnIdle { assertEquals(code, copied?.invoke()) }
-        rule.onNodeWithTag("visual_toggle_3").assertDoesNotExist()
+        rule.onNodeWithTag("visual_toggle_3").assertExists()
         rule.onNodeWithTag("thread_code_3").assertExists()
+    }
+    @Test fun rejectedMermaidFallsBackToExactCopyableSource() {
+        val code = "%%{init: {securityLevel: 'loose'}}%%\ngraph TD; A-->B"
+        var copied: (() -> String?)? = null
+        rule.setContent { Ot3Theme {
+            val clipboard = LocalClipboardManager.current
+            copied = { clipboard.getText()?.text }
+            VisualCodeBlock(JSONObject().put("language", "mermaid").put("code", code), 9)
+        } }
+        rule.onNodeWithTag("visual_toggle_9").performClick()
+        rule.onNodeWithTag("thread_code_9").assertExists()
+        rule.onNodeWithText("Diagram could not be rendered within its limits. Source shown.").assertExists()
+        rule.onNodeWithTag("thread_copy_code_9").performClick()
+        rule.runOnIdle { assertEquals(code, copied?.invoke()) }
     }
     @Test fun streamingNeverOffersPreviewOrRun() {
         rule.setContent { Ot3Theme {

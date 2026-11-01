@@ -6,7 +6,7 @@
     <string name="connections_all_hosts_warning">Bu davet tüm ana makinelere erişim sağlayabilir. Devam etmeden önce kapsamı daveti verenle doğrula.</string>
     <string name="connections_peer_confirm">Bu eş kimliğini tam olarak doğruladım ve erişim kapsamını kabul ediyorum.</string>
     <string name="connections_pair_pending">Onay yetkili ana makinede verilir. Onaydan sonra daveti yeniden içe aktar.</string>
-    <string name="connections_host_authority">Bu mobil SDK yönetim sunmaz. Rotaları, paylaşımı, istemcileri, bulutu, ağı, yayını, izni, ağ geçitlerini, aktarmayı ve kurulumu yetkili ana makinede yönet.</string>
+    <string name="connections_host_authority">Bağlantıları Ortamlar altında da bulunan OmaBridge yönetiminde yönetin. Uzak işlemler ilgili izni gerektirir.</string>
     <string name="connections_local_id">Bu cihazın kimliği</string>
     <string name="connections_bridge_id">Seçili köprünün kimliği</string>
 </resources>

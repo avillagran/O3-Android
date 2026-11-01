@@ -79,8 +79,17 @@ class ReaderImageZoomDeviceTest {
         viewport().performTouchInput { doubleClick(center) }; assertEquals(200, scale())
         rule.onNodeWithTag("thread_image_zoom_reset").performClick(); assertEquals(100, scale())
         scenario.onActivity { assertEquals("Gestures reuse decoded image", reads, it.fixture.transport.log.count { call -> call.method == "image" }) }
+        scenario.onActivity { it.getSystemService(android.content.ClipboardManager::class.java).clearPrimaryClip() }
         rule.onNodeWithTag("thread_image_copy_viewer").performClick()
-        rule.waitUntil(10_000) { rule.onAllNodesWithContentDescription("Copied!").fetchSemanticsNodes().isNotEmpty() }
+        // Copy feedback expires; wait for the durable result, then verify its exact bytes.
+        var clipboardReady = false
+        rule.waitUntil(10_000) {
+            scenario.onActivity {
+                clipboardReady = it.getSystemService(android.content.ClipboardManager::class.java)
+                    .primaryClip?.description?.hasMimeType("image/png") == true
+            }
+            clipboardReady
+        }
         scenario.onActivity {
             val clip = it.getSystemService(android.content.ClipboardManager::class.java).primaryClip!!
             assertTrue(clip.description.hasMimeType("image/png"))

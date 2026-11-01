@@ -25,4 +25,9 @@
     <string name="bridge_admin_gateway_stop">Désactiver la passerelle</string>
     <string name="bridge_admin_revoke">Révoquer l’accès</string>
     <string name="bridge_admin_share">Partager l’invitation</string>
+    <string name="bridge_peer_drafts">Autorité des brouillons (droit drafts)</string>
+    <string name="bridge_peer_no_drafts">Aucun droit drafts</string>
+    <string name="bridge_peer_managed">Administration autorisée</string>
+    <string name="bridge_peer_unmanaged">Aucun droit de gestion</string>
+    <string name="bridge_peer_selected">Autorité des brouillons sélectionnée</string>
 </resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Detta</string>
+    <string name="capture_image">Scegli schermata</string>
+    <string name="capture_photo">Scatta foto</string>
+    <string name="capture_failed">Acquisizione non riuscita o bozza modificata. Riprova.</string>
+    <string name="capture_speech_consent">Il servizio vocale Android elabora l’audio del microfono. Si preferisce il riconoscimento sul dispositivo; altri servizi possono usare la rete. Controlla il testo prima di inserirlo.</string>
+    <string name="capture_listening">In ascolto…</string>
+    <string name="capture_review">Controlla testo</string>
+    <string name="capture_start">Avvia dettatura</string>
+    <string name="capture_insert">Inserisci nella bozza</string>
+    <string name="capture_diagram_zoom">Ingrandisci diagramma</string>
+    <string name="capture_diagram_failed">Impossibile visualizzare il diagramma entro i limiti. Viene mostrato il codice.</string>
+    <string name="capture_title">Acquisizione dal telefono</string>
+</resources>

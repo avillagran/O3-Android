@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_dictate">Dicteren</string>
+    <string name="capture_image">Schermafbeelding kiezen</string>
+    <string name="capture_photo">Foto maken</string>
+    <string name="capture_failed">Opname mislukt of concept gewijzigd. Probeer opnieuw.</string>
+    <string name="capture_speech_consent">De Android-spraakdienst verwerkt microfoonaudio. Herkenning op het apparaat heeft de voorkeur; andere diensten kunnen het netwerk gebruiken. Controleer de tekst voor het invoegen.</string>
+    <string name="capture_listening">Luisteren…</string>
+    <string name="capture_review">Tekst controleren</string>
+    <string name="capture_start">Dicteren starten</string>
+    <string name="capture_insert">In concept invoegen</string>
+    <string name="capture_diagram_zoom">Diagram vergroten</string>
+    <string name="capture_diagram_failed">Het diagram kon niet binnen de limieten worden weergegeven. De broncode wordt getoond.</string>
+    <string name="capture_title">Telefoonopname</string>
+</resources>
