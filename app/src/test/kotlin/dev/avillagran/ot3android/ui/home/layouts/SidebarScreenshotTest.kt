@@ -54,4 +54,10 @@ class SidebarScreenshotTest : ScreenshotTest() {
     }
     @Test fun largeRows() = render("classic", name = "large", large = true)
     @Test fun vivid() = render("classic", vivid = true)
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi") fun classic320Font160Sober() = render("classic", 1.6f, false, name = "classic-320")
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi") fun classic320Font160Vivid() = render("classic", 1.6f, true, name = "classic-320")
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi") fun focus320Font160Sober() = render("focus", 1.6f, false, name = "focus-320")
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi") fun focus320Font160Vivid() = render("focus", 1.6f, true, name = "focus-320")
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi") fun projects320Font160Sober() = render("projects", 1.6f, false, name = "projects-320")
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi") fun projects320Font160Vivid() = render("projects", 1.6f, true, name = "projects-320")
 }
