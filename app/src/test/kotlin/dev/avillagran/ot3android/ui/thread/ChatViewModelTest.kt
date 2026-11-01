@@ -344,7 +344,8 @@ class ChatViewModelTest {
         fixture("default") { f ->
             f.offline()
             f.vm.importAttachment(f.context, f.content("notes.md", "offline bytes"))
-            assertEquals(UploadStatus.Uploading, f.vm.attachmentDraft.value.single().status)
+            // The chip is immediate; the background copy may already have queued its bytes.
+            assertEquals(1, f.vm.attachmentDraft.value.size)
             f.await { f.vm.attachmentDraft.value.single().status == UploadStatus.Queued }
             val chip = f.vm.attachmentDraft.value.single()
             assertEquals("notes.md", chip.name)
