@@ -12,6 +12,12 @@ class DesktopSurfaces(
     private var deadline = 0L
     var unknown = false
         private set
+    var consentRequired = false
+        private set
+    var notSent = false
+        private set
+    var lastUnknown = false
+        private set
     suspend fun read(path: String): JSONObject = request("GET", path, null)
     suspend fun prepare(surface: String, action: String, reportId: String, settings: JSONObject? = null): JSONObject {
         check(!unknown)
@@ -44,18 +50,19 @@ class DesktopSurfaces(
         return request("POST", "/v1/maintenance/confirm", body.toString())
     }
     private suspend fun request(method: String, path: String, body: String?): JSONObject {
+        consentRequired = false; notSent = false; lastUnknown = false
         val mutating = path == "/v1/maintenance/confirm"
         if (mutating) unknown = true
         val result = exchange(method, path, body)
         when (result.getString("outcome")) {
-            "notSent" -> { if (mutating) unknown = false; error("not_sent") }
-            "unknown" -> error("unknown_outcome")
+            "notSent" -> { notSent = true; if (mutating) unknown = false; error("not_sent") }
+            "unknown" -> { lastUnknown = true; error("unknown_outcome") }
             "http" -> {
                 val status = result.getInt("httpStatus")
                 val raw = decode(result.getString("bodyBase64"))
                 val json = JSONObject(String(raw, Charsets.UTF_8))
                 if (mutating) unknown = status >= 500 || json.optString("outcome") == "unknown" || json.optString("error") == "unknown"
-                if (status !in 200..299) { pending = null; error("host_refused_$status") }
+                if (status !in 200..299) { consentRequired = status == 403 && json.optString("error") == "consent_required"; pending = null; error("host_refused_$status") }
                 return json
             }
             else -> error("invalid_outcome")

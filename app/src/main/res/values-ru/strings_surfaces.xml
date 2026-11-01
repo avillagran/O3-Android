@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Минимум токенов (1000–1000000)</string>
     <string name="surfaces_prepare">Подготовить изменение</string>
     <string name="surfaces_confirmation">Проверьте точный запрос и полный отчёт. Подтверждение действует 60 секунд и используется один раз.</string>
+    <string name="surfaces_disabled">Хост не включил эту функцию. Включите согласие на хосте, как описано выше.</string>
+    <string name="surfaces_not_sent">Запрос не отправлен. Автоповтора нет. Проверьте разрешение службы и соединение bridge.</string>
 </resources>

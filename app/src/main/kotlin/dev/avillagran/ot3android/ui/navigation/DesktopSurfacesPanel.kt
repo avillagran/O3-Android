@@ -54,7 +54,7 @@ internal fun DesktopSurfacesPanel(bridge: BridgeCatalogController, credentialLab
             try { action() }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { failed = true; content = null; capabilities = emptySet(); confirmation = null; preview = null; client.discard() }
-            finally { unknown = client.unknown; busy = false }
+            finally { unknown = client.unknown || client.lastUnknown; busy = false }
         }
     }
     LaunchedEffect(bridge) {
@@ -114,7 +114,11 @@ internal fun DesktopSurfacesPanel(bridge: BridgeCatalogController, credentialLab
                     }) { Text(stringResource(label)) }
                 }
                 if (busy) CircularProgressIndicator()
-                if (failed) Text(stringResource(R.string.surfaces_refused))
+                if (failed && !unknown) Text(stringResource(when {
+                    client.consentRequired -> R.string.surfaces_disabled
+                    client.notSent -> R.string.surfaces_not_sent
+                    else -> R.string.surfaces_refused
+                }))
                 if (unknown) Text(stringResource(R.string.surfaces_unknown))
                 val data = content
                 if (data != null) {

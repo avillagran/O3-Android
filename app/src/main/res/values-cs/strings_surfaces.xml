@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Minimum tokenů (1000–1000000)</string>
     <string name="surfaces_prepare">Připravit změnu</string>
     <string name="surfaces_confirmation">Zkontrolujte přesný požadavek a úplnou zprávu. Potvrzení vyprší za 60 sekund a je jednorázové.</string>
+    <string name="surfaces_disabled">Hostitel tuto funkci nepovolil. Povolte souhlas hostitele podle pokynů výše.</string>
+    <string name="surfaces_not_sent">Požadavek nebyl odeslán. Bez automatického opakování. Zkontrolujte oprávnění služby a připojení bridge.</string>
 </resources>

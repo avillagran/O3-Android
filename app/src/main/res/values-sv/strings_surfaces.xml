@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Minsta antal token (1000–1000000)</string>
     <string name="surfaces_prepare">Förbered ändring</string>
     <string name="surfaces_confirmation">Granska exakt begäran och hela rapporten. Bekräftelsen löper ut efter 60 sekunder och används en gång.</string>
+    <string name="surfaces_disabled">Värden har inte aktiverat funktionen. Aktivera värdens samtycke enligt ovan.</string>
+    <string name="surfaces_not_sent">Begäran skickades inte. Inget automatiskt återförsök. Kontrollera tjänstens behörighet och bryggans anslutning.</string>
 </resources>

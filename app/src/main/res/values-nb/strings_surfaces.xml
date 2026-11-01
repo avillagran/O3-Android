@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Minste antall tokens (1000–1000000)</string>
     <string name="surfaces_prepare">Forbered endring</string>
     <string name="surfaces_confirmation">Se gjennom nøyaktig forespørsel og hele rapporten. Bekreftelsen utløper etter 60 sekunder og brukes én gang.</string>
+    <string name="surfaces_disabled">Verten har ikke aktivert funksjonen. Aktiver vertens samtykke som beskrevet ovenfor.</string>
+    <string name="surfaces_not_sent">Forespørselen ble ikke sendt. Ingen automatisk gjentakelse. Kontroller tjenestetillatelsen og broforbindelsen.</string>
 </resources>

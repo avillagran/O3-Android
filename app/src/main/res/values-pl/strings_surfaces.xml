@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Minimum tokenów (1000–1000000)</string>
     <string name="surfaces_prepare">Przygotuj zmianę</string>
     <string name="surfaces_confirmation">Sprawdź dokładne żądanie i pełny raport. Potwierdzenie wygasa po 60 sekundach i jest jednorazowe.</string>
+    <string name="surfaces_disabled">Host nie włączył tej funkcji. Włącz zgodę hosta zgodnie z opisem powyżej.</string>
+    <string name="surfaces_not_sent">Żądanie nie zostało wysłane. Bez automatycznego ponawiania. Sprawdź uprawnienia usługi i połączenie bridge.</string>
 </resources>

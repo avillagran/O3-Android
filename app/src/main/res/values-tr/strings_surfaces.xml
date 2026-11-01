@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">En az token (1000–1000000)</string>
     <string name="surfaces_prepare">Değişikliği hazırla</string>
     <string name="surfaces_confirmation">Tam isteği ve raporun tamamını inceleyin. Onay 60 saniyede sona erer ve bir kez kullanılır.</string>
+    <string name="surfaces_disabled">Sunucu bu özelliği açmadı. Yukarıda açıklanan sunucu onayını açın.</string>
+    <string name="surfaces_not_sent">İstek gönderilmedi. Otomatik tekrar yok. Hizmet iznini ve bridge bağlantısını kontrol edin.</string>
 </resources>

@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Mindestanzahl Tokens (1000–1000000)</string>
     <string name="surfaces_prepare">Änderung vorbereiten</string>
     <string name="surfaces_confirmation">Prüfe die genaue Anfrage und den vollständigen Bericht. Die Bestätigung läuft nach 60 Sekunden ab und gilt einmal.</string>
+    <string name="surfaces_disabled">Der Host hat diese Funktion nicht aktiviert. Aktiviere die oben beschriebene Zustimmung auf dem Host.</string>
+    <string name="surfaces_not_sent">Anfrage nicht gesendet. Keine automatische Wiederholung. Prüfe Dienstfreigabe und Bridge-Verbindung.</string>
 </resources>

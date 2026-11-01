@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">الحد الأدنى للرموز (1000–1000000)</string>
     <string name="surfaces_prepare">تحضير التغيير</string>
     <string name="surfaces_confirmation">راجع الطلب الدقيق والتقرير الكامل. ينتهي التأكيد بعد 60 ثانية ويستخدم مرة واحدة.</string>
+    <string name="surfaces_disabled">لم يفعّل المضيف هذه الميزة. فعّل موافقة المضيف كما هو موضح أعلاه.</string>
+    <string name="surfaces_not_sent">لم يُرسل الطلب. لا إعادة محاولة تلقائية. تحقق من إذن الخدمة واتصال الجسر.</string>
 </resources>

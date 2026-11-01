@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">最小トークン数（1000–1000000）</string>
     <string name="surfaces_prepare">変更を準備</string>
     <string name="surfaces_confirmation">正確なリクエストとレポート全体を確認してください。確認は60秒で期限切れとなり、1回のみ使用できます。</string>
+    <string name="surfaces_disabled">ホストでこの機能が有効になっていません。上記の手順でホストの許可を有効にしてください。</string>
+    <string name="surfaces_not_sent">リクエストは送信されませんでした。自動再試行はしません。サービスの権限とブリッジ接続を確認してください。</string>
 </resources>

@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">최소 토큰 (1000–1000000)</string>
     <string name="surfaces_prepare">변경 준비</string>
     <string name="surfaces_confirmation">정확한 요청과 전체 보고서를 확인하세요. 확인은 60초 후 만료되며 한 번만 사용됩니다.</string>
+    <string name="surfaces_disabled">호스트에서 이 기능을 켜지 않았습니다. 위에 설명된 호스트 동의를 켜세요.</string>
+    <string name="surfaces_not_sent">요청을 보내지 않았습니다. 자동 재시도는 없습니다. 서비스 권한과 브리지 연결을 확인하세요.</string>
 </resources>

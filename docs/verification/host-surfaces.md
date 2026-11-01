@@ -11,6 +11,7 @@ Source contracts: Desktop `docs/REMOTE_SURFACES.md`; OmaBridge
 - `service-request-v1` / `desktop-snapshots` with GET/POST, transient bearer and
   base64 JSON. SDK capability, remote service grant and session capability gating.
   Missing support/consent/grant displays host setup steps instead of surface actions.
+  Host consent disabled, not-sent and unknown are presented distinctly.
 - Document index/snapshots rendered as selectable source text; static HTML gallery
   decodes bounded PNG only. No WebView, JavaScript, URI loader, file or network API.
 - Memory, vault, host-sync, compaction, idle-release and build-cleanup projections,
@@ -24,7 +25,7 @@ Source contracts: Desktop `docs/REMOTE_SURFACES.md`; OmaBridge
   A new page cannot replay an old token; the host also durably refuses exact-report replay.
 - Coroutine cancellation signals cancelServiceRequest on another IO worker.
   Native errors never appear in UI, logs, URLs or diagnostics. No credential/body logging.
-- Sixteen hand-kept strings in all 20 locales (320 localized values).
+- Eighteen hand-kept strings in all 20 locales (360 localized values).
 
 ## Verification
 
@@ -47,3 +48,11 @@ manual. SDK HTTP response bound is 512 KiB; larger snapshot/gallery JSON respons
 fail closed even though the Desktop publication store allows larger content.
 Native worker state is persisted, not live control. Accessibility/RTL/large-font
 acceptance of this new screen and production host acceptance remain unverified.
+
+
+Host setup (owner only): enable Remote documents on this device in Preferences →
+Connections, then run `omarchy-t3-client remote-surfaces-serve http://127.0.0.1:<T3-port> <broker-port>`.
+Configure an OmaBridge service named `desktop-snapshots` targeting that loopback
+broker port and grant it to the intended phone. Also enable Allow remote maintenance
+on this device for mutations; cleanup roots stay owner-local. Do not publish the
+broker port directly. Android cannot grant itself any of these permissions.

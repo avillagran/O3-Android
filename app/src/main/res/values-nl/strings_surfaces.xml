@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Minimumtokens (1000–1000000)</string>
     <string name="surfaces_prepare">Wijziging voorbereiden</string>
     <string name="surfaces_confirmation">Controleer het exacte verzoek en het volledige rapport. De bevestiging verloopt na 60 seconden en is eenmalig.</string>
+    <string name="surfaces_disabled">De host heeft deze functie niet ingeschakeld. Schakel de hierboven beschreven toestemming op de host in.</string>
+    <string name="surfaces_not_sent">Verzoek niet verzonden. Geen automatische herhaling. Controleer de servicemachtiging en bridgeverbinding.</string>
 </resources>

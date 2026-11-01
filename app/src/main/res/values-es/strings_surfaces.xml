@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Tokens mínimos (1000–1000000)</string>
     <string name="surfaces_prepare">Preparar cambio</string>
     <string name="surfaces_confirmation">Revisa la solicitud exacta y el reporte completo. La confirmación vence en 60 segundos y se usa una vez.</string>
+    <string name="surfaces_disabled">El host no ha habilitado esta superficie. Activa el consentimiento del host indicado arriba.</string>
+    <string name="surfaces_not_sent">Solicitud no enviada. No hay reintento automático. Revisa el permiso del servicio y la conexión del bridge.</string>
 </resources>

@@ -28,7 +28,7 @@ class DesktopSurfacesTest {
     }
     @Test fun disabledConsentShowsNoCachedReport() = runTest {
         val c = client({ _, _, _ -> http(JSONObject().put("error", "consent_required"), 403) })
-        refused { c.read("/v1/memory") }; refused { c.confirm() }
+        refused { c.read("/v1/memory") }; assertTrue(c.consentRequired); refused { c.confirm() }
     }
     @Test fun deniedAndRevokedNeverReachConfirmation() = runTest {
         for (status in listOf(401, 403, 404)) {
@@ -66,7 +66,7 @@ class DesktopSurfacesTest {
         var calls = 0
         val c = client({ _, _, _ -> calls++; if (calls == 1) http(confirmation) else JSONObject().put("outcome", "notSent") })
         c.prepare("vault", "rollout", "abc"); refused { c.confirm() }; refused { c.confirm() }
-        assertFalse(c.unknown); assertEquals(2, calls)
+        assertFalse(c.unknown); assertTrue(c.notSent); assertEquals(2, calls)
     }
     @Test fun cancellationAfterSendRemainsUnknown() = runTest {
         var calls = 0

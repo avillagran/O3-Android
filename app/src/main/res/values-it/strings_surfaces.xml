@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Token minimi (1000–1000000)</string>
     <string name="surfaces_prepare">Prepara modifica</string>
     <string name="surfaces_confirmation">Controlla la richiesta esatta e il rapporto completo. La conferma scade dopo 60 secondi e si usa una volta.</string>
+    <string name="surfaces_disabled">Il host non ha abilitato questa funzione. Attiva il consenso sul host come descritto sopra.</string>
+    <string name="surfaces_not_sent">Richiesta non inviata. Nessun tentativo automatico. Controlla il permesso del servizio e la connessione bridge.</string>
 </resources>

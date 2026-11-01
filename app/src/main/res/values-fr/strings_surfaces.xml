@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Tokens minimum (1000–1000000)</string>
     <string name="surfaces_prepare">Préparer la modification</string>
     <string name="surfaces_confirmation">Vérifiez la demande exacte et le rapport complet. La confirmation expire dans 60 secondes et ne sert qu’une fois.</string>
+    <string name="surfaces_disabled">Cet hôte n’a pas activé cette fonction. Activez son consentement comme indiqué ci-dessus.</string>
+    <string name="surfaces_not_sent">Demande non envoyée. Aucun nouvel essai automatique. Vérifiez les droits du service et la connexion du bridge.</string>
 </resources>

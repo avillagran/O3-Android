@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Vähimmäistokenit (1000–1000000)</string>
     <string name="surfaces_prepare">Valmistele muutos</string>
     <string name="surfaces_confirmation">Tarkista tarkka pyyntö ja koko raportti. Vahvistus vanhenee 60 sekunnissa ja on kertakäyttöinen.</string>
+    <string name="surfaces_disabled">Isäntä ei ole ottanut tätä toimintoa käyttöön. Ota isännän suostumus käyttöön yllä kuvatulla tavalla.</string>
+    <string name="surfaces_not_sent">Pyyntöä ei lähetetty. Ei automaattista uudelleenyritystä. Tarkista palvelun oikeus ja siltayhteys.</string>
 </resources>

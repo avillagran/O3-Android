@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">最少令牌数（1000–1000000）</string>
     <string name="surfaces_prepare">准备更改</string>
     <string name="surfaces_confirmation">请核对准确的请求和完整报告。确认在60秒后过期且仅可使用一次。</string>
+    <string name="surfaces_disabled">主机尚未启用此功能。请按上述说明启用主机同意。</string>
+    <string name="surfaces_not_sent">请求未发送。不会自动重试。请检查服务授权和桥接连接。</string>
 </resources>

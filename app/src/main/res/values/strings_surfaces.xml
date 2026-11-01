@@ -17,4 +17,6 @@
     <string name="surfaces_tokens">Minimum tokens (1000–1000000)</string>
     <string name="surfaces_prepare">Prepare change</string>
     <string name="surfaces_confirmation">Review the exact request and full report below. Confirmation expires in 60 seconds and is used once.</string>
+    <string name="surfaces_disabled">The host has not enabled this surface. Enable the host consent described above.</string>
+    <string name="surfaces_not_sent">Request not sent. No automatic retry. Check the bridge service grant and connection.</string>
 </resources>

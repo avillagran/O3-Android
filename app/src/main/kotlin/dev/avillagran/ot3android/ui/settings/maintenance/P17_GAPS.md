@@ -3,7 +3,8 @@
 Reference: desktop-parity-audit.md P17; inventory 114–120, 178–182, 229–245,
 T3AgentMemorySettings, T3CompactionSettings, T3JournalSettings, T3StorageSettings,
 T3Archive, T3AgentSessions, T3ProcessDiagnostics, T3ScheduledTasks and T3HostSync.
-Desktop reference branch feat/o3-brand; mobile AAR v0.3.5 / d4bf6054b4480efdcd8a436cb66cb7f2e23664b1.
+Desktop reference branch feat/o3-brand; mobile AAR v0.3.7 / 7cbad5d8198d37e9ded767d33ac03f2cf15875f4.
+Desktop broker transport SDK pin: 1097f0e7cd4e91e58dce94744f13606a26756601.
 
 ## Available remote paths implemented
 
