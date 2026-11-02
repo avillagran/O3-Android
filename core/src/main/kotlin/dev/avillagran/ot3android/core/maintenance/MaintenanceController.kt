@@ -14,14 +14,28 @@ data class MaintenanceHost(val environment: String, val origin: String, val view
     init { require(environment.isNotBlank() && origin.isNotBlank() && viewer.isNotBlank()) }
 }
 fun MaintenanceHost.webhookEndpoint(webhook: JSONObject): String? {
-    webhook.optString("url").takeIf { it.isNotBlank() && it != "null" }?.let { return it }
-    val path = webhook.optString("path").takeIf { it.startsWith("/") && !it.startsWith("//") } ?: return null
+    val raw = webhook.optString("url").takeIf { it.isNotBlank() && it != "null" }
+    val path = raw ?: webhook.optString("path").takeIf { it.startsWith("/") && !it.startsWith("//") } ?: return null
     return runCatching {
         val base = java.net.URI(origin)
         val endpoint = base.resolve(path)
-        endpoint.takeIf { it.scheme in setOf("http", "https") && it.scheme == base.scheme &&
-            it.rawAuthority == base.rawAuthority }?.toASCIIString()
+        val same = endpoint.scheme in setOf("http", "https") && endpoint.scheme.equals(base.scheme, true) &&
+            endpoint.host.equals(base.host, true) && (if (endpoint.port == -1) if (endpoint.scheme == "https") 443 else 80 else endpoint.port) ==
+            (if (base.port == -1) if (base.scheme == "https") 443 else 80 else base.port) && endpoint.userInfo == null
+        endpoint.takeIf { same && (raw == null || java.net.URI(raw).isAbsolute) }?.let { raw ?: it.toASCIIString() }
     }.getOrNull()
+}
+
+/** Absolute relay URLs remain selectable text; no server value grants origin trust. */
+fun MaintenanceHost.webhookOriginWarning(webhook: JSONObject): Boolean {
+    val raw = webhook.optString("url").takeIf { it.isNotBlank() && it != "null" } ?: return false
+    return runCatching {
+        val base = java.net.URI(origin)
+        val url = java.net.URI(raw)
+        fun port(u: java.net.URI) = if (u.port != -1) u.port else if (u.scheme == "https") 443 else 80
+        !(url.isAbsolute && url.scheme in setOf("http", "https") && url.scheme.equals(base.scheme, true) &&
+            url.host.equals(base.host, true) && port(url) == port(base) && url.userInfo == null)
+    }.getOrDefault(true)
 }
 
 enum class MaintenancePage(val read: String?) {

@@ -78,7 +78,8 @@ fun MaintenanceScreen(controller: MaintenanceController, modifier: Modifier = Mo
                 Text(task.optJSONObject("schedule")?.let { schedule ->
                     listOf("type", "everyMs", "timeOfDay", "weekdays").filter(schedule::has).joinToString(" · ") { schedule.opt(it)?.toString().orEmpty() }
                 } ?: "—")
-                task.optJSONObject("webhook")?.let(controller.host::webhookEndpoint)?.let { url ->
+                task.optJSONObject("webhook")?.let { hook -> controller.host.webhookEndpoint(hook) ?: hook.optString("url").takeIf { it.isNotBlank() && it != "null" } }?.let { url ->
+                    if (controller.host.webhookOriginWarning(task.getJSONObject("webhook"))) Text(stringResource(R.string.maintenance_hook_origin_warning))
                     SelectionContainer { Text(url) }
                 }
                 val id = JSONObject().put("id", task.optString("id"))

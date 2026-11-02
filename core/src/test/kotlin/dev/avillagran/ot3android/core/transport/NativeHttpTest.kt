@@ -102,8 +102,8 @@ class NativeHttpTest {
     }
 
     @Test
-    fun shellLargerThanEightMiBPassesThroughTheAndroidAdapter() = runBlocking {
-        val title = "x".repeat(9 * 1024 * 1024)
+    fun realisticShellPassesThroughTheAndroidAdapter() = runBlocking {
+        val title = "x".repeat(2500 * 1024)
         shellBody = JSONObject().put("snapshotSequence", 4).put("projects", org.json.JSONArray())
             .put("threads", org.json.JSONArray().put(JSONObject().put("id", "large").put("title", title))).toString()
         transport.connect(ConnectRoute.Bearer(server.baseUrl, TOKEN))

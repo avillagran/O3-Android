@@ -18,6 +18,23 @@ import org.junit.Test
  */
 class SidebarViewTest {
 
+    @Test fun indexedRowsRestoreTheFullReaderAndShareUnmodifiedRows() {
+        val wire = JSONObject("""{"format":"indexed-v1","rowDefaults":{"branch":null,"pinned":false},"threads":[{"key":"e/t","id":"t","environmentId":"e","title":"Title"}],"sections":{"active":[[0,{}]],"working":[],"snoozed":[],"settled":[]}}""")
+        val result = SidebarView.parse(wire)
+        assertEquals("Title", result.active.single().title)
+        org.junit.Assert.assertSame(result.threads.single(), result.active.single())
+        assertTrue(result.threads.single().raw.has("branch"))
+        assertFalse(result.raw.has("format"))
+    }
+    @Test fun excessiveAggregateRowsFailBeforeJni() = runBlocking {
+        val threads = org.json.JSONArray().apply { repeat(1001) { put(JSONObject().put("id", "t$it")) } }
+        val shell = ShellReducer.parse(JSONObject().put("threads", threads))
+        var called = false
+        val fake = dev.avillagran.ot3android.core.transport.DomainCalls { _, _ -> called = true; JSONObject() }
+        val error = runCatching { SidebarView.build(fake, listOf(SidebarEnvironment("fixture", shell = shell)), 0) }.exceptionOrNull()
+        assertEquals("sidebar_presentation_limit", (error as? dev.avillagran.t3.T3Exception)?.code)
+        assertFalse(called)
+    }
     private val domain = DomainEngine.shared
 
     @Before

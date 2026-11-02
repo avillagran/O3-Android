@@ -191,8 +191,10 @@ object SidebarView {
         project: String? = null,
         query: String? = null,
     ): Sidebar {
+        if (environments.sumOf { it.shell?.threads?.size ?: 0 } > 1000) throw dev.avillagran.t3.T3Exception("sidebar_presentation_limit")
         val args = JSONObject()
             .put("environments", JSONArray().apply { environments.forEach { put(environment(it)) } })
+            .put("compact", true)
             .put("now", now)
             .put("grouped", grouped)
         environmentId?.let { args.put("environmentId", it) }
@@ -205,14 +207,43 @@ object SidebarView {
 
     /** Maps a `sidebar.view` result. */
     fun parse(view: JSONObject): Sidebar {
+        if (view.optString("format") == "indexed-v1") {
+            val defaults = view.getJSONObject("rowDefaults")
+            val rows = view.getJSONArray("threads")
+            for (i in 0 until rows.length()) {
+                val row = rows.getJSONObject(i)
+                val absent = row.optJSONArray("\$absent")
+                val missing = (0 until (absent?.length() ?: 0)).map { absent!!.getString(it) }.toSet()
+                defaults.keys().forEach { key -> if (!row.has(key) && key !in missing) row.put(key, defaults.get(key)) }
+                row.remove("\$absent")
+            }
+            val sections = view.getJSONObject("sections")
+            sections.keys().forEach { name ->
+                val refs = sections.getJSONArray(name)
+                for (i in 0 until refs.length()) {
+                    val ref = refs.getJSONArray(i)
+                    val base = rows.getJSONObject(ref.getInt(0))
+                    val patch = ref.getJSONObject(1)
+                    val row = if (patch.length() == 0) base else JSONObject().apply {
+                        base.keys().forEach { put(it, base.get(it)) }
+                        patch.keys().forEach { put(it, patch.get(it)) }
+                    }
+                    refs.put(i, row)
+                }
+            }
+            view.remove("format")
+            view.remove("rowDefaults")
+        }
+        val rowCache = java.util.IdentityHashMap<JSONObject, SidebarRow>()
+        fun mapped(json: JSONObject): SidebarRow = rowCache.getOrPut(json) { row(json) }
         val sections = view.optJSONObject("sections") ?: JSONObject()
         val counts = view.optJSONObject("counts")
         val identities = view.optJSONObject("projectIdentities")
         return Sidebar(
-            active = sections.objects("active").map(::row),
-            working = sections.objects("working").map(::row),
-            snoozed = sections.objects("snoozed").map(::row),
-            settled = sections.objects("settled").map(::row),
+            active = sections.objects("active").map(::mapped),
+            working = sections.objects("working").map(::mapped),
+            snoozed = sections.objects("snoozed").map(::mapped),
+            settled = sections.objects("settled").map(::mapped),
             counts = counts?.keys()?.asSequence()?.associateWith { counts.optInt(it) }.orEmpty(),
             identities = identities?.keys()?.asSequence()
                 ?.mapNotNull { key -> identities.optJSONObject(key)?.let { key to identity(it) } }?.toMap().orEmpty(),
@@ -243,7 +274,7 @@ object SidebarView {
                 is String -> scope.takeIf { it.isNotEmpty() }?.let(::setOf)
                 else -> null
             },
-            threads = view.objects("threads").map(::row),
+            threads = view.objects("threads").map(::mapped),
             returns = view.optJSONObject("returns"),
             raw = view,
         )
@@ -267,7 +298,7 @@ object SidebarView {
             "projects",
             JSONArray().apply {
                 shell.projects.forEach { project ->
-                    val json = JSONObject(project.raw.toString())
+                    val json = JSONObject().apply { project.raw.keys().forEach { put(it, project.raw.get(it)) } }
                     json.put("repositoryIdentity", project.repositoryIdentity?.let { JSONTokener(it).nextValue() } ?: JSONObject.NULL)
                     put(json)
                 }

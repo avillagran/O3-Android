@@ -176,4 +176,5 @@
     <string name="bridge_available">Bridge connected</string>
     <string name="bridge_refresh">Refresh bridge</string>
     <string name="bridge_pair_help">Or paste or scan an OmaBridge invitation to add its authorized computers automatically.</string>
+    <string name="maintenance_hook_origin_warning">Webhook URL is outside the selected server origin; shown as text only.</string>
 </resources>

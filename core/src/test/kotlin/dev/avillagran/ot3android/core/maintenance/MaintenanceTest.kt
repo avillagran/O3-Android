@@ -144,9 +144,17 @@ class MaintenanceTest {
         assertEquals(1, writes)
     }
 
+    @Test fun absoluteHooksOutsideTheSelectedOriginAreInertAndWarned() {
+        for (url in listOf("https://attacker.invalid/hook", "//attacker.invalid/hook", "javascript:alert(1)", "https://t3.example/hook")) {
+            val hook = JSONObject().put("url", url)
+            assertTrue(host.webhookOriginWarning(hook))
+            assertEquals(null, host.webhookEndpoint(hook))
+        }
+        assertFalse(host.webhookOriginWarning(JSONObject().put("url", "https://host:443/api/hooks/one")))
+    }
     @Test fun relativeHookUsesTrustedOrigin() {
         assertEquals("https://host/api/hooks/one", host.webhookEndpoint(JSONObject("""{"url":null,"path":"/api/hooks/one"}""")))
-        assertEquals("https://t3.example/hook", host.webhookEndpoint(JSONObject("""{"url":"https://t3.example/hook"}""")))
+        assertEquals(null, host.webhookEndpoint(JSONObject("""{"url":"https://t3.example/hook"}""")))
         assertEquals(null, host.webhookEndpoint(JSONObject("""{"path":"//other.example/hook"}""")))
     }
 
