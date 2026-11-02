@@ -9,7 +9,7 @@ and answer questions from your phone or tablet, against your own T3 Code servers
 pairing link, URL and token, OmaBridge, Tailscale, and later T3 Connect.
 
 Status: **in development, not distributed yet.** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-The app pins lib-t3-rust source commit `046bfa946cc07c468b186fec10ee938f73e08f8e`
+The app pins lib-t3-rust source commit `6e17bb2276da5aee0912fbe084bc024819f65899`
 in `libs/lib-t3-rust.lock`. Build its AAR and host JNI library from a clean checkout
 at that commit with `LIB_T3_RUST_DIR=/path/to/lib-t3-rust scripts/fetch-or-build-lib.sh`.
 See [docs/LIB_BUILD.md](docs/LIB_BUILD.md) and, for what the app

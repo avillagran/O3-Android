@@ -107,7 +107,30 @@ class NativeHttpTest {
         shellBody = JSONObject().put("snapshotSequence", 4).put("projects", org.json.JSONArray())
             .put("threads", org.json.JSONArray().put(JSONObject().put("id", "large").put("title", title))).toString()
         transport.connect(ConnectRoute.Bearer(server.baseUrl, TOKEN))
-        assertEquals(title.length, transport.shell().getJSONArray("threads").getJSONObject(0).getString("title").length)
+        val shell = transport.shell()
+        assertEquals(title.length, shell.getJSONArray("threads").getJSONObject(0).getString("title").length)
+        val sidebar = dev.avillagran.ot3android.core.shell.SidebarView.build(
+            transport, listOf(dev.avillagran.ot3android.core.shell.SidebarEnvironment(
+                id = "fixture", shell = dev.avillagran.ot3android.core.shell.ShellReducer.parse(shell))), 0)
+        assertEquals(title, sidebar.active.single().title)
+    }
+
+    @Test
+    fun gzipAndBrotliAreDecodedThroughJni() = runBlocking {
+        val body = "{\"snapshotSequence\":7,\"projects\":[],\"threads\":[]}".toByteArray()
+        val gzip = java.io.ByteArrayOutputStream().also { output ->
+            java.util.zip.GZIPOutputStream(output).use { it.write(body) }
+        }.toByteArray()
+        val brotli = java.util.Base64.getDecoder().decode("HzAA+I3UYs0Z7qQnS/35XQsmaBI2mgkd2IADhyyCgAbguwFHiMHJOUx6T9SOEgmhgRqRgg8=")
+        for ((encoding, bytes) in listOf("gzip" to gzip, "br" to brotli)) {
+            FakeHttpServer { _, headers ->
+                org.junit.Assert.assertTrue(headers["accept-encoding"].orEmpty().contains(encoding))
+                FakeHttpServer.Response(200, raw = bytes, encoding = encoding)
+            }.use { compressed ->
+                transport.connect(ConnectRoute.Bearer(compressed.baseUrl, TOKEN))
+                assertEquals(7L, transport.shell().getLong("snapshotSequence"))
+            }
+        }
     }
 
     @Test

@@ -1,7 +1,7 @@
 # Current source pin
 
 `libs/lib-t3-rust.lock` selects source mode at
-`046bfa946cc07c468b186fec10ee938f73e08f8e` on `o3/server-capabilities`.
+`6e17bb2276da5aee0912fbe084bc024819f65899` on `o3/server-capabilities`.
 Use a separate clean lib-t3-rust checkout at that commit and run:
 
 ```sh
@@ -10,7 +10,7 @@ LIB_T3_RUST_DIR=/path/to/lib-t3-rust scripts/fetch-or-build-lib.sh
 
 This builds all four Android ABIs and host JNI. The helper rejects a different
 source commit or `--release` while this unreleased source pin is active.
-The core accepts shell snapshots up to 64 MiB; Android delegates shell GET and
+The core accepts shell snapshots up to 16 MiB on Android (64 MiB on desktop); Android delegates shell GET and
 subscription limits to it. Git controls pass current `server.getConfig`, including
 `environment.capabilities.pullRequests`; absent capabilities retain legacy behavior.
 

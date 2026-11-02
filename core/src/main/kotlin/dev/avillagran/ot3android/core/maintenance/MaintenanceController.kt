@@ -13,6 +13,17 @@ import org.json.JSONObject
 data class MaintenanceHost(val environment: String, val origin: String, val viewer: String) {
     init { require(environment.isNotBlank() && origin.isNotBlank() && viewer.isNotBlank()) }
 }
+fun MaintenanceHost.webhookEndpoint(webhook: JSONObject): String? {
+    webhook.optString("url").takeIf { it.isNotBlank() && it != "null" }?.let { return it }
+    val path = webhook.optString("path").takeIf { it.startsWith("/") && !it.startsWith("//") } ?: return null
+    return runCatching {
+        val base = java.net.URI(origin)
+        val endpoint = base.resolve(path)
+        endpoint.takeIf { it.scheme in setOf("http", "https") && it.scheme == base.scheme &&
+            it.rawAuthority == base.rawAuthority }?.toASCIIString()
+    }.getOrNull()
+}
+
 enum class MaintenancePage(val read: String?) {
     MEMORY(null), STORAGE("diagnostics.storageCleanupReport"), ARCHIVE("orchestration.getArchivedShellSnapshot"),
     SCHEDULES("scheduledTasks.list"), SESSIONS("agentSessions.scan"), DIAGNOSTICS("server.getProcessDiagnostics"), HOST_SYNC(null), VAULT(null),

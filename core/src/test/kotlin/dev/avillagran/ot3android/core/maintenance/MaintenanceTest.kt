@@ -127,6 +127,29 @@ class MaintenanceTest {
         c.refresh(); assertTrue("scheduledTasks.upsert" in c.state.value.writable)
     }
 
+    @Test fun lostScheduleResponseBlocksRetryEvenAfterRefresh() = runTest {
+        val f = Fixture(); f.functions += "scheduledTasks.upsert"
+        var writes = 0
+        val transport = object : T3Transport by f.transport {
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? {
+                if (fn == "scheduledTasks.upsert") { writes++; throw dev.avillagran.t3.T3Exception("rpc_timeout", "lost response") }
+                return f.transport.call(fn, args, timeoutMs)
+            }
+        }
+        val c = MaintenanceController(host, MaintenancePage.SCHEDULES, transport, FileMaintenanceReceipts(temporary.newFolder()))
+        c.refresh(); c.mutate("scheduledTasks.upsert", JSONObject(), true)
+        assertTrue(c.state.value.unknown)
+        c.refresh(); assertTrue(c.state.value.unknown)
+        assertTrue(runCatching { c.mutate("scheduledTasks.upsert", JSONObject(), true) }.isFailure)
+        assertEquals(1, writes)
+    }
+
+    @Test fun relativeHookUsesTrustedOrigin() {
+        assertEquals("https://host/api/hooks/one", host.webhookEndpoint(JSONObject("""{"url":null,"path":"/api/hooks/one"}""")))
+        assertEquals("https://t3.example/hook", host.webhookEndpoint(JSONObject("""{"url":"https://t3.example/hook"}""")))
+        assertEquals(null, host.webhookEndpoint(JSONObject("""{"path":"//other.example/hook"}""")))
+    }
+
     @Test fun localSchedulersAndVaultMutationsHaveNoActions() {
         listOf(MaintenancePage.MEMORY, MaintenancePage.VAULT, MaintenancePage.HOST_SYNC).forEach {
             assertNull(it.read); assertTrue(MaintenanceController.actions(it).isEmpty())

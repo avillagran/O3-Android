@@ -43,7 +43,7 @@
   },
   {
     "name": "lib-t3-rust",
-    "version": "0.3.7+046bfa9",
+    "version": "0.3.8+6e17bb2",
     "license": "MIT",
     "file": "lib-t3-rust.txt",
     "source": "https://github.com/avillagran/lib-t3-rust"

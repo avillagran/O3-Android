@@ -16,7 +16,7 @@ internal class FakeHttpServer private constructor(private val handle: (Request) 
     constructor(handle: (path: String, headers: Map<String, String>) -> Response) :
         this({ request: Request -> handle(request.path, request.headers) })
 
-    class Response(val status: Int, val body: String = "")
+    class Response(val status: Int, val body: String = "", val raw: ByteArray? = null, val encoding: String? = null)
 
     /** One request: method, path with query, headers (lower-case names) and the body as UTF-8. */
     class Request(val method: String, val path: String, val headers: Map<String, String>, val body: String)
@@ -49,10 +49,11 @@ internal class FakeHttpServer private constructor(private val handle: (Request) 
                         while (read < length) read += input.read(bytes, read, length - read).also { n -> check(n >= 0) }
                     }
                     val response = handle(Request(method, path, headers, body.toString(Charsets.UTF_8)))
-                    val answer = response.body.toByteArray(Charsets.UTF_8)
+                    val answer = response.raw ?: response.body.toByteArray(Charsets.UTF_8)
                     it.getOutputStream().apply {
                         write(
                             ("HTTP/1.1 ${response.status} Fixture\r\nContent-Type: application/json\r\n" +
+                                (response.encoding?.let { "Content-Encoding: $it\r\n" } ?: "") +
                                 "Content-Length: ${answer.size}\r\nConnection: close\r\n\r\n").toByteArray(Charsets.US_ASCII),
                         )
                         write(answer)
