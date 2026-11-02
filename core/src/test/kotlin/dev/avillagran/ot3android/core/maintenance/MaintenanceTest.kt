@@ -101,6 +101,32 @@ class MaintenanceTest {
         assertFalse(r.pending(host, MaintenancePage.SCHEDULES))
         assertTrue(runCatching { r.reserve(host, MaintenancePage.STORAGE, "cleanup", JSONObject()) }.isFailure)
     }
+    @Test fun signingSecretsAreNotPersistedInReceipts() {
+        val directory = temporary.newFolder()
+        val receipts = FileMaintenanceReceipts(directory)
+        receipts.reserve(host, MaintenancePage.SCHEDULES, "scheduledTasks.upsert", JSONObject("""{"schedule":{"type":"webhook","signature":{"header":"x-signature","secret":"fixture-only","secretRef":"fixture-ref"}}}"""))
+        val stored = directory.listFiles()!!.single().readText()
+        assertFalse(stored.contains("fixture-only")); assertFalse(stored.contains("fixture-ref"))
+        assertTrue(stored.contains("x-signature"))
+    }
+
+    @Test fun explicitRejectionDoesNotLeaveAnUnknownSaveOrEchoDiagnostics() = runTest {
+        val f = Fixture(); f.functions += "scheduledTasks.upsert"
+        val transport = object : T3Transport by f.transport {
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? {
+                if (fn == "scheduledTasks.upsert") throw dev.avillagran.t3.T3Exception("rpc_rejected", "private submitted value")
+                return f.transport.call(fn, args, timeoutMs)
+            }
+        }
+        val receipts = FileMaintenanceReceipts(temporary.newFolder())
+        val c = MaintenanceController(host, MaintenancePage.SCHEDULES, transport, receipts)
+        c.refresh(); c.mutate("scheduledTasks.upsert", JSONObject(), true)
+        assertTrue(c.state.value.failed); assertFalse(c.state.value.unknown)
+        assertFalse(receipts.pending(host, MaintenancePage.SCHEDULES))
+        assertFalse(c.state.value.toString().contains("private submitted value"))
+        c.refresh(); assertTrue("scheduledTasks.upsert" in c.state.value.writable)
+    }
+
     @Test fun localSchedulersAndVaultMutationsHaveNoActions() {
         listOf(MaintenancePage.MEMORY, MaintenancePage.VAULT, MaintenancePage.HOST_SYNC).forEach {
             assertNull(it.read); assertTrue(MaintenanceController.actions(it).isEmpty())

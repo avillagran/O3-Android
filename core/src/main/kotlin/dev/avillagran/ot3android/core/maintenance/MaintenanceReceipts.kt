@@ -26,7 +26,12 @@ class FileMaintenanceReceipts(private val directory: File) : MaintenanceReceipts
         // Reserve before writing: even a partial record blocks another effect.
         check(target.createNewFile())
         target.outputStream().use { stream ->
-            stream.write(JSONObject().put("function", function).put("args", args).toString().toByteArray())
+            val recorded = JSONObject(args.toString())
+            recorded.optJSONObject("schedule")?.optJSONObject("signature")?.apply {
+                remove("secret")
+                remove("secretRef")
+            }
+            stream.write(JSONObject().put("function", function).put("args", recorded).toString().toByteArray())
             stream.fd.sync()
         }
     }

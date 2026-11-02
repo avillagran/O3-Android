@@ -1,6 +1,11 @@
 package dev.avillagran.ot3android.ui.settings.maintenance
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -13,7 +18,17 @@ import org.json.JSONObject
 
 /** Native schedule/model/workspace validation remains in the pinned typed API. */
 @Composable
-internal fun TaskEditor(task: JSONObject, onDismiss: () -> Unit, onSave: (JSONObject) -> Unit) {
+internal fun TaskEditor(task: JSONObject, onDismiss: () -> Unit, onSave: suspend (JSONObject) -> String?) {
+    val scope = rememberCoroutineScope()
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var secret by remember { mutableStateOf("") }
+    val originalSignature = task.optJSONObject("schedule")?.optJSONObject("signature")
+    var signing by remember { mutableStateOf(originalSignature != null) }
+    var header by remember { mutableStateOf(originalSignature?.optString("header") ?: "x-hub-signature-256") }
+    var encoding by remember { mutableStateOf(originalSignature?.optString("encoding") ?: "hex") }
+    var prefix by remember { mutableStateOf(originalSignature?.optString("prefix") ?: "sha256=") }
+    val dismiss = { if (!saving) { secret = ""; onDismiss() } }
     var title by remember { mutableStateOf(task.optString("title")) }
     var prompt by remember { mutableStateOf(task.optString("prompt")) }
     val originalSchedule = task.optJSONObject("schedule") ?: JSONObject()
@@ -28,13 +43,13 @@ internal fun TaskEditor(task: JSONObject, onDismiss: () -> Unit, onSave: (JSONOb
     val scheduleValid = when(type) {
         "interval" -> minutes.toLongOrNull()?.let { it in 1..525600 } == true
         "fixed_time" -> Regex("(?:[01][0-9]|2[0-3]):[0-5][0-9]").matches(time)
-        "webhook" -> true
+        "webhook" -> !signing || (header.isNotBlank() && (secret.isNotBlank() || originalSignature != null))
         else -> false
     }
     val workspaceValid = when(workspace) { "root" -> true; "worktree" -> base.isNotBlank(); "existing_worktree" -> path.isNotBlank(); else -> false }
     val valid = title.isNotBlank() && prompt.isNotBlank() && scheduleValid && workspaceValid &&
         task.optString("projectId").isNotBlank() && task.optJSONObject("modelSelection") != null
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.maintenance_edit)) }, text = {
+    AlertDialog(onDismissRequest = dismiss, title = { Text(stringResource(R.string.maintenance_edit)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.maintenance_title)) })
             OutlinedTextField(prompt, { prompt = it }, label = { Text(stringResource(R.string.maintenance_prompt)) })
@@ -49,14 +64,32 @@ internal fun TaskEditor(task: JSONObject, onDismiss: () -> Unit, onSave: (JSONOb
                 }
                 if (days.isEmpty()) Text(maintenanceText("Every day"))
             }
-            if (type == "webhook") Text(maintenanceText("Runs on each request to the task's webhook URL, shown after saving. The prompt may use {{body.path}} placeholders."))
+            if (type == "webhook") {
+                Text(maintenanceText("Runs on each request to the task's webhook URL, shown after saving. The prompt may use {{body.path}} placeholders."))
+                TextButton(enabled = !saving, onClick = { signing = !signing; secret = "" }) {
+                    Text((if (signing) "✓ " else "") + "HMAC-SHA256 signature")
+                }
+                if (signing) {
+                    OutlinedTextField(header, { header = it }, enabled = !saving, label = { Text("Signature header") })
+                    listOf("hex", "base64").forEach { value ->
+                        TextButton(enabled = !saving, onClick = { encoding = value }) { Text((if (encoding == value) "✓ " else "") + value) }
+                    }
+                    OutlinedTextField(prefix, { prefix = it }, enabled = !saving, label = { Text("Signature prefix (optional)") })
+                    OutlinedTextField(secret, { secret = it }, enabled = !saving,
+                        label = { Text(if (originalSignature != null) "New secret (blank keeps stored secret)" else "Signing secret") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), singleLine = true)
+                    Text("The secret is sent once and is never displayed again.")
+                }
+            }
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             listOf("root" to "Local", "worktree" to "Worktree", "existing_worktree" to "Existing worktree").forEach { (id, label) ->
                 TextButton(onClick = { workspace = id }) { Text((if (workspace == id) "✓ " else "") + maintenanceText(label)) }
             }
             if (workspace == "worktree") OutlinedTextField(base, { base = it }, label = { Text(maintenanceText("Base branch")) })
             if (workspace == "existing_worktree") OutlinedTextField(path, { path = it }, label = { Text(maintenanceText("Worktree path")) })
         }
-    }, confirmButton = { TextButton(enabled = valid, onClick = {
+    }, confirmButton = { TextButton(enabled = valid && !saving, onClick = {
         val args = JSONObject()
         listOf("id", "enabled", "projectId", "modelSelection", "runtimeMode", "interactionMode", "threadId").forEach { key ->
             if (task.has(key)) args.put(key, task.get(key))
@@ -69,13 +102,27 @@ internal fun TaskEditor(task: JSONObject, onDismiss: () -> Unit, onSave: (JSONOb
             "fixed_time" -> JSONObject().put("type", type).put("timeOfDay", time).apply {
                 if (days.isNotEmpty() && days.size < 7) put("weekdays", JSONArray(days.sorted()))
             }
-            else -> if (originalSchedule.optString("type") == "webhook") JSONObject(originalSchedule.toString()) else JSONObject().put("type", "webhook")
+            else -> (if (originalSchedule.optString("type") == "webhook") JSONObject(originalSchedule.toString()) else JSONObject().put("type", "webhook")).apply {
+                put("signature", if (signing) JSONObject().put("header", header.trim()).put("encoding", encoding).put("prefix", prefix).apply {
+                    if (secret.isNotBlank()) put("secret", secret.trim())
+                } else JSONObject.NULL)
+            }
         }
         val strategy = if (workspace == originalWorkspace.optString("type")) JSONObject(originalWorkspace.toString()) else JSONObject().put("type", workspace)
         if (workspace == "worktree") strategy.put("baseRef", base.trim())
         if (workspace == "existing_worktree") strategy.put("worktreePath", path.trim())
-        onSave(args.put("schedule", schedule).put("workspaceStrategy", strategy))
+        secret = ""
+        saving = true
+        error = null
+        scope.launch {
+            try {
+                error = onSave(args.put("schedule", schedule).put("workspaceStrategy", strategy))
+                if (error == null) onDismiss()
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { error = "Task could not be saved. Refresh and check access before trying again." }
+            finally { schedule.optJSONObject("signature")?.remove("secret"); saving = false }
+        }
     }) { Text(stringResource(R.string.maintenance_save)) } }, dismissButton = {
-        TextButton(onClick = onDismiss) { Text(stringResource(R.string.maintenance_cancel)) }
+        TextButton(enabled = !saving, onClick = dismiss) { Text(stringResource(R.string.maintenance_cancel)) }
     })
 }

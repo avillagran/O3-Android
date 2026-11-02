@@ -308,6 +308,12 @@ class DomainContractTest {
         ) as JSONObject
 
         val sheet = call("gitControls.present", JSONObject().put("scope", scope).put("status", status).put("scripts", JSONArray())) as JSONObject
+        val disabled = call("gitControls.present", JSONObject().put("scope", scope).put("status", status).put("scripts", JSONArray())
+            .put("serverConfig", JSONObject("""{"environment":{"capabilities":{"pullRequests":false}}}"""))) as JSONObject
+        assertTrue(sheet.getJSONObject("actions").getBoolean("commit_push_pr"))
+        assertTrue(!disabled.getJSONObject("actions").getBoolean("commit_push_pr"))
+        assertTrue(!disabled.getJSONObject("actions").getBoolean("create_pr"))
+        assertTrue(disabled.getJSONObject("actions").getBoolean("commit_push"))
         val intent = JSONObject().put("scope", sheet.getJSONObject("scope")).put("revision", sheet.get("revision"))
             .put("operation", "commit_push").put("actionId", "dd38bad7-c625-438d-9f12-165f25521753").put("confirmed", true)
         val plan = call("gitControls.buildAction", JSONObject().put("current", sheet).put("intent", intent)) as JSONObject

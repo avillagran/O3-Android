@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android.ui.settings.maintenance
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -77,6 +78,9 @@ fun MaintenanceScreen(controller: MaintenanceController, modifier: Modifier = Mo
                 Text(task.optJSONObject("schedule")?.let { schedule ->
                     listOf("type", "everyMs", "timeOfDay", "weekdays").filter(schedule::has).joinToString(" · ") { schedule.opt(it)?.toString().orEmpty() }
                 } ?: "—")
+                task.optJSONObject("webhook")?.optString("url")?.takeIf { it.isNotBlank() && it != "null" }?.let { url ->
+                    SelectionContainer { Text(url) }
+                }
                 val id = JSONObject().put("id", task.optString("id"))
                 Action(if (task.optBoolean("enabled")) R.string.maintenance_disable else R.string.maintenance_enable,
                     "scheduledTasks.setEnabled", state, enabled) { request(it, JSONObject(id.toString()).put("enabled", !task.optBoolean("enabled"))) }
@@ -117,7 +121,16 @@ fun MaintenanceScreen(controller: MaintenanceController, modifier: Modifier = Mo
         }
     }
     editing?.let { value -> TaskEditor(JSONObject(value), onDismiss = { editing = null }) { args ->
-        editing = null; request("scheduledTasks.upsert", args)
+        controller.mutate("scheduledTasks.upsert", args, confirmed = true)
+        val result = controller.state.value
+        when {
+            result.unknown -> "Save outcome is unknown. Refresh and verify the task before any further changes."
+            result.failed -> {
+                controller.refresh()
+                "Task was not saved. Check webhook signing settings, schedule, workspace and host access."
+            }
+            else -> { controller.refresh(); null }
+        }
     } }
     confirmation?.let { (fn, args) ->
         AlertDialog(onDismissRequest = { confirmation = null }, title = { Text(stringResource(R.string.maintenance_confirm)) },

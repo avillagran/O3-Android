@@ -32,7 +32,8 @@ class GitOperations(
         val project = (0 until projects.length()).map { projects.getJSONObject(it) }.first { it.getString("id") == scope.getString("projectId") }
         val scripts = domain.domain("gitControls.resolveScripts", JSONObject().put("settings", transport.call("server.getSettings")).put("project", project))
         val status = transport.call("vcs.refreshStatus", JSONObject().put("cwd", scope.getString("cwd")))
-        return domain.domain("gitControls.present", JSONObject().put("scope", scope).put("status", status).put("scripts", scripts)) as JSONObject
+        return domain.domain("gitControls.present", JSONObject().put("scope", scope).put("status", status).put("scripts", scripts)
+            .put("serverConfig", transport.call("server.getConfig"))) as JSONObject
     }
 
     /** Call only for the transport resolved by snapshot.scope.environment. No outbox replay. */

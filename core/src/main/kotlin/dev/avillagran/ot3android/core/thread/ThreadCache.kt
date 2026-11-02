@@ -14,7 +14,8 @@ class ThreadCache(
     private val directory: File,
     private var maxBytes: Long = 200L * 1024 * 1024,
     private val maxEntries: Int = 128,
-    private val maxEntryBytes: Long = 8L * 1024 * 1024,
+    // Includes whole sidebar shell snapshots, matching the core transport bound.
+    private val maxEntryBytes: Long = 64L * 1024 * 1024,
     private val maxAgeMs: Long = 7L * 24 * 60 * 60 * 1000,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {

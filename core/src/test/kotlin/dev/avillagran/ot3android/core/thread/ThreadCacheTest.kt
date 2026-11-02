@@ -12,6 +12,14 @@ class ThreadCacheTest {
     private fun snapshot(value: String = "hello") = JSONObject().put("snapshotSequence", 10)
         .put("projection", JSONObject().put("value", value))
 
+    @Test fun largeShellSurvivesOfflineCacheRestart() = runBlocking {
+        val directory = root.newFolder()
+        val text = "x".repeat(9 * 1024 * 1024)
+        ThreadCache(directory).writeSidebar("environment", "scope", snapshot(text))
+        val restored = ThreadCache(directory).readSidebar("environment", "scope")!!
+        assertEquals(text.length, restored.getJSONObject("projection").getString("value").length)
+    }
+
     @Test fun sidebarSurvivesPinnedTranscriptPressureAcrossRestartWithinTheSameBudget() = runBlocking {
         var now = 1_000L
         val directory = root.newFolder()

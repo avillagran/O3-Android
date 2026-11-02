@@ -1,6 +1,7 @@
 package dev.avillagran.ot3android.core.maintenance
 
 import dev.avillagran.ot3android.core.transport.T3Transport
+import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -120,6 +121,11 @@ class MaintenanceController(
         } catch (e: CancellationException) {
             if (active) mutable.value = before.copy(busy = false, stale = true, unknown = dispatched, writable = emptySet())
             throw e
+        } catch (e: T3Exception) {
+            val rejected = e.code == "rpc_rejected"
+            if (rejected && dispatched) receipts.complete(host, page)
+            if (active) mutable.value = before.copy(busy = false, stale = true, failed = true,
+                unknown = !rejected && (dispatched || receipts.pending(host, page)), writable = emptySet())
         } catch (_: Exception) {
             if (active) mutable.value = before.copy(busy = false, stale = true, failed = true,
                 unknown = dispatched || receipts.pending(host, page), writable = emptySet())

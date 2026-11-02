@@ -1,6 +1,24 @@
-# Adopted release: v0.3.8
+# Current source pin
 
-Current consumer pin: `1498ad6656fed511d1c7ea61795dfd46c0e01ce5`, ABI 3.
+`libs/lib-t3-rust.lock` selects source mode at
+`046bfa946cc07c468b186fec10ee938f73e08f8e` on `o3/server-capabilities`.
+Use a separate clean lib-t3-rust checkout at that commit and run:
+
+```sh
+LIB_T3_RUST_DIR=/path/to/lib-t3-rust scripts/fetch-or-build-lib.sh
+```
+
+This builds all four Android ABIs and host JNI. The helper rejects a different
+source commit or `--release` while this unreleased source pin is active.
+The core accepts shell snapshots up to 64 MiB; Android delegates shell GET and
+subscription limits to it. Git controls pass current `server.getConfig`, including
+`environment.capabilities.pullRequests`; absent capabilities retain legacy behavior.
+
+The release workflow below applies when the lock selects a published release.
+
+# Previous published release: v0.3.8
+
+Previous release pin: `1498ad6656fed511d1c7ea61795dfd46c0e01ce5`, ABI 3.
 Release AAR SHA-256: `6cf56cf366d16dd59ef313864fb7cfb4e04fb067487e1d1e0671b30fe81ae213`.
 Use `scripts/fetch-or-build-lib.sh --release --host-jni` with a checkout at this
 source commit. Regenerate `strings_ot3.xml` with `tools/import-ot3-strings`.
@@ -17,7 +35,7 @@ and x86_64. `scripts/fetch-or-build-lib.sh` downloads the archive from a GitHub 
 (or builds it from a lib checkout) and places it under a stable name:
 
 ```
-libs/lib-t3-rust.lock                    committed: the release tag and AAR SHA-256 this repository targets
+libs/lib-t3-rust.lock                    committed: source commit or release tag and AAR SHA-256
 libs/lib-t3-rust-android.aar             the AAR, referenced as files("libs/lib-t3-rust-android.aar")
 libs/lib-t3-rust-android.aar.sha256      sha256sum -c compatible checksum
 libs/lib-t3-rust-android.properties      version, source commit, tag, describe, abiVersion, origin, sha256

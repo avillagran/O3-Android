@@ -109,6 +109,7 @@ prop() { sed -n "s/^$1=//p" "$2" 2>/dev/null | head -1; }
 
 # A committed libs/lib-t3-rust.lock (tag=..., sha256=...) pins the release path.
 if ((release)) && [[ -f $release_lock ]]; then
+  [[ $(prop mode "$release_lock") != source ]] || die "This checkout pins an unreleased source commit; build without --release (see docs/LIB_BUILD.md)"
   lock_tag=$(prop tag "$release_lock")
   lock_sha=$(prop sha256 "$release_lock")
   [[ -n $lock_tag && $lock_sha =~ ^[0-9a-f]{64}$ ]] \
@@ -241,6 +242,9 @@ inspect_lib() {
   [[ -f $lib_dir/Cargo.toml ]] || die "$lib_dir/Cargo.toml not found"
   [[ -f $lib_dir/include/t3_protocol.h ]] || die "$lib_dir/include/t3_protocol.h not found"
   lib_commit=$(git -C "$lib_dir" rev-parse HEAD)
+  if [[ -f $release_lock && $(prop mode "$release_lock") == source ]]; then
+    [[ $lib_commit == "$(prop source "$release_lock")" ]] || die "lib checkout must match the source commit pinned in libs/lib-t3-rust.lock"
+  fi
   lib_describe=$(git -C "$lib_dir" describe --tags --always)
   lib_tag=$(git -C "$lib_dir" describe --tags --exact-match 2>/dev/null || true)
   lib_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$lib_dir/Cargo.toml" | head -1)
@@ -321,7 +325,7 @@ check_build_env() {
 
 build_aar() {
   inspect_lib
-  if [[ -f $release_lock ]] && [[ $(prop tag "$release_lock") != "${lib_tag:-none}" ]]; then
+  if [[ -f $release_lock && $(prop mode "$release_lock") != source ]] && [[ $(prop tag "$release_lock") != "${lib_tag:-none}" ]]; then
     log "warning: libs/lib-t3-rust.lock pins $(prop tag "$release_lock") (release path only); building $lib_describe from source"
   fi
   if ((!force)) && aar_current source "$lib_commit" describe "$lib_describe"; then

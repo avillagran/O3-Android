@@ -20,6 +20,7 @@ class GitSafetyTest {
     private fun snapshot() = JSONObject().put("scope", scope).put("revision", "v1")
 
     private class Policy : DomainCalls {
+        var config: JSONObject? = null
         var refuse = false
         var commandCalls = 0
         var observation = "pending"
@@ -27,7 +28,7 @@ class GitSafetyTest {
         override suspend fun domain(fn: String, args: JSONObject): Any = when (fn) {
             "gitControls.scope" -> args.getJSONObject("shell").getJSONObject("scope")
             "gitControls.resolveScripts" -> JSONArray()
-            "gitControls.present" -> JSONObject().put("scope", args.get("scope")).put("revision", "v1")
+            "gitControls.present" -> JSONObject().put("scope", args.get("scope")).put("revision", "v1").also { config = args.getJSONObject("serverConfig") }
             "gitControls.buildVerifiedAction" -> {
                 if (refuse) error("git_stale_result")
                 val intent = args.getJSONObject("intent")
@@ -54,13 +55,30 @@ class GitSafetyTest {
                 "authSession" -> JSONObject().put("authenticated", authenticated).put("scopes", JSONArray(listOf("source-control:write", "terminal:write", "orchestration:operate")))
                 "shell" -> JSONObject().put("scope", scope).put("projects", JSONArray("""[{"id":"p"}]"""))
                 "call" -> when (args!![0]) {
-                    "server.getSettings", "vcs.refreshStatus" -> JSONObject()
+                    "server.getConfig", "server.getSettings", "vcs.refreshStatus" -> JSONObject()
                     else -> { writes++; if(cancel) throw CancellationException(); if(writes == failAt) error("disconnected"); JSONObject().put("status", "pulled") }
                 }
                 else -> error(method.name)
             }
         } as T3Transport
     }
+    @Test fun readerForwardsFreshServerCapabilities() = runTest {
+        val host = Host(scope)
+        var allowed = false
+        val transport = object : T3Transport by host.transport {
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? =
+                if (fn == "server.getConfig") JSONObject().put("environment", JSONObject().put("capabilities", JSONObject().put("pullRequests", allowed)))
+                else host.transport.call(fn, args, timeoutMs)
+        }
+        val policy = Policy(); val api = GitOperations(journal(), policy)
+        api.read(transport, scope)
+        assertFalse(policy.config!!.getJSONObject("environment").getJSONObject("capabilities").getBoolean("pullRequests"))
+        allowed = true
+        api.read(transport, scope)
+        assertTrue(policy.config!!.getJSONObject("environment").getJSONObject("capabilities").getBoolean("pullRequests"))
+        assertEquals(0, host.writes)
+    }
+
     @Test fun duplicateAndConcurrentCheckoutAdmissionSurviveReopen() {
         val first = journal()
         assertTrue(first.reserve("a", "checkout", JSONObject()))

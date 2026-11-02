@@ -17,6 +17,7 @@ class NativeHttpTest {
     private lateinit var server: FakeHttpServer
     private lateinit var transport: NativeT3Transport
     private val descriptorAuthorization = AtomicReference<String?>("unset")
+    private var shellBody = """{"snapshotSequence":3,"projects":[],"threads":[]}"""
     private val shellProtocol = AtomicReference<String?>("unset")
 
     @Before
@@ -35,7 +36,7 @@ class NativeHttpTest {
                 "/api/orchestration/shell" -> {
                     shellProtocol.set(headers["x-t3-orchestration-protocol"])
                     if (headers["authorization"] == "Bearer $TOKEN") {
-                        FakeHttpServer.Response(200, "{\"snapshotSequence\":3,\"projects\":[],\"threads\":[]}")
+                        FakeHttpServer.Response(200, shellBody)
                     } else {
                         FakeHttpServer.Response(401)
                     }
@@ -98,6 +99,15 @@ class NativeHttpTest {
 
         assertEquals(3L, shell.getLong("snapshotSequence"))
         assertEquals("2", shellProtocol.get())
+    }
+
+    @Test
+    fun shellLargerThanEightMiBPassesThroughTheAndroidAdapter() = runBlocking {
+        val title = "x".repeat(9 * 1024 * 1024)
+        shellBody = JSONObject().put("snapshotSequence", 4).put("projects", org.json.JSONArray())
+            .put("threads", org.json.JSONArray().put(JSONObject().put("id", "large").put("title", title))).toString()
+        transport.connect(ConnectRoute.Bearer(server.baseUrl, TOKEN))
+        assertEquals(title.length, transport.shell().getJSONArray("threads").getJSONObject(0).getString("title").length)
     }
 
     @Test
