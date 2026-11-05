@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Tilføj projekt</string>
+    <string name="project_new">Nyt projekt</string>
+    <string name="project_environment">Vælg miljø</string>
+    <string name="project_search">Søg efter projekter…</string>
+    <string name="project_none">Ingen projekter fundet</string>
+    <string name="project_setup">Opsætning kræves</string>
+    <string name="project_local">Lokal mappe</string>
+    <string name="project_provider">%1$s-repository</string>
+    <string name="project_name">Projektnavn</string>
+    <string name="project_choose_folder">Vælg mappe</string>
+    <string name="project_folder">Mappe</string>
+    <string name="project_browse">Åbn mappe</string>
+    <string name="project_open">Åbn projekt</string>
+    <string name="project_clone">Klon et repository</string>
+    <string name="project_pending">Resultatet er ukendt. Opdater og tjek, før du prøver den samme handling igen.</string>
+    <string name="project_reviewed">Jeg har kontrolleret mine projekter</string>
+</resources>

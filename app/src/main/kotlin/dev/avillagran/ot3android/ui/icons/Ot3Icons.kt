@@ -19,6 +19,10 @@ import dev.avillagran.ot3android.R
  * that folder's NOTICE.md and add the icon here.
  */
 object Ot3Icons {
+    @DrawableRes val Linux: Int = R.drawable.ic_linux
+    @DrawableRes val MacMini: Int = R.drawable.ic_mac_mini
+    @DrawableRes val MacStudio: Int = R.drawable.ic_mac_studio
+    @DrawableRes val LayoutGrid: Int = R.drawable.ic_layout_grid
     @DrawableRes val ZoomIn: Int = R.drawable.ic_zoom_in
     @DrawableRes val ZoomOut: Int = R.drawable.ic_zoom_out
     @DrawableRes val RotateCcw: Int = R.drawable.ic_rotate_ccw
@@ -167,7 +171,11 @@ object Ot3Icons {
         "square-pen" to SquarePen,
         "stop-filled" to StopFilled,
         "star" to Star,
+        "linux" to Linux,
+        "mac-mini" to MacMini,
+        "mac-studio" to MacStudio,
         "list-todo" to ListTodo,
+        "layout-grid" to LayoutGrid,
         "circle" to Circle,
         "circle-dot" to CircleDot,
         "star-filled" to StarFilled,

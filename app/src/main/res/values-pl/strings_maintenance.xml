@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Uruchamia się przy każdym żądaniu do adresu URL webhooka zadania, widocznego po zapisaniu. Prompt może używać symboli {{body.path}}.</string>
     <string name="maintenance_extended_16">Ostatnie 30 minut: CPU (linia) i pamięć (słupki)</string>
     <string name="maintenance_add_project">Dodaj projekt</string>
+    <string name="maintenance_server_unsupported">Ta funkcja nie jest dostępna w tej wersji serwera.</string>
 </resources>

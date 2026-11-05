@@ -25,7 +25,7 @@ val desktopPreferencesPages = listOf(
 
 data class PreferenceLabel(@param:StringRes val label: Int, val choices: List<Int>)
 val localAppearanceLabels = mapOf(
-    LocalAppearancePreference.INTERFACE_LAYOUT to PreferenceLabel(R.string.preferences_interface_layout, listOf(R.string.preferences_classic, R.string.preferences_focus, R.string.preferences_by_project)),
+    LocalAppearancePreference.INTERFACE_LAYOUT to PreferenceLabel(R.string.preferences_interface_layout, listOf(R.string.preferences_classic, R.string.preferences_focus, R.string.preferences_by_project, R.string.sidebar_layout_board)),
     LocalAppearancePreference.ANIMATIONS_ENABLED to PreferenceLabel(R.string.preferences_enable_animations, listOf()),
     LocalAppearancePreference.SIDEBAR_STYLE to PreferenceLabel(R.string.preferences_style, listOf(R.string.preferences_sober, R.string.preferences_vivid)),
     LocalAppearancePreference.BRAND_GLYPH to PreferenceLabel(R.string.preferences_logo, listOf(R.string.preferences_letter_o, R.string.preferences_omarchy_logo)),

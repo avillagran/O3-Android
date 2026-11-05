@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Přidat projekt</string>
+    <string name="project_new">Nový projekt</string>
+    <string name="project_environment">Vybrat prostředí</string>
+    <string name="project_search">Hledat projekty…</string>
+    <string name="project_none">Nenalezeny žádné projekty</string>
+    <string name="project_setup">Vyžaduje nastavení</string>
+    <string name="project_local">Místní složka</string>
+    <string name="project_provider">Repozitář %1$s</string>
+    <string name="project_name">Název projektu</string>
+    <string name="project_choose_folder">Vybrat složku</string>
+    <string name="project_folder">Složka</string>
+    <string name="project_browse">Otevřít složku</string>
+    <string name="project_open">Otevřít projekt</string>
+    <string name="project_clone">Klonovat repozitář</string>
+    <string name="project_pending">Výsledek není znám. Před opakováním stejné akce aktualizujte stav.</string>
+    <string name="project_reviewed">Zkontroloval jsem své projekty</string>
+</resources>

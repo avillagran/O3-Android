@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Suoritetaan jokaisesta pyynnöstä tehtävän webhook-URL-osoitteeseen, joka näkyy tallennuksen jälkeen. Kehote voi käyttää {{body.path}}-paikkamerkkejä.</string>
     <string name="maintenance_extended_16">Viimeiset 30 minuuttia: CPU (viiva) ja muisti (palkit)</string>
     <string name="maintenance_add_project">Lisää projekti</string>
+    <string name="maintenance_server_unsupported">Tämä toiminto ei ole käytettävissä tässä palvelinversiossa.</string>
 </resources>

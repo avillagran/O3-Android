@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">تعمل مع كل طلب إلى عنوان URL الخاص بـ webhook المهمة، والذي يظهر بعد الحفظ. يمكن أن يستخدم الموجّه عناصر {{body.path}}.</string>
     <string name="maintenance_extended_16">آخر 30 دقيقة: CPU (خط) والذاكرة (أعمدة)</string>
     <string name="maintenance_add_project">إضافة مشروع</string>
+    <string name="maintenance_server_unsupported">هذه الميزة غير متاحة في إصدار الخادم هذا.</string>
 </resources>

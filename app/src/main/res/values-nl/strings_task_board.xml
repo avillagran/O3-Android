@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Takenbord</string>
+    <string name="task_board_pending">In afwachting</string>
+    <string name="task_board_working">Aan het werk</string>
+    <string name="task_board_waiting">Wachten</string>
+    <string name="task_board_done">Gereed</string>
+    <string name="board_live_view">Liveweergave</string>
+    <string name="board_live_loading">Gesprek laden…</string>
+    <string name="board_live_empty">Nog geen berichten</string>
+    <string name="board_live_you">Jij</string>
+    <string name="board_live_write">Bericht schrijven</string>
+    <string name="board_live_unavailable">Omgeving niet beschikbaar</string>
+    <string name="board_live_waiting">Omgeving niet beschikbaar</string>
+</resources>

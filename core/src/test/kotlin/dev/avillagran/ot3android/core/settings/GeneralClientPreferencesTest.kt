@@ -45,6 +45,26 @@ class GeneralClientPreferencesTest {
         assertEquals("Sí", lines[0]); assertEquals(250, lines[1].length); assertEquals(3,lines.size)
         assertTrue(prefs.settings.first().getString("quickReplies.en").startsWith("Continue."))
     }
+    @Test fun hostFollowUpPreferenceIsMirroredUnlessAndroidWasExplicitlyOverridden() = runBlocking {
+        assertEquals("steer", prefs.followUpBehavior("a"))
+        prefs.mirrorFollowUp("a", "queue")
+        assertEquals("queue", prefs.followUpBehavior("a"))
+        assertEquals("queue", prefs.settingsFor("a").first().getString("followUpBehavior"))
+        assertEquals("steer", prefs.followUpBehavior("b"))
+        prefs.update("followUpBehavior", "steer")
+        assertEquals("steer", prefs.followUpBehavior("a"))
+        prefs.reset("followUpBehavior")
+        assertEquals("queue", prefs.followUpBehavior("a"))
+        prefs.mirrorFollowUp("a", "steer")
+        assertEquals("steer", prefs.followUpBehavior("a"))
+    }
+    @Test fun sharedDocumentUsesDesktopDefaultsAndSupportsLegacyNesting() {
+        assertEquals("steer", SharedClientPreferencesReader.parse("{}"))
+        assertEquals("steer", SharedClientPreferencesReader.parse(""))
+        assertEquals("queue", SharedClientPreferencesReader.parse("""{"settings":{"followUpBehavior":"queue"}}"""))
+        assertTrue(runCatching { SharedClientPreferencesReader.parse("""{"followUpBehavior":"invalid"}""") }.isFailure)
+    }
+
     @Test fun invalidEnumsDoNotReplaceSavedValues() = runBlocking {
         prefs.update("followUpBehavior", "steer")
         assertTrue(runCatching { prefs.update("followUpBehavior", "unexpected") }.isFailure)

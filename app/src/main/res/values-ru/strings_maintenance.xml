@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Запускается при каждом запросе к URL вебхука задачи, который появится после сохранения. Промпт может использовать заполнители {{body.path}}.</string>
     <string name="maintenance_extended_16">Последние 30 минут: CPU (линия) и память (столбцы)</string>
     <string name="maintenance_add_project">Добавить проект</string>
+    <string name="maintenance_server_unsupported">Эта функция недоступна в этой версии сервера.</string>
 </resources>

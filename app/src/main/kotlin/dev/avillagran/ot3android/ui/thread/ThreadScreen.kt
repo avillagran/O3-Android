@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,6 +77,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -149,9 +151,9 @@ fun ThreadScreen(viewModel: ThreadViewModel, onBack: () -> Unit, modifier: Modif
     val imageConnection by viewModel.imageConnection.collectAsStateWithLifecycle()
     val diffSettings by androidx.compose.ui.platform.LocalContext.current.devGraph().diffReviewSettings.collectAsStateWithLifecycle()
     val graph = androidx.compose.ui.platform.LocalContext.current.devGraph()
-    val clientSettings by graph.generalClientPreferences.settings.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
+    val clientSettings by remember(graph, viewModel.localEnvironmentId) { graph.generalClientPreferences.settingsFor(viewModel.localEnvironmentId) }.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
     val mathRendering by androidx.compose.ui.platform.LocalContext.current.devGraph().mathRenderingEnabled.collectAsStateWithLifecycle()
-    ReaderReferenceHost(imageConnection, state.view.threadId, viewModel.localEnvironmentId, graph,
+    ReaderReferenceHost(imageConnection, state.view.threadId, viewModel.localEnvironmentId, graph, viewModel::workspaceCwd,
         { environment, thread -> if (onOpenReferenceThread != null) onOpenReferenceThread(environment, thread) else if (environment == viewModel.localEnvironmentId) onOpenThread?.invoke(thread) }) {
     androidx.compose.runtime.CompositionLocalProvider(dev.avillagran.ot3android.ui.thread.rendering.LocalCodeActions provides dev.avillagran.ot3android.ui.thread.rendering.CodeActions(run = onRunCode?.let { run -> { block: org.json.JSONObject -> run(block.getString("command")) } }), LocalRegistryTransport provides imageConnection?.transport, LocalLiveInspector provides LiveInspector(imageConnection) { viewModel.isImageConnectionCurrent(imageConnection) }, LocalReaderCheckpoint provides ReaderCheckpoint(checkpointMessages, viewModel::previewCheckpoint), LocalReaderTimeFormat provides clientSettings.optString("timestampFormat", "locale"), LocalReaderReview provides if (viewModel.durableComposerAvailable) ReaderReviewSettings(diffSettings, graph::setDiffReviewSettings) else ReaderReviewSettings(), LocalReaderMath provides mathRendering, LocalReaderStreaming provides state.view.working, LocalReaderImages provides ReaderImages(imageConnection, { viewModel.isImageConnectionCurrent(imageConnection) }, owner = viewModel.imageOwner(imageConnection), read = viewModel::readImage)) {
         ThreadContent(
@@ -302,15 +304,20 @@ fun ThreadContent(
                 state.connected && !state.view.stale && !state.sending && state.queueEdit == null && state.unconfirmed.isEmpty(), onRefreshModels, onRuntimeMode)
         }
     }
+    // Desktop's panel sky (T3Panel.qml:1036) behind the whole thread: still while idle,
+    // drifting with comets while this thread works.
+    Box(modifier.background(Ot3Theme.colors.background)) {
+    ThreadSky(state.view.working, Modifier.matchParentSize())
     Scaffold(
-        modifier = modifier.testTag(ThreadScreenTags.ROOT),
+        modifier = Modifier.fillMaxSize().testTag(ThreadScreenTags.ROOT),
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         contentWindowInsets = WindowInsets.safeDrawing,
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 expandedHeight = 56.dp,
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Ot3Theme.colors.background),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
                 title = {
                     Column {
                         Text(
@@ -321,9 +328,8 @@ fun ThreadContent(
                             modifier = Modifier.testTag(ThreadScreenTags.TITLE),
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            (state.connection as? ConnectionState.Connected)?.descriptor?.label?.takeIf { it.isNotBlank() }?.let { host ->
-                                Text(host, Modifier.padding(end = 6.dp).widthIn(max = 72.dp), maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall, color = Ot3Theme.colors.dim)
+                            (state.hostLabel ?: (state.connection as? ConnectionState.Connected)?.descriptor?.label)?.takeIf { it.isNotBlank() }?.let { host ->
+                                dev.avillagran.ot3android.ui.kit.HostBadge(host, state.hostEnvironmentId, Modifier.padding(end = 6.dp))
                             }
                             ConnectionChip(state.connection)
                             if (state.view.working) {
@@ -486,17 +492,21 @@ fun ThreadContent(
             }
         }
     }
+    }
 }
 
 }
 
 @Composable
-private fun WorkingLabel() {
-    val colors = MaterialTheme.colorScheme
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag(ThreadScreenTags.WORKING)) {
-        Ot3Spinner(size = 12.dp, tint = Ot3Theme.colors.working)
-        Spacer(Modifier.width(4.dp))
-        StatusLabel(stringResource(R.string.status_working), colors.tertiaryContainer, colors.onTertiaryContainer)
+internal fun WorkingLabel() {
+    val label = stringResource(R.string.status_working)
+    Box(Modifier.requiredSize(20.dp).testTag(ThreadScreenTags.WORKING)
+        .clearAndSetSemantics { contentDescription = label }, contentAlignment = Alignment.Center) {
+        Text("\uf013", color = Ot3Theme.colors.working,
+            fontFamily = androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(R.font.nerd_preview)),
+            fontSize = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toSp() },
+            maxLines = 1, softWrap = false,
+            style = androidx.compose.ui.text.TextStyle(platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)))
     }
 }
 
@@ -663,7 +673,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
     SideEffect { model.sharedDraftRepository = shared; model.sharedDraftSynchronizer = synchronizer }
 
     val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
-    val client by graph.generalClientPreferences.settings.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
+    val client by remember(graph, model.localEnvironmentId) { graph.generalClientPreferences.settingsFor(model.localEnvironmentId) }.collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.core.settings.GeneralClientPreferences.defaults)
     LaunchedEffect(state.draft) {
         if (session.snapshot.text != state.draft) session.replace(session.snapshot, state.draft,
             dev.avillagran.ot3android.core.composer.ComposerSelection(state.draft.length, state.draft.length))
@@ -689,7 +699,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
     var sharedAdoptionFailed by remember(synchronizer) { mutableStateOf(false) }
     if (sharedFailed || sharedAdoptionFailed || (shared != null && attachments.size > 16)) Text(stringResource(R.string.shared_draft_failed), color = MaterialTheme.colorScheme.error)
     if (sharedConflicts > 0) Text(stringResource(R.string.shared_draft_conflict), color = MaterialTheme.colorScheme.error)
-    LaunchedEffect(synchronizer, snapshot.text, snapshot.selection, snapshot.composing, attachments, state.modelSelection, state.composer.loaded, state.sending, pending, planControls) {
+    LaunchedEffect(synchronizer, snapshot.text, snapshot.selection, snapshot.composing, attachments, state.modelSelection, state.composer.loaded, state.sending, pending, planControls, client.optString("followUpBehavior")) {
         if (snapshot.text == state.draft && state.unconfirmed.isEmpty() && state.composer.loaded && synchronizer != null && !snapshot.composing && pending == null && !state.sending && attachments.size <= 16 && attachments.all { it.status == dev.avillagran.ot3android.core.composer.UploadStatus.Ready && it.descriptor != null }) {
             val draftPayload = org.json.JSONObject().put("schema", 1).put("text", snapshot.text)
                 .put("attachments", org.json.JSONArray(attachments.map { file ->
@@ -713,7 +723,7 @@ private fun ConnectedComposer(model: ThreadViewModel, state: ThreadUiState, cont
                     put("modelSelection", safe)
                 } }
                 .put("preferences", org.json.JSONObject(draftOptions?.toString() ?: "{}").put("interactionMode", planControls.optString("interactionMode", "default"))
-                    .put("deliveryMode", draftOptions?.optString("deliveryMode")?.takeIf { it in setOf("queue", "steer", "auto") } ?: client.optString("followUpBehavior", "queue")))
+                    .put("deliveryMode", draftOptions?.optString("deliveryMode")?.takeIf { it in setOf("queue", "send", "steer", "auto") } ?: if (client.optString("followUpBehavior", "steer") == "queue") "queue" else "send"))
             if (sharedBound) synchronizer.edit(draftPayload) else { sharedBound = true; synchronizer.bind(draftPayload) }
         }
     }

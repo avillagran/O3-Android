@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Görev panosu</string>
+    <string name="task_board_pending">Bekliyor</string>
+    <string name="task_board_working">Çalışıyor</string>
+    <string name="task_board_waiting">Bekleniyor</string>
+    <string name="task_board_done">Hazır</string>
+    <string name="board_live_view">Canlı görünüm</string>
+    <string name="board_live_loading">Konuşma yükleniyor…</string>
+    <string name="board_live_empty">Henüz mesaj yok</string>
+    <string name="board_live_you">Siz</string>
+    <string name="board_live_write">İleti yaz</string>
+    <string name="board_live_unavailable">Ortam kullanılamıyor</string>
+    <string name="board_live_waiting">Ortam kullanılamıyor</string>
+</resources>

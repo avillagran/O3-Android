@@ -17,7 +17,7 @@ import org.json.JSONObject
 internal fun NewChatDraftScreen(state: NewChatDraftState, onBack: () -> Unit,
     onText: (String) -> Unit, onTitle: (String) -> Unit, onSelect: (JSONObject) -> Unit,
     onOption: (String, Any) -> Unit, onRuntime: (String) -> Unit, onRefresh: () -> Unit, onCreate: (String) -> Unit,
-    environmentLabel: String = "", onDiscard: () -> Unit = {},
+    environmentLabel: String = "", onDiscard: () -> Unit = {}, environmentId: String = "",
 ) {
     var confirmingDiscard by remember { mutableStateOf(false) }
     if (confirmingDiscard) AlertDialog(onDismissRequest = { confirmingDiscard = false },
@@ -41,7 +41,7 @@ internal fun NewChatDraftScreen(state: NewChatDraftState, onBack: () -> Unit,
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()
             .padding(horizontal = 12.dp).testTag("new_chat_draft"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(state.projectTitle, style = MaterialTheme.typography.titleMedium)
-            if (environmentLabel.isNotBlank()) Text(environmentLabel, style = MaterialTheme.typography.labelMedium)
+            if (environmentLabel.isNotBlank()) dev.avillagran.ot3android.ui.kit.HostBadge(environmentLabel, environmentId)
             Text(stringResource(R.string.ot3_new_chat_current_checkout), style = MaterialTheme.typography.labelSmall)
             if (state.loading || state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (state.error) Text(stringResource(R.string.home_action_unconfirmed), color = MaterialTheme.colorScheme.error)

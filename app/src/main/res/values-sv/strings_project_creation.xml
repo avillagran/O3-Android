@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Lägg till projekt</string>
+    <string name="project_new">Nytt projekt</string>
+    <string name="project_environment">Välj miljö</string>
+    <string name="project_search">Sök projekt…</string>
+    <string name="project_none">Inga projekt hittades</string>
+    <string name="project_setup">Konfiguration krävs</string>
+    <string name="project_local">Lokal mapp</string>
+    <string name="project_provider">%1$s-arkiv</string>
+    <string name="project_name">Projektnamn</string>
+    <string name="project_choose_folder">Välj mapp</string>
+    <string name="project_folder">Mapp</string>
+    <string name="project_browse">Öppna mapp</string>
+    <string name="project_open">Öppna projekt</string>
+    <string name="project_clone">Klona ett arkiv</string>
+    <string name="project_pending">Resultatet är okänt. Uppdatera och kontrollera innan du försöker samma åtgärd igen.</string>
+    <string name="project_reviewed">Jag har kontrollerat mina projekt</string>
+</resources>

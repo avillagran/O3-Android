@@ -101,6 +101,54 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
     }
 
     @Composable
+    override fun AddProject(entry: NavBackStackEntry, route: AddProject) {
+        val graph = LocalContext.current.appGraph
+        val home = homeViewModel(entry)
+        val homeState by home.state.collectAsStateWithLifecycle()
+        val environments by graph.environmentRepository.environments.collectAsStateWithLifecycle(initialValue = emptyList())
+        val connections by graph.connectionManager.states.collectAsStateWithLifecycle(initialValue = emptyMap())
+        var selected by rememberSaveable { mutableStateOf(route.environmentId) }
+        androidx.compose.runtime.LaunchedEffect(environments, connections) {
+            if (selected == null) environments.filter { connections[it.id] is dev.avillagran.ot3android.core.connection.ConnectionState.Connected }
+                .singleOrNull()?.let { selected = it.id }
+        }
+        val live by remember(selected) { selected?.let(graph.connectionManager::connectionFlow) ?: kotlinx.coroutines.flow.flowOf(null) }
+            .collectAsStateWithLifecycle(initialValue = null)
+        val controller = live?.let { graph.projectCreationOwner(requireNotNull(selected), it.transport) }
+        val state by (controller?.state ?: kotlinx.coroutines.flow.flowOf(dev.avillagran.ot3android.ui.projects.ProjectCreationState()))
+            .collectAsStateWithLifecycle(initialValue = dev.avillagran.ot3android.ui.projects.ProjectCreationState())
+        val scope = rememberCoroutineScope()
+        androidx.compose.runtime.LaunchedEffect(controller) { controller?.refresh() }
+        androidx.compose.runtime.LaunchedEffect(controller, state.createdProjectId) {
+            state.createdProjectId?.let { id ->
+                val environment = selected ?: return@let
+                controller?.opened()
+                navigator.back()
+                navigator.push(NewThreadDraft(environment, id))
+            }
+        }
+        val current = homeState
+        val projects = current?.projects?.values.orEmpty().map { project ->
+            val environment = project.key.substringBefore('/')
+            dev.avillagran.ot3android.ui.newchat.NewChatProjectOption(environment,
+                environments.firstOrNull { it.id == environment }?.label ?: environment,
+                project.key.substringAfter('/'), project.title, project.workspaceRoot,
+                connections[environment] is dev.avillagran.ot3android.core.connection.ConnectionState.Connected,
+                current?.actionContexts?.get(environment)?.canOperate == true)
+        }
+        dev.avillagran.ot3android.ui.projects.AddProjectScreen(
+            environments.map { dev.avillagran.ot3android.ui.projects.ProjectEnvironment(it.id, it.label,
+                connections[it.id] is dev.avillagran.ot3android.core.connection.ConnectionState.Connected) },
+            selected, projects, state,
+            onEnvironment = { selected = it },
+            onBrowse = { path -> scope.launch { controller?.browse(path) } },
+            onCreate = { source, value, folder -> graph.appScope.launch { controller?.create(source, value, folder) } },
+            onOpen = { navigator.back(); navigator.push(NewThreadDraft(it.environmentId, it.projectId)) },
+            onRetry = { graph.appScope.launch { controller?.retry() } },
+            onRefresh = { scope.launch { controller?.refresh() }; home.refresh() }, onBack = { navigator.back() }, onReviewed = { controller?.reviewed() })
+    }
+
+    @Composable
     override fun NewChatDraft(entry: NavBackStackEntry, route: NewThreadDraft) {
         val graph = LocalContext.current.appGraph
         val model: dev.avillagran.ot3android.ui.newchat.NewChatDraftViewModel = viewModel(viewModelStoreOwner = entry) {
@@ -114,7 +162,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         }
         dev.avillagran.ot3android.ui.newchat.NewChatDraftScreen(state, { navigator.back() }, model::text, model::title,
             model::select, model::option, model::runtime, model::refresh, model::create,
-            environmentLabel = environments.firstOrNull { it.id == route.environmentId }?.label.orEmpty(), onDiscard = model::discard)
+            environmentLabel = environments.firstOrNull { it.id == route.environmentId }?.label.orEmpty(), onDiscard = model::discard, environmentId = route.environmentId)
     }
 
     private fun onHomeIntent(intent: HomeIntent, viewModel: HomeViewModel) {
@@ -463,7 +511,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
         var pending by rememberSaveable(row.key) { mutableStateOf(route.initialAction?.let { ThreadAction.valueOf(it) }) }
         pending?.let { action -> dev.avillagran.ot3android.ui.home.ThreadManagementDialog(row, action,
             onDismiss = { pending = null }, onConfirm = { title ->
-                scope.launch { operations?.execute(row, action, title = title, confirmed = true) }
+                operations?.submit(row, action, title = title, confirmed = true)
                 pending = null
                 navigator.closeSheet(entry)
             }) }
@@ -550,7 +598,7 @@ class AppScreens(private val navigator: Ot3Navigator) : Ot3Screens {
                 navigator.push(NewThreadDraft(row.environmentId, requireNotNull(row.projectId), row.branch))
                 return@ThreadActionsContent
             }
-            if (dev.avillagran.ot3android.core.home.ThreadManagement.supported(action)) scope.launch { operations?.execute(row, action) }
+            if (dev.avillagran.ot3android.core.home.ThreadManagement.supported(action)) operations?.submit(row, action)
             when (action) {
                 ThreadAction.CopyPath -> row.path
                 ThreadAction.CopyBranch -> row.branch

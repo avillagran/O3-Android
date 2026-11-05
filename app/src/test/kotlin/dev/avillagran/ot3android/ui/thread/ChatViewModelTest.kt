@@ -34,6 +34,60 @@ import java.nio.file.Files
 @Config(application = Application::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatViewModelTest {
+    @Test fun providerCatalogLoadsOnOpenWithoutOpeningModelPicker() = runBlocking {
+        fixture { f ->
+            f.await { f.vm.state.value.modelCatalog != null }
+            val catalog = JSONObject(f.vm.state.value.modelCatalog!!)
+            assertTrue(catalog.getJSONArray("providers").length() > 0)
+            assertEquals("provider", JSONObject(f.vm.state.value.modelSelection!!).getString("instanceId"))
+        }
+    }
+
+    @Test fun queuedFollowUpUsesDispatchModeInsteadOfInvalidQueueIntent() = runBlocking {
+        fixture("default", active = true) { f ->
+            f.followUp("queue")
+            f.await { f.vm.state.value.view.activeRunId == "run" }
+            val message = f.plainSend("Follow up without interrupting")
+            assertEquals("queue_after_active", message.getJSONObject("dispatchMode").getString("type"))
+            assertFalse(message.has("deliveryIntent"))
+        }
+    }
+
+    @Test fun activeRunSteersByDefaultInsteadOfSilentlyQueuing() = runBlocking {
+        fixture("default", active = true) { f ->
+            val message = f.plainSend("Redirect the current task")
+            assertEquals("steer", message.getString("deliveryIntent"))
+            assertEquals("start_immediately", message.getJSONObject("dispatchMode").getString("type"))
+        }
+    }
+
+    @Test fun sharedSendPreferenceOverridesQueueOnlyForItsSubmittedDraft() = runBlocking {
+        fixture("default", active = true) { f ->
+            f.followUp("queue")
+            f.vm.adoptSharedModel(JSONObject().put("preferences", JSONObject().put("deliveryMode", "send")))
+            val first = f.plainSend("Send shared draft now")
+            assertEquals("steer", first.getString("deliveryIntent"))
+            f.vm.onDraftChange("Next follows normal preference")
+            f.await { f.vm.state.value.draft == "Next follows normal preference" }
+            f.vm.dispatchAttachments()
+            f.await { f.fake.calls.count { it.fn == MessageSender.DISPATCH } == 2 }
+            val second = f.fake.calls.last { it.fn == MessageSender.DISPATCH }.args
+            assertEquals("queue_after_active", second.getJSONObject("dispatchMode").getString("type"))
+        }
+    }
+
+    @Test fun newChatHasPermissionChoicesBeforeFirstRefreshOrSend() = runBlocking {
+        fixture("default") { f ->
+            val draft = f.newChat()
+            f.await { !draft.state.value.loading && draft.state.value.catalog != null }
+            val state = draft.state.value
+            val instance = JSONObject(state.selection!!).getString("instanceId")
+            val rows = JSONObject(state.catalog!!).getJSONObject("permissionViews").getJSONObject(instance).getJSONArray("rows")
+            assertTrue(rows.length() > 0)
+            assertFalse(f.fake.calls.any { it.fn == MessageSender.DISPATCH || it.fn == "orchestration.launchThread" })
+        }
+    }
+
     @Test fun implementationRevalidatesPlanAndUnknownMessageNeverNavigatesOrClearsDraft() = runBlocking {
         fixture { f ->
             f.vm.onDraftChange("Refine validation")
@@ -354,8 +408,24 @@ class ChatViewModelTest {
             f.online()
             f.await { f.vm.attachmentDraft.value.single().status == UploadStatus.Ready }
             assertEquals(listOf("notes.md" to "offline bytes"), f.uploads)
+            val reference = dev.avillagran.ot3android.core.composer.NativeComposer().attachmentReference(JSONObject(f.vm.attachmentDraft.value.single().descriptor!!))
+            f.await { f.vm.state.value.draft.contains(reference) }
+            assertEquals(reference, f.vm.state.value.draft)
             assertFalse(f.spool(chip.id).exists())
             assertEquals(1, f.journal().getJSONArray("attachments").length())
+        }
+    }
+
+    @Test fun removingUploadedAttachmentAlsoRemovesItsCanonicalReference() = runBlocking {
+        fixture("default") { f ->
+            f.vm.onDraftChange("Keep this text")
+            f.await { f.vm.state.value.draft == "Keep this text" }
+            val id = f.readyAttachment("notes.md")
+            val reference = dev.avillagran.ot3android.core.composer.NativeComposer().attachmentReference(JSONObject(f.vm.attachmentDraft.value.single().descriptor!!))
+            f.await { f.vm.state.value.draft.contains(reference) }
+            f.vm.removeAttachment(id)
+            f.await { f.vm.attachmentDraft.value.isEmpty() && !f.vm.state.value.draft.contains(reference) }
+            assertEquals("Keep this text", f.vm.state.value.draft.trim())
         }
     }
 
@@ -452,7 +522,8 @@ class ChatViewModelTest {
             f.vm.importAttachment(f.context, f.content("late.md", "late"))
             f.await { f.vm.attachmentDraft.value.any { it.name == "late.md" && it.status == UploadStatus.Ready } }
             gate.complete(Unit)
-            f.await { f.vm.state.value.draft.isEmpty() && !f.vm.state.value.sending }
+            val lateReference = dev.avillagran.ot3android.core.composer.NativeComposer().attachmentReference(JSONObject(f.vm.attachmentDraft.value.first { it.name == "late.md" }.descriptor!!))
+            f.await { f.vm.state.value.draft == lateReference && !f.vm.state.value.sending }
             assertEquals(listOf("late.md"), f.vm.attachmentDraft.value.map { it.name })
             assertFalse(f.vm.attachmentDraft.value.any { it.id == sent })
             assertEquals(1, f.fake.calls.single { it.fn == MessageSender.DISPATCH }.args.getJSONArray("attachments").length())
@@ -477,7 +548,8 @@ class ChatViewModelTest {
             f.vm.importAttachment(f.context, f.content("late.md", "late"))
             f.await { f.vm.attachmentDraft.value.any { it.name == "late.md" && it.status == UploadStatus.Ready } }
             gate.complete(Unit)
-            f.await { f.vm.state.value.draft.isEmpty() && !f.vm.state.value.sending }
+            val lateReference = dev.avillagran.ot3android.core.composer.NativeComposer().attachmentReference(JSONObject(f.vm.attachmentDraft.value.first { it.name == "late.md" }.descriptor!!))
+            f.await { f.vm.state.value.draft == lateReference && !f.vm.state.value.sending }
             assertEquals(listOf("late.md"), f.vm.attachmentDraft.value.map { it.name })
             assertFalse(f.vm.attachmentDraft.value.any { it.id == sent })
             val message = f.fake.calls.last { it.fn == MessageSender.DISPATCH }.args
@@ -507,11 +579,14 @@ class ChatViewModelTest {
 
     private val main = UnconfinedTestDispatcher()
 
-    private suspend fun fixture(interactionMode: String = "plan", block: suspend (Fixture) -> Unit) {
+    private suspend fun fixture(interactionMode: String = "plan", active: Boolean = false, block: suspend (Fixture) -> Unit) {
         assumeHostJni()
         Dispatchers.setMain(main)
         val f = Fixture(interactionMode)
-        try { f.start(); block(f) }
+        try {
+            if (active) f.projection.getJSONArray("runs").getJSONObject(0).put("status", "running")
+            f.start(); block(f)
+        }
         finally { f.close(); Dispatchers.resetMain() }
     }
 
@@ -565,6 +640,7 @@ class ChatViewModelTest {
         var credential: String? = "node"
         lateinit var vm: ThreadViewModel
         suspend fun start() {
+            prefs.reset("followUpBehavior")
             prefs.update("planModeEnabled", true)
             repository.save("node", "Fixture", "http://fixture.invalid", "node", null)
             vm = newViewModel()
@@ -572,6 +648,14 @@ class ChatViewModelTest {
             scope.launch { vm.state.collect() }
             await { vm.state.value.connected && vm.state.value.view.loaded && vm.state.value.composer.loaded }
             assertTrue(vm.refreshPlanControls().getBoolean("enabled"))
+        }
+        suspend fun followUp(value: String) { prefs.update("followUpBehavior", value) }
+        fun newChat(): dev.avillagran.ot3android.ui.newchat.NewChatDraftViewModel {
+            val model = dev.avillagran.ot3android.ui.newchat.NewChatDraftViewModel("node", "project", null, connections,
+                MessageSender(outbox, scope), outbox, androidx.lifecycle.SavedStateHandle())
+            store.put("new-chat", model)
+            scope.launch { model.state.collect() }
+            return model
         }
         private fun newViewModel() = ThreadViewModel("node", "chat", connections, DraftRepository(db.draftDao()), outbox,
             MessageSender(outbox, scope), scope, attachmentDirectory = directory,

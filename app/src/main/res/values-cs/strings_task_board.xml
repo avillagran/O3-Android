@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Tabule úkolů</string>
+    <string name="task_board_pending">Čeká</string>
+    <string name="task_board_working">Pracuje</string>
+    <string name="task_board_waiting">Čekání</string>
+    <string name="task_board_done">Hotovo</string>
+    <string name="board_live_view">Živé zobrazení</string>
+    <string name="board_live_loading">Načítání konverzace…</string>
+    <string name="board_live_empty">Zatím žádné zprávy</string>
+    <string name="board_live_you">Vy</string>
+    <string name="board_live_write">Napsat zprávu</string>
+    <string name="board_live_unavailable">Prostředí není dostupné</string>
+    <string name="board_live_waiting">Prostředí není dostupné</string>
+</resources>

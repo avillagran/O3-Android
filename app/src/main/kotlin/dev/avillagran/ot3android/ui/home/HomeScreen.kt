@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.only
@@ -133,12 +134,14 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
     val preferences = remember(context) { AppearancePreferences(context) }
     val persisted by preferences.settings.collectAsState(AppearanceSettings())
     val settings = appearance ?: persisted
+    var lastListLayout by rememberSaveable { mutableStateOf(settings.interfaceLayout.takeUnless { it == "board" } ?: "classic") }
+    LaunchedEffect(settings.interfaceLayout) { if (settings.interfaceLayout != "board") lastListLayout = settings.interfaceLayout }
     val homePreferences = remember(context) { dev.avillagran.ot3android.core.data.prefs.HomePreferences(context) }
     val savedHostStyles by homePreferences.hostStyles.collectAsState(emptyMap())
     val looks = savedHostStyles.mapValues { (_, value) -> val fields = value.split('|')
         HostStyle(fields.getOrElse(0) { "server" }, fields.getOrElse(1) { "" }, fields.getOrElse(2) { "false" } == "true") }
     val effectiveMetadata = metadata.copy(clocks = (if (appearance == null) observedSidebarClocks() else emptyMap()) + metadata.clocks,
-        hostStyles = looks + metadata.hostStyles)
+        hostStyles = dev.avillagran.ot3android.ui.kit.LocalHostStyles.current + looks + metadata.hostStyles)
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var searchFocused by remember { mutableStateOf(false) }
@@ -148,6 +151,10 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
     }
     // Presentation controls belong to the existing header menu. A fixed controls row
     // here consumes 48dp of the workspace even when no control is being used.
+    val toggleBoard = { scope.launch {
+        preferences.setLocal(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.INTERFACE_LAYOUT,
+            if (settings.interfaceLayout == "board") lastListLayout else "board")
+    }; Unit }
     val sidebarControls: @Composable () -> Unit = {
         if (state?.content == HomeContent.List) {
             SidebarControls(state, settings, effectiveMetadata, sidebarChip,
@@ -188,18 +195,20 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
             ) {
                 if (LocalConfiguration.current.screenHeightDp < 480) {
                     Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { Header(state, onIntent, sidebarControls, dev.avillagran.ot3android.ui.sky.homeBrandConfig(settings, motion.level == Ot3MotionLevel.OFF)) }
+                        Box(Modifier.weight(1f)) { Header(state, onIntent, sidebarControls, dev.avillagran.ot3android.ui.sky.homeBrandConfig(settings, motion.level == Ot3MotionLevel.OFF), settings.interfaceLayout == "board", toggleBoard) }
                         Box(Modifier.weight(1f)) {
                             SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                         }
                     }
                 } else Column(Modifier.statusBarsPadding()) {
-                    Header(state, onIntent, sidebarControls, dev.avillagran.ot3android.ui.sky.homeBrandConfig(settings, motion.level == Ot3MotionLevel.OFF))
+                    Header(state, onIntent, sidebarControls, dev.avillagran.ot3android.ui.sky.homeBrandConfig(settings, motion.level == Ot3MotionLevel.OFF), settings.interfaceLayout == "board", toggleBoard)
                     SearchRow(query, state?.filter?.active == true, onIntent, onFocus = { searchFocused = it })
                 }
             }
+            // Sync progress floats over the content so the list or board never shifts when it appears or ends.
+            Box(Modifier.weight(1f).fillMaxWidth()) {
             val content = state?.content ?: HomeContent.Connecting
-            if (content == HomeContent.List && state != null) CompositionLocalProvider(LocalSidebarRows provides SidebarRowAppearance(
+            if (state != null && (content == HomeContent.List || settings.interfaceLayout == "board" && content in listOf(HomeContent.Empty, HomeContent.NoResults))) CompositionLocalProvider(LocalSidebarRows provides SidebarRowAppearance(
                 enabled = true,
                 sober = settings.interfaceLayout != "classic" || settings.sidebarStyle != "vivid",
                 compact = settings.threadRowSize == "compact",
@@ -229,12 +238,17 @@ fun HomeScreen(state: HomeUiState?, isTop: Boolean, onIntent: (HomeIntent) -> Un
             }
                 } }
             }
+            HomeConnectionStatus(state?.hostStatuses.orEmpty(),
+                Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(horizontal = 12.dp, vertical = 12.dp)) {
+                onIntent(HomeIntent.OpenEnvironments)
+            }
+            }
         }
     }
 }
 
 @Composable
-private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarControls: @Composable () -> Unit, brandConfig: dev.avillagran.ot3android.ui.sky.O3BrandConfig) {
+private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarControls: @Composable () -> Unit, brandConfig: dev.avillagran.ot3android.ui.sky.O3BrandConfig, board: Boolean, onToggleBoard: () -> Unit) {
     val header = state?.header
     var menuOpen by remember { mutableStateOf(false) }
     val colors = Ot3Theme.colors
@@ -257,6 +271,10 @@ private fun Header(state: HomeUiState?, onIntent: (HomeIntent) -> Unit, sidebarC
                 if (text.isNotEmpty()) Text(text, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
+        Ot3IconButton(if (board) "list-todo" else "layout-grid", stringResource(if (board) R.string.sidebar_layout_classic else R.string.sidebar_layout_board),
+            onToggleBoard, modifier = Modifier.testTag("home_toggle_board"))
+        Ot3IconButton("folder-plus", stringResource(R.string.project_add), { onIntent(HomeIntent.AddProject) },
+            modifier = Modifier.testTag("home_add_project"))
         Box {
             Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { menuOpen = true },
                 modifier = Modifier.testTag(HomeTags.OVERFLOW))
@@ -356,21 +374,29 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
     val viewPreferences = remember(context) { dev.avillagran.ot3android.core.data.prefs.HomePreferences(context) }
     val collapsed by viewPreferences.sidebarCollapsed.collectAsState(emptySet())
     val unlimited by viewPreferences.sidebarUnlimited.collectAsState(emptySet())
+    val boardLive by viewPreferences.boardLive.collectAsState(false)
     val scope = rememberCoroutineScope()
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val selectedKey = LocalSelectedThreadKey.current
-    val layoutItems = remember(state.items, state.rows, state.filter, state.query, settings.interfaceLayout) {
-        if (settings.interfaceLayout != "classic" && !state.filter.active && state.query.isBlank()) {
-            nestedSidebarRows(state.rows.values.toList()).map { HomeItem.Row(it) } +
-                state.items.filter { it is HomeItem.ShowMoreSettled || it is HomeItem.Message || it is HomeItem.MessagesHeader }
-        } else if (!state.filter.active && state.query.isBlank()) buildList {
+    // Conserva las secciones visibles y su expansión en todas las vistas.
+    val layoutItems = remember(state.items, state.filter, state.query, settings.interfaceLayout) {
+        if (settings.interfaceLayout == "board") state.items
+        else if (!state.filter.active && state.query.isBlank()) buildList {
             val group = mutableListOf<HomeRow>()
             fun flush() { addAll(nestedSidebarRows(group).map { HomeItem.Row(it) }); group.clear() }
             state.items.forEach { item -> if (item is HomeItem.Row) group.add(item.row) else { flush(); add(item) } }
             flush()
         } else state.items
     }
-    val sections = remember(layoutItems) { homeListSections(layoutItems) }
+    val sections = remember(layoutItems, settings.interfaceLayout) {
+        if (settings.interfaceLayout == "board") HomeListSections(emptyList(), emptyList()) else homeListSections(layoutItems)
+    }
+    val entries = remember(sections.main, settings, state.shelves.grouped, metadata, chip) {
+        sidebarEntries(sections.main, settings, state.shelves.grouped, metadata, chip)
+    }
+    val treeIndex = remember(entries) { sidebarTreeIndex(entries.map { ((it as? SidebarEntry.Item)?.value as? HomeItem.Row)?.row }) }
+    val projectHosts = remember(state.rows) { state.rows.values.associateBy { "project:${it.projectKey ?: "host:${it.environmentId}"}" } }
+    val limited = remember(entries) { entries.filterIsInstance<SidebarEntry.Header>().filter { it.count > 5 }.map { it.key }.toSet() }
     Column(Modifier.fillMaxSize().alpha(if (state.stale) 0.6f else 1f)) {
         if (state.offline) {
             Text(
@@ -380,28 +406,48 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag(HomeTags.OFFLINE),
             )
         }
-        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+        if (settings.interfaceLayout == "board") {
+            val boardRows = state.boardRows ?: state.items.filterIsInstance<HomeItem.Row>().map { it.row }
+            val columns = remember(boardRows, metadata, chip) { taskBoardColumns(boardRows, metadata, chip) }
+            quotaStrip()
+            TaskBoard(columns, collapsed, { key -> scope.launch { viewPreferences.toggleSidebarSection(key) } },
+                Modifier.weight(1f).fillMaxWidth(), liveMode = boardLive,
+                onLiveMode = { enabled -> scope.launch { viewPreferences.setBoardLive(enabled) } },
+                liveContent = { row, active, expanded -> BoardLivePreview(row, active, expanded, { onIntent(HomeIntent.OpenRow(row)) }) }) {
+                row -> ThreadRow(row, onIntent, swipeEnabled = false)
+            }
+            val messages = state.items.filter { it is HomeItem.MessagesHeader || it is HomeItem.Message }
+            if (messages.isNotEmpty()) LazyColumn(Modifier.fillMaxWidth().heightIn(max = 180.dp)) {
+                items(messages, key = { it.key }) { HomeListItem(it, onIntent) }
+            }
+        } else BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             // Keep headers outside every scrolling list. Each expanded body is independently
             // bounded; the main list owns all remaining space even with no active rows.
             val bodyLimit = ((maxHeight - 48.dp * sections.bottom.size).coerceAtLeast(0.dp) * .3f)
             Column(Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag(HomeTags.LIST), state = listState) {
                     item("provider_usage") { quotaStrip() }
-                    val entries = sidebarEntries(sections.main, settings, state.shelves.grouped, metadata, chip)
-                    val limited = entries.filterIsInstance<SidebarEntry.Header>().filter { it.count > 5 }.map { it.key }.toSet()
                     val shown = mutableMapOf<String, Int>()
                     var hiddenDepth: Int? = null
                     entries.forEachIndexed { index, entry ->
-                        fun hidden(section: String): Boolean = collapsed.any { section == it || section.startsWith("$it/") }
+                        fun hidden(section: String): Boolean = sidebarSectionHidden(section, collapsed)
                         when (entry) {
-                            is SidebarEntry.Header -> if (!collapsed.any { entry.key.startsWith("$it/") }) item(entry.key) {
+                            is SidebarEntry.Header -> if (!sidebarSectionHidden(entry.key, collapsed, includeSelf = false)) item(entry.key) {
                                 val expansion = stringResource(if (entry.key in collapsed) R.string.about_collapsed else R.string.about_expanded)
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                     TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key) } }, modifier = Modifier.weight(1f).testTag("sidebar_toggle_${entry.key}").semantics { stateDescription = expansion }) {
                                         dev.avillagran.ot3android.ui.kit.Ot3Icon(if (entry.key in collapsed) "chevron-right" else "chevron-down", null)
+                                        val projectHost = projectHosts[entry.key]
+                                        val projectHostStyle = projectHost?.let { metadata.hostStyles[it.environmentId] }
+                                        val projectTint = projectHostStyle?.color?.takeIf { it.matches(Regex("#[0-9a-fA-F]{6}")) }
+                                            ?.let { androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(it)) }
                                         Text("${sidebarLabel(entry.title)}${if (entry.count > 0) " (${entry.count})" else ""}",
-                                            modifier = Modifier.fillMaxWidth(), color = Ot3Theme.colors.dim,
+                                            modifier = Modifier.weight(1f), color = projectTint ?: Ot3Theme.colors.dim,
                                             style = MaterialTheme.typography.labelLarge)
+                                        projectHost?.let { row ->
+                                            dev.avillagran.ot3android.ui.kit.HostBadge(row.environmentLabel ?: row.environmentId,
+                                                style = projectHostStyle ?: HostStyle())
+                                        }
                                     }
                                     if (entry.count > 5) TextButton(onClick = { scope.launch { viewPreferences.toggleSidebarSection(entry.key, true) } }) {
                                         Text(stringResource(if (entry.key in unlimited) R.string.sidebar_limit_less else R.string.sidebar_limit_more))
@@ -413,21 +459,18 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                                 if (row != null && hiddenDepth != null && row.depth <= hiddenDepth!!) hiddenDepth = null
                                 val hideChild = row != null && hiddenDepth != null
                                 val treeKey = row?.let { "thread:${it.key}" }
-                                val children = if (row == null) emptyList() else entries.drop(index + 1).takeWhile {
-                                    it is SidebarEntry.Item && (it.value as? HomeItem.Row)?.row?.depth?.let { depth -> depth > row.depth } == true
-                                }
-                                if (!hideChild && treeKey in collapsed && children.isNotEmpty()) hiddenDepth = row!!.depth
+                                val descendants = treeIndex[index]
+                                if (!hideChild && treeKey in collapsed && descendants.count > 0) hiddenDepth = row!!.depth
                                 val position = shown.getOrDefault(entry.section, 0).let { roots -> if (row != null && row.depth > 0) (roots - 1).coerceAtLeast(0) else roots }
                                 if (row == null || row.depth == 0) shown[entry.section] = position + 1
                                 val selected = (entry.value as? HomeItem.Row)?.row?.key == selectedKey
                                 if (!hideChild && !hidden(entry.section) && (entry.section !in limited || entry.section in unlimited || position < 5 || selected))
                                     item(entry.value.key) {
                                         val expansion = stringResource(if (treeKey in collapsed) R.string.about_collapsed else R.string.about_expanded)
-                                        val workingChildren = children.count { ((it as? SidebarEntry.Item)?.value as? HomeItem.Row)?.row?.working == true }
                                         HomeListItem(entry.value, onIntent, Modifier.animateItem(
                                             fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()),
-                                            subagents = children.takeIf { it.isNotEmpty() }?.let {
-                                                dev.avillagran.ot3android.ui.kit.SubagentsModel(it.size, workingChildren, treeKey !in collapsed)
+                                            subagents = descendants.takeIf { it.count > 0 }?.let {
+                                                dev.avillagran.ot3android.ui.kit.SubagentsModel(it.count, it.working, treeKey !in collapsed)
                                             }, onSubagents = { scope.launch { viewPreferences.toggleSidebarSection(treeKey!!) } })
                                     }
                             }
@@ -438,23 +481,26 @@ private fun ThreadList(state: HomeUiState, onIntent: (HomeIntent) -> Unit, quota
                     androidx.compose.runtime.key(header.shelf) {
                         ShelfHeader(header, onIntent)
                         if (header.expanded && members.isNotEmpty()) {
-                            LazyColumn(Modifier.fillMaxWidth().heightIn(max = bodyLimit)
-                                .testTag("home_shelf_list_${header.shelf.name}")) {
-                                val shelfRows = sidebarSections(nestedSidebarRows(members.filterIsInstance<HomeItem.Row>().map { it.row }), "classic", false, metadata,
+                            val shelfRows = remember(members, metadata, settings, chip) {
+                                sidebarSections(nestedSidebarRows(members.filterIsInstance<HomeItem.Row>().map { it.row }), "classic", false, metadata,
                                     settings.localValue(dev.avillagran.ot3android.core.data.prefs.LocalAppearancePreference.THREAD_ORDER) == "reply")
                                     .flatMap { it.rows }.filter { matchesChip(it, chip, metadata) }
+                            }
+                            val shelfTree = remember(shelfRows) { sidebarTreeIndex(shelfRows) }
+                            LazyColumn(Modifier.fillMaxWidth().heightIn(max = bodyLimit)
+                                .testTag("home_shelf_list_${header.shelf.name}")) {
                                 var hiddenAt: Int? = null
                                 shelfRows.forEachIndexed { index, row ->
                                     if (hiddenAt != null && row.depth <= hiddenAt!!) hiddenAt = null
-                                    val children = shelfRows.drop(index + 1).takeWhile { it.depth > row.depth }
+                                    val descendants = shelfTree[index]
                                     val treeKey = "thread:${row.key}"
                                     val hidden = hiddenAt != null
-                                    if (treeKey in collapsed && children.isNotEmpty()) hiddenAt = row.depth
+                                    if (treeKey in collapsed && descendants.count > 0) hiddenAt = row.depth
                                     if (!hidden) item(row.key) {
                                         HomeListItem(HomeItem.Row(row), onIntent, Modifier.animateItem(
                                             fadeInSpec = motion.rowArriveFade(), placementSpec = motion.shelfMove(), fadeOutSpec = motion.rowDepart()),
-                                            subagents = children.takeIf { it.isNotEmpty() }?.let {
-                                                dev.avillagran.ot3android.ui.kit.SubagentsModel(it.size, it.count { child -> child.working }, treeKey !in collapsed)
+                                            subagents = descendants.takeIf { it.count > 0 }?.let {
+                                                dev.avillagran.ot3android.ui.kit.SubagentsModel(it.count, it.working, treeKey !in collapsed)
                                             }, onSubagents = { scope.launch { viewPreferences.toggleSidebarSection(treeKey) } })
                                     }
                                 }
@@ -487,7 +533,7 @@ private fun HomeListItem(item: HomeItem, onIntent: (HomeIntent) -> Unit, rowModi
 
 /** A `sidebar.view` row rendered by the shared Desktop layout. */
 @Composable
-private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModifier: Modifier = Modifier, subagents: dev.avillagran.ot3android.ui.kit.SubagentsModel? = null, onSubagents: (() -> Unit)? = null) {
+private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModifier: Modifier = Modifier, subagents: dev.avillagran.ot3android.ui.kit.SubagentsModel? = null, onSubagents: (() -> Unit)? = null, swipeEnabled: Boolean = true) {
     val haptics = LocalHapticFeedback.current
     val motion = Ot3Theme.motion
     val drift = remember(row.key) { Animatable(if (motion.animates) -18f else 0f) }
@@ -510,9 +556,11 @@ private fun ThreadRow(row: HomeRow, onIntent: (HomeIntent) -> Unit, animatedModi
     }
     val modifier = animatedModifier.graphicsLayer { translationX = drift.value * density * direction }.padding(horizontal = 8.dp).testTag(HomeTags.row(row.key))
     CompositionLocalProvider(LocalSidebarRows provides LocalSidebarRows.current.copy(shelved = row.slim, host = LocalSidebarRows.current.hostStyles[row.environmentId] ?: HostStyle())) {
-    ThreadSwipeActions(row, { onIntent(HomeIntent.Swipe(row, it)) }, modifier) { contentModifier ->
-    DesktopThreadRow(model, onSubagentsClick = onSubagents, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
-    }
+        val content: @Composable (Modifier) -> Unit = { contentModifier ->
+            DesktopThreadRow(model, onSubagentsClick = onSubagents, selected = row.key == LocalSelectedThreadKey.current, onClick = onClick, onLongClick = onLongClick, onProjectLongClick = onProjectLongClick, onPullRequestClick = { onIntent(HomeIntent.OpenPullRequest(row)) }, modifier = contentModifier)
+        }
+        if (swipeEnabled) ThreadSwipeActions(row, { onIntent(HomeIntent.Swipe(row, it)) }, modifier, content)
+        else content(modifier)
     }
 }
 

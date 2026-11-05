@@ -73,12 +73,22 @@ class AppGraph(
             dev.avillagran.ot3android.core.composer.SharedDraftSynchronizer(repository, scope, appScope, syncRemotely = false) { text -> draftRepository.save(localEnvironment, scope.thread, text) }
         }
 
+    private val projectCreationOwners = mutableMapOf<String, Pair<dev.avillagran.ot3android.core.transport.T3Transport, dev.avillagran.ot3android.ui.projects.ProjectCreation>>()
+    @Synchronized fun projectCreationOwner(environment: String, transport: dev.avillagran.ot3android.core.transport.T3Transport): dev.avillagran.ot3android.ui.projects.ProjectCreation {
+        val previous = projectCreationOwners[environment]
+        if (previous?.first === transport) return previous.second
+        val key = java.security.MessageDigest.getInstance("SHA-256").digest(environment.toByteArray()).joinToString("") { "%02x".format(it) }
+        return dev.avillagran.ot3android.ui.projects.ProjectCreation(transport, appContext.noBackupFilesDir.resolve("project-creation/$key.json")) { action ->
+            checkoutAdmission.command(environment, action)
+        }.also { projectCreationOwners[environment] = transport to it }
+    }
+
     private val threadMenuOwners = mutableMapOf<String, Pair<dev.avillagran.ot3android.core.transport.T3Transport, dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations>>()
     @Synchronized fun threadMenuOwner(environment: String, thread: String, transport: dev.avillagran.ot3android.core.transport.T3Transport): dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations {
         val key = org.json.JSONArray().put(environment).put(thread).toString()
         val previous = threadMenuOwners[key]
         if (previous != null && (previous.first === transport || previous.second.state.value.retryCommandId != null)) return previous.second
-        return dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations(transport, messageSender).also { threadMenuOwners[key] = transport to it }
+        return dev.avillagran.ot3android.ui.settings.projects.ThreadMenuOperations(transport, messageSender, appScope).also { threadMenuOwners[key] = transport to it }
     }
     val projectPresentation by lazy { dev.avillagran.ot3android.ui.settings.projects.ProjectPresentation(appContext.getSharedPreferences("project-presentation", Context.MODE_PRIVATE)) }
     private val mutableProjectPresentation by lazy { kotlinx.coroutines.flow.MutableStateFlow(projectPresentation.snapshot().toString()) }
@@ -145,6 +155,8 @@ class AppGraph(
 
     /** Home's grouping and collapsed shelves. */
     val homePreferences: HomePreferences by lazy { HomePreferences(appContext) }
+    private val sharedClientPreferences by lazy { dev.avillagran.ot3android.core.settings.SharedClientPreferences(connectionManager, generalClientPreferences, appScope) }
+    private val sharedHostAppearance by lazy { dev.avillagran.ot3android.core.data.prefs.SharedHostAppearance(connectionManager, homePreferences, appScope) }
 
     /** The bundled Omarchy themes, parsed once off the main thread (started in [init]). */
     suspend fun themeCatalog(): OmarchyThemeCatalog = OmarchyThemeCatalog.load(appContext)
@@ -237,6 +249,8 @@ class AppGraph(
     val messageSender: MessageSender by lazy { MessageSender(outboxRepository, appScope, admission = checkoutAdmission) }
 
     init {
+        sharedHostAppearance.start()
+        sharedClientPreferences.start()
         // A send cut by the previous process dying has an unknown outcome: offer Resend.
         val startedAt = System.currentTimeMillis()
         appScope.launch(Dispatchers.IO) { outboxRepository.recoverInterrupted(startedAt) }

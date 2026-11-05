@@ -42,6 +42,9 @@ object SkyDefaults {
  *   1 600 ms and comets appear only above 0.
  * @param brandHeight height of the brand row; the sky fades over the rest
  *   (`fade = 1 − brandHeight × 0.85 / height`).
+ * @param panel ot3's panel sky (`T3Panel.qml:1036`) instead of the header one: it covers the
+ *   whole view over the theme background (transparent base, no fade) and, like any
+ *   non-header sky, draws comets only in [SkyMotion.Full].
  * @param onAutoDegrade non-null when [motion] is the Auto preference: the header watches
  *   its ticks and, after 90 slow ones while working, drops to [SkyMotion.Light] for the
  *   rest of its life and calls this once so the preference can remember it.
@@ -54,6 +57,7 @@ fun SkyHeader(
     modifier: Modifier = Modifier,
     brandHeight: Dp = SkyDefaults.BrandHeight,
     forceCanvas: Boolean = false,
+    panel: Boolean = false,
     onAutoDegrade: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -109,7 +113,8 @@ fun SkyHeader(
                         heightDp = size.height / density,
                         pixelDensity = density,
                         brandHeightDp = brandHeight.value,
-                    )
+                        header = !panel,
+                    ).let { if (panel) it.copy(fade = 0f, base = SkyRgba(0f, 0f, 0f, 0f)) else it }
                     if (shader != null && brush != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         StarfieldShaders.apply(shader, u)
                         drawRect(brush)

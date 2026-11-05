@@ -14,7 +14,7 @@ import org.junit.Test
 /**
  * The real Rust core through the AAR's adapter and the host JNI library; no network.
  *
- * The exact pins (0.3.8, 125 functions, 14 streams, 127 domain functions) are intentional: bumping
+ * The exact pins (0.3.8, 126 functions, 15 streams, 127 domain functions) are intentional: bumping
  * libs/lib-t3-rust.lock must fail here until the lib's changes are read and the pins move
  * with them (docs/DECISIONS.md).
  */
@@ -39,7 +39,7 @@ class NativeSmokeTest {
 
         assertEquals(3, capabilities.getInt("abiVersion"))
         assertEquals("0.3.8", capabilities.getString("libraryVersion"))
-        assertEquals(125, capabilities.getInt("functions"))
+        assertEquals(126, capabilities.getInt("functions"))
         assertEquals(127, capabilities.getInt("domainFunctions"))
         val operations = capabilities.getJSONArray("operations").strings()
         assertEquals(operations.toString(), 24, operations.size)
@@ -50,8 +50,8 @@ class NativeSmokeTest {
     fun describeListsTheTypedRegistry() = runBlocking {
         val api = transport.describe()
 
-        assertEquals(125, api.getJSONArray("functions").length())
-        assertEquals(14, api.getJSONArray("streams").length())
+        assertEquals(126, api.getJSONArray("functions").length())
+        assertEquals(15, api.getJSONArray("streams").length())
         val domain = api.getJSONArray("domain")
         assertEquals(127, domain.length())
         val names = List(domain.length()) { domain.getJSONObject(it).getString("fn") }

@@ -52,6 +52,50 @@ class SidebarCollapseTest {
         rule.onNodeWithTag("home_row_${child.key}").assertDoesNotExist()
     }
 
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi")
+    fun addProjectRemainsReachableOnNarrowScreenWithLargeText() {
+        var intent: dev.avillagran.ot3android.ui.home.HomeIntent? = null
+        val state = HomeUiState(content = HomeContent.List, header = HomeHeader(counts = CountPills(12, 173, 4)))
+        rule.setContent { androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(
+                androidx.compose.ui.platform.LocalDensity.current.density, 1.6f)) {
+            Ot3Theme { HomeScreen(state, true, { intent = it }) }
+        } }
+        rule.onNodeWithTag("home_add_project").assertIsDisplayed().performClick()
+        assertEquals(dev.avillagran.ot3android.ui.home.HomeIntent.AddProject, intent)
+    }
+
+    private fun closedShelfInLayout(layout: String) {
+        val active = fixtureRow("node", "active")
+        val closed = fixtureRow("node", "closed", settled = true)
+        val filtered = fixtureRow("node", "filtered")
+        val expanded = androidx.compose.runtime.mutableStateOf(true)
+        rule.setContent {
+            val state = HomeUiState(content = HomeContent.List,
+                shelves = ShelfState(settledExpanded = expanded.value),
+                rows = listOf(active, closed, filtered).associateBy { it.key },
+                items = buildList {
+                    add(HomeItem.Row(active))
+                    add(HomeItem.ShelfHeader(Shelf.Settled, 1, expanded.value))
+                    if (expanded.value) add(HomeItem.Row(closed))
+                })
+            Ot3Theme { HomeScreen(state, true, { intent ->
+                if (intent is dev.avillagran.ot3android.ui.home.HomeIntent.ToggleShelf && intent.shelf == Shelf.Settled)
+                    expanded.value = !expanded.value
+            }, appearance = AppearanceSettings(local = mapOf(LocalAppearancePreference.INTERFACE_LAYOUT to layout))) }
+        }
+        rule.onNodeWithTag("home_row_${closed.key}").assertExists()
+        rule.onNodeWithTag("home_row_${filtered.key}").assertDoesNotExist()
+        rule.onNodeWithTag(dev.avillagran.ot3android.ui.home.HomeTags.shelf(Shelf.Settled)).performClick()
+        rule.onNodeWithTag("home_row_${closed.key}").assertDoesNotExist()
+        rule.onNodeWithTag("home_row_${active.key}").assertExists()
+        rule.onNodeWithTag(dev.avillagran.ot3android.ui.home.HomeTags.shelf(Shelf.Settled)).performClick()
+        rule.onNodeWithTag("home_row_${closed.key}").assertExists()
+    }
+    @Test fun classicClosedShelf() = closedShelfInLayout("classic")
+    @Test fun focusClosedShelf() = closedShelfInLayout("focus")
+    @Test fun projectsClosedShelf() = closedShelfInLayout("projects")
+
     private fun chipInLayout(layout: String) {
         val parent = fixtureRow("node", "parent-$layout")
         val child = fixtureRow("node", "child-$layout").copy(parentKey = parent.key, subagent = true)

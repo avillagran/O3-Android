@@ -264,4 +264,7 @@
     <string name="ot3_new_chat_title">Título del chat</string>
     <string name="ot3_new_chat_no_projects">No se encontraron proyectos</string>
     <string name="ot3_new_chat_current_checkout">Copia de trabajo actual</string>
+    <string name="ot3_reference_unsupported">Este tipo de archivo no se puede previsualizar aquí</string>
+    <string name="ot3_reference_truncated">Se muestra solo el comienzo del archivo</string>
+    <string name="ot3_reference_copy_path">Copiar ruta</string>
 </resources>

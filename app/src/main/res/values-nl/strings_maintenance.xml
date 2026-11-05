@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Draait bij elk verzoek naar de webhook-URL van de taak, die na opslaan verschijnt. De prompt kan {{body.path}}-plaatsaanduidingen gebruiken.</string>
     <string name="maintenance_extended_16">Laatste 30 minuten: CPU (lijn) en geheugen (balken)</string>
     <string name="maintenance_add_project">Project toevoegen</string>
+    <string name="maintenance_server_unsupported">Deze functie is niet beschikbaar in deze serverversie.</string>
 </resources>

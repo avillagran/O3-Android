@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">إضافة مشروع</string>
+    <string name="project_new">مشروع جديد</string>
+    <string name="project_environment">اختيار البيئة</string>
+    <string name="project_search">البحث عن مشاريع…</string>
+    <string name="project_none">لم يتم العثور على مشاريع</string>
+    <string name="project_setup">يلزم الإعداد</string>
+    <string name="project_local">مجلد محلي</string>
+    <string name="project_provider">مستودع %1$s</string>
+    <string name="project_name">اسم المشروع</string>
+    <string name="project_choose_folder">اختيار المجلد</string>
+    <string name="project_folder">المجلد</string>
+    <string name="project_browse">فتح المجلد</string>
+    <string name="project_open">فتح المشروع</string>
+    <string name="project_clone">استنساخ مستودع</string>
+    <string name="project_pending">النتيجة غير معروفة. حدّث للتحقق قبل إعادة المحاولة بنفس الإجراء.</string>
+    <string name="project_reviewed">لقد راجعت مشاريعي</string>
+</resources>

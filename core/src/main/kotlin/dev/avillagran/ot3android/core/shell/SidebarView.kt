@@ -191,7 +191,6 @@ object SidebarView {
         project: String? = null,
         query: String? = null,
     ): Sidebar {
-        if (environments.sumOf { it.shell?.threads?.size ?: 0 } > 1000) throw dev.avillagran.t3.T3Exception("sidebar_presentation_limit")
         val args = JSONObject()
             .put("environments", JSONArray().apply { environments.forEach { put(environment(it)) } })
             .put("compact", true)
@@ -202,7 +201,15 @@ object SidebarView {
         filter?.let { args.put("filter", it) }
         project?.let { args.put("project", it) }
         query?.takeIf { it.isNotEmpty() }?.let { args.put("query", it) }
-        return parse(domain.domain("sidebar.view", args) as JSONObject)
+        val view = try {
+            domain.domain("sidebar.view", args) as JSONObject
+        } catch (error: dev.avillagran.t3.T3Exception) {
+            if (error.code != "sidebar_presentation_limit") throw error
+            // Indexed presentation has stricter aggregate limits than the shell transport.
+            // Keep all hosts, rows and native filtering through the standard projection.
+            domain.domain("sidebar.view", JSONObject(args.toString()).put("compact", false)) as JSONObject
+        }
+        return parse(view)
     }
 
     /** Maps a `sidebar.view` result. */

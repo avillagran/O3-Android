@@ -65,7 +65,7 @@ data class AppearanceSettings(
 
 /** Desktop local appearance contract. IDs and defaults match T3Preferences.qml. */
 enum class LocalAppearancePreference(val id: String, val default: String, val choices: List<String>) {
-    INTERFACE_LAYOUT("interfaceLayout", "classic", listOf("classic", "focus", "projects")),
+    INTERFACE_LAYOUT("interfaceLayout", "classic", listOf("classic", "focus", "projects", "board")),
     ANIMATIONS_ENABLED("animationsEnabled", "true", listOf("false", "true")),
     SIDEBAR_STYLE("sidebarStyle", "sober", listOf("sober", "vivid")),
     BRAND_GLYPH("brandGlyph", "o", listOf("o", "omarchy")),

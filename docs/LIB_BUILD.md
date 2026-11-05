@@ -1,7 +1,8 @@
 # Current source pin
 
 `libs/lib-t3-rust.lock` selects source mode at
-`6e17bb2276da5aee0912fbe084bc024819f65899` on `o3/server-capabilities`.
+`c11c38857bd51ff0b23da2433f25805c3516539b` (lib-t3-rust PR26 on `o3/server-capabilities`:
+`scheduledTasks.list` reads T3 nightly's `scheduledTasks.subscribe` stream).
 Use a separate clean lib-t3-rust checkout at that commit and run:
 
 ```sh

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">添加项目</string>
+    <string name="project_new">新建项目</string>
+    <string name="project_environment">选择环境</string>
+    <string name="project_search">搜索项目…</string>
+    <string name="project_none">未找到项目</string>
+    <string name="project_setup">需要配置</string>
+    <string name="project_local">本地文件夹</string>
+    <string name="project_provider">%1$s 仓库</string>
+    <string name="project_name">项目名称</string>
+    <string name="project_choose_folder">选择文件夹</string>
+    <string name="project_folder">文件夹</string>
+    <string name="project_browse">打开文件夹</string>
+    <string name="project_open">打开项目</string>
+    <string name="project_clone">克隆仓库</string>
+    <string name="project_pending">结果未知。重试同一操作前请刷新并确认。</string>
+    <string name="project_reviewed">我已检查项目</string>
+</resources>

@@ -145,6 +145,9 @@ fun ComposerParity(
     val editorActions: @Composable () -> Unit = {
         if (ComposerAction.Attach in capabilities) Ot3IconButton("paperclip", stringResource(R.string.composer_attach),
             { request(ComposerAction.Attach) }, enabled = snapshot.transformable)
+        if (ComposerAction.QuickReplies in capabilities) Ot3IconButton("message-square", stringResource(R.string.composer_quick_replies),
+            { request(ComposerAction.QuickReplies) }, enabled = snapshot.transformable,
+            modifier = Modifier.testTag("composer_quick_replies"))
         Box {
             Ot3IconButton("ellipsis-vertical", stringResource(R.string.home_more), { overflow = true },
                 modifier = Modifier.testTag("composer_actions"))
@@ -153,7 +156,7 @@ fun ComposerParity(
                     text = { Text(stringResource(R.string.capture_title)) }, enabled = snapshot.transformable,
                     onClick = { overflow = false; captureOpen = true }, modifier = Modifier.testTag("capture_menu"))
                 extraMenu { overflow = false }
-                capabilities.forEach { action ->
+                capabilities.filterNot { it == ComposerAction.QuickReplies }.forEach { action ->
                     val sendAction = action in setOf(ComposerAction.OppositeOnce, ComposerAction.Background, ComposerAction.SendAndNew)
                     DropdownMenuItem(text = { Text(actionLabel(action, snapshot.interaction)) },
                         enabled = if (sendAction) snapshot.sendable else snapshot.transformable,

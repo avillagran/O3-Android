@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">작업 보드</string>
+    <string name="task_board_pending">대기 중</string>
+    <string name="task_board_working">작업 중</string>
+    <string name="task_board_waiting">대기 중</string>
+    <string name="task_board_done">완료</string>
+    <string name="board_live_view">실시간 보기</string>
+    <string name="board_live_loading">대화 불러오는 중…</string>
+    <string name="board_live_empty">아직 메시지가 없습니다</string>
+    <string name="board_live_you">나</string>
+    <string name="board_live_write">메시지 작성</string>
+    <string name="board_live_unavailable">환경을 사용할 수 없음</string>
+    <string name="board_live_waiting">환경을 사용할 수 없음</string>
+</resources>

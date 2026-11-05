@@ -42,7 +42,8 @@ fun MaintenanceScreen(controller: MaintenanceController, modifier: Modifier = Mo
         if (state.unknown) Text(stringResource(R.string.maintenance_unknown), modifier = Modifier.testTag("maintenance_unknown"))
         if (state.failed) Text(stringResource(R.string.maintenance_failed))
         if (state.stale && state.readable) Text(stringResource(R.string.maintenance_stale))
-        if (!state.readable && !state.busy) Text(stringResource(R.string.maintenance_unavailable))
+        if (state.unsupported) Text(stringResource(R.string.maintenance_server_unsupported), modifier = Modifier.testTag("maintenance_server_unsupported"))
+        else if (!state.readable && !state.busy) Text(stringResource(R.string.maintenance_unavailable))
         when (controller.page) {
             MaintenancePage.MEMORY -> Text(stringResource(R.string.maintenance_memory_gap))
             MaintenancePage.VAULT -> Text(stringResource(R.string.maintenance_vault_gap))

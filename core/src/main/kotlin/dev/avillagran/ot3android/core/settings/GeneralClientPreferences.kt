@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -15,12 +16,25 @@ private val Context.generalDataStore by preferencesDataStore(name = "general_set
 /** Android client preferences; P20 consumes this flow in the composer and timestamp formatter. */
 class GeneralClientPreferences(private val store: DataStore<Preferences>) {
     constructor(context: Context) : this(context.applicationContext.generalDataStore)
-    val settings = store.data.map { prefs ->
-        JSONObject().also { out -> defaults.keys().forEach { key ->
-            val raw = prefs[stringPreferencesKey(key)]
-            out.put(key, raw?.let { runCatching { JSONObject(it).get("value") }.getOrNull() } ?: defaults.get(key))
-        } }
+    private fun values(prefs: Preferences): JSONObject = JSONObject().also { out -> defaults.keys().forEach { key ->
+        val raw = prefs[stringPreferencesKey(key)]
+        out.put(key, raw?.let { runCatching { JSONObject(it).get("value") }.getOrNull() } ?: defaults.get(key))
+    } }
+    val settings = store.data.map(::values)
+    fun settingsFor(environmentId: String) = store.data.map { prefs ->
+        values(prefs).put("followUpBehavior", effectiveFollowUp(prefs, environmentId))
     }
+    private fun effectiveFollowUp(prefs: Preferences, environmentId: String): String {
+        fun read(key: String) = prefs[stringPreferencesKey(key)]?.let { runCatching { JSONObject(it).getString("value") }.getOrNull() }
+        return read("followUpBehavior")?.takeIf { it in setOf("steer", "queue") }
+            ?: read("shared_follow_up:$environmentId")?.takeIf { it in setOf("steer", "queue") } ?: "steer"
+    }
+    suspend fun followUpBehavior(environmentId: String): String = effectiveFollowUp(store.data.first(), environmentId)
+    suspend fun mirrorFollowUp(environmentId: String, behavior: String) {
+        require(behavior in setOf("steer", "queue"))
+        store.edit { it[stringPreferencesKey("shared_follow_up:$environmentId")] = JSONObject().put("value", behavior).toString() }
+    }
+
     suspend fun update(key: String, value: Any) {
         require(defaults.has(key))
         when (key) {
@@ -75,7 +89,7 @@ class GeneralClientPreferences(private val store: DataStore<Preferences>) {
             "de" to "Fahre fort.\nMach weiter.\nStopp.\nPrüfe die Änderungen.\nFühre die Tests aus.\nErkläre das Ergebnis.",
             "it" to "Continua.\nVai avanti.\nFermati.\nVerifica le modifiche.\nEsegui i test.\nSpiega il risultato.",
         )
-        val defaults: JSONObject get() = JSONObject().put("followUpBehavior", "queue").put("timestampFormat", "locale")
+        val defaults: JSONObject get() = JSONObject().put("followUpBehavior", "steer").put("timestampFormat", "locale")
             .put("planModeEnabled", false).put("quickRepliesButton", true).put("quickReplyLanguage", "auto")
             .also { out -> languages.forEach { out.put("quickReplies.$it", quickReplyDefaults[it].orEmpty()) } }
     }

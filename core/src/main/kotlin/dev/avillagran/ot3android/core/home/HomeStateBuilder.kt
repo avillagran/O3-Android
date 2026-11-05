@@ -66,7 +66,7 @@ object HomeStateBuilder {
         // Section rows carry their nesting; `threads` adds the rows no section lists (filtered out).
         val listed = (sidebar.active + sidebar.working + sidebar.snoozed + sidebar.settled)
             .associate { row -> row.key to homeRow(row, sidebar, projects, input) }
-        val rows = sidebar.threads.associate { row -> row.key to homeRow(row, sidebar, projects, input) } + listed
+        val rows = sidebar.threads.associate { row -> row.key to (listed[row.key] ?: homeRow(row, sidebar, projects, input)) } + listed
         fun row(lib: SidebarRow): HomeRow = listed.getValue(lib.key)
 
         val items = buildList {
@@ -105,10 +105,12 @@ object HomeStateBuilder {
             ),
             shelves = input.shelves,
             items = items,
-            stale = shells.any { it.connection !is ConnectionState.Connected },
+            hostStatuses = environments.map { HomeHostStatus(it.id, it.label, it.connection, it.shell != null, it.syncing) },
+            stale = shells.any { it.connection !is ConnectionState.Connected || it.syncing },
             offline = shells.isNotEmpty() && shells.none { it.connection is ConnectionState.Connected },
             multipleEnvironments = multiple,
             rows = rows,
+            boardRows = listed.values.toList(),
             projects = projects,
             projectScope = if (input.filter.projectKey == null) emptySet() else sidebar.projectScope.orEmpty(),
         )

@@ -20,12 +20,13 @@ class MaintenanceTest {
         var authenticated = true
         var scopes = listOf("orchestration:read", "orchestration:operate")
         var functions = listOf("scheduledTasks.list", "scheduledTasks.runNow", "scheduledTasks.delete")
+        var readFailure: dev.avillagran.t3.T3Exception? = null
         var fail = false
         var cancel = false
         var writes = 0
         var readGate: CompletableDeferred<Unit>? = null
         var response = JSONObject("""{"tasks":[{"id":"one","title":"Task"}]}""")
-        val transport = Proxy.newProxyInstance(T3Transport::class.java.classLoader, arrayOf(T3Transport::class.java)) { _, method, args ->
+        private val delegate = Proxy.newProxyInstance(T3Transport::class.java.classLoader, arrayOf(T3Transport::class.java)) { _, method, args ->
             when (method.name) {
                 "authSession" -> JSONObject().put("authenticated", authenticated).put("scopes", JSONArray(scopes))
                 "describe" -> JSONObject().put("functions", JSONArray(functions.map { fn -> JSONObject().put("fn", fn)
@@ -39,6 +40,12 @@ class MaintenanceTest {
                 else -> error(method.name)
             }
         } as T3Transport
+        val transport = object : T3Transport by delegate {
+            override suspend fun call(fn: String, args: JSONObject, timeoutMs: Int?): Any? {
+                if (fn.endsWith("list")) readFailure?.let { throw it }
+                return delegate.call(fn, args, timeoutMs)
+            }
+        }
     }
     private fun controller(f: Fixture, receipts: MaintenanceReceipts = FileMaintenanceReceipts(temporary.newFolder())) =
         MaintenanceController(host, MaintenancePage.SCHEDULES, f.transport, receipts)
@@ -58,6 +65,27 @@ class MaintenanceTest {
         val f = Fixture(); val c = controller(f)
         assertTrue(runCatching { c.mutate("scheduledTasks.runNow", JSONObject(), true) }.isFailure)
         assertEquals(0, f.writes)
+    }
+    @Test fun olderServerDropsStaleReportAndExplainsUnsupportedRead() = runTest {
+        val f = Fixture(); val c = controller(f); c.refresh()
+        f.readFailure = dev.avillagran.t3.T3Exception("rpc_rejected", "Unknown request tag: scheduledTasks.list")
+        c.refresh()
+        assertTrue(c.state.value.unsupported)
+        assertFalse(c.state.value.failed)
+        assertFalse(c.state.value.readable)
+        assertTrue(c.state.value.writable.isEmpty())
+        assertEquals("{}", c.state.value.data)
+        assertEquals(0, f.writes)
+        f.readFailure = null; c.refresh()
+        assertFalse(c.state.value.unsupported)
+        assertTrue(c.state.value.readable)
+    }
+    @Test fun otherRejectionsRemainFailures() = runTest {
+        val f = Fixture(); val c = controller(f)
+        f.readFailure = dev.avillagran.t3.T3Exception("rpc_rejected", "Unknown request tag: different.read")
+        c.refresh()
+        assertFalse(c.state.value.unsupported)
+        assertTrue(c.state.value.failed)
     }
     @Test fun failureMakesOldReportStale() = runTest {
         val f = Fixture(); val c = controller(f); c.refresh(); f.fail = true; c.refresh()

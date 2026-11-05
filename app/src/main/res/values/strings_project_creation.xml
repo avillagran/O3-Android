@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Add project</string>
+    <string name="project_new">New project</string>
+    <string name="project_environment">Choose environment</string>
+    <string name="project_search">Search projects…</string>
+    <string name="project_none">No projects found</string>
+    <string name="project_setup">Setup required</string>
+    <string name="project_local">Local folder</string>
+    <string name="project_provider">%1$s repository</string>
+    <string name="project_name">Project name</string>
+    <string name="project_choose_folder">Choose folder</string>
+    <string name="project_folder">Folder</string>
+    <string name="project_browse">Open folder</string>
+    <string name="project_open">Open project</string>
+    <string name="project_clone">Clone a repository</string>
+    <string name="project_pending">Outcome unknown. Refresh to check before retrying the same action.</string>
+    <string name="project_reviewed">I have checked my projects</string>
+</resources>

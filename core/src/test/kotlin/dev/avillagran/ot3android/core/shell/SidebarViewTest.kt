@@ -26,14 +26,42 @@ class SidebarViewTest {
         assertTrue(result.threads.single().raw.has("branch"))
         assertFalse(result.raw.has("format"))
     }
-    @Test fun excessiveAggregateRowsFailBeforeJni() = runBlocking {
+    @Test fun indexedLimitRetriesStandardProjectionWithAllRowsAndSameFilters() = runBlocking {
         val threads = org.json.JSONArray().apply { repeat(1001) { put(JSONObject().put("id", "t$it")) } }
         val shell = ShellReducer.parse(JSONObject().put("threads", threads))
-        var called = false
-        val fake = dev.avillagran.ot3android.core.transport.DomainCalls { _, _ -> called = true; JSONObject() }
-        val error = runCatching { SidebarView.build(fake, listOf(SidebarEnvironment("fixture", shell = shell)), 0) }.exceptionOrNull()
-        assertEquals("sidebar_presentation_limit", (error as? dev.avillagran.t3.T3Exception)?.code)
-        assertFalse(called)
+        val calls = mutableListOf<JSONObject>()
+        val fake = dev.avillagran.ot3android.core.transport.DomainCalls { _, args ->
+            calls += JSONObject(args.toString())
+            if (args.optBoolean("compact")) throw dev.avillagran.t3.T3Exception("sidebar_presentation_limit")
+            JSONObject().put("threads", org.json.JSONArray().put(JSONObject().put("id", "visible").put("title", "Visible")))
+        }
+        val result = SidebarView.build(fake, listOf(SidebarEnvironment("fixture", shell = shell)), 123,
+            environmentId = "fixture", grouped = true, filter = "working", project = "fixture/p", query = "search")
+        assertEquals("Visible", result.threads.single().title)
+        assertEquals(2, calls.size)
+        assertEquals(1001, calls.last().getJSONArray("environments").getJSONObject(0).getJSONObject("shell").getJSONArray("threads").length())
+        assertEquals(calls.first().put("compact", false).toString(), calls.last().toString())
+    }
+    @Test fun unrelatedDomainFailureIsNotRetried() = runBlocking {
+        var calls = 0
+        val fake = dev.avillagran.ot3android.core.transport.DomainCalls { _, _ ->
+            calls++; throw dev.avillagran.t3.T3Exception("invalid_environment")
+        }
+        val error = runCatching { SidebarView.build(fake, emptyList(), 0) }.exceptionOrNull()
+        assertEquals("invalid_environment", (error as? dev.avillagran.t3.T3Exception)?.code)
+        assertEquals(1, calls)
+    }
+    @Test fun aggregateShellAboveFourMiBStillRendersThroughNativeFallback() = runBlocking {
+        val environments = (0..1).map { host ->
+            val threads = org.json.JSONArray().apply {
+                repeat(400) { put(JSONObject().put("id", "t$it").put("title", "Task $it").put("status", "idle")
+                    .put("extraMetadata", "x".repeat(6000))) }
+            }
+            SidebarEnvironment("host$host", shell = ShellReducer.parse(JSONObject().put("threads", threads)))
+        }
+        val result = SidebarView.build(domain, environments, 0)
+        assertEquals(800, result.threads.size)
+        assertEquals(800, result.threads.map { it.key }.distinct().size)
     }
     private val domain = DomainEngine.shared
 

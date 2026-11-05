@@ -20,6 +20,14 @@ class ComposerModelsTest {
     private val selection = """{"instanceId":"personal","model":"same","options":[]}"""
     private val catalog = """{"favoritesReady":true,"favorites":[],"providers":[{"instanceId":"personal","name":"Personal","ready":true},{"instanceId":"work","name":"Work","ready":true}],"models":[{"instanceId":"personal","model":"same","displayName":"Personal model","providerName":"Personal","available":true,"descriptors":[{"id":"effort","label":"Reasoning effort","type":"select","currentValue":"low","options":[{"id":"low","label":"Low"},{"id":"high","label":"High"}]}]},{"instanceId":"work","model":"same","displayName":"Work model","providerName":"Work","available":true}]}"""
 
+    @Test fun providerIdentityIsVisibleForAnUnlistedModelWithoutOpeningPicker() {
+        val data = JSONObject(catalog)
+        data.getJSONArray("providers").getJSONObject(0).put("driverKind", "codex")
+        val selected = JSONObject(selection).put("model", "retired-model")
+        rule.setContent { Ot3Theme { ComposerModels(data.toString(), selected.toString(), false, true, {}, {}, { _, _ -> }, { _, _ -> }) } }
+        rule.onNodeWithTag("provider_icon_personal", useUnmergedTree = true).assertExists()
+    }
+
     @Test fun providerIdentitySurvivesDuplicateModelSlugsAndRefreshIsExplicit() {
         var chosen: JSONObject? = null
         var refreshes = 0

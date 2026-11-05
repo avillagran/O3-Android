@@ -19,13 +19,8 @@ data class ReplyClock(val repliedAt: Long = 0, val settledSortAt: Long = 0, val 
     }
 }
 data class HostStyle(val icon: String = "server", val color: String = "", val showName: Boolean = false) {
-    // The existing Android kit has no platform-specific glyph assets.
-    val displayIcon: String get() = when (icon) {
-        "linux" -> "terminal"
-        "mac-mini" -> "server"
-        "mac-studio" -> "monitor"
-        else -> icon
-    }
+    val displayIcon: String get() = if (icon == "desktop") "monitor" else icon
+
 }
 data class SidebarChip(val key: String, val title: String, val count: Int, val group: Boolean = false)
 data class SidebarSection(val key: String, val title: String, val rows: List<HomeRow>)

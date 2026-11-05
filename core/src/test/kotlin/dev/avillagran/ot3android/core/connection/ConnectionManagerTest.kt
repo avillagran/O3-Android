@@ -170,6 +170,28 @@ class ConnectionManagerTest {
         }
     }
 
+    @Test fun sidebarPersistenceDoesNotTruncateHostsAboveTwoThousandThreads() = kotlinx.coroutines.runBlocking {
+        dev.avillagran.ot3android.core.transport.assumeHostJni()
+        val directory = java.nio.file.Files.createTempDirectory(java.nio.file.Path.of("/var/tmp"), "sidebar-all-").toFile()
+        val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
+        repository.save(null, "One", "http://one:3773", null, "t1")
+        val largeFactory = FakeT3TransportFactory {
+            FakeT3Transport().apply {
+                onFetchDescriptor("http://one:3773") { JSONObject().put("environmentId", "one") }
+                onShell { body(5, emptyList(), (0..2000).map { thread("t$it") }) }
+            }
+        }
+        try {
+            val cache = dev.avillagran.ot3android.core.thread.ThreadCache(directory)
+            val manager = ConnectionManager(repository, cursors, largeFactory, scope, cache = cache)
+            manager.startIfCurrent(manager.supervisor("id-1"))
+            kotlinx.coroutines.withTimeout(10_000) { while (cache.usage().entries == 0) kotlinx.coroutines.delay(10) }
+            val cold = dev.avillagran.ot3android.core.thread.ThreadCache(directory)
+            val stored = cold.readSidebar("id-1", repository.cacheAuthority("id-1")!!)!!
+            assertEquals(2001, stored.getJSONArray("threads").length())
+        } finally { scope.coroutineContext[kotlinx.coroutines.Job]!!.cancel(); directory.deleteRecursively() }
+    }
+
     private val cursors = MemoryCursorStore()
     private val dao = InMemoryEnvironmentDao()
     private var ids = 0

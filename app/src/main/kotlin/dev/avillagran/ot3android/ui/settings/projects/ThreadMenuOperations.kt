@@ -6,6 +6,8 @@ import dev.avillagran.ot3android.core.thread.SendResult
 import dev.avillagran.ot3android.core.transport.T3Transport
 import dev.avillagran.t3.T3Exception
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -14,13 +16,17 @@ import kotlinx.coroutines.sync.Mutex
 data class ThreadMenuOperationState(val busy: Boolean = false, val retryCommandId: String? = null,
     val error: String? = null, val titleRegenerating: Boolean = false)
 
-class ThreadMenuOperations(private val transport: T3Transport, private val sender: MessageSender) {
+class ThreadMenuOperations(private val transport: T3Transport, private val sender: MessageSender, private val scope: CoroutineScope) {
     private val mutex = Mutex()
     private val mutable = MutableStateFlow(ThreadMenuOperationState())
     val state = mutable.asStateFlow()
 
     /** Pass the current shell's titleRegeneration flag; an accepted regeneration stays gated. */
     fun observeTitleRegeneration(active: Boolean) { mutable.value = mutable.value.copy(titleRegenerating = active) }
+
+    /** La operación pertenece a la app y sobrevive al cierre inmediato del menú. */
+    fun submit(row: HomeRow, action: ThreadAction, title: String? = null, until: String? = null, confirmed: Boolean = false) =
+        scope.launch { execute(row, action, title, until, confirmed) }
 
     suspend fun execute(row: HomeRow, action: ThreadAction, title: String? = null,
         until: String? = null, confirmed: Boolean = false,

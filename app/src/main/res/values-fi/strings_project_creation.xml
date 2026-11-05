@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Lisää projekti</string>
+    <string name="project_new">Uusi projekti</string>
+    <string name="project_environment">Valitse ympäristö</string>
+    <string name="project_search">Etsi projekteja…</string>
+    <string name="project_none">Projekteja ei löytynyt</string>
+    <string name="project_setup">Määritys tarvitaan</string>
+    <string name="project_local">Paikallinen kansio</string>
+    <string name="project_provider">%1$s-tietovarasto</string>
+    <string name="project_name">Projektin nimi</string>
+    <string name="project_choose_folder">Valitse kansio</string>
+    <string name="project_folder">Kansio</string>
+    <string name="project_browse">Avaa kansio</string>
+    <string name="project_open">Avaa projekti</string>
+    <string name="project_clone">Kloonaa tietovarasto</string>
+    <string name="project_pending">Tulos on epäselvä. Päivitä ja tarkista ennen saman toiminnon uusintaa.</string>
+    <string name="project_reviewed">Olen tarkistanut projektini</string>
+</resources>

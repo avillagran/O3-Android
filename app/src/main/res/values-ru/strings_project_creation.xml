@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Добавить проект</string>
+    <string name="project_new">Новый проект</string>
+    <string name="project_environment">Выбрать окружение</string>
+    <string name="project_search">Поиск проектов…</string>
+    <string name="project_none">Проекты не найдены</string>
+    <string name="project_setup">Требуется настройка</string>
+    <string name="project_local">Локальная папка</string>
+    <string name="project_provider">Репозиторий %1$s</string>
+    <string name="project_name">Название проекта</string>
+    <string name="project_choose_folder">Выбрать папку</string>
+    <string name="project_folder">Папка</string>
+    <string name="project_browse">Открыть папку</string>
+    <string name="project_open">Открыть проект</string>
+    <string name="project_clone">Клонировать репозиторий</string>
+    <string name="project_pending">Результат неизвестен. Обновите беседу для проверки перед повтором действия.</string>
+    <string name="project_reviewed">Я проверил свои проекты</string>
+</resources>

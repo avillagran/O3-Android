@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Oppgavetavle</string>
+    <string name="task_board_pending">Venter</string>
+    <string name="task_board_working">Arbeider</string>
+    <string name="task_board_waiting">Venter</string>
+    <string name="task_board_done">Klar</string>
+    <string name="board_live_view">Direktevisning</string>
+    <string name="board_live_loading">Laster samtale…</string>
+    <string name="board_live_empty">Ingen meldinger ennå</string>
+    <string name="board_live_you">Du</string>
+    <string name="board_live_write">Skriv melding</string>
+    <string name="board_live_unavailable">Miljøet er utilgjengelig</string>
+    <string name="board_live_waiting">Miljøet er utilgjengelig</string>
+</resources>

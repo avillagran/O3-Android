@@ -21,6 +21,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,6 +69,8 @@ data class ThreadUiState(
     val answeredRequests: Set<String> = emptySet(),
     val readingPosition: dev.avillagran.ot3android.core.data.prefs.ReadingPosition? = null,
     val readingPositionLoaded: Boolean = true,
+    val hostEnvironmentId: String = "",
+    val hostLabel: String? = null,
 ) {
     val connected: Boolean get() = connection is ConnectionState.Connected
 
@@ -317,8 +320,20 @@ class ThreadViewModel(
 
     fun removeAttachment(id: String) {
         if (local.value.queueBusy || attachmentPending.value != null || state.value.sending) return
-        dropAttachments(setOf(id))
-        persistAttachments()
+        val descriptor = attachmentDraft.value.firstOrNull { it.id == id }?.descriptor
+        if (descriptor == null) {
+            dropAttachments(setOf(id)); persistAttachments()
+            return
+        }
+        local.update { it.copy(queueBusy = true) }
+        viewModelScope.launch {
+            try {
+                val reference = dev.avillagran.ot3android.core.composer.NativeComposer().attachmentReference(org.json.JSONObject(descriptor))
+                composer.onDraftChange(composer.state.value.draft.replace(reference, ""))
+                dropAttachments(setOf(id))
+                persistAttachments()
+            } finally { local.update { it.copy(queueBusy = false) } }
+        }
     }
 
     /** The only way a chip's local bytes leave before an upload: the user or its accepted send. */
@@ -411,9 +426,19 @@ class ThreadViewModel(
                 dev.avillagran.ot3android.ui.thread.composer.ComposerAttachmentImporter.upload(upload, bytes, file.name, file.mimeType ?: "application/octet-stream")
             }
             check(current()) { "connection_changed" }
+            val reference = dev.avillagran.ot3android.core.composer.NativeComposer().attachmentReference(descriptor)
+            if (attachmentDraft.value.none { it.id == file.id }) return
             bytes.delete()
             updateAttachment(file.id) { it.copy(name = descriptor.optString("name", it.name),
                 status = dev.avillagran.ot3android.core.composer.UploadStatus.Ready, descriptor = descriptor.toString()) }
+            viewModelScope.launch {
+                // A late file belongs to the next draft, after the accepted command clears its text.
+                state.first { !it.sending }
+                if (attachmentDraft.value.any { it.id == file.id }) {
+                    val draft = composer.state.value.draft
+                    if (!draft.contains(reference)) composer.onDraftChange(draft + (if (draft.isBlank() || draft.endsWith("\n")) "" else "\n") + reference)
+                }
+            }
         } catch (cancelled: CancellationException) {
             updateAttachment(file.id) { it.copy(status = dev.avillagran.ot3android.core.composer.UploadStatus.Queued) }
             throw cancelled
@@ -449,10 +474,12 @@ class ThreadViewModel(
                     .put("attachments", org.json.JSONArray(files.map { org.json.JSONObject(it.descriptor!!) }))
                 if (pending == null) {
                     sharedClear = captureSharedClear(args.optString("text"), files)
-                    val preferences = clientPreferences?.settings?.first()
-                    var delivery = if (state.value.view.activeRunId == null) "auto" else if ((state.value.view.timeline?.optJSONArray("approvals")?.length() ?: 0) > 0) "steer" else sharedDeliveryMode ?: preferences?.optString("followUpBehavior", "queue") ?: "queue"
+                    val followUp = clientPreferences?.followUpBehavior(environmentId) ?: "steer"
+                    var delivery = if (state.value.view.activeRunId == null) "auto" else if ((state.value.view.timeline?.optJSONArray("approvals")?.length() ?: 0) > 0) "steer" else sharedDeliveryMode ?: followUp
                     if (oppositeOnce && delivery != "auto") delivery = if (delivery == "queue") "steer" else "queue"
-                    args.put("deliveryIntent", delivery)
+                    args.put("dispatchMode", org.json.JSONObject().put("type",
+                        if (delivery == "queue") "queue_after_active" else "start_immediately"))
+                    if (delivery == "queue") args.remove("deliveryIntent") else args.put("deliveryIntent", delivery)
                     args = prepareChatCommand(args, newThread, plan)
                 }
                 val id = args.getString("commandId")
@@ -466,6 +493,7 @@ class ThreadViewModel(
                 val unsent = pending == null && result is SendResult.Failed && result.code == MessageSender.NOT_CONNECTED
                 if (unsent) sender.discard(id)
                 if (result is SendResult.Accepted) {
+                    sharedDeliveryMode = null
                     stageSharedClear(args.getString("commandId"))
                     args.optString("acceptedInteractionMode").takeIf { it in setOf("plan", "default") }?.let { chosenInteraction.value = it }
                     dropAttachments(commandAttachments()); attachmentCommand = null; attachmentCommandFiles = null; attachmentPending.value = null
@@ -702,6 +730,7 @@ class ThreadViewModel(
     private val supervisor = MutableStateFlow<ConnectionSupervisor?>(null)
     private val local = MutableStateFlow(Local(readingPositionLoaded = preferences == null))
     private var modelSave: kotlinx.coroutines.Job? = null
+    private var modelRefreshJob: kotlinx.coroutines.Job? = null
     private val readingPositions = kotlinx.coroutines.channels.Channel<dev.avillagran.ot3android.core.data.prefs.ReadingPosition>(kotlinx.coroutines.channels.Channel.CONFLATED)
 
     private val session = ThreadSession(
@@ -773,6 +802,8 @@ class ThreadViewModel(
         if (liveScope != null) lastComposerScope = liveScope
         ThreadUiState(
             view = view,
+            hostEnvironmentId = environmentId,
+            hostLabel = supervisor.value?.environmentLabel,
             title = view.title ?: shellRow?.title,
             composerScope = liveScope ?: lastComposerScope,
             modelSelection = local.selectedModel ?: view.modelSelection ?: shellRow?.raw?.optJSONObject("modelSelection")?.toString(),
@@ -802,7 +833,7 @@ class ThreadViewModel(
             val parsed = dev.avillagran.ot3android.core.thread.ThreadTimelines.parse(raw)
             ui.copy(view = ui.view.copy(timeline = raw, messages = parsed.messages))
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId)))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThreadUiState(ThreadView(threadId), hostEnvironmentId = environmentId))
 
     init {
         if (preferences != null) appScope.launch {
@@ -832,6 +863,13 @@ class ThreadViewModel(
                 supervisor.value = it
             }
         }
+        viewModelScope.launch {
+            supervisor.flatMapLatest { it?.connection ?: flowOf<Connection?>(null) }.collectLatest { connection ->
+                modelRefreshJob?.cancelAndJoin()
+                local.update { it.copy(modelCatalog = null, modelsLoading = false) }
+                if (connection != null) refreshModels()
+            }
+        }
         session.start()
         viewModelScope.launch { uploadQueuedAttachments() }
     }
@@ -857,14 +895,16 @@ class ThreadViewModel(
     /** Native catalog projection hides disabled/hidden models and preserves provider identities. */
     fun refreshModels() {
         if (local.value.modelsLoading) return
-        val live = transport() ?: return
+        val connection = supervisor.value?.connection?.value ?: return
+        val live = connection.transport
         local.update { it.copy(modelsLoading = true) }
-        viewModelScope.launch {
+        modelRefreshJob = viewModelScope.launch {
             try {
                 val config = live.call("server.getConfig", org.json.JSONObject()) as org.json.JSONObject
                 val catalog = dev.avillagran.ot3android.core.transport.DomainEngine.shared.domain(
                     "models.catalog", org.json.JSONObject().put("config", config),
                 ) as org.json.JSONObject
+                if (supervisor.value?.connection?.value === connection) local.update { it.copy(modelCatalog = catalog.toString()) }
                 val permissionViews = org.json.JSONObject()
                 val providers = catalog.optJSONArray("providers") ?: org.json.JSONArray()
                 for (index in 0 until providers.length()) {
@@ -873,13 +913,23 @@ class ThreadViewModel(
                         .put("selection", org.json.JSONObject().put("instanceId", id))))
                 }
                 catalog.put("permissionViews", permissionViews)
-                if (transport() === live) local.update { it.copy(modelCatalog = catalog.toString()) }
+                if (supervisor.value?.connection?.value === connection) local.update { it.copy(modelCatalog = catalog.toString()) }
             } catch (error: dev.avillagran.t3.T3Exception) {
-                local.update { it.copy(notice = ThreadNotice.Failed(error.code, error.reason, error.requiredScope)) }
+                if (supervisor.value?.connection?.value === connection)
+                    local.update { it.copy(notice = ThreadNotice.Failed(error.code, error.reason, error.requiredScope)) }
             } finally {
-                local.update { it.copy(modelsLoading = false) }
+                if (supervisor.value?.connection?.value === connection) local.update { it.copy(modelsLoading = false) }
             }
         }
+    }
+
+    /** The thread's working directory on its host (its worktree, else the project root). */
+    fun workspaceCwd(): String? {
+        val shell = supervisor.value?.shell?.value ?: return null
+        val thread = shell.thread(threadId) ?: return null
+        return thread.raw.optString("cwd").takeIf { it.isNotBlank() && it != "null" }
+            ?: thread.raw.optString("worktreePath").takeIf { it.isNotBlank() && it != "null" }
+            ?: shell.projects.firstOrNull { it.id == thread.projectId }?.workspaceRoot
     }
 
     suspend fun composerCompletions(snapshot: dev.avillagran.ot3android.core.composer.ComposerSnapshot): Pair<org.json.JSONObject, org.json.JSONArray>? {
@@ -920,7 +970,12 @@ class ThreadViewModel(
         payload.optJSONObject("preferences")?.optString("interactionMode")?.takeIf { it in setOf("plan", "default") }?.let {
             chosenInteraction.value = it; persistAttachments()
         }
-        sharedDeliveryMode = payload.optJSONObject("preferences")?.optString("deliveryMode")?.takeIf { it in setOf("auto", "queue", "steer") }
+        sharedDeliveryMode = when (payload.optJSONObject("preferences")?.optString("deliveryMode")) {
+            "send", "steer" -> "steer"
+            "queue" -> "queue"
+            "auto" -> "auto"
+            else -> null
+        }
         payload.optJSONObject("modelSelection")?.let { model ->
             val provider = model.optString("providerId").takeIf(String::isNotBlank)
             val name = model.optString("modelId").takeIf(String::isNotBlank)

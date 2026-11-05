@@ -33,6 +33,9 @@ class SidebarScreenshotTest : ScreenshotTest() {
     }
     @Test fun classic() = render("classic")
     @Test fun focus() = render("focus")
+    @Test fun taskBoard() = render("board")
+    @Test @Config(qualifiers = "w891dp-h411dp-land-xhdpi") fun taskBoardLandscape() = render("board", name = "board-landscape")
+    @Test @Config(qualifiers = "w320dp-h900dp-port-xhdpi") fun taskBoardLargeText() = render("board", 1.6f, name = "board-320")
     @Test fun projects() = render("projects")
     @Test fun font160() = render("classic", 1.6f)
     @Test @Config(qualifiers = "w891dp-h411dp-land-xhdpi") fun landscape() = render("classic", name = "landscape")

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Project toevoegen</string>
+    <string name="project_new">Nieuw project</string>
+    <string name="project_environment">Omgeving kiezen</string>
+    <string name="project_search">Projecten zoeken…</string>
+    <string name="project_none">Geen projecten gevonden</string>
+    <string name="project_setup">Configuratie vereist</string>
+    <string name="project_local">Lokale map</string>
+    <string name="project_provider">%1$s-repository</string>
+    <string name="project_name">Projectnaam</string>
+    <string name="project_choose_folder">Map kiezen</string>
+    <string name="project_folder">Map</string>
+    <string name="project_browse">Map openen</string>
+    <string name="project_open">Project openen</string>
+    <string name="project_clone">Een repository klonen</string>
+    <string name="project_pending">Uitkomst onbekend. Vernieuw eerst om dit te controleren voordat je dezelfde actie opnieuw probeert.</string>
+    <string name="project_reviewed">Ik heb mijn projecten gecontroleerd</string>
+</resources>

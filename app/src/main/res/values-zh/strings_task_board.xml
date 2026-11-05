@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">任务看板</string>
+    <string name="task_board_pending">待处理</string>
+    <string name="task_board_working">工作中</string>
+    <string name="task_board_waiting">等待中</string>
+    <string name="task_board_done">就绪</string>
+    <string name="board_live_view">实时视图</string>
+    <string name="board_live_loading">正在加载对话…</string>
+    <string name="board_live_empty">暂无消息</string>
+    <string name="board_live_you">你</string>
+    <string name="board_live_write">编写消息</string>
+    <string name="board_live_unavailable">环境不可用</string>
+    <string name="board_live_waiting">环境不可用</string>
+</resources>

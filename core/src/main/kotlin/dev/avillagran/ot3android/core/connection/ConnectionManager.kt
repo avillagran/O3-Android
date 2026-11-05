@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
@@ -90,22 +93,23 @@ class ConnectionManager(
                     if (authority != null) {
                         val saved = cache?.readSidebar(environmentId, authority)
                         if (saved != null && repository.cacheAuthority(environmentId) == authority)
-                            created.showCachedShell(dev.avillagran.ot3android.core.shell.ShellReducer.parse(saved))
+                            created.showCachedShell(withContext(computation) { dev.avillagran.ot3android.core.shell.ShellReducer.parse(saved) })
                     }
                 } catch (_: java.io.IOException) { /* Disposable cache; connection proceeds. */ }
                 created.also { created ->
                     synchronized(this) { _supervisors.update { it + (environmentId to created) } }
                     // Persist each host independently of UI subscriptions, other hosts and
                     // sidebar.view. A failed presentation must not prevent the next cold start.
-                    if (cache != null && authority != null) cacheWriters[environmentId] = scope.launch {
+                    if (cache != null && authority != null) cacheWriters[environmentId] = scope.launch(computation) {
                         combine(created.shell, created.connection) { shell, live -> shell to live }
-                            .collect { (shell, live) ->
-                                if (shell == null || live == null) return@collect
+                            .filter { (shell, live) -> shell != null && live != null }
+                            .map { it.first!! }.distinctUntilChanged().conflate()
+                            .collect { shell ->
                                 try {
                                     if (repository.cacheAuthority(environmentId) != authority) return@collect
                                     val body = org.json.JSONObject().put("snapshotSequence", shell.sequence)
                                         .put("projects", org.json.JSONArray(shell.projects.map { it.raw }))
-                                        .put("threads", org.json.JSONArray(shell.threads.take(2000).map { it.raw }))
+                                        .put("threads", org.json.JSONArray(shell.threads.map { it.raw }))
                                     cache.writeSidebar(environmentId, authority, body)
                                 } catch (_: java.io.IOException) { /* Disposable cache. */ }
                             }

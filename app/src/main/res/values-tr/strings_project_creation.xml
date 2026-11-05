@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Proje ekle</string>
+    <string name="project_new">Yeni proje</string>
+    <string name="project_environment">Ortam seç</string>
+    <string name="project_search">Proje ara…</string>
+    <string name="project_none">Proje bulunamadı</string>
+    <string name="project_setup">Kurulum gerekli</string>
+    <string name="project_local">Yerel klasör</string>
+    <string name="project_provider">%1$s deposu</string>
+    <string name="project_name">Proje adı</string>
+    <string name="project_choose_folder">Klasör seç</string>
+    <string name="project_folder">Klasör</string>
+    <string name="project_browse">Klasörü aç</string>
+    <string name="project_open">Projeyi aç</string>
+    <string name="project_clone">Depoyu klonla</string>
+    <string name="project_pending">Sonuç bilinmiyor. Aynı işlemi yinelemeden önce yenileyip kontrol edin.</string>
+    <string name="project_reviewed">Projelerimi kontrol ettim</string>
+</resources>

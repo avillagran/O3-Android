@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">프로젝트 추가</string>
+    <string name="project_new">새 프로젝트</string>
+    <string name="project_environment">환경 선택</string>
+    <string name="project_search">프로젝트 검색…</string>
+    <string name="project_none">프로젝트를 찾을 수 없습니다</string>
+    <string name="project_setup">설정 필요</string>
+    <string name="project_local">로컬 폴더</string>
+    <string name="project_provider">%1$s 저장소</string>
+    <string name="project_name">프로젝트 이름</string>
+    <string name="project_choose_folder">폴더 선택</string>
+    <string name="project_folder">폴더</string>
+    <string name="project_browse">폴더 열기</string>
+    <string name="project_open">프로젝트 열기</string>
+    <string name="project_clone">저장소 복제</string>
+    <string name="project_pending">결과를 알 수 없습니다. 동일한 작업을 다시 시도하기 전에 새로고침하여 확인하세요.</string>
+    <string name="project_reviewed">프로젝트를 확인했습니다</string>
+</resources>

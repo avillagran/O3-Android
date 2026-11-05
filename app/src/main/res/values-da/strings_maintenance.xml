@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Kører ved hver anmodning til opgavens webhook-URL, som vises efter gem. Prompten kan bruge {{body.path}}-pladsholdere.</string>
     <string name="maintenance_extended_16">Seneste 30 minutter: CPU (linje) og hukommelse (søjler)</string>
     <string name="maintenance_add_project">Tilføj projekt</string>
+    <string name="maintenance_server_unsupported">Denne funktion er ikke tilgængelig i denne serverversion.</string>
 </resources>

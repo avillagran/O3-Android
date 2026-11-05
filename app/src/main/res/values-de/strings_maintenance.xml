@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Läuft bei jeder Anfrage an die Webhook-URL der Aufgabe, die nach dem Speichern angezeigt wird. Der Prompt kann {{body.path}}-Platzhalter nutzen.</string>
     <string name="maintenance_extended_16">Letzte 30 Minuten: CPU (Linie) und Speicher (Balken)</string>
     <string name="maintenance_add_project">Projekt hinzufügen</string>
+    <string name="maintenance_server_unsupported">Diese Funktion ist in dieser Serverversion nicht verfügbar.</string>
 </resources>

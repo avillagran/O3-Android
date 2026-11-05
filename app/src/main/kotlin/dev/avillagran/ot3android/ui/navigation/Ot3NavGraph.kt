@@ -35,6 +35,9 @@ interface Ot3Screens {
     fun NewChat(entry: NavBackStackEntry) { NotYetScreen("NewThread") }
 
     @Composable
+    fun AddProject(entry: NavBackStackEntry, route: AddProject) { NotYetScreen("AddProject") }
+
+    @Composable
     fun NewChatDraft(entry: NavBackStackEntry, route: NewThreadDraft) { NotYetScreen("NewThreadDraft") }
 
     @Composable
@@ -134,7 +137,7 @@ fun NavGraphBuilder.ot3Graph(screens: Ot3Screens, isTop: (NavBackStackEntry) -> 
         composable<ThreadChanges> { screens.Changes(it.toRoute()) }
         composable<NewThread> { entry -> screens.NewChat(entry) }
         composable<NewThreadDraft> { entry -> screens.NewChatDraft(entry, entry.toRoute()) }
-        composable<AddProject> { NotYetScreen("AddProject") }
+        composable<AddProject> { entry -> screens.AddProject(entry, entry.toRoute()) }
         composable<CommandPalette> { NotYetScreen("CommandPalette") }
         sheet<ThreadActionsSheet> { entry -> screens.ThreadActions(entry, entry.toRoute()) }
         sheet<ProjectActionsSheet> { entry -> screens.ProjectActions(entry, entry.toRoute()) }

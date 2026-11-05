@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">プロジェクトを追加</string>
+    <string name="project_new">新しいプロジェクト</string>
+    <string name="project_environment">環境を選択</string>
+    <string name="project_search">プロジェクトを検索…</string>
+    <string name="project_none">プロジェクトが見つかりません</string>
+    <string name="project_setup">設定が必要</string>
+    <string name="project_local">ローカルフォルダー</string>
+    <string name="project_provider">%1$s リポジトリ</string>
+    <string name="project_name">プロジェクト名</string>
+    <string name="project_choose_folder">フォルダーを選択</string>
+    <string name="project_folder">フォルダー</string>
+    <string name="project_browse">フォルダーを開く</string>
+    <string name="project_open">プロジェクトを開く</string>
+    <string name="project_clone">リポジトリをクローン</string>
+    <string name="project_pending">結果は不明です。同じ操作を再試行する前に更新して確認してください。</string>
+    <string name="project_reviewed">プロジェクトを確認しました</string>
+</resources>

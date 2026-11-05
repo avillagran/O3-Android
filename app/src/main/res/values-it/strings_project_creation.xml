@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Aggiungi progetto</string>
+    <string name="project_new">Nuovo progetto</string>
+    <string name="project_environment">Scegli ambiente</string>
+    <string name="project_search">Cerca progetti…</string>
+    <string name="project_none">Nessun progetto trovato</string>
+    <string name="project_setup">Configurazione richiesta</string>
+    <string name="project_local">Cartella locale</string>
+    <string name="project_provider">Repository %1$s</string>
+    <string name="project_name">Nome progetto</string>
+    <string name="project_choose_folder">Scegli cartella</string>
+    <string name="project_folder">Cartella</string>
+    <string name="project_browse">Apri cartella</string>
+    <string name="project_open">Apri progetto</string>
+    <string name="project_clone">Clona un repository</string>
+    <string name="project_pending">Esito sconosciuto. Aggiorna per verificare prima di ripetere la stessa azione.</string>
+    <string name="project_reviewed">Ho controllato i miei progetti</string>
+</resources>

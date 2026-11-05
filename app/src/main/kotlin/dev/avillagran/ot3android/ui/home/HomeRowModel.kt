@@ -42,10 +42,7 @@ fun HomeRow.toThreadRowModel(): ThreadRowModel {
             PrBadgeModel(PrState.fromLib(it.optString("state")), it.optString("text"), it.optString("kind") == "stack")
         },
         workspaceIcon = if (worktree) WORKTREE_ICON else null,
-        environmentName = environmentLabel.takeIf {
-            val look = dev.avillagran.ot3android.ui.home.layouts.LocalSidebarRows.current.hostStyles[environmentId]
-            look == null || look.showName
-        },
+        environmentName = environmentLabel,
         machineIcon = dev.avillagran.ot3android.ui.home.layouts.LocalSidebarRows.current.hostStyles[environmentId]?.displayIcon ?: "server",
         pinned = pinned,
         subagent = subagent,

@@ -46,17 +46,27 @@ class HomePreferences(private val dataStore: DataStore<Preferences>) : ShelfStor
     )
 
     val hostStyles: Flow<Map<String, String>> = dataStore.data.map { prefs ->
-        prefs.asMap().entries.filter { it.key.name.startsWith("host_style:") && it.value is String }
-            .associate { it.key.name.removePrefix("host_style:") to it.value as String }
+        fun entries(prefix: String) = prefs.asMap().entries.filter { it.key.name.startsWith(prefix) && it.value is String }
+            .associate { it.key.name.removePrefix(prefix) to it.value as String }
+        entries("shared_host_style:") + entries("host_style:")
     }
+    suspend fun setSharedHostStyle(host: String, icon: String, color: String, showName: Boolean) {
+        require(icon in HostAppearanceReader.ICONS)
+        require(color.isEmpty() || color.matches(Regex("#[0-9a-fA-F]{6}")))
+        dataStore.edit { it[stringPreferencesKey("shared_host_style:$host")] = "$icon|$color|$showName" }
+    }
+
     suspend fun setHostStyle(host: String, icon: String, color: String, showName: Boolean) {
-        require(icon in setOf("server", "cloud", "linux", "monitor", "laptop", "mac-mini", "mac-studio"))
+        require(icon in HostAppearanceReader.ICONS)
         require(color in setOf("", "#e06c75", "#e5a050", "#d8c35a", "#8fc46a", "#4fb8a8", "#5aa2e6", "#9a7be6", "#d877b8"))
         dataStore.edit { it[stringPreferencesKey("host_style:$host")] = "$icon|$color|$showName" }
     }
 
     /** UI-only tree folds and bounded shelves; independent of native membership/filter state. */
     val sidebarCollapsed: Flow<Set<String>> = dataStore.data.map { it[Keys.SIDEBAR_COLLAPSED].orEmpty() }
+    val boardLive: Flow<Boolean> = dataStore.data.map { it[Keys.BOARD_LIVE] ?: false }
+    suspend fun setBoardLive(enabled: Boolean) { dataStore.edit { it[Keys.BOARD_LIVE] = enabled } }
+
     val sidebarUnlimited: Flow<Set<String>> = dataStore.data.map { it[Keys.SIDEBAR_UNLIMITED].orEmpty() }
     suspend fun toggleSidebarSection(key: String, limit: Boolean = false) {
         dataStore.edit { prefs ->
@@ -67,6 +77,7 @@ class HomePreferences(private val dataStore: DataStore<Preferences>) : ShelfStor
     }
 
     object Keys {
+        val BOARD_LIVE = booleanPreferencesKey("board_live")
         val SIDEBAR_COLLAPSED = stringSetPreferencesKey("sidebar_collapsed")
         val SIDEBAR_UNLIMITED = stringSetPreferencesKey("sidebar_unlimited")
         val GROUPED = booleanPreferencesKey("sidebar_grouped")

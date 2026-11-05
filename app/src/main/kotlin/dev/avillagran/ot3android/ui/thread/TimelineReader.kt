@@ -45,6 +45,9 @@ import dev.avillagran.ot3android.ui.thread.reader.*
 
 internal fun JSONArray?.objects(): List<JSONObject> = this?.let { a -> (0 until a.length()).mapNotNull(a::optJSONObject) }.orEmpty()
 
+/** Most history pages the reader requests by itself while the window holds no prose. */
+internal const val AUTO_HISTORY_PAGES = 8
+
 /** Draw Rust's complete ordered view. No grouping, Markdown parsing or eligibility rules here. */
 @OptIn(kotlinx.coroutines.FlowPreview::class)
 @Composable
@@ -82,6 +85,14 @@ internal fun TimelineReader(view: JSONObject?, fallback: List<ThreadMessage>, on
         fallback.map { JSONObject().put("id", it.id).put("role", it.role).put("text", it.text)
             .put("createdAt", it.createdAt).put("streaming", it.streaming).put("rev", it.rev) }
     }.asReversed()
+    // A bounded window that ends in a long run of tool activity holds no prose to read.
+    // Page back on its own until a prompt or reply is in view, as a reader would.
+    val hasMoreHistory = view?.optBoolean("hasMoreHistory") == true
+    val hasProse = rows.any { it.optString("role") in setOf("user", "assistant") && it.readerText("text").isNotBlank() }
+    var autoPages by remember(threadKey) { mutableIntStateOf(0) }
+    LaunchedEffect(rows.size, hasMoreHistory, hasProse, refreshing) {
+        if (hasMoreHistory && !hasProse && autoPages < AUTO_HISTORY_PAGES) { autoPages++; onLoadOlder() }
+    }
     val contentRevision = rows.map { Triple(it.optString("id"), it.optString("rev"), it.optString("text")) }
     val matches = remember(contentRevision, query) { transcriptMatches(rows, query) }
     val activeMatch = matches.indexOfFirst { it.rowId == selectedMatch && it.offset == matchOffset }
@@ -272,7 +283,7 @@ internal fun TimelineRow(row: JSONObject, readyPlan: JSONObject?, actions: Trans
     val colors = Ot3Theme.colors
     val typing = stringResource(R.string.thread_message_typing)
     Row(Modifier.fillMaxWidth().padding(bottom = if (role == "activity") 0.dp else if (commentary) 8.dp else 16.dp).testTag(ThreadScreenTags.message(id)).semantics { if (row.optBoolean("streaming")) stateDescription = typing }, horizontalArrangement = Arrangement.Start) {
-        Surface(color = colors.background, shape = RoundedCornerShape(0.dp),
+        Surface(color = androidx.compose.ui.graphics.Color.Transparent, shape = RoundedCornerShape(0.dp),
             modifier = Modifier.widthIn(max = 760.dp).fillMaxWidth()) {
             Column(Modifier.padding(horizontal = 4.dp, vertical = if (role == "activity") 0.dp else 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 when (role) {

@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">保存後に表示されるタスクの Webhook URL へのリクエストごとに実行されます。プロンプトでは {{body.path}} プレースホルダーを使えます。</string>
     <string name="maintenance_extended_16">直近 30 分: CPU（線）とメモリ（棒）</string>
     <string name="maintenance_add_project">プロジェクトを追加</string>
+    <string name="maintenance_server_unsupported">この機能は、このサーバーバージョンでは利用できません。</string>
 </resources>

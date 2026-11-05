@@ -48,7 +48,7 @@ internal fun SidebarControls(state: HomeUiState, settings: AppearanceSettings, m
         Box {
             TextButton(onClick = { menu = true }) { Text(sidebarLabel(settings.interfaceLayout)) }
             DropdownMenu(menu, { menu = false }) {
-                listOf("classic", "focus", "projects").forEach { layout ->
+                listOf("classic", "focus", "projects", "board").forEach { layout ->
                     DropdownMenuItem(text = { Text(sidebarLabel(layout)) }, onClick = { menu = false; onLayout(layout) })
                 }
             }
@@ -103,6 +103,7 @@ internal fun sidebarLabel(key: String): String = when (key) {
     "classic" -> stringResource(R.string.sidebar_layout_classic)
     "focus" -> stringResource(R.string.sidebar_layout_focus)
     "projects" -> stringResource(R.string.sidebar_layout_projects)
+    "board" -> stringResource(R.string.sidebar_layout_board)
     "pinned" -> stringResource(R.string.sidebar_section_pinned)
     "waiting" -> stringResource(R.string.sidebar_section_waiting)
     "working" -> stringResource(R.string.sidebar_section_working)

@@ -13,6 +13,7 @@ import dev.avillagran.ot3android.core.transport.FakeT3TransportFactory
 import dev.avillagran.ot3android.core.transport.ThreadUpdates
 import dev.avillagran.t3.T3Exception
 import dev.avillagran.t3.ThreadUpdate
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -416,6 +417,24 @@ class ConnectionSupervisorTest {
         runCurrent()
         assertEquals("epochs keep growing across runs", 3, supervisor.connection.value?.epoch)
         assertSame(factory.created.last(), supervisor.connection.value?.transport)
+    }
+
+    @Test fun refreshReportsSyncingWithoutDiscardingTheSavedShell() = runTest {
+        val supervisor = supervisor()
+        var syncing = false
+        backgroundScope.launch { supervisor.syncing.collect { syncing = it } }
+        supervisor.start(); runCurrent()
+        emit(ThreadUpdates.batch(snapshot(5, listOf(project("p1")), listOf(thread("t1"))), start = "snapshot", cursor = 5))
+        val saved = supervisor.shell.value
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        shellAnswer = { gate.await(); body(9, listOf(project("p1")), listOf(thread("fresh"))) }
+        val refreshing = launch { supervisor.refresh() }
+        runCurrent()
+        assertTrue(syncing)
+        assertSame(saved, supervisor.shell.value)
+        gate.complete(Unit); refreshing.join(); runCurrent()
+        assertFalse(syncing)
+        assertEquals("fresh", supervisor.shell.value!!.threads.single().id)
     }
 
     @Test

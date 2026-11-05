@@ -47,12 +47,19 @@ class MainActivity : ComponentActivity() {
                 (selection as dev.avillagran.ot3android.core.theme.ThemeSelection.Fallback).reason == dev.avillagran.ot3android.core.theme.FallbackReason.Loading
             if (themeCatalog != null && appearanceSettings != null && !readingInitialTheme) {
                 Ot3AppTheme(themeCatalog, appearanceSettings, selection as? dev.avillagran.ot3android.core.theme.ThemeSelection.Live) {
-                    Surface(Modifier.fillMaxSize()) {
-                        Ot3NavHost(
-                            deepLink = link,
-                            onDeepLinkHandled = { deepLink.value = null },
-                            pairingLinkWaiting = pairingLink != null,
-                        )
+                    val rawHostStyles by appGraph.homePreferences.hostStyles.collectAsStateWithLifecycle(emptyMap())
+                    val hostStyles = rawHostStyles.mapValues { (_, value) ->
+                        val fields = value.split('|')
+                        dev.avillagran.ot3android.ui.home.layouts.HostStyle(fields.getOrElse(0) { "server" }, fields.getOrElse(1) { "" }, fields.getOrElse(2) { "false" } == "true")
+                    }
+                    androidx.compose.runtime.CompositionLocalProvider(dev.avillagran.ot3android.ui.kit.LocalHostStyles provides hostStyles) {
+                        Surface(Modifier.fillMaxSize()) {
+                            Ot3NavHost(
+                                deepLink = link,
+                                onDeepLinkHandled = { deepLink.value = null },
+                                pairingLinkWaiting = pairingLink != null,
+                            )
+                        }
                     }
                 }
             }

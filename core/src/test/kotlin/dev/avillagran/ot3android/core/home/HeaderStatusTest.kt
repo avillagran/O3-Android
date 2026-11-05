@@ -32,8 +32,8 @@ class HeaderStatusTest {
             HeaderStatusDisplay.status(listOf(env("a", connected), env("b", connected, null))),
         )
         assertEquals(
-            "a reconnect behind a ready environment stays quiet",
-            HeaderStatus.Hidden,
+            "a reconnect stays visible while another host is ready",
+            HeaderStatus.Reconnecting("Env b", true),
             HeaderStatusDisplay.status(listOf(env("a", connected), env("b", ConnectionState.Connecting))),
         )
         assertEquals(
@@ -52,6 +52,11 @@ class HeaderStatusTest {
         )
         assertEquals(HeaderStatus.NotConnected, HeaderStatusDisplay.status(listOf(env("a", ConnectionState.Disconnected))))
         assertEquals("nothing loaded, nothing running", HeaderStatus.Hidden, HeaderStatusDisplay.status(listOf(env("a", ConnectionState.Disconnected, null))))
+    }
+
+    @Test fun cachedShellStillReportsSyncUntilStreamCatchesUp() {
+        assertEquals(HeaderStatus.Syncing, HeaderStatusDisplay.status(listOf(env("a", connected).copy(syncing = true))))
+        assertEquals(HeaderStatus.Hidden, HeaderStatusDisplay.status(listOf(env("a", connected))))
     }
 
     @Test

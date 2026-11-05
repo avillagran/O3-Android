@@ -46,6 +46,7 @@ internal fun ComposerModels(
     val selected = models.firstOrNull {
         it.optString("instanceId") == selection.optString("instanceId") && it.optString("model") == selection.optString("model")
     }
+    val selectedProvider = providers.firstOrNull { it.optString("instanceId") == selection.optString("instanceId") }
     var picker by rememberSaveable { mutableStateOf(false) }
     var options by rememberSaveable { mutableStateOf(false) }
     var provider by rememberSaveable { mutableStateOf("") }
@@ -62,7 +63,9 @@ internal fun ComposerModels(
             provider = if (favorites.isNotEmpty()) "favorites" else selection.optString("instanceId")
             search = ""; legacy = selected?.optBoolean("isLegacy") == true; picker = true; onRefresh()
         }, enabled = enabled, modifier = Modifier.size(48.dp).testTag("composer_models").semantics { contentDescription = modelLabel }) {
-            if (selected != null) ProviderIcon(selected, colors.dim)
+            val identity = selected ?: selectedProvider
+            if (identity != null) ProviderIcon(identity, colors.dim)
+            else if (loading) CircularProgressIndicator(Modifier.size(18.dp), color = colors.dim, strokeWidth = 2.dp)
             else dev.avillagran.ot3android.ui.kit.Ot3Icon("bot", null)
         }
         permissions()

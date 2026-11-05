@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Дошка завдань</string>
+    <string name="task_board_pending">Очікує</string>
+    <string name="task_board_working">Працює</string>
+    <string name="task_board_waiting">Очікування</string>
+    <string name="task_board_done">Готово</string>
+    <string name="board_live_view">Наживо</string>
+    <string name="board_live_loading">Завантаження розмови…</string>
+    <string name="board_live_empty">Повідомлень ще немає</string>
+    <string name="board_live_you">Ви</string>
+    <string name="board_live_write">Написати повідомлення</string>
+    <string name="board_live_unavailable">Середовище недоступне</string>
+    <string name="board_live_waiting">Середовище недоступне</string>
+</resources>

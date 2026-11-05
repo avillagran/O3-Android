@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Si esegue a ogni richiesta all’URL del webhook dell’attività, mostrato dopo il salvataggio. Il prompt può usare segnaposto {{body.path}}.</string>
     <string name="maintenance_extended_16">Ultimi 30 minuti: CPU (linea) e memoria (barre)</string>
     <string name="maintenance_add_project">Aggiungi progetto</string>
+    <string name="maintenance_server_unsupported">Questa funzione non è disponibile in questa versione del server.</string>
 </resources>

@@ -195,13 +195,11 @@ private fun PooledQuotaStrip(states: List<Pair<String, QuotaState>>, enabled: Bo
                         (if (compact) windows.take(2) else windows).forEach { window ->
                             Text(window.optString("label"), style = MaterialTheme.typography.labelSmall)
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                                window.optJSONArray("segments")?.let { segments ->
+                                (window.optJSONArray("segments")?.takeIf { it.length() > 0 }
+                                    ?: org.json.JSONArray().put(window)).let { segments ->
                                     for (i in 0 until segments.length()) {
                                         val segment = segments.optJSONObject(i)
-                                        val available = segment?.optDouble("availablePercent")?.div(100)?.toFloat()?.coerceIn(0f, 1f)
-                                        Box(Modifier.weight(1f).height(6.dp).background(Ot3Theme.colors.foreground.copy(alpha = .12f))) {
-                                            if (available != null) Box(Modifier.fillMaxWidth(available).fillMaxHeight().background(Ot3Theme.colors.accent).progressSemantics(available))
-                                        }
+                                        QuotaSegment(segment, Modifier.weight(1f))
                                     }
                                 }
                             }
@@ -221,6 +219,34 @@ private fun PooledQuotaStrip(states: List<Pair<String, QuotaState>>, enabled: Bo
                     }
                 }
             }
+        }
+    }
+}
+
+/** Desktop quotaOptimal: native expected balance marker, with faster consumption in urgent color. */
+@Composable
+internal fun QuotaSegment(segment: JSONObject?, modifier: Modifier = Modifier) {
+    val available = segment?.optDouble("availablePercent")?.takeIf { it.isFinite() }
+    val expected = segment?.optDouble("expectedAvailable")?.takeIf { it.isFinite() && it >= 0 }
+    val colors = Ot3Theme.colors
+    val fill = if (available != null && expected != null && available < expected) colors.failed else colors.accent
+    androidx.compose.foundation.Canvas(modifier.height(10.dp)
+        .then(if (available != null) Modifier.progressSemantics((available / 100).toFloat().coerceIn(0f, 1f)) else Modifier)) {
+        val inset = 2.dp.toPx()
+        val barHeight = size.height - 2 * inset
+        drawRoundRect(colors.foreground.copy(alpha = if (segment == null) .035f else .12f),
+            topLeft = androidx.compose.ui.geometry.Offset(0f, inset),
+            size = androidx.compose.ui.geometry.Size(size.width, barHeight), cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()))
+        available?.let {
+            drawRoundRect(fill, topLeft = androidx.compose.ui.geometry.Offset(0f, inset),
+                size = androidx.compose.ui.geometry.Size(size.width * (it / 100).toFloat().coerceIn(0f, 1f), barHeight),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()))
+        }
+        expected?.let {
+            val width = 2.dp.toPx().coerceAtMost(size.width)
+            val x = (size.width * (it / 100).toFloat() - width / 2).coerceIn(0f, (size.width - width).coerceAtLeast(0f))
+            drawRoundRect(colors.foreground, topLeft = androidx.compose.ui.geometry.Offset(x, 0f),
+                size = androidx.compose.ui.geometry.Size(width, size.height), cornerRadius = androidx.compose.ui.geometry.CornerRadius(1.dp.toPx()))
         }
     }
 }

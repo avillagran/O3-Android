@@ -96,6 +96,26 @@ class HomeStateBuilderTest {
     private fun HomeUiState.headers() = items.filterIsInstance<HomeItem.ShelfHeader>()
 
     @Test
+    fun boardMembershipHonorsNativeFilterIndependentlyOfCollapsedShelves() {
+        val state = build(filter = HomeFilter(status = StatusFilter.Settled), shelves = ShelfState(settledExpanded = false))
+        assertEquals(listOf("e1/a-settled"), state.boardRows!!.map { it.key })
+        assertTrue(state.items.filterIsInstance<HomeItem.Row>().isEmpty())
+        assertTrue("action targets still include unfiltered threads", state.rows.size > state.boardRows.size)
+    }
+
+    @Test
+    fun sharedRowsAreProjectedOnlyOnce() = runBlocking {
+        var actionLookups = 0
+        val input = HomeInput(environments = listOf(laptop, server), now = now, actions = {
+            actionLookups++
+            ActionContext.Interim
+        })
+        val sidebar = HomeStateBuilder.view(DomainEngine.shared, input)
+        val state = HomeStateBuilder.build(input, sidebar)
+        assertEquals(state.rows.size, actionLookups)
+    }
+
+    @Test
     fun branchAndPullRequestBadgeComeFromTheLibWithoutHostInference() {
         val source = env("remote", "Servidor QA", shell(
             listOf(project("p", "Repository")),

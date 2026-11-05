@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Tehtävätaulu</string>
+    <string name="task_board_pending">Odottaa</string>
+    <string name="task_board_working">Työn alla</string>
+    <string name="task_board_waiting">Odottaa</string>
+    <string name="task_board_done">Valmis</string>
+    <string name="board_live_view">Reaaliaikainen näkymä</string>
+    <string name="board_live_loading">Ladataan keskustelua…</string>
+    <string name="board_live_empty">Ei vielä viestejä</string>
+    <string name="board_live_you">Sinä</string>
+    <string name="board_live_write">Kirjoita viesti</string>
+    <string name="board_live_unavailable">Ympäristö ei ole käytettävissä</string>
+    <string name="board_live_waiting">Ympäristö ei ole käytettävissä</string>
+</resources>

@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Executa a cada requisição para a URL do webhook da tarefa, exibida após salvar. O prompt pode usar marcadores {{body.path}}.</string>
     <string name="maintenance_extended_16">Últimos 30 minutos: CPU (linha) e memória (barras)</string>
     <string name="maintenance_add_project">Adicionar projeto</string>
+    <string name="maintenance_server_unsupported">Esta funcionalidade não está disponível nesta versão do servidor.</string>
 </resources>

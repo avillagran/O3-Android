@@ -147,10 +147,10 @@ fun NewChatProjectPicker(
                             .alpha(if (project.connected && project.writable) 1f else 0.5f)
                             .testTag(NewChatProjectPickerTags.row(project.environmentId, project.projectId))
                         ListItem(
-                            headlineContent = { Text(project.projectTitle) },
+                            headlineContent = { dev.avillagran.ot3android.ui.kit.HostProjectTitle(project.projectTitle, project.environmentId) },
                             supportingContent = {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(project.environmentLabel)
+                                    dev.avillagran.ot3android.ui.kit.HostBadge(project.environmentLabel, project.environmentId)
                                     project.workspaceRoot?.let { Text(it) }
                                     if (!project.connected) Text(stringResource(R.string.ot3_connection_offline))
                                     else if (!project.writable) Text(stringResource(R.string.thread_notice_rejected_plain))

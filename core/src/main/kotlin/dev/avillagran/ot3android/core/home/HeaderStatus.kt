@@ -60,12 +60,12 @@ object HeaderStatusDisplay {
         if (environments.isEmpty()) return HeaderStatus.Hidden
         if (offline) return HeaderStatus.Offline
         val connected = environments.filter { it.connection is ConnectionState.Connected }
-        val ready = connected.any { it.shell != null }
-        val pending = connected.any { it.shell == null }
+        val ready = connected.any { it.shell != null && !it.syncing }
+        val pending = connected.any { it.shell == null || it.syncing }
         val loaded = environments.any { it.shell != null }
         val connecting = environments.filter { it.connection.reconnecting() }
         val error = environments.firstNotNullOfOrNull { env -> env.connection.errorCode()?.let { HeaderStatus.Error(env.id, it) } }
-        val shows = if (ready) pending else error != null || connecting.isNotEmpty() || pending || (loaded && !ready)
+        val shows = error != null || connecting.isNotEmpty() || pending || (loaded && !ready)
         if (!shows) return HeaderStatus.Hidden
         val progress = (ready || error == null) && (connecting.isNotEmpty() || pending)
         return when {

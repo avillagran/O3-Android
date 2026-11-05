@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">저장 후 표시되는 작업의 웹훅 URL로 요청이 올 때마다 실행됩니다. 프롬프트에서 {{body.path}} 자리표시자를 쓸 수 있습니다.</string>
     <string name="maintenance_extended_16">최근 30분: CPU(선)와 메모리(막대)</string>
     <string name="maintenance_add_project">프로젝트 추가</string>
+    <string name="maintenance_server_unsupported">이 기능은 이 서버 버전에서 사용할 수 없습니다.</string>
 </resources>

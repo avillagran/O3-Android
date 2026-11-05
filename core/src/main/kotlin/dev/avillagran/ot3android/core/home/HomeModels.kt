@@ -13,6 +13,7 @@ data class HomeEnvironment(
     /** Null until the first snapshot; kept while reconnecting. */
     val shell: ShellState?,
     val actions: ActionContext = ActionContext.Interim,
+    val syncing: Boolean = false,
 )
 
 /** ot3's Status filter (`ot3:ui/qml/T3Panel.qml:1079-1089`), in ot3's order; [libName] is `sidebar.view`'s `filter`. */
@@ -201,7 +202,11 @@ sealed interface HomeContent {
     data object List : HomeContent
 }
 
+data class HomeHostStatus(val id: String, val label: String, val connection: ConnectionState,
+    val hasSavedThreads: Boolean, val syncing: Boolean = false)
+
 data class HomeUiState(
+    val hostStatuses: List<HomeHostStatus> = emptyList(),
     val actionContexts: Map<String, ActionContext> = emptyMap(),
     val content: HomeContent = HomeContent.Connecting,
     val header: HomeHeader = HomeHeader(),
@@ -222,4 +227,6 @@ data class HomeUiState(
     val projects: Map<String, ProjectOption> = emptyMap(),
     /** The project keys the Project filter covers (`projectScope`); empty while it is off. */
     val projectScope: Set<String> = emptySet(),
+    /** Filas admitidas por el filtro nativo, antes de los pliegues de la lista. */
+    val boardRows: List<HomeRow>? = null,
 )

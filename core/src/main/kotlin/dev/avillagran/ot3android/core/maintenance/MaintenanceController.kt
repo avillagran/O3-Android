@@ -45,7 +45,7 @@ enum class MaintenancePage(val read: String?) {
 data class MaintenanceState(
     val busy: Boolean = false, val failed: Boolean = false, val stale: Boolean = true,
     val data: String = "{}", val readable: Boolean = false, val writable: Set<String> = emptySet(),
-    val unknown: Boolean = false,
+    val unknown: Boolean = false, val unsupported: Boolean = false,
 )
 
 /** No shell, local cleanup, background scheduler or automatic mutation retry. */
@@ -63,7 +63,7 @@ class MaintenanceController(
 
     suspend fun refresh() = gate.withLock {
         if (!active) return@withLock
-        mutable.value = mutable.value.copy(busy = true, stale = true, writable = emptySet())
+        mutable.value = mutable.value.copy(busy = true, stale = true, writable = emptySet(), unsupported = false)
         try {
             val access = access()
             val read = page.read
@@ -85,6 +85,11 @@ class MaintenanceController(
         } catch (e: CancellationException) {
             if (active) mutable.value = mutable.value.copy(busy = false, failed = true)
             throw e
+        } catch (error: T3Exception) {
+            if (active) mutable.value = if (error.code == "rpc_rejected" &&
+                error.reason?.trim() == "Unknown request tag: ${page.read}") {
+                MaintenanceState(unsupported = true, unknown = receipts.pending(host, page))
+            } else mutable.value.copy(busy = false, failed = true)
         } catch (_: Exception) {
             if (active) mutable.value = mutable.value.copy(busy = false, failed = true)
         }

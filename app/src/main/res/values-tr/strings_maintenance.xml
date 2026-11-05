@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">Kaydettikten sonra gösterilen görev webhook URL\'sine gelen her istekte çalışır. İstem {{body.path}} yer tutucularını kullanabilir.</string>
     <string name="maintenance_extended_16">Son 30 dakika: CPU (çizgi) ve bellek (çubuklar)</string>
     <string name="maintenance_add_project">Proje ekle</string>
+    <string name="maintenance_server_unsupported">Bu özellik bu sunucu sürümünde kullanılamıyor.</string>
 </resources>

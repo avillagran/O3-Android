@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Tablero de tareas</string>
+    <string name="task_board_pending">Pendiente</string>
+    <string name="task_board_working">Trabajando</string>
+    <string name="task_board_waiting">Esperando</string>
+    <string name="task_board_done">Listo</string>
+    <string name="board_live_view">En vivo</string>
+    <string name="board_live_loading">Cargando conversación…</string>
+    <string name="board_live_empty">Aún no hay mensajes</string>
+    <string name="board_live_you">Tú</string>
+    <string name="board_live_write">Escribir mensaje</string>
+    <string name="board_live_unavailable">Entorno no disponible</string>
+    <string name="board_live_waiting">Entorno no disponible</string>
+</resources>

@@ -87,6 +87,7 @@ fun DesktopThreadRow(
     val depth = row.depth.coerceIn(0, MAX_DEPTH)
     val projectColor = if (appearance.projectColors) row.project?.color ?: colors.dim else colors.dim
     val hostColor = appearance.host.color.takeIf { it.matches(Regex("#[0-9a-fA-F]{6}")) }?.let { Color(it.toColorInt()) }
+    val identityColor = hostColor ?: if (appearance.enabled) colors.dim else projectColor
     val name = rowAccessibilityName(row)
     Box(modifier.fillMaxWidth().height(titleHeight + metadataHeight + 12.dp)
         .combinedClickable(interactionSource = interaction, indication = null, role = Role.Button,
@@ -101,11 +102,11 @@ fun DesktopThreadRow(
             .then(if (selected || focused) Modifier.border(1.dp, if (focused) colors.accent else colors.foreground.copy(alpha = .22f), shape) else Modifier)) {
             if (!appearance.sober && appearance.projectColors && !row.subagent) {
                 Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.horizontalGradient(
-                    listOf(projectColor.copy(alpha = if (row.receding) .065f else .13f), projectColor.copy(alpha = .02f), Color.Transparent)), shape))
+                    listOf(identityColor.copy(alpha = if (row.receding) .065f else .13f), identityColor.copy(alpha = .02f), Color.Transparent)), shape))
             }
             if (!appearance.sober) ThreadAura(row, appearance.shelved, Modifier.matchParentSize())
             if (selected || !appearance.sober) Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 8.dp)
-                .background(if (selected) colors.accent else hostColor ?: projectColor, RoundedCornerShape(2.dp)))
+                .background(if (appearance.enabled || hostColor != null) identityColor else if (selected) colors.accent else projectColor, RoundedCornerShape(2.dp)))
             Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp)) {
                 Row(Modifier.height(titleHeight), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -129,11 +130,8 @@ fun DesktopThreadRow(
                     if (row.subagent) Ot3Icon("bot", stringResource(R.string.ot3_kit_subagent), tint = colors.dim, size = 12.dp)
                     Text(row.projectName, Modifier.weight(1f)
                         .then(if (onProjectLongClick != null) Modifier.combinedClickable(onClick = onClick, onLongClick = onProjectLongClick) else Modifier),
-                        color = colors.dim, style = type.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    row.environmentName?.let { Text(it, Modifier.widthIn(max = 100.dp)
-                        .border(1.dp, colors.dim.copy(alpha = .2f), RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp),
-                        color = if (!appearance.sober) hostColor ?: colors.dim else colors.dim,
-                        style = type.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                        color = hostColor ?: colors.dim, style = type.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    row.environmentName?.let { HostBadge(it, style = appearance.host) }
                 }
             }
         }

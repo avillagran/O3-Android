@@ -77,4 +77,5 @@
     <string name="maintenance_extended_15">每次请求任务的 webhook URL（保存后显示）时运行。提示中可以使用 {{body.path}} 占位符。</string>
     <string name="maintenance_extended_16">最近 30 分钟：CPU（折线）和内存（柱状）</string>
     <string name="maintenance_add_project">添加项目</string>
+    <string name="maintenance_server_unsupported">此服务器版本不支持此功能。</string>
 </resources>

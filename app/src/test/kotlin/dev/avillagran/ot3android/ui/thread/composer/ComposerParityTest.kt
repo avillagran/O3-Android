@@ -25,6 +25,19 @@ class ComposerParityTest {
     private val scope = ComposerScope("host", "project", "thread")
     private fun initial() = ComposerSnapshot(scope, text = "Look at the file", selection = ComposerSelection(16, 16),
         attachments = listOf(ComposerAttachment("file", "notes.md", UploadStatus.Ready, "descriptor")))
+    @Test fun quickRepliesAreBesideAttachAndOpenDirectly() {
+        var chosen: ComposerAction? = null
+        rule.setContent { Ot3Theme { ComposerParity(ComposerSnapshot(scope),
+            setOf(ComposerAction.Attach, ComposerAction.QuickReplies), { _, _, _, _ -> },
+            { if (it is ComposerRequest.Action) chosen = it.action }) } }
+        val clip = rule.onNodeWithContentDescription("Attach files").fetchSemanticsNode().boundsInRoot
+        val quick = rule.onNodeWithTag("composer_quick_replies")
+        val bounds = quick.fetchSemanticsNode().boundsInRoot
+        assertTrue(bounds.left >= clip.right - 1f)
+        quick.performClick()
+        assertEquals(ComposerAction.QuickReplies, chosen)
+    }
+
     @Test fun compactCaptureUsesOverflowAndKeepsConsentAfterMenuCloses() {
         val requests = mutableListOf<ComposerRequest>()
         rule.setContent { Ot3Theme {

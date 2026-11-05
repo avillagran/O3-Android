@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_add">Додати проєкт</string>
+    <string name="project_new">Новий проєкт</string>
+    <string name="project_environment">Вибрати середовище</string>
+    <string name="project_search">Пошук проєктів…</string>
+    <string name="project_none">Проєкти не знайдено</string>
+    <string name="project_setup">Потрібне налаштування</string>
+    <string name="project_local">Локальна папка</string>
+    <string name="project_provider">Репозиторій %1$s</string>
+    <string name="project_name">Назва проєкту</string>
+    <string name="project_choose_folder">Вибрати папку</string>
+    <string name="project_folder">Тека</string>
+    <string name="project_browse">Відкрити теку</string>
+    <string name="project_open">Відкрити проєкт</string>
+    <string name="project_clone">Клонувати репозиторій</string>
+    <string name="project_pending">Результат невідомий. Оновіть розмову для перевірки перед повтором дії.</string>
+    <string name="project_reviewed">Я перевірив свої проєкти</string>
+</resources>

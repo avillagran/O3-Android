@@ -263,4 +263,7 @@
     <string name="ot3_new_chat_title">Thread title</string>
     <string name="ot3_new_chat_no_projects">No projects found</string>
     <string name="ot3_new_chat_current_checkout">Current checkout</string>
+    <string name="ot3_reference_unsupported">This file type can\'t be previewed here</string>
+    <string name="ot3_reference_truncated">Showing the first part of the file</string>
+    <string name="ot3_reference_copy_path">Copy path</string>
 </resources>

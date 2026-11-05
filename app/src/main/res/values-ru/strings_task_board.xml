@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">Доска задач</string>
+    <string name="task_board_pending">Ожидает</string>
+    <string name="task_board_working">Работает</string>
+    <string name="task_board_waiting">Ожидание</string>
+    <string name="task_board_done">Готово</string>
+    <string name="board_live_view">В реальном времени</string>
+    <string name="board_live_loading">Загрузка разговора…</string>
+    <string name="board_live_empty">Сообщений пока нет</string>
+    <string name="board_live_you">Вы</string>
+    <string name="board_live_write">Написать сообщение</string>
+    <string name="board_live_unavailable">Окружение недоступно</string>
+    <string name="board_live_waiting">Окружение недоступно</string>
+</resources>

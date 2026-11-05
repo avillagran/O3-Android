@@ -101,3 +101,7 @@ The existing converter centers and tints the monochrome marks for Android.
 
 `camera.svg` and `mic.svg`: Desktop `ui/js/IconAssets.js` (current checkout), Lucide ISC, stroke 1.75.
 `image.svg`: Desktop `ui/js/IconAssets.js` icon table, Lucide ISC.
+
+- `layout-grid.svg`: copied from o3-code `ui/assets/icons/layout-grid.svg` (Lucide, ISC).
+
+`linux.svg`: Desktop ui/assets/icons; `mac-mini.svg` and `mac-studio.svg`: Desktop ui/js/IconAssets.js, Lucide ISC.

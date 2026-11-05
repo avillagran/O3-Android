@@ -5,6 +5,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.avillagran.ot3android.Ot3Application
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 
 /** Reads existing foreground shell observations. Never creates a connection or thread lease. */
@@ -23,8 +24,8 @@ internal fun observedSidebarClocks(): Map<String, ReplyClock> {
                     "$host/${thread.id}" to ReplyClock(repliedAt = reply, updatedAt = updated,
                         startedAt = thread.latestRunRequestedAt ?: 0)
                 } }
-            }) { maps -> maps.fold(emptyMap<String, ReplyClock>()) { all, map -> all + map } }
-        }
+            }) { maps -> buildMap { maps.forEach { putAll(it) } } }
+        }.flowOn(Dispatchers.Default).distinctUntilChanged()
     }
     val clocks by flow.collectAsStateWithLifecycle(emptyMap())
     return clocks

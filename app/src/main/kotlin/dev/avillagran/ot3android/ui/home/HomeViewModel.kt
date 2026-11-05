@@ -36,13 +36,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -112,8 +113,8 @@ class HomeViewModel(
                             catch (error: CancellationException) { throw error }
                             catch (_: Exception) { ActionContext.Interim })
                     } }.combine(actionBusy) { context, busy -> context.copy(busy = env.id in busy, buildersAvailable = sender != null && context.buildersAvailable) }
-                    combine(supervisor.state, supervisor.shell, access) { state, shell, context ->
-                        HomeEnvironment(env.id, env.label, state, shell, if (state is dev.avillagran.ot3android.core.connection.ConnectionState.Connected) context else ActionContext.Interim)
+                    combine(supervisor.state, supervisor.shell, access, supervisor.syncing) { state, shell, context, syncing ->
+                        HomeEnvironment(env.id, env.label, state, shell, if (state is dev.avillagran.ot3android.core.connection.ConnectionState.Connected) context else ActionContext.Interim, syncing)
                     }
                 },
             ) { it.toList() }
@@ -145,10 +146,19 @@ class HomeViewModel(
 
     private val view = combine(query, filter, settledLimit, ::View)
 
-    val state: StateFlow<HomeUiState?> = combine(environments, view, shelfStore.shelves, messages, header) { envs, view, shelves, messages, header ->
-        Inputs(envs, view, shelves, messages, header)
-    }.combine(now) { inputs, now -> inputs to now }
-        .mapLatest { (inputs, now) ->
+    private var lastUnfoldedState: HomeUiState? = null
+
+    // Una búsqueda o agrupación nueva reemplaza la anterior; los datos en vivo no la cancelan.
+    val state: StateFlow<HomeUiState?> = combine(view, shelfStore.shelves.map { it.grouped }.distinctUntilChanged()) { view, grouped ->
+        view to ShelfState(grouped = grouped, workingExpanded = true, snoozedExpanded = true, settledExpanded = true)
+    }.flatMapLatest { (view, shelves) ->
+        combine(environments, messages, header) { envs, messages, header ->
+            Inputs(envs, view, shelves, messages, header)
+        }.combine(now) { inputs, now -> inputs to now }
+        // Las actualizaciones del shell y el reloj no deben cancelar una proyección en curso.
+        // Publica cada resultado terminado y conserva solo la entrada más reciente en espera.
+        .conflate()
+        .map { (inputs, now) ->
             val input = HomeInput(
                 environments = inputs.environments,
                 query = inputs.view.query,
@@ -167,14 +177,17 @@ class HomeViewModel(
                 throw error
             } catch (_: T3Exception) {
                 // The lib refused the input (an environment id it cannot key): keep the last list.
-                return@mapLatest state.value
+                return@map lastUnfoldedState
             }
             returns = sidebar.returns
             HomeStateBuilder.build(input, sidebar).copy(actionContexts = inputs.environments.associate { it.id to it.actions }).also { state ->
-                ticking.value = state.rows.values.any { it.time.kind == "elapsed" || it.time.kind == "countdown" }
+                lastUnfoldedState = state
+                ticking.value = state.boardRows.orEmpty().any { it.time.kind == "elapsed" || it.time.kind == "countdown" }
             }
         }
+    }
         .flowOn(Dispatchers.Default)
+        .combine(shelfStore.shelves) { state, shelves -> state?.withShelfExpansion(shelves) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private data class Inputs(

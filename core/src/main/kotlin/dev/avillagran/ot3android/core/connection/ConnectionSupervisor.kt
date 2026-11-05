@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
@@ -143,6 +144,7 @@ class ConnectionSupervisor(
     private val routeFallbacks: StateFlow<Map<String, String>> = MutableStateFlow(emptyMap()),
 ) {
     val environmentId: String = environment.id
+    val environmentLabel: String = environment.label
     private val baseUrl = environment.baseUrl
 
     /** The server's environment id, checked by `fetchDescriptor` once known. */
@@ -166,6 +168,11 @@ class ConnectionSupervisor(
 
     /** What this row is doing with its fallback; see [FallbackStatus]. */
     val fallback: StateFlow<FallbackStatus> = _fallback.asStateFlow()
+
+    private val awaitingShell = MutableStateFlow(false)
+    private val refreshes = MutableStateFlow(0)
+    /** Distinguishes an authenticated host still receiving its shell from a fully current host. */
+    val syncing = combine(awaitingShell, refreshes) { waiting, count -> waiting || count > 0 }
 
     private val _shell = MutableStateFlow<ShellState?>(null)
 
@@ -281,12 +288,15 @@ class ConnectionSupervisor(
             retry()
             throw T3Exception("not_connected")
         }
-        val fresh = withContext(computation) { ShellReducer.parse(current.shell()) }
-        shellLock.withLock {
-            val heldSequence = held?.sequence
-            val freshSequence = fresh.sequence
-            if (heldSequence == null || freshSequence == null || freshSequence >= heldSequence) replaceHeld(fresh)
-        }
+        refreshes.update { it + 1 }
+        try {
+            val fresh = withContext(computation) { ShellReducer.parse(current.shell()) }
+            shellLock.withLock {
+                val heldSequence = held?.sequence
+                val freshSequence = fresh.sequence
+                if (heldSequence == null || freshSequence == null || freshSequence >= heldSequence) replaceHeld(fresh)
+            }
+        } finally { refreshes.update { it - 1 } }
     }
 
     @OptIn(FlowPreview::class)
@@ -464,6 +474,7 @@ class ConnectionSupervisor(
             // The checks above can take seconds, and the route can be withdrawn meanwhile.
             if (fallback != null && routeFallbacks.value[environmentId] != fallback) return ROUTE_CHANGED
             client.connect(ConnectRoute.Bearer(url, secret))
+            awaitingShell.value = true
             val connected = synchronized(lock) { ++epoch }
             if (shellLock.withLock { held } == null) {
                 val fresh = withContext(computation) { ShellReducer.parse(client.shell()) }
@@ -483,6 +494,7 @@ class ConnectionSupervisor(
             val follow: suspend () -> String = {
                 var closedWith: String? = null
                 client.shellStream(afterSequence = after).collect { update ->
+                    awaitingShell.value = false
                     if (connectedAt == null) connectedAt = clock()
                     shellLock.withLock {
                         held = ShellReducer.reduce(held, update)
@@ -501,6 +513,7 @@ class ConnectionSupervisor(
         } catch (_: Exception) {
             return INTERNAL_ERROR
         } finally {
+            awaitingShell.value = false
             clearConnection(run)
             connectedAt?.let {
                 backoff.connectionLasted(clock() - it)

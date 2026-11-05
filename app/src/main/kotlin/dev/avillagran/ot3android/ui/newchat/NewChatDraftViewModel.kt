@@ -79,9 +79,21 @@ internal class NewChatDraftViewModel(
             val scoped = domain.domain("scopedSettings.projectCatalogConfig", JSONObject().put("config", config)
                 .put("settings", settings).put("project", project.raw)) as JSONObject
             val catalog = domain.domain("models.catalog", JSONObject().put("config", scoped)) as JSONObject
+            val permissionViews = JSONObject()
+            val providers = catalog.optJSONArray("providers") ?: JSONArray()
+            for (index in 0 until providers.length()) {
+                val id = providers.getJSONObject(index).getString("instanceId")
+                permissionViews.put(id, transport.domain("models.permissionView", JSONObject().put("catalog", catalog)
+                    .put("selection", JSONObject().put("instanceId", id))))
+            }
+            catalog.put("permissionViews", permissionViews)
             val access = ThreadManagement.access(catalog, transport.authSession())
             val defaults = domain.domain("nativeSettings.threadDefaults", JSONObject().put("settings", settings).put("projectId", projectId)) as JSONObject
-            val defaultSelection = defaults.optJSONObject("defaultModelSelection")
+            val models = catalog.optJSONArray("models") ?: JSONArray()
+            val firstAvailable = (0 until models.length()).map { models.getJSONObject(it) }.firstOrNull { it.optBoolean("available") }
+            val defaultSelection = defaults.optJSONObject("defaultModelSelection") ?: firstAvailable?.let {
+                JSONObject().put("instanceId", it.getString("instanceId")).put("model", it.getString("model")).put("options", JSONArray())
+            }
             if (live !== transport) return
             local.update { current -> current.copy(loading = false, writable = access.canWrite,
                 projectTitle = project.title ?: projectId, catalog = catalog.toString(),

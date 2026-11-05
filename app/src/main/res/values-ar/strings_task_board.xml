@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sidebar_layout_board">لوحة المهام</string>
+    <string name="task_board_pending">قيد الانتظار</string>
+    <string name="task_board_working">قيد العمل</string>
+    <string name="task_board_waiting">بانتظار الإدخال</string>
+    <string name="task_board_done">جاهز</string>
+    <string name="board_live_view">عرض مباشر</string>
+    <string name="board_live_loading">جارٍ تحميل المحادثة…</string>
+    <string name="board_live_empty">لا توجد رسائل بعد</string>
+    <string name="board_live_you">أنت</string>
+    <string name="board_live_write">كتابة رسالة</string>
+    <string name="board_live_unavailable">البيئة غير متاحة</string>
+    <string name="board_live_waiting">البيئة غير متاحة</string>
+</resources>

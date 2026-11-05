@@ -48,6 +48,13 @@ class TranscriptReaderTest {
         rule.onNodeWithTag("thread_load_older").assertHasClickAction().performClick()
         rule.runOnIdle { assertEquals(1, requests) }
     }
+    @Test fun windowOfOnlyToolActivityRequestsOlderHistoryByItself() {
+        var requests = 0
+        val data = JSONObject().put("hasMoreHistory", true).put("timeline", JSONArray().put(
+            JSONObject().put("id", "w").put("role", "assistant").put("rev", "1").put("text", "")))
+        rule.setContent { Ot3Theme { Box(Modifier.height(600.dp)) { TimelineReader(data, emptyList(), onLoadOlder = { requests++ }) } } }
+        rule.runOnIdle { assertEquals(1, requests) }
+    }
     @Test fun quoteAndNavigationRequireCallbacksAndNativeReadyPlan() {
         var quote = ""
         var target = ""
